@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "sourceCase", "grants", "wireFields", "rootClonePayloadBytes", "sharedOwnerRetiredBytes", "finalOwnerRetiredBytes", "largeSourceCase", "largeFinalOwnerRetiredBytes", "hoverIsCaptured", "privateDomainIsCaptured", "anchorIsCaptured", "commaIdIsSplit", "zeroGrantChangesOwner", "coldDecodeEarnsInteractiveCredit"],
+  "properties": {
+    "version": {"const": 1}, "sourceCase": {"const": "sparse-anchor-comma-private-preserved"}, "grants": {"const": [0, 1, 64, 4096]},
+    "wireFields": {"const": ["selection", "activeMode", "activeGranularity"]},
+    "rootClonePayloadBytes": {"const": 0}, "sharedOwnerRetiredBytes": {"const": 0}, "finalOwnerRetiredBytes": {"const": 73},
+    "largeSourceCase": {"const": "semantic-unicode-over-page"}, "largeFinalOwnerRetiredBytes": {"const": 33265},
+    "hoverIsCaptured": {"const": false}, "privateDomainIsCaptured": {"const": true}, "anchorIsCaptured": {"const": true}, "commaIdIsSplit": {"const": false},
+    "zeroGrantChangesOwner": {"const": false}, "coldDecodeEarnsInteractiveCredit": {"const": false}
+  }
+}

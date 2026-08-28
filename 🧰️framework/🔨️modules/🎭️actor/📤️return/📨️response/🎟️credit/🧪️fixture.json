@@ -1,0 +1,29 @@
+{
+  "authority":{"activationGeneration":"7","transportRequestSequence":128},
+  "returnOriginRequestSequence":9,
+  "maximumBackingBytes":4161,
+  "ownerBinding":["originalWorkerObject","originalActivationObject","actualTransportRequest"],
+  "reservationOrder":["sharedLedgerAdmission","strongRawSlotRegistration","pendingDispatchRegistration","post"],
+  "captureOrder":["originalRootRetention","headerCorrelation","creditedCapture","boundedBodyValidation","pendingRemoval","callback"],
+  "receiverInitial":{"phase":"reserved","rawBackingBytes":4161,"captures":0,"emergencyRoots":0,"sealed":false,"pendingRetained":true,"rawRetained":false,"faultRetained":false},
+  "workerInitial":{"phase":"admitted","transferCreditsSpent":0,"rawRetained":false,"backingRetained":false,"faultRetained":false},
+  "receiverCases":[
+    {"name":"ordinary exact response","actions":["post","capture","settle"],"expected":{"phase":"captured","rawBackingBytes":4161,"captures":1,"emergencyRoots":0,"sealed":false,"pendingRetained":false,"rawRetained":true,"faultRetained":false}},
+    {"name":"unused reservation cancellation","actions":["cancelEmpty"],"expected":{"phase":"cancelled","rawBackingBytes":0,"captures":0,"emergencyRoots":0,"sealed":false,"pendingRetained":false,"rawRetained":false,"faultRetained":false}},
+    {"name":"refused dispatch retains exception and reservation","actions":["postRefused"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":0,"emergencyRoots":0,"sealed":true,"pendingRetained":true,"rawRetained":false,"faultRetained":true}},
+    {"name":"matched malformed body is owned before decode","actions":["post","capture","bodyFault"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":1,"emergencyRoots":0,"sealed":true,"pendingRetained":true,"rawRetained":true,"faultRetained":true}},
+    {"name":"invalid header preserves pending and first emergency root","actions":["post","headerFault"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":0,"emergencyRoots":1,"sealed":true,"pendingRetained":true,"rawRetained":false,"faultRetained":true}},
+    {"name":"replacement worker cannot spend old credit","actions":["post","foreignWorker"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":0,"emergencyRoots":1,"sealed":true,"pendingRetained":true,"rawRetained":false,"faultRetained":true}},
+    {"name":"same named reactivation cannot spend old credit","actions":["post","foreignActivation"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":0,"emergencyRoots":1,"sealed":true,"pendingRetained":true,"rawRetained":false,"faultRetained":true}},
+    {"name":"origin request cannot replace actual control request","actions":["post","foreignRequest"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":0,"emergencyRoots":1,"sealed":true,"pendingRetained":true,"rawRetained":false,"faultRetained":true}},
+    {"name":"duplicate preserves original credited response","actions":["post","capture","settle","duplicate"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":1,"emergencyRoots":1,"sealed":true,"pendingRetained":false,"rawRetained":true,"faultRetained":true}},
+    {"name":"callback fault cannot release raw custody","actions":["post","capture","settle","callbackFault"],"expected":{"phase":"heldFault","rawBackingBytes":4161,"captures":1,"emergencyRoots":0,"sealed":true,"pendingRetained":false,"rawRetained":true,"faultRetained":true}}
+  ],
+  "workerCases":[
+    {"name":"one successful transfer retains native result until separate retirement","actions":["capture","normalize","post","duplicate"],"expected":{"phase":"posted","transferCreditsSpent":1,"rawRetained":true,"backingRetained":false,"faultRetained":false}},
+    {"name":"normalization failure retains original result and fault","actions":["capture","normalizationFault"],"expected":{"phase":"heldFault","transferCreditsSpent":0,"rawRetained":true,"backingRetained":false,"faultRetained":true}},
+    {"name":"refused post keeps exact attached backing","actions":["capture","normalize","postRefused"],"expected":{"phase":"heldFault","transferCreditsSpent":0,"rawRetained":true,"backingRetained":true,"faultRetained":true}},
+    {"name":"detached backing after throwing wrapper cannot be resent","actions":["capture","normalize","detachedPostFault","duplicate"],"expected":{"phase":"heldFault","transferCreditsSpent":1,"rawRetained":true,"backingRetained":false,"faultRetained":true}}
+  ],
+  "boundaries":{"operationRevocationReleasesCredit":false,"oldWorkerReplyMayBeRetained":true,"formatMintsProvenance":false,"callbackReleasesRawLease":false,"responseCountIsByteAdmission":false,"fieldCopyIsNativeInputAck":false,"fixedFaultReleasesOriginalError":false,"emergencyMayOverwrite":false,"rogueFloodIsBounded":false,"wireLayout":"semio.actor.return-response.v1"}
+}

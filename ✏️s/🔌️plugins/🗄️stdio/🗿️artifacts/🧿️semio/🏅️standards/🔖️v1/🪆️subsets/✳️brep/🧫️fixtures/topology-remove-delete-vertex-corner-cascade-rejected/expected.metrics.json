@@ -1,0 +1,26 @@
+{
+  "declaredOutcome": "rejected",
+  "kind": "delete-vertex",
+  "hasExpected": false,
+  "solids": 0,
+  "shells": 0,
+  "faces": 1,
+  "edges": 4,
+  "vertices": 4,
+  "boundingBox": {
+    "xMin": -1e-7,
+    "xMax": 10.0000001,
+    "yMin": -1e-7,
+    "yMax": 10.0000001,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 14.142135906573662,
+  "volume": 0,
+  "area": 100,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "before operand only — kernel produced no AFTER shape",
+  "rejectionReason": "wireLoop(remaining-two-edges) — wireLoop: {\"kind\":\"KERNEL_OPERATION\",\"code\":\"WIRE_BUILD_FAILED\",\"message\":\"Failed to build the wire: unknown error\"}"
+}

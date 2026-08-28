@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeTowerIsChimney",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTowerIsChimney"
+  ],
+  "properties": {
+    "newTowerIsChimney": {
+      "type": "boolean"
+    }
+  }
+}

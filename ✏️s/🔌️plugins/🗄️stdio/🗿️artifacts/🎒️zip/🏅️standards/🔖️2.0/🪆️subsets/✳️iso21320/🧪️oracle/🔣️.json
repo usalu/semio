@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🎒️ ZIP 2.0/✳️iso21320's own contribution to the repository test platform: the `zip` reference implementation registered for THIS subset's own 8-kind `ZipIso21320Mutation` vocabulary, and a comparison profile that — unlike the sibling `✳️any` one — checks the ISO/IEC 21320-1 constraints the profile exists to enforce.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "zip",
       "version": "6",
-      "capabilities": ["zip-2-0-iso21320-mutate"],
-      "comparisonProfiles": ["semantic-zip-iso21320-v1"],
+      "capabilities": [
+        "zip-2-0-iso21320-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-zip-iso21320-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/zip-rs/zip2",
       "rationale": "The reference ZIP reader/writer of the Rust ecosystem, and the only producer in this comparison that can honour a per-member compression method: ZipWriter::start_file takes the method explicitly, and ZipFile::compression/encrypted expose on read exactly the two wire properties ISO/IEC 21320-1 §4.1 and §4.4 constrain. That is what makes it the right independent reference for this subset rather than for ZIP in general. A distinct id and capability from both the plugin-level `zip` entry (zip-archive: plain create/read/remove evidence) and the sibling `✳️any` entry (zip-2-0-mutate): a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

@@ -1,0 +1,8 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","cases","laws"],
+  "properties":{
+    "version":{"const":1},
+    "cases":{"type":"array","minItems":12,"items":{"type":"object","additionalProperties":false,"required":["name","type","hex","native32","native64","finite"],"properties":{"name":{"type":"string"},"type":{"enum":["u8","u32","u64","i64","usize","f64"]},"hex":{"type":"string","pattern":"^(?:[0-9a-f]{2})+$"},"native32":{"type":"boolean"},"native64":{"type":"boolean"},"finite":{"type":"boolean"}}}},
+    "laws":{"type":"array","minItems":6,"uniqueItems":true,"items":{"type":"string"}}
+  }
+}

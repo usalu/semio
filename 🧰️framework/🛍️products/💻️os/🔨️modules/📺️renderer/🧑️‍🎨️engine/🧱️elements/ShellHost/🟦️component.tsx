@@ -114,6 +114,7 @@ import {
   type Conflict,
   type ConflictResolution,
   type Fault,
+  type InvocationResponse,
   type MergePolicy,
   type MergeReport,
   type Severity,
@@ -486,7 +487,7 @@ import {
   ShellRouteNotFoundPage,
   useNamedLayoutHost,
 } from "../ChromePanels/🟦️component.tsx";
-import { type PluginWasmHandle, serializePerActor, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
+import { type PluginWasmHandle, type PluginExtensionCompletion, serializePerActor, setPluginRuntimeActor } from "../PluginRuntime/🟦️component.tsx";
 import { EXTENSION_TARGETS } from "../../../../🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️catalog.ts";
 
@@ -966,49 +967,73 @@ function pluginInstallConcurrency(): number {
 //#endregion 🧵️ConcurrencyHelpers
 
 //#region 🔁️InvokeExtensionDispatch
-/** 🔁️ terra-web-shellhost (finding 1) — runs one `invokeExtension` effect's extension call plus its
- * `req`-correlated completion. Split out of `applyHostEffects`'s `for`-loop body so that loop can
- * dispatch it through `serializePerActor` (below) instead of `await`ing it inline: before this packet,
- * a slow `invoke()` against one extension actor blocked EVERY later effect in the same batch — and
- * every caller `await`ing `applyHostEffects` itself — until it settled. Errors are still never
- * swallowed: a failed `invoke()` is caught and reported back to the requesting actor as a `fault`
- * completion (unchanged from the pre-existing behaviour), and this function's own promise still
- * rejects to its caller if `completeExtensionInvoke` itself is unavailable/throws, so the per-actor
- * dispatch site has something real to `.catch()`. */
-async function runInvokeExtensionEffect(
-  requestingPlugin: LoadedProgramState,
+function captureExtensionCompletion(requestingPlugin: LoadedProgramState, instanceId: number, req: bigint): PluginExtensionCompletion {
+  const capture = requestingPlugin.handle.captureExtensionCompletion;
+  if (typeof capture !== "function") throw new Error("extension.completion-unavailable");
+  const completion = capture.call(requestingPlugin.handle, instanceId, req);
+  if (!completion || typeof completion.complete !== "function" || typeof completion.assertActive !== "function") throw new Error("extension.completion-unavailable");
+  if (completion.instanceId !== instanceId || completion.req !== req) throw new Error("extension.completion-owner-mismatch");
+  completion.assertActive();
+  return completion;
+}
+
+async function runCapturedExtensionEffect(
+  completion: PluginExtensionCompletion,
   extensionEntry: LoadedProgramState | undefined,
-  instanceId: number,
   extensionId: string,
   capability: string,
   requestJson: string,
-  req: number,
-): Promise<void> {
+): Promise<InvocationResponse> {
+  completion.assertActive();
+  const { instanceId, req } = completion;
+  const unavailable = (code: string) => new SemioFaultError({
+    origin: "os", code, severity: "error", message: code,
+    scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
+  });
+  let outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array };
   try {
-    let outputJson = "";
+    if (!extensionEntry) throw unavailable("extension.missing");
     const invoke = (extensionEntry?.handle as { invoke?: (capability: string, request: Uint8Array | string) => Promise<string | Uint8Array> } | undefined)?.invoke;
-    if (typeof invoke === "function" && extensionEntry) {
-      const raw = await invoke(capability, requestJson);
-      outputJson = typeof raw === "string" ? raw : new TextDecoder().decode(raw);
-      console.log("[DEBUG] invokeExtension via handle.invoke", { extensionId, capability, req });
-    } else {
-      console.warn("[DEBUG] invokeExtension: extension handle missing invoke; returning empty output", { extensionId, capability });
-    }
-    if (requestingPlugin.handle.completeExtensionInvoke) {
-      const outcomeBytes = encodePackValue(outputJson.length > 0 ? JSON.parse(outputJson) : {});
-      await requestingPlugin.handle.completeExtensionInvoke(instanceId, req, { ok: outcomeBytes });
-    } else {
-      console.warn("[DEBUG] invokeExtension: requesting plugin's handle has no completeExtensionInvoke — completion not delivered", { extensionId, capability, req });
-    }
+    if (typeof invoke !== "function") throw unavailable("extension.invoke-unavailable");
+    const raw = await invoke.call(extensionEntry.handle, capability, requestJson);
+    completion.assertActive();
+    const outputJson = typeof raw === "string" ? raw : new TextDecoder("utf-8", { fatal: true }).decode(raw);
+    outcome = { ok: encodePackValue(JSON.parse(outputJson)) };
   } catch (error) {
-    console.warn("[os-shell] invokeExtension failed", { extensionId, capability, error });
-    if (requestingPlugin.handle.completeExtensionInvoke) {
-      const message = error instanceof Error ? error.message : String(error);
-      await requestingPlugin.handle.completeExtensionInvoke(instanceId, req, { fault: encodePackValue({ code: "extension.invoke-failed", message }) }).catch((completionError) => {
-        console.warn("[os-shell] invokeExtension: fault completion also failed to deliver", { extensionId, capability, req, completionError });
-      });
-    }
+    completion.assertActive();
+    const fault: Fault = error instanceof SemioFaultError ? error.fault : {
+      origin: "os", code: "extension.invoke-failed", severity: "error", message: error instanceof Error ? error.message : String(error),
+      scope: { pluginId: extensionId, instanceId: String(instanceId) }, retryable: false,
+    };
+    outcome = { fault: encodePackValue(fault) };
   }
+  completion.assertActive();
+  const response = await completion.complete(outcome);
+  completion.assertActive();
+  console.log("[DEBUG] extension invocation completed", { extensionId, capability, instanceId, req, status: "ok" in outcome ? "ok" : "fault" });
+  return response;
+}
+
+/** 🔁️ Captures one requester before evaluation and delivers only to that same activation. */
+export async function runInvokeExtensionEffect(requestingPlugin: LoadedProgramState, extensionEntry: LoadedProgramState | undefined, instanceId: number, extensionId: string, capability: string, requestJson: string, req: bigint): Promise<InvocationResponse> {
+  return runCapturedExtensionEffect(captureExtensionCompletion(requestingPlugin, instanceId, req), extensionEntry, extensionId, capability, requestJson);
+}
+
+/** 📨️ Resolves an extension address and serializes requests belonging to one originating instance. */
+export async function dispatchInvokeExtensionEffect(
+  plugins: readonly LoadedProgramState[],
+  requester: Pick<ActiveSession, "pluginId" | "instanceId">,
+  invocation: Extract<Effect, { readonly invokeExtension: unknown }>["invokeExtension"],
+  publish: (requestingPlugin: LoadedProgramState, response: InvocationResponse) => Promise<void>,
+): Promise<void> {
+  const { extensionId, capability, requestJson, req } = invocation;
+  const requestingPlugin = plugins.find((entry) => entry.handle.pluginId === requester.pluginId);
+  if (!requestingPlugin) throw new Error("extension.requester-unavailable");
+  const extensionEntry = plugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((contribution) => "extensionId" in contribution && (contribution as { extensionId?: string }).extensionId === extensionId));
+  const completion = captureExtensionCompletion(requestingPlugin, requester.instanceId, req);
+  const response = await serializePerActor(`${requester.pluginId}:${requester.instanceId}`, () => runCapturedExtensionEffect(completion, extensionEntry, extensionId, capability, requestJson));
+  completion.assertActive();
+  await publish(requestingPlugin, response);
 }
 //#endregion 🔁️InvokeExtensionDispatch
 
@@ -3069,32 +3094,19 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("invokeExtension" in effect) {
-          const { extensionId, capability, requestJson, req } = effect.invokeExtension;
-          const request = JSON.parse(requestJson) as { operatorId?: string; inputJson?: string; nodeHash?: number };
-          const requestingPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
-          const extensionEntry = loadedPlugins.find((entry) => entry.handle.pluginId === extensionId || entry.manifest.contributions?.some((c) => "extensionId" in c && (c as { extensionId?: string }).extensionId === extensionId));
-          // 🔁️ terra-web-shellhost (finding 1) — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H1-react):
-          // `invoke-extension` no longer carries a `responseAction` to redispatch; the result is
-          // correlated back to the ORIGINATING actor by `req` and delivered as `Event::Completed`,
-          // which resumes the guest SDK's parked `RequestRegistry` future (design-abi.md §2). Dispatched
-          // through `serializePerActor` (keyed on the REQUESTING instance) rather than `await`ed here: a
-          // slow extension call used to stall every later effect in this batch (and every caller
-          // `await`ing `applyHostEffects` itself). `serializePerActor` still runs same-actor calls
-          // strictly in submission order (never two in flight at once for the same key) — only
-          // DIFFERENT actors' invokeExtension calls now run concurrently with each other. The dispatch
-          // is fired in loop order (never awaited here), so submission order into the per-actor queue
-          // matches effect order; failures are never swallowed — `runInvokeExtensionEffect` itself
-          // reports a failed `invoke()` back to the requester as a `fault` completion, and any residual
-          // rejection (e.g. the actor's queue is full) is logged here rather than becoming a silent
-          // unhandled rejection.
-          if (requestingPlugin && request.operatorId && request.inputJson != null && request.nodeHash != null) {
-            const invokeExtensionActorKey = `${baseSession.pluginId}:${baseSession.instanceId}`;
-            void serializePerActor(invokeExtensionActorKey, () =>
-              runInvokeExtensionEffect(requestingPlugin, extensionEntry, baseSession.instanceId, extensionId, capability, requestJson, req),
-            ).catch((error) => {
-              console.error("[os-shell] invokeExtension: per-actor dispatch failed unexpectedly", { extensionId, capability, req, error });
-            });
-          }
+          void dispatchInvokeExtensionEffect(loadedPlugins, baseSession, effect.invokeExtension, async (requestingPlugin, response) => {
+            const current = sessionRef.current;
+            const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
+            if (!current || handle !== requestingPlugin.handle) throw new Error("extension.requester-retired");
+            const primary = current.pluginId === baseSession.pluginId && current.instanceId === baseSession.instanceId;
+            const spawned = parsePanelState(current.viewState)?.spawnedApps.some((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
+            if (!primary && !spawned) throw new Error("extension.requester-retired");
+            applyHistoryPatch(response.historyPatch);
+            await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope));
+          }).catch((error) => {
+            const { extensionId, capability, req } = effect.invokeExtension;
+            console.error("[DEBUG] invokeExtension dispatch failed", { extensionId, capability, req, error });
+          });
           continue;
         }
         if ("spawnPluginInstance" in effect) {

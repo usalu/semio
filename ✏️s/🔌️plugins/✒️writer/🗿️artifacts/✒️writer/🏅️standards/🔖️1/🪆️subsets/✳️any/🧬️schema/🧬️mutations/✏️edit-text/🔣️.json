@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text",
+  "semanticKind": "edit-text",
+  "displayName": "Edit Text",
+  "emoji": "✏️",
+  "aggregateVariant": "EditText",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "edit-text",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResizeNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "height",
+    "id",
+    "width"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "width": {
+      "type": "number"
+    },
+    "height": {
+      "type": "number"
+    }
+  }
+}

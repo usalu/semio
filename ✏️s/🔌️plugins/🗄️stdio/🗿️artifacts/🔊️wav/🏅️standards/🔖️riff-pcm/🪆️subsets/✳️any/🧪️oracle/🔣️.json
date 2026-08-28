@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset contributes the exhaustive WAV RIFF-PCM mutation vocabulary. The root stdio oracle manifest owns the shared dependency-free PCM16 oracle for both creation and mutation capabilities.",
   "oracles": [],
   "mutationCatalogs": [

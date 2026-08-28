@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯change-active-model-definition",
+  "semanticKind": "change-active-model-definition",
+  "displayName": "Change Active Model Definition",
+  "emoji": "🎯",
+  "aggregateVariant": "ChangeActiveModelDefinition",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-active-model-definition",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

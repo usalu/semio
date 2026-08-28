@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/contributed-mutation-wire/add-value",
+  "type": "object",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false,
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["delta"],
+      "properties": {
+        "delta": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 }
+      }
+    }
+  }
+}

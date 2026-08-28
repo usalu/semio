@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","indexIds","cases","laws"],
+  "properties":{
+    "version":{"const":1},
+    "indexIds":{"type":"array","minItems":2,"maxItems":2,"uniqueItems":true,"items":{"type":"integer","minimum":0,"maximum":9007199254740991}},
+    "cases":{"type":"array","minItems":4,"items":{
+      "type":"object","additionalProperties":false,"required":["name","kind","schema","packet","diagnostic"],
+      "properties":{"name":{"type":"string"},"kind":{"type":"string"},"schema":{"type":"string"},"packet":{"type":"array","maxItems":32768,"items":{"type":"integer","minimum":0,"maximum":255}},"diagnostic":{"enum":[null,"invalid-scene-packet","unsupported-scene-schema","invalid-scene-fields"]}}
+    }},
+    "laws":{"type":"array","minItems":8,"uniqueItems":true,"items":{"type":"string"}}
+  }
+}

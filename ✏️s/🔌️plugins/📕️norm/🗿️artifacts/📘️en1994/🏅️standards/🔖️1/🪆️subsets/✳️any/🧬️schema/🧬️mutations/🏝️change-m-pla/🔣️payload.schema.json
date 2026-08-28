@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMPla",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMPla"
+  ],
+  "properties": {
+    "newMPla": {
+      "type": "number"
+    }
+  }
+}

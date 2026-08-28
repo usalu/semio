@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version","admissionGrant","smallGrant","frames","componentCount","grants","cancelFrontiers","finalReadModes","documentGeneration","revision","nodeIds","wireOrder","text","textRepeats","copiesOldComponent","waitsForLiveDocumentOnCancel","contendedProgress","rejectedOwnerReturned"],
+  "properties": {
+    "version":{"const":1}, "admissionGrant":{"const":32768}, "smallGrant":{"const":4096}, "frames":{"const":256}, "componentCount":{"const":18},
+    "grants":{"const":[1,64,4096]}, "cancelFrontiers":{"const":[0,1,2,5,16,64,128]},
+    "finalReadModes":{"const":["sole","concurrent-pair","queued-alias"]},
+    "documentGeneration":{"const":93}, "revision":{"const":7}, "nodeIds":{"const":[41,9]}, "wireOrder":{"const":[41,9]},
+    "text":{"const":"é"}, "textRepeats":{"const":256}, "copiesOldComponent":{"const":false},
+    "waitsForLiveDocumentOnCancel":{"const":false}, "contendedProgress":{"const":false}, "rejectedOwnerReturned":{"const":true}
+  }
+}

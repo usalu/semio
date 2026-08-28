@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","$defs":{"payload":{"type":"object","required":["status"],"properties":{"status":{"enum":["pending","running","succeeded","failed","canceled"]}}}},"allOf":[{"$ref":"#/$defs/payload"}],"unevaluatedProperties":false}

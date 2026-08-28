@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "current", "feedback", "kinds", "reservation", "retirementGrants", "liveGuestReceiverProven", "semanticPublicationProven"],
+  "properties": {
+    "version": {"const": 1},
+    "current": {"$ref": "#/definitions/identity"},
+    "feedback": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "object", "additionalProperties": false, "required": ["name", "changes", "accepted"], "properties": {"name": {"type": "string", "minLength": 1}, "changes": {"$ref": "#/definitions/fields"}, "accepted": {"type": "boolean"}}}},
+    "kinds": {"const": ["ack", "rejected"]},
+    "reservation": {"const": {"zeroBytesPreservesSequence": true, "occupiedTargetPreservesSource": true, "sequenceExhaustionCapturesSources": 0, "maximumSequence": "18446744073709551615", "maximumPlacementBytes": 32768}},
+    "retirementGrants": {"const": [1, 64, 4096]},
+    "liveGuestReceiverProven": {"const": false},
+    "semanticPublicationProven": {"const": false}
+  },
+  "definitions": {
+    "positive": {"$ref": "semio.actor.instance-lifetime-close.v1#/definitions/u64"},
+    "fields": {"type": "object", "additionalProperties": false, "properties": {"activationGeneration": {"$ref": "#/definitions/positive"}, "instanceId": {"type": "integer", "minimum": 0, "maximum": 4294967295}, "guestLifetime": {"$ref": "#/definitions/positive"}, "patchSequence": {"$ref": "#/definitions/positive"}, "surface": {"type": "string", "minLength": 1}, "revision": {"$ref": "#/definitions/positive"}}},
+    "identity": {"type": "object", "additionalProperties": false, "required": ["activationGeneration", "instanceId", "guestLifetime", "patchSequence", "surface", "revision"], "properties": {"activationGeneration": {"$ref": "#/definitions/positive"}, "instanceId": {"$ref": "#/definitions/fields/properties/instanceId"}, "guestLifetime": {"$ref": "#/definitions/positive"}, "patchSequence": {"$ref": "#/definitions/positive"}, "surface": {"$ref": "#/definitions/fields/properties/surface"}, "revision": {"$ref": "#/definitions/positive"}}}
+  }
+}

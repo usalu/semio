@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"node_id":{"type":"string"},"port_id":{"type":"string"}},"required":["node_id","port_id"],"additionalProperties":false}

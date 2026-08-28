@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ScaleObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newScale"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newScale": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

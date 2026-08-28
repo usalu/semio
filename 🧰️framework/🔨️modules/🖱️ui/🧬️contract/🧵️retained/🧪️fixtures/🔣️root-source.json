@@ -1,0 +1,1 @@
+{"version":1,"labels":["First view","Zweite Ansicht"],"nodes":[{"id":9007199254740991,"text":"Old / Alt 😀"},{"id":1099511627776,"text":"New / Neu ä"}],"cancelled":"Not published / Nicht veröffentlicht","laws":["stable-root-view","exact-native-publication","independent-consumers","cancel-keeps-visible-root","root-replacement","close-waits-unmount"]}

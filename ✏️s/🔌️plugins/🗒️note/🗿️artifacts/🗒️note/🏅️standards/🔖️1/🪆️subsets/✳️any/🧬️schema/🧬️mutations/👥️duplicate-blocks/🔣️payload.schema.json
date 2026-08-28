@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DuplicateBlocks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceIds",
+    "blocks"
+  ],
+  "properties": {
+    "sourceIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NoteBlockNode"
+      }
+    }
+  },
+  "$defs": {
+    "NoteBlockNode": {
+      "title": "NoteBlockNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

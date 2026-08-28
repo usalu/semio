@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.byte-page.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumBytes",
+    "blockCount",
+    "wordsPerBlock",
+    "wordByteOrder",
+    "canonicalTailByte",
+    "bytePattern",
+    "vectors",
+    "invalidLengths",
+    "invalidWords",
+    "padding",
+    "ownership"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "const": 4096
+    },
+    "blockCount": {
+      "const": 64
+    },
+    "wordsPerBlock": {
+      "const": 8
+    },
+    "wordByteOrder": {
+      "const": "little-endian"
+    },
+    "canonicalTailByte": {
+      "const": 0
+    },
+    "bytePattern": {
+      "const": {
+        "multiplier": 37,
+        "addend": 11,
+        "modulus": 256
+      }
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "length",
+          "firstWord",
+          "lastUsedWord"
+        ],
+        "properties": {
+          "length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4096
+          },
+          "firstWord": {
+            "$ref": "semio.actor.byte-page.v1#/definitions/word"
+          },
+          "lastUsedWord": {
+            "$ref": "semio.actor.byte-page.v1#/definitions/word"
+          }
+        }
+      }
+    },
+    "invalidLengths": {
+      "const": [
+        -1,
+        4097,
+        0.5
+      ]
+    },
+    "invalidWords": {
+      "const": [
+        "-1",
+        "+1",
+        "00",
+        "01",
+        "1.0",
+        "1e0",
+        "18446744073709551616"
+      ]
+    },
+    "padding": {
+      "const": [
+        {
+          "length": 0,
+          "byteOffset": 0,
+          "value": 1,
+          "accepted": false
+        },
+        {
+          "length": 1,
+          "byteOffset": 1,
+          "value": 1,
+          "accepted": false
+        },
+        {
+          "length": 7,
+          "byteOffset": 7,
+          "value": 1,
+          "accepted": false
+        },
+        {
+          "length": 8,
+          "byteOffset": 8,
+          "value": 1,
+          "accepted": false
+        },
+        {
+          "length": 4095,
+          "byteOffset": 4095,
+          "value": 1,
+          "accepted": false
+        },
+        {
+          "length": 4096,
+          "byteOffset": 4095,
+          "value": 1,
+          "accepted": true
+        }
+      ]
+    },
+    "ownership": {
+      "const": {
+        "confersAuthority": false,
+        "buildsPageArray": false,
+        "readsUnknownKeys": false,
+        "copyMaximumBytes": 4096
+      }
+    }
+  }
+}

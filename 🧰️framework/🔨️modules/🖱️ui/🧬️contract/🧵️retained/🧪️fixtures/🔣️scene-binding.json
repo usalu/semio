@@ -1,0 +1,11 @@
+{
+  "version":1,
+  "indexIds":[1099511627776,9007199254740991],
+  "cases":[
+    {"name":"text-editor","kind":"text-editor","schema":"text-editor@1","packet":[13,1,6,6,98,117,102,102,101,114,6,0],"diagnostic":null},
+    {"name":"bad-packet","kind":"text-editor","schema":"text-editor@1","packet":[13,1],"diagnostic":"invalid-scene-packet"},
+    {"name":"bad-version","kind":"text-editor","schema":"text-editor@99","packet":[13,1,6,6,98,117,102,102,101,114,6,0],"diagnostic":"unsupported-scene-schema"},
+    {"name":"missing-buffer","kind":"text-editor","schema":"text-editor@1","packet":[13,0],"diagnostic":"invalid-scene-fields"}
+  ],
+  "laws":["node-and-scene-share-one-issued-root","diagnostics-retain-original-node","unchanged-component-reuses-prepared-scene","changed-component-never-reuses-stale-projection","field-reader-outlives-binding","cancel-every-phase-preserves-source","non-surface-needs-no-scene","no-prepared-owner-exposed","typed-source-constructor-requires-private-mint"]
+}

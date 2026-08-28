@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform — the EPW EnergyPlus `any` mutation vocabulary and the reference implementation that exercises it. An EnergyPlus weather file is 8 fixed header lines followed by 8,760 comma-separated hourly records, so the already-linked `csv` crate is registered here under a distinct id/capability for the RECORD half only (per the wave 7 fleet brief's oracle-registration gotcha: reusing the shared csv-rfc4180 entry would fail the contract with oracle-capability-mismatch, and would also misrepresent what csv actually validates for this format). `csv` is genuinely independent for the 35-column hourly records; the 8 header lines (LOCATION, DESIGN CONDITIONS, TYPICAL/EXTREME PERIODS, GROUND TEMPERATURES, HOLIDAYS/DAYLIGHT SAVINGS, COMMENTS 1, COMMENTS 2, DATA PERIODS) are EnergyPlus-specific grammar that no third-party crate on crates.io validates -- `epw-rs` was surveyed and rejected: it is alpha-quality and read-only (no writer), which would rule out differential coverage anyway. Record-kind mutations (`no-mutation`, `insert-record`, `remove-record`, `set-record-field`) are typed `@mode-differential`: `csv` genuinely reads AND writes that half. Header-kind mutations (`set-snapshot`, `set-location`, `set-design-conditions`, `set-typical-extreme-periods`, `set-ground-temperatures`, `set-holidays-dst`, `set-comments-1`, `set-comments-2`, `set-data-periods`) are typed `@mode-property`: the oracle module writes the header bytes itself (hand-rolled, independent of the subject crate) and reads them back with `csv`'s generic comma-grid reader for structural evidence only, never claiming an independent second PRODUCER for header semantics it does not have.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/BurntSushi/rust-csv",
       "rationale": "The reference RFC 4180-shaped CSV reader/writer of the Rust ecosystem, read/written with `has_headers(false)` and `flexible(true)` exactly as the sibling `csv-rfc4180-mutate` entry does. Genuinely authoritative for EPW's 8,760 comma-separated hourly records (35 columns each, real per-record information the way this subset's own schema already models it) — used both as the independent PRODUCER for record-kind mutations and as the independent READER for the semantic projection. It carries no knowledge of EnergyPlus header grammar (LOCATION/DESIGN CONDITIONS/GROUND TEMPERATURES/DATA PERIODS field meanings), so header-kind mutations are registered against this same oracle for its reading role only and typed `@mode-property` rather than `@mode-differential` in the case's feature file — see that file's own description for the full honesty accounting. `epw-rs` (the only EPW-specific crate found) was surveyed and NOT registered: alpha-quality and read-only, which the fleet brief's §6 rules out for a differential producer.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "csv",
+        "implementation": "csv Rust RFC 4180 reader/writer",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

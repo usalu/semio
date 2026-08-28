@@ -95,6 +95,12 @@ export type TestTaxonomy = Readonly<{
   testSchemaLocation: TestLocation;
   testContributionDirName: string;
   testContributionFileKindId: string;
+  /** 🔬️ Directory name of an owner's external measurement probes — test-owned by what it is. */
+  testProbeDirName: string;
+  /** 🏭️ Directory name of an owner's third-party fixture generator — test-owned by what it is. */
+  testGeneratorDirName: string;
+  /** 🏭️ Directory name of an owner's production mutation bridge. Production-side by design: it links the real implementation so `listMutations` answers from dispatch. */
+  testBridgeDirName: string;
   testDomainPath: string;
   testPhases: readonly string[];
   testLevellessPhases: readonly string[];
@@ -107,7 +113,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionFileKindId", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
+  const required = ["fileKinds", "pathExclusions", "testsDirName", "testFixturesDirName", "testFeatureFileKindId", "testCaseSlugPattern", "testAdapterFileKinds", "testImplementationIds", "testOutputCacheDirName", "testOutputMarkerFileKindId", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryLocation", "testSchemaLocation", "testContributionDirName", "testContributionFileKindId", "testProbeDirName", "testGeneratorDirName", "testBridgeDirName", "testDomainPath", "testPhases", "testLevellessPhases", "testMutationVocabularyDirName"];
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
   const value = Object.fromEntries(required.map((key) => [key, parsed[key]])) as unknown as TestTaxonomy;
@@ -141,6 +147,14 @@ export function testAdapterFilenames(taxonomy: TestTaxonomy): Readonly<Record<st
  * only by a CI path filter. This function names no area; which ones are excluded is vocabulary. */
 export function isExcludedTestPath(repoRoot: string, relPath: string): boolean {
   const normalized = relPath.split(sep).join("/");
+  // 🚫️The repository's OWN meta directory is excluded structurally, not by a listed path: it holds
+  // tickets, caches, notes and metrics, and a ticket folder routinely contains a SCRATCH COPY of a
+  // plugin subtree. Those copies were discovered as real owners and real test cases — at one point
+  // the only four cases discovery could find were scratch copies inside one ticket, while every
+  // committed case was invisible. It is derived from `getRepoMetaDir` rather than spelled here so
+  // relocating the cache is still a vocabulary change.
+  const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
+  if (metaRoot.length > 0 && !metaRoot.startsWith("..") && (normalized === metaRoot || normalized.startsWith(`${metaRoot}/`))) return true;
   return Object.values(testTaxonomy(repoRoot).pathExclusions).some(({ path }) => normalized === path.replace(/\/$/, "") || normalized.startsWith(path) || normalized.includes(`/${path}`));
 }
 
@@ -1382,6 +1396,14 @@ function bundleBreach(scope: string, state: "source" | "projected"): BreachRecor
 export function mutationVectorRegistryBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const contribution of registry.contributions) {
+    // 🧾️The represented sets are OWNER-scoped, not catalog-scoped. An owner may declare several
+    // catalogs over ONE `🧬️mutations` tree — `🎚️config` declares three, for opening, merge-policy and
+    // identity — and a per-catalog sweep then reported every OTHER catalog's vectors as unregistered.
+    // Five real scenarios became ten spurious findings that way: the evidence was registered, just not
+    // by the catalog that happened to be walking.
+    const representedSource = new Set<string>();
+    const representedProjected = new Set<string>();
+    const sweepRoots: { sourceMutationRoot: string; projectedProfileRoot: string }[] = [];
     for (const catalog of contribution.mutationCatalogs) {
       const profileProblems = mutationCatalogProblems(catalog, contribution.owner);
       for (const problem of profileProblems) breaches.push(breach("testing/contract", "mutation-vector-catalog-invalid", contribution.manifestPath, problem, "The physical vector registry is a strict owner-scoped contract.", "Correct the catalog record without aliases or optional legacy fields."));
@@ -1394,8 +1416,7 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
         markerIndex < 0
           ? join(repoRoot, contribution.owner, "🧪️tests", "🪆️")
           : join(repoRoot, contribution.owner.slice(0, markerIndex), "🧪️tests", `🪆️${(catalog.standardDirectoryName ?? "").slice("🔖️".length)}-${(catalog.subsetDirectoryName ?? "").slice("✳️".length)}`);
-      const representedSource = new Set<string>();
-      const representedProjected = new Set<string>();
+      sweepRoots.push({ sourceMutationRoot, projectedProfileRoot });
 
       for (const vector of catalog.vectors) {
         const sourceTests = join(sourceMutationRoot, vector.sourceMutationDirectoryName, "🧪️tests");
@@ -1439,17 +1460,25 @@ export function mutationVectorRegistryBreaches(repoRoot: string, registry: Oracl
         }
       }
 
-      for (const mutationDirectoryName of childDirectories(sourceMutationRoot)) {
-        const tests = join(sourceMutationRoot, mutationDirectoryName, "🧪️tests");
+    }
+
+    // 🧾️One sweep per owner, after every catalog has contributed what it registers. Each physical root
+    // is visited once however many catalogs share it, so a scenario is reported as unregistered only
+    // when NO catalog of this owner claims it.
+    for (const root of new Map(sweepRoots.map((entry) => [entry.sourceMutationRoot, entry])).values()) {
+      for (const mutationDirectoryName of childDirectories(root.sourceMutationRoot)) {
+        const tests = join(root.sourceMutationRoot, mutationDirectoryName, "🧪️tests");
         for (const scenario of childDirectories(tests)) {
           const key = `${mutationDirectoryName}/${scenario}`;
           if (!representedSource.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", relative(repoRoot, join(tests, scenario)).split(sep).join("/"), `Physical source vector ${key} is not registered`, "Unregistered physical evidence cannot be projected or verified deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
         }
       }
-      for (const mutationDirectoryName of childDirectories(projectedProfileRoot)) {
-        for (const scenario of childDirectories(join(projectedProfileRoot, mutationDirectoryName))) {
+    }
+    for (const root of new Map(sweepRoots.map((entry) => [entry.projectedProfileRoot, entry])).values()) {
+      for (const mutationDirectoryName of childDirectories(root.projectedProfileRoot)) {
+        for (const scenario of childDirectories(join(root.projectedProfileRoot, mutationDirectoryName))) {
           const key = `${mutationDirectoryName}/${scenario}`;
-          if (!representedProjected.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", relative(repoRoot, join(projectedProfileRoot, key)).split(sep).join("/"), `Physical projected vector ${key} is not registered`, "Unregistered physical evidence cannot be verified or rolled back deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
+          if (!representedProjected.has(key)) breaches.push(breach("testing/contract", "mutation-vector-unregistered", relative(repoRoot, join(root.projectedProfileRoot, key)).split(sep).join("/"), `Physical projected vector ${key} is not registered`, "Unregistered physical evidence cannot be verified or rolled back deterministically.", "Add its exact mutation and canonical scenario identity to vectors."));
         }
       }
     }
@@ -1647,9 +1676,18 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
   // made a directory production source the moment its JSON was absent or malformed — so an owner
   // adding one would see its own reference libraries reported as a production dependency.
-  const contributionDir = testTaxonomy(repoRoot).testContributionDirName;
-  const inContributionDir = (rel: string): boolean => rel.split("/").includes(contributionDir);
-  const isTestOwned = (rel: string): boolean => caseDirs.has(rel) || inContributionDir(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
+  // 🧩️A contribution, a probe and a fixture generator are all test-owned by WHAT THEY ARE. All three
+  // link a reference library on purpose; a scan that only knew the first reported the test platform's
+  // own measurement tools as a production dependency on the library they exist to invoke.
+  const taxonomy = testTaxonomy(repoRoot);
+  const testOwnedDirs = [taxonomy.testContributionDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName];
+  const inContributionDir = (rel: string): boolean => rel.split("/").some((segment) => testOwnedDirs.includes(segment));
+  // 🚫️The repository's OWN meta directory — tickets, caches, notes, metrics — is never production
+  // source. Walking into it reported a scratch file inside somebody's ticket folder as a production
+  // import of a registered oracle, which is a finding about a scratch file, not about what ships.
+  const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
+  const isRepositoryMeta = (rel: string): boolean => rel === metaRoot || rel.startsWith(`${metaRoot}/`);
+  const isTestOwned = (rel: string): boolean => isRepositoryMeta(rel) || caseDirs.has(rel) || inContributionDir(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
   // 🔒️Recorded, shrink-only production debt: a package that was ALREADY production-reachable before
   // it was registered as an oracle. The path is named in the registry entry so the debt is visible
   // in the report instead of silently excused, and `dependency` prints it every run.
@@ -1780,6 +1818,11 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
     }
   }
   breaches.push(...mutationInventoryBreaches(repoRoot, registry));
+  breaches.push(...capabilityManifestBreaches(registry));
+  breaches.push(...binaryProtocolDriftBreaches(repoRoot, registry));
+  breaches.push(...stubSerializerBreaches(repoRoot));
+  breaches.push(...reimplementationOracleBreaches(repoRoot, registry));
+  breaches.push(...registryRecordBreaches(registry));
   breaches.push(...noOracleMisuseBreaches(registry));
   breaches.push(...fixtureProvenanceBreaches(repoRoot, registry));
   breaches.push(...isolationBreaches(registry));
@@ -2072,6 +2115,152 @@ export function ratchetDependencies(baseline: readonly ClassifiedDependency[], c
   const productionCount = candidate.filter((entry) => entry.productionReachable).length;
   const baselineProductionCount = baseline.filter((entry) => entry.productionReachable).length;
   return { ok: newProduction.length === 0 && unregisteredTestDeps.length === 0 && productionCount <= baselineProductionCount, newProduction, unregisteredTestDeps, removed, productionCount, baselineProductionCount };
+}
+
+/**
+ * 🔎️ Scans the LIVE tree for every externally-sourced dependency each ecosystem declares.
+ *
+ * The ratchet exists to refuse a NEW production-reachable external dependency, and it was being fed
+ * the committed baseline as BOTH of its arguments — so `newProduction` and `unregisteredTestDeps` were
+ * provably always empty whatever a developer added to a `package.json`, a `Cargo.toml`, a `go.mod` or
+ * a `.csproj`. The function itself is sound; it simply had nothing to compare against. This produces
+ * the missing half.
+ *
+ * A declaration is TEST-OWNED when the file declaring it lives in a test-owned location — a case
+ * directory, a `🧪️oracle` / `🔬️probes` / `🏭️generator` directory, the test domain itself, or the
+ * repository's own meta directory. Everything else is production.
+ */
+export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegistry = loadOracleRegistry(repoRoot)): ClassifiedDependency[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const testOwnedDirs = [taxonomy.testContributionDirName, taxonomy.testProbeDirName, taxonomy.testGeneratorDirName, taxonomy.testsDirName];
+  const metaRoot = relative(repoRoot, getRepoMetaDir(repoRoot)).split(sep).join("/");
+  const isTestOwned = (rel: string): boolean => rel === metaRoot || rel.startsWith(`${metaRoot}/`) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`) || rel.split("/").some((segment) => testOwnedDirs.includes(segment));
+  const registered = new Set(registry.oracles.flatMap((entry) => oraclePackages(entry)));
+  const probePackages = new Set(registry.probes.map((probe) => probe.package));
+
+  const found = new Map<string, { entry: ClassifiedDependency; production: boolean }>();
+  const record = (ecosystem: DependencyEcosystem, name: string, version: string, user: string, production: boolean): void => {
+    if (name.length === 0) return;
+    const id = `${ecosystem}:${name}`;
+    const previous = found.get(id);
+    // 🔒️Production wins over test: one production declaration makes the package production-reachable
+    // however many test-owned files also declare it.
+    const isProduction = production || (previous?.production ?? false);
+    const kinds: ClassifiedDependency["kinds"] = isProduction ? ["production-runtime"] : registered.has(name) || probePackages.has(name) ? ["test-oracle"] : ["test-runner"];
+    found.set(id, {
+      production: isProduction,
+      entry: {
+        ecosystem,
+        name,
+        version: previous?.entry.version ?? version,
+        kinds,
+        users: [...new Set([...(previous?.entry.users ?? []), user])].sort(),
+        productionReachable: isProduction,
+        oracleIds: registered.has(name) ? registry.oracles.filter((oracle) => oraclePackages(oracle).includes(name)).map((oracle) => oracle.id).sort() : undefined,
+      },
+    });
+  };
+
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    const production = !isTestOwned(rel);
+    for (const name of readdirSync(abs, { withFileTypes: true })) {
+      if (!name.isFile()) continue;
+      const filePath = `${rel}/${name.name}`;
+      let source: string;
+      try {
+        source = readFileSync(join(repoRoot, filePath), "utf8");
+      } catch {
+        continue;
+      }
+      if (name.name === "package.json") {
+        try {
+          const parsed = JSON.parse(source) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+          for (const [dependency, version] of Object.entries(parsed.dependencies ?? {})) if (!version.startsWith("workspace:") && !version.startsWith("file:") && !version.startsWith("link:")) record("js", dependency, version, filePath, production);
+          for (const [dependency, version] of Object.entries(parsed.devDependencies ?? {})) if (!version.startsWith("workspace:") && !version.startsWith("file:") && !version.startsWith("link:")) record("js", dependency, version, filePath, false);
+        } catch {
+          /* 🧭️A malformed package.json is somebody else's gate to report. */
+        }
+        continue;
+      }
+      if (name.name === "Cargo.toml") {
+        // 🦀️Only registry crates count. THREE things are not external distributions and each was
+        // being counted as one: a `path = "…"` dependency is in-repository source; a
+        // `{ workspace = true }` dependency resolves through the root manifest, which declares the
+        // repository's own crates by path; and the keys of a `[[bench]]`/`[[bin]]` table are not
+        // dependencies at all — a `^\[([^\]]+)\]$` heading match cannot match `[[bench]]`, so the
+        // section silently stayed on `dependencies` and `harness`, `name` and `path` were reported as
+        // crates. Any line opening a bracket now resets the section.
+        let section = "";
+        for (const line of source.split(/\r?\n/)) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith("[")) {
+            section = trimmed.match(/^\[([^\]]+)\]$/)?.[1] ?? "";
+            continue;
+          }
+          if (!/^(dependencies|build-dependencies|dev-dependencies|workspace\.dependencies|target\..+\.dependencies)$/.test(section)) continue;
+          const declaration = line.match(/^\s*([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
+          if (declaration === null) continue;
+          const value = declaration[2]!;
+          if (/\bpath\s*=/.test(value) || /\bworkspace\s*=\s*true/.test(value)) continue;
+          const version = value.match(/"([^"]+)"/)?.[1] ?? "*";
+          record("rust", declaration[1]!, version, filePath, production && section !== "dev-dependencies");
+        }
+        continue;
+      }
+      if (name.name === "go.mod") {
+        for (const line of source.split(/\r?\n/)) {
+          const declaration = line.trim().match(/^([a-z0-9.\-]+\/[^\s]+)\s+(v[^\s]+)/);
+          if (declaration !== null && declaration[1]!.includes(".")) record("go", declaration[1]!, declaration[2]!, filePath, production);
+        }
+        continue;
+      }
+      if (name.name.endsWith(".csproj")) {
+        for (const declaration of source.matchAll(/<PackageReference\s+Include="([^"]+)"(?:\s+Version="([^"]+)")?/g)) {
+          record("dotnet", declaration[1]!, declaration[2] ?? "*", filePath, production && !/test/i.test(name.name));
+        }
+        continue;
+      }
+      if (name.name === "requirements.txt") {
+        for (const line of source.split(/\r?\n/)) {
+          const trimmed = line.trim();
+          if (trimmed.length === 0 || trimmed.startsWith("#") || trimmed.startsWith("-")) continue;
+          const declaration = trimmed.match(/^([A-Za-z0-9_.\-]+)\s*(?:\[[^\]]*\])?\s*(?:[=><~!]=+\s*([^\s;#]+))?/);
+          if (declaration !== null && declaration[1]!.length > 1) record("python", declaration[1]!, declaration[2] ?? "*", filePath, production);
+        }
+        continue;
+      }
+      if (name.name === "pyproject.toml") {
+        // 🐍️ONLY the `dependencies = [ … ]` array. Reading every `key = value` line reported
+        // `name`, `version`, `requires-python` and `package` as production dependencies — a parser
+        // that finds four packages in a file declaring none is worse than no parser.
+        let inArray = false;
+        for (const line of source.split(/\r?\n/)) {
+          const trimmed = line.trim();
+          if (/^(dependencies|optional-dependencies\.[A-Za-z0-9_-]+)\s*=\s*\[/.test(trimmed)) {
+            inArray = true;
+            if (trimmed.endsWith("]")) inArray = false;
+            for (const quoted of trimmed.matchAll(/"([^"]+)"/g)) {
+              const declaration = quoted[1]!.match(/^([A-Za-z0-9_.\-]+)\s*(?:\[[^\]]*\])?\s*(?:[=><~!]=+\s*([^\s;]+))?/);
+              if (declaration !== null) record("python", declaration[1]!, declaration[2] ?? "*", filePath, production);
+            }
+            continue;
+          }
+          if (!inArray) continue;
+          if (trimmed.startsWith("]")) {
+            inArray = false;
+            continue;
+          }
+          for (const quoted of trimmed.matchAll(/"([^"]+)"/g)) {
+            const declaration = quoted[1]!.match(/^([A-Za-z0-9_.\-]+)\s*(?:\[[^\]]*\])?\s*(?:[=><~!]=+\s*([^\s;]+))?/);
+            if (declaration !== null) record("python", declaration[1]!, declaration[2] ?? "*", filePath, production);
+          }
+        }
+      }
+    }
+    return "enter";
+  });
+  return [...found.values()].map((row) => row.entry).sort((a, b) => `${a.ecosystem}:${a.name}`.localeCompare(`${b.ecosystem}:${b.name}`));
 }
 
 /** 🐹️ Production dependency closure of a Go module — `go list` deps of the non-test build. */
@@ -2432,12 +2621,94 @@ export type SubsetTarget = Readonly<{
   selector?: Readonly<{ type: "entity-id" | "entity-path" | "entity-set" | "whole-subset"; value: string | readonly string[] }>;
 }>;
 
-/** 🚫️ Subset ids that name "everything" rather than a semantic scope. v2 refuses all of them. */
+/** 🚫️ Subset ids that name "everything" rather than a semantic scope. */
 export const WILDCARD_SUBSET_IDS: readonly string[] = ["*", "any", "all", "unconstrained", ""];
 
-/** 🚫️ Whether a subset id is a wildcard rather than a smallest semantic scope. */
+/** 🚫️ Whether a subset id SPELLS a wildcard. Whether it IS one depends on what else the artifact declares — see `isWildcardSubsetFor`. */
 export function isWildcardSubset(subset: string): boolean {
   return WILDCARD_SUBSET_IDS.includes(subset.trim().toLowerCase());
+}
+
+/**
+ * 🪆️ What subsets one artifact/standard actually declares, read from its own
+ * `🪆️subsets/<taxonomy filename>` component. Cached, because the gate asks per mutation.
+ */
+const declaredSubsetsCache = new Map<string, ReadonlyMap<string, readonly string[]>>();
+
+export function declaredSubsets(repoRoot: string): ReadonlyMap<string, readonly string[]> {
+  const cached = declaredSubsetsCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const found = new Map<string, readonly string[]>();
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    if (basename(abs) !== "🪆️subsets") return "enter";
+    for (const candidate of [filename, "🔣️component.json"]) {
+      const manifest = join(abs, candidate);
+      if (!existsSync(manifest)) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(manifest, "utf8")) as { artifact?: string; standard?: string; subsets?: Record<string, unknown> };
+        if (typeof parsed.artifact === "string") found.set(`${parsed.artifact}@${parsed.standard ?? ""}`, Object.keys(parsed.subsets ?? {}));
+      } catch {
+        /* 🧭️A malformed subsets component is the taxonomy phase's finding, not this one's. */
+      }
+      break;
+    }
+    return "skip";
+  });
+  declaredSubsetsCache.set(repoRoot, found);
+  return found;
+}
+
+/** 🪆️ Whether an artifact has RECORDED that it genuinely has one scope, rather than merely not having been split. */
+export function subsetPolicyIsSingle(repoRoot: string, artifact: string, standard: string): boolean {
+  return declaredSubsetPolicies(repoRoot).get(`${artifact}@${standard}`) === "single";
+}
+
+const declaredSubsetPolicyCache = new Map<string, ReadonlyMap<string, string>>();
+
+/** 🪆️ The `subsetPolicy` each artifact records beside its subsets, if any. */
+export function declaredSubsetPolicies(repoRoot: string): ReadonlyMap<string, string> {
+  const cached = declaredSubsetPolicyCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const found = new Map<string, string>();
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    if (basename(abs) !== "🪆️subsets") return "enter";
+    for (const candidate of [filename, "🔣️component.json"]) {
+      const manifestPath = join(abs, candidate);
+      if (!existsSync(manifestPath)) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as { artifact?: string; standard?: string; subsetPolicy?: string };
+        if (typeof parsed.artifact === "string" && typeof parsed.subsetPolicy === "string") found.set(`${parsed.artifact}@${parsed.standard ?? ""}`, parsed.subsetPolicy);
+      } catch {
+        /* 🧭️Reported by the taxonomy phase. */
+      }
+      break;
+    }
+    return "skip";
+  });
+  declaredSubsetPolicyCache.set(repoRoot, found);
+  return found;
+}
+
+/**
+ * 🚫️ Whether a subset is a wildcard IN ITS ARTIFACT'S CONTEXT.
+ *
+ * `✳️any` means two different things depending on what sits beside it. For `s.stdio.step@ap214`, which
+ * declares `cc1`…`cc6`, it lumps seven conformance classes into one bucket and hides which of them a
+ * mutation was actually exercised against — a genuine wildcard. For the 82 artifacts whose ONLY
+ * declared subset is `*`, there is nothing narrower to be scoped to, and calling it a wildcard would
+ * demand a split that the format itself does not have. Refusing the spelling unconditionally produced
+ * 82 findings nobody could act on, which is how a gate teaches people to ignore it.
+ */
+export function isWildcardSubsetFor(repoRoot: string, artifact: string, standard: string, subset: string): boolean {
+  if (!isWildcardSubset(subset)) return false;
+  const siblings = declaredSubsets(repoRoot).get(`${artifact}@${standard}`) ?? [];
+  return siblings.filter((candidate) => !isWildcardSubset(candidate)).length > 0;
 }
 
 /** 🪆️ Renders a subset target as the stable coordinate every report row and cache key is keyed by. */
@@ -2540,7 +2811,12 @@ export function mutationManifestProblems(value: unknown, owner?: string): string
     if (typeof value[key] !== "string" || (value[key] as string).length === 0) problems.push(`${key} must be a non-empty string`);
   }
   const subset = typeof value.subset === "string" ? value.subset : "";
-  if (isWildcardSubset(subset)) problems.push(`subset ${JSON.stringify(subset)} is a wildcard — a mutation must be owned by the smallest semantic subset`);
+  // 🪆️Whether a wildcard SPELLING is actually a wildcard depends on what else the artifact declares,
+  // which this record-level validator cannot see — so it is decided by `mutationInventoryBreaches`,
+  // which can. Refusing the spelling here made a manifest unrepresentable for the 82 artifacts whose
+  // only declared subset IS `*`, and an unrepresentable manifest is an unmeasured vocabulary: exactly
+  // the outcome v2 exists to remove.
+  if (subset.length === 0) problems.push("subset must be a non-empty string");
   const coordinates = owner === undefined ? null : subsetCoordinatesOfOwner(owner);
   if (coordinates !== null) {
     if (typeof value.standardDirectoryName === "string" && value.standardDirectoryName !== coordinates.standardDirectoryName) problems.push("standardDirectoryName does not match the owner path");
@@ -2562,7 +2838,6 @@ export function mutationManifestProblems(value: unknown, owner?: string): string
     if (seen.has(id)) problems.push(`mutations[${index}].id ${id} is duplicated — a mutation has exactly one owner`);
     seen.add(id);
     if (typeof raw.capability !== "string" || !CAPABILITY_ID_RE.test(raw.capability)) problems.push(`mutations[${index}].capability must be a dotted/kebab id`);
-    if (typeof raw.subset === "string" && isWildcardSubset(raw.subset)) problems.push(`mutations[${index}].subset ${JSON.stringify(raw.subset)} is a wildcard`);
     if (raw.compound !== undefined && (!Array.isArray(raw.compound) || raw.compound.length < 2)) problems.push(`mutations[${index}].compound must name at least two subsets`);
     if (!Array.isArray(raw.outcomes) || raw.outcomes.length === 0 || raw.outcomes.some((outcome) => !(MUTATION_OUTCOME_CLASSES as readonly string[]).includes(String(outcome)))) {
       problems.push(`mutations[${index}].outcomes must be a non-empty array of ${MUTATION_OUTCOME_CLASSES.join("|")}`);
@@ -2739,7 +3014,7 @@ export function contentDigestOf(absPath: string): string {
 }
 
 /** 🧾️ Validates one fixture manifest strictly. A fixture with incomplete provenance is a contract failure. */
-export function fixtureManifestProblems(value: unknown): string[] {
+export function fixtureManifestProblems(value: unknown, repoRoot?: string): string[] {
   if (!isPlainObject(value)) return ["fixture manifest is not an object"];
   const problems: string[] = [];
   if (value.schema !== "semio.repository-test.fixture/v2") problems.push('schema must be "semio.repository-test.fixture/v2"');
@@ -2749,7 +3024,15 @@ export function fixtureManifestProblems(value: unknown): string[] {
   else {
     for (const key of ["artifact", "standard", "subset"] as const) if (typeof (value.target as Record<string, unknown>)[key] !== "string") problems.push(`target.${key} must be a string`);
     const subset = String((value.target as Record<string, unknown>).subset ?? "");
-    if (isWildcardSubset(subset)) problems.push(`target.subset ${JSON.stringify(subset)} is a wildcard`);
+    // 🪆️Settled the same way a MUTATION's scope is, when the repository is available to ask. A subset
+    // literally named `any` is a hard breach only when the artifact has real sibling subsets to be
+    // scoped against; an artifact with exactly one subset is not "everything", it is a naming choice,
+    // and `subsetPolicy: "single"` settles it. Judging fixtures by the bare spelling while judging
+    // mutations by the resolved rule made 27 fixtures of genuinely single-subset owners unregisterable.
+    const artifact = String((value.target as Record<string, unknown>).artifact ?? "");
+    const standard = String((value.target as Record<string, unknown>).standard ?? "");
+    const wildcard = repoRoot === undefined ? isWildcardSubset(subset) : isWildcardSubsetFor(repoRoot, artifact, standard, subset);
+    if (wildcard) problems.push(`target.subset ${JSON.stringify(subset)} is a wildcard`);
   }
   if (value.outcome !== undefined && !(MUTATION_OUTCOME_CLASSES as readonly string[]).includes(String(value.outcome))) problems.push(`outcome must be one of ${MUTATION_OUTCOME_CLASSES.join("|")}`);
   if (!isPlainObject(value.units) || typeof value.units.length !== "string" || typeof value.units.angle !== "string") problems.push("units must declare length and angle");
@@ -2815,6 +3098,665 @@ export function fixtureBundleDigest(manifest: FixtureManifest): string {
   return setDigest(manifest.files.map((file) => [file.role, file.sha256] as const));
 }
 //#endregion 🧫️Fixture
+
+//#region 🪪️LeafDescriptor
+/**
+ * 🪪️ One mutation leaf's own declaration, the fourteen-field record the `dsl::Mutations` derive reads
+ * at expansion time from `🧬️mutations/<kind>/<taxonomy json filename>`.
+ *
+ * This is the single source Protocol v2 wanted and could not previously reach. It is DECLARATIVE and
+ * LANGUAGE-NEUTRAL — a JSON file beside the Rust, read by the derive to generate production
+ * registration — so a manifest built from it is generated from the same record production is, rather
+ * than restated beside it. Crucially it carries `outcomeClasses`, which is the one field a manifest
+ * cannot honestly invent: only the implementation knows which classes a mutation can reach.
+ *
+ * @see 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️component.rs — `parse_mutation_leaf_descriptor`
+ */
+export type MutationLeafDescriptor = Readonly<{
+  schemaVersion: number;
+  owner: string;
+  semanticKind: string;
+  displayName: string;
+  emoji: string;
+  aggregateVariant: string;
+  payloadSchema: string;
+  textOpcode: string | null;
+  binaryTag: number | null;
+  invertibility: "self" | "explicit-mutation" | "plan" | "non-invertible";
+  diffParticipation: "detect" | "apply-only" | "plan" | "none";
+  outcomeClasses: readonly string[];
+  composition: "atomic" | "composite";
+  requiredLanguageSurfaces: readonly string[];
+}>;
+
+/** 🎯️ Maps the implementation's outcome vocabulary onto the protocol's declared classes. */
+export function outcomeClassesOf(descriptor: MutationLeafDescriptor): MutationOutcomeClass[] {
+  // 🎯️`Info`/`Warning` are DIAGNOSTIC severities on an outcome, not outcome classes — a mutation that
+  // applies with a warning still applied. `Error`/`Fatal` are the refusal. Collapsing them here is the
+  // one piece of vocabulary translation between the two records, and it is done in one place.
+  const mapped = new Set<MutationOutcomeClass>();
+  for (const raw of descriptor.outcomeClasses) {
+    const value = raw.toLowerCase();
+    if (value === "applied" || value === "info" || value === "warning") mapped.add("applied");
+    else if (value === "error" || value === "fatal" || value === "rejected") mapped.add("rejected");
+    else if ((MUTATION_OUTCOME_CLASSES as readonly string[]).includes(value)) mapped.add(value as MutationOutcomeClass);
+  }
+  if (mapped.size === 0) mapped.add("applied");
+  return [...mapped];
+}
+
+/** 🪪️ Every mutation leaf descriptor beneath one owner, keyed by its semantic kind. */
+/**
+ * 🦠️ Whether a directory under `🧬️mutations` is a MUTATION LEAF rather than a shared facet.
+ *
+ * `💾️binary`, `📝️text` and `🧬️schema` live beside the leaves and are not leaves. Counting them as such
+ * made every owner look permanently undescribed — 21 owners whose every real leaf carried a descriptor
+ * were reported as 4, because three facet directories could never have one.
+ */
+export function isMutationLeafDirectory(repoRoot: string, name: string): boolean {
+  const pattern = (testTaxonomy(repoRoot) as unknown as { mutationDirectoryPattern?: string }).mutationDirectoryPattern;
+  if (typeof pattern === "string") {
+    try {
+      return new RegExp(pattern, "u").test(name);
+    } catch {
+      /* 🧭️Fall through to the structural rule below. */
+    }
+  }
+  return /[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(name) && !["💾️binary", "📝️text", "🧬️schema"].includes(name);
+}
+
+export function readLeafDescriptors(repoRoot: string, owner: string): Map<string, MutationLeafDescriptor> {
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const root = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const found = new Map<string, MutationLeafDescriptor>();
+  if (!existsSync(root)) return found;
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.isSymbolicLink() || !isMutationLeafDirectory(repoRoot, entry.name)) continue;
+    const descriptorPath = join(root, entry.name, filename);
+    if (!existsSync(descriptorPath)) continue;
+    try {
+      const parsed = JSON.parse(readFileSync(descriptorPath, "utf8")) as MutationLeafDescriptor;
+      if (typeof parsed.semanticKind === "string" && Array.isArray(parsed.outcomeClasses)) found.set(parsed.semanticKind, parsed);
+    } catch {
+      /* 🧭️A malformed descriptor is the derive's own gate to report; it fails the build. */
+    }
+  }
+  return found;
+}
+
+/** 🪪️ How many of an owner's mutation leaves carry a descriptor — the ratio that gates generation. */
+export function leafDescriptorCoverage(repoRoot: string, owner: string): { leaves: number; described: number; missing: string[] } {
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const root = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  if (!existsSync(root)) return { leaves: 0, described: 0, missing: [] };
+  const directories = readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name)).map((entry) => entry.name);
+  const missing = directories.filter((name) => !existsSync(join(root, name, filename)));
+  return { leaves: directories.length, described: directories.length - missing.length, missing };
+}
+
+/**
+ * 🧬️ Builds a v2 mutation manifest for one owner FROM ITS LEAF DESCRIPTORS.
+ *
+ * Returns `null` when any leaf lacks a descriptor. That refusal is the whole point: a manifest whose
+ * outcome classes were guessed for even one mutation would report coverage of an outcome nobody can
+ * reach, or hide one everybody can — and a partial manifest is worse than none, because the gate would
+ * then measure against a denominator that silently omits the undescribed leaves.
+ */
+export function manifestFromLeafDescriptors(repoRoot: string, owner: string, capability: string): MutationManifest | null {
+  const coordinates = subsetCoordinatesOfOwner(owner);
+  if (coordinates === null) return null;
+  const coverage = leafDescriptorCoverage(repoRoot, owner);
+  if (coverage.leaves === 0 || coverage.missing.length > 0) return null;
+  const descriptors = readLeafDescriptors(repoRoot, owner);
+  if (descriptors.size !== coverage.leaves) return null;
+  const artifact = artifactOfOwner(repoRoot, owner);
+  if (artifact === null) return null;
+  return {
+    schema: "semio.repository-test.mutation-manifest/v2",
+    artifact,
+    standard: coordinates.standard,
+    subset: coordinates.subset,
+    standardDirectoryName: coordinates.standardDirectoryName,
+    subsetDirectoryName: coordinates.subsetDirectoryName,
+    mutations: [...descriptors.values()]
+      .sort((a, b) => a.semanticKind.localeCompare(b.semanticKind))
+      .map((descriptor) => ({
+        id: descriptor.semanticKind,
+        capability,
+        payloadSchema: descriptor.payloadSchema,
+        outcomes: outcomeClassesOf(descriptor),
+        productionDispatch: { operation: descriptor.textOpcode ?? descriptor.semanticKind, bridgeVersion: 1, variant: descriptor.aggregateVariant },
+        oracleRequirements: [{ capability, qualifyingKind: "third-party-library" as const }],
+      })),
+  };
+}
+
+/** 🗿️ The artifact id an owner path belongs to, read from its own 🪆️subsets component. */
+export function artifactOfOwner(repoRoot: string, owner: string): string | null {
+  const marker = owner.indexOf("/🏅️standards/");
+  if (marker < 0) return null;
+  const taxonomy = testTaxonomy(repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  const subsetsRoot = join(repoRoot, owner.slice(0, owner.lastIndexOf("/🪆️subsets/") + "/🪆️subsets".length));
+  for (const candidate of [filename, "🔣️component.json"]) {
+    const manifestPath = join(subsetsRoot, candidate);
+    if (!existsSync(manifestPath)) continue;
+    try {
+      const parsed = JSON.parse(readFileSync(manifestPath, "utf8")) as { artifact?: string };
+      if (typeof parsed.artifact === "string") return parsed.artifact;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+//#endregion 🪪️LeafDescriptor
+
+//#region 🏗️LeafScaffold
+/** 🏗️ One derived descriptor field, with the file and line that justifies it. */
+export type DerivedField = Readonly<{ value: unknown; evidence: string }>;
+
+/** 🏗️ A scaffolded descriptor, or the exact reason one field could not be derived. */
+export type LeafScaffold = Readonly<{ leaf: string; kind: string; descriptor: MutationLeafDescriptor | null; evidence: Readonly<Record<string, string>>; refused: readonly string[] }>;
+
+function readFirst(paths: readonly string[]): { path: string; text: string } | null {
+  for (const path of paths) {
+    if (!existsSync(path)) continue;
+    try {
+      return { path, text: readFileSync(path, "utf8") };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+function titleCase(kind: string): string {
+  return kind.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
+
+function pascalCase(kind: string): string {
+  return kind.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join("");
+}
+
+/**
+ * 🏗️ Derives one mutation leaf's descriptor FROM THE LEAF ITSELF, and refuses any field it cannot
+ * justify with a file and a line.
+ *
+ * The descriptor is the single source a v2 manifest is generated from, and its `outcomeClasses` is the
+ * one field nobody can honestly invent from outside the implementation — so this does not invent it.
+ * It reads the leaf's own `🔺️diff`, where the semantics actually live: `MutationOutcome::error(…)` is a
+ * REJECTED path, `MutationOutcome::empty()` is a NO-OP path, and `MutationOutcome::new(…)` is an
+ * APPLIED path. Same for the rest: the aggregate variant comes from the `pub struct` the leaf declares,
+ * the binary tag from the `record <kind> tag=<n>` line in the owner's binary protocol, the text opcode
+ * from the `#[dsl(keyword = "…")]` attribute. A field with no such line is REFUSED and the leaf is
+ * reported, never guessed — a scaffolded descriptor that guessed one field would put a wrong outcome
+ * class into production registration AND into the coverage denominator at the same time.
+ */
+export function scaffoldLeafDescriptor(repoRoot: string, ownerRel: string, leafDirName: string): LeafScaffold {
+  const taxonomy = testTaxonomy(repoRoot);
+  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const leafAbs = join(vocabulary, leafDirName);
+  const leafRel = `${ownerRel}/🧬️schema/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
+  const kind = leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
+  const emoji = kind.length > 0 ? leafDirName.slice(0, leafDirName.length - kind.length) : "";
+  const evidence: Record<string, string> = {};
+  const refused: string[] = [];
+
+  if (kind.length === 0) refused.push("semanticKind: the directory name does not end in a two-or-more-segment kebab identifier");
+  if (emoji.length === 0) refused.push("emoji: the directory name carries no leading emoji");
+
+  // 🦀️The payload struct, and therefore the aggregate variant, is whatever the leaf actually declares.
+  // 🧭️`🧬️operation` is the same payload directory under a rename a concurrent session is applying; both
+  // spellings are READ here so a half-migrated tree is still measurable. Nothing is written under either.
+  const mutationSource = readFirst([join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🦠️mutation", "🦀️component.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️component.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️component.rs")]);
+  let aggregateVariant = "";
+  if (mutationSource === null) refused.push("aggregateVariant: the leaf declares no Rust source");
+  else {
+    const declared = mutationSource.text.match(/^pub struct ([A-Za-z0-9_]+)/m)?.[1] ?? mutationSource.text.match(/^pub enum ([A-Za-z0-9_]+)/m)?.[1] ?? "";
+    if (declared.length === 0) refused.push(`aggregateVariant: no \`pub struct\` in ${relative(repoRoot, mutationSource.path).split(sep).join("/")}`);
+    else {
+      aggregateVariant = declared;
+      evidence.aggregateVariant = `pub struct ${declared} in ${relative(repoRoot, mutationSource.path).split(sep).join("/")}`;
+      if (declared !== pascalCase(kind)) evidence.aggregateVariant += ` (note: differs from the PascalCase of ${kind}, so the declaration wins)`;
+    }
+  }
+
+  // 🎯️OUTCOME CLASSES, from the diff implementation. This is the field the whole exercise exists for.
+  const diffSource = readFirst([join(leafAbs, "🔺️diff", "🦀️.rs"), join(leafAbs, "🔺️diff", "🦀️component.rs")]);
+  const outcomes = new Set<string>();
+  if (diffSource === null) refused.push("outcomeClasses: the leaf declares no 🔺️diff implementation to read them from");
+  else {
+    const lines = diffSource.text.split(/\r?\n/);
+    const cite: string[] = [];
+    for (const [index, line] of lines.entries()) {
+      if (/MutationOutcome::error\s*\(/.test(line)) {
+        outcomes.add("error");
+        cite.push(`error@${index + 1}`);
+      }
+      if (/MutationOutcome::empty\s*\(/.test(line)) {
+        outcomes.add("info");
+        cite.push(`empty@${index + 1}`);
+      }
+      if (/MutationOutcome::new\s*\(/.test(line)) {
+        outcomes.add("applied");
+        cite.push(`new@${index + 1}`);
+      }
+    }
+    if (outcomes.size === 0) refused.push(`outcomeClasses: no MutationOutcome:: call in ${relative(repoRoot, diffSource.path).split(sep).join("/")}`);
+    else evidence.outcomeClasses = `${relative(repoRoot, diffSource.path).split(sep).join("/")} — ${cite.join(", ")}`;
+  }
+
+  // 🎯️SECOND EVIDENCE SOURCE, used when the leaf has no 🔺️diff to read: the committed mutation vectors.
+  // Every scenario bundle records what the implementation ACTUALLY produced in its `🎯️outcome`, so the
+  // union across a leaf's scenarios is a lower bound on the classes it reaches — observed behaviour
+  // rather than inferred behaviour. It is a LOWER bound and the evidence string says so, because a
+  // class no committed scenario exercises is invisible here.
+  if (outcomes.size === 0) {
+    const scenarios = join(leafAbs, taxonomy.testsDirName);
+    if (existsSync(scenarios)) {
+      const observed: string[] = [];
+      for (const scenario of readdirSync(scenarios, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.isSymbolicLink())) {
+        const outcome = readFirst([join(scenarios, scenario.name, "🎯️outcome", "🔣️.json"), join(scenarios, scenario.name, "🎯️outcome", "🔣️component.json")]);
+        if (outcome === null) continue;
+        try {
+          const status = String((JSON.parse(outcome.text) as { status?: unknown }).status ?? "");
+          if (status.length === 0) continue;
+          const mapped = status === "applied" ? "applied" : status === "rejected" || status === "error" ? "error" : status === "no-op" || status === "empty" ? "info" : "";
+          if (mapped.length > 0) {
+            outcomes.add(mapped);
+            observed.push(`${scenario.name}=${status}`);
+          }
+        } catch {
+          /* 🧭️A malformed vector is the vector audit's finding, not this one's. */
+        }
+      }
+      if (observed.length > 0) {
+        const index = refused.findIndex((why) => why.startsWith("outcomeClasses"));
+        if (index >= 0) refused.splice(index, 1);
+        evidence.outcomeClasses = `LOWER BOUND from ${observed.length} committed vector(s): ${observed.slice(0, 4).join(", ")} — the leaf has no 🔺️diff, so this records observed outcomes only and a class no scenario exercises is not represented`;
+      }
+    }
+  }
+
+  // 🔢️The binary tag is declared once, in the owner's binary protocol, and must stay that number.
+  const binaryProtocol = readFirst([join(vocabulary, "💾️binary", "📡️component.protocol.semio"), join(vocabulary, "💾️binary", "📡️.protocol.semio")]);
+  let binaryTag: number | null = null;
+  if (binaryProtocol !== null) {
+    const lines = binaryProtocol.text.split(/\r?\n/);
+    const line = lines.findIndex((candidate) => new RegExp(`record\\s+${kind}\\s+tag=(\\d+)`).test(candidate));
+    if (line >= 0) {
+      binaryTag = Number(lines[line]!.match(/tag=(\d+)/)![1]);
+      evidence.binaryTag = `${relative(repoRoot, binaryProtocol.path).split(sep).join("/")}:${line + 1}`;
+    } else {
+      // 🔢️A binary surface that does not carry this kind is STALE, and inventing a tag would put a
+      // wire number into production registration that nothing on the wire agrees with. The CAD binary
+      // protocol is exactly this case: it still lists the fourteen verbs retired in ticket
+      // 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 3 and none of the twenty that replaced them.
+      // 🔢️A STALE wire protocol is real drift and is reported as such — every one of the hundred owners
+      // that has a binary protocol is missing records, 1 361 kinds in total. But it is NOT a reason to
+      // block this mutation from being testable: the descriptor contract permits a null `binaryTag`,
+      // the two concerns are orthogonal, and conflating them would hold subset-scoped external-oracle
+      // coverage hostage to a wire format nothing in the test path reads. The drift is surfaced by
+      // `binaryProtocolDriftBreaches` instead, where it can be acted on without blocking anything.
+      const declared = lines.filter((candidate) => /^record\s/.test(candidate)).length;
+      evidence.binaryTag = `null — ${relative(repoRoot, binaryProtocol.path).split(sep).join("/")} declares ${declared} record(s) and none is ${JSON.stringify(kind)}; the wire protocol is stale for this vocabulary`;
+    }
+  }
+
+  // 🔤️The text opcode is the DSL keyword the payload declares, not an assumption about its name.
+  let textOpcode: string | null = null;
+  if (mutationSource !== null) {
+    const keyword = mutationSource.text.match(/#\[dsl\(keyword\s*=\s*"([a-z0-9-]+)"\)\]/)?.[1];
+    if (keyword !== undefined) {
+      textOpcode = keyword;
+      evidence.textOpcode = `#[dsl(keyword = "${keyword}")] in ${relative(repoRoot, mutationSource.path).split(sep).join("/")}`;
+      if (keyword !== kind) refused.push(`textOpcode: the DSL keyword ${JSON.stringify(keyword)} disagrees with the directory kind ${JSON.stringify(kind)}`);
+    }
+  }
+
+  const hasInverse = existsSync(join(leafAbs, "↩️inverse"));
+  const hasPlan = existsSync(join(leafAbs, "🧩️plan"));
+  const hasText = existsSync(join(vocabulary, "📝️text"));
+  const hasBinary = binaryProtocol !== null;
+  // 🧬️Two payload-schema conventions are in the tree and both are legitimate: the descriptor-linked
+  // `🧬️schema/<json>` beside the leaf, and the flat `🔣️payload.schema.json` the projection names as its
+  // source filename. Whichever the leaf actually has is the one the descriptor points at.
+  const schemaCandidates: readonly [string, string][] = [
+    [`🧬️schema/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)}`, join(leafAbs, "🧬️schema", testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId))],
+    ["🔣️payload.schema.json", join(leafAbs, "🔣️payload.schema.json")],
+  ];
+  const payloadSchema = schemaCandidates.find(([, abs]) => existsSync(abs))?.[0] ?? "";
+  const hasSchema = payloadSchema.length > 0;
+  if (hasSchema) evidence.payloadSchema = `${payloadSchema} exists beside the leaf`;
+  evidence.invertibility = hasPlan ? "🧩️plan facet present" : hasInverse ? "↩️inverse facet present" : "neither ↩️inverse nor 🧩️plan is present";
+  evidence.diffParticipation = diffSource === null ? "no 🔺️diff facet" : "🔺️diff facet present";
+  evidence.requiredLanguageSurfaces = `facets present: rust${hasSchema ? `, ${payloadSchema}` : ""}${hasText ? ", 📝️text" : ""}${hasBinary ? ", 💾️binary" : ""}`;
+
+  // 🧬️The payload schema is a taxonomy LOCATION, not a guess: `mutationPayloadSchemaLocation` puts it
+  // at `🧬️schema/<json>` beside the leaf. A leaf without one has no payload contract to point at.
+  if (!hasSchema) refused.push(`payloadSchema: the leaf carries neither 🧬️schema/${testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId)} nor 🔣️payload.schema.json, so there is no payload contract to reference`);
+  if (refused.length > 0) return { leaf: leafRel, kind, descriptor: null, evidence, refused };
+
+  const surfaces = ["rust", ...(hasSchema ? ["json-schema"] : []), ...(hasText ? ["text"] : []), ...(hasBinary ? ["binary"] : [])];
+  return {
+    leaf: leafRel,
+    kind,
+    evidence,
+    refused,
+    descriptor: {
+      schemaVersion: 1,
+      owner: leafRel,
+      semanticKind: kind,
+      displayName: titleCase(kind),
+      emoji,
+      aggregateVariant,
+      payloadSchema,
+      textOpcode,
+      binaryTag,
+      invertibility: hasPlan ? "plan" : hasInverse ? "explicit-mutation" : "non-invertible",
+      diffParticipation: diffSource === null ? "none" : "detect",
+      outcomeClasses: [...outcomes],
+      composition: "atomic",
+      requiredLanguageSurfaces: surfaces,
+    },
+  };
+}
+
+/**
+ * 🔢️ Where the binary wire protocol has fallen behind the mutation vocabulary it is supposed to carry.
+ *
+ * Reported separately from descriptor derivation on purpose: a stale wire format is a real defect and a
+ * different one from "this mutation has no test", and blocking the second on the first would hold every
+ * mutation hostage to a file nothing in the test path reads.
+ */
+export function binaryProtocolDriftBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const breaches: BreachRecord[] = [];
+  for (const owner of [...new Set(registry.contributions.map((entry) => entry.owner))]) {
+    const vocabulary = join(repoRoot, owner, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+    if (!existsSync(vocabulary)) continue;
+    const kinds = readdirSync(vocabulary, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && /[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/.test(entry.name))
+      .map((entry) => entry.name.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)![0]);
+    if (kinds.length === 0) continue;
+    const protocol = readFirst([join(vocabulary, "💾️binary", "📡️component.protocol.semio"), join(vocabulary, "💾️binary", "📡️.protocol.semio")]);
+    if (protocol === null) continue;
+    const declared = new Set([...protocol.text.matchAll(/^record\s+([a-z][a-z0-9-]*)\s+tag=(\d+)/gm)].map((match) => match[1]!));
+    const missing = kinds.filter((kind) => !declared.has(kind));
+    const orphaned = [...declared].filter((kind) => !kinds.includes(kind));
+    if (missing.length === 0 && orphaned.length === 0) continue;
+    breaches.push(
+      breach(
+        "testing/contract",
+        "binary-protocol-drift",
+        relative(repoRoot, protocol.path).split(sep).join("/"),
+        `${missing.length} mutation kind(s) have no wire record and ${orphaned.length} record(s) name a kind that no longer exists${orphaned.length > 0 ? `: ${orphaned.slice(0, 6).join(", ")}` : ""}`,
+        "A wire protocol that has fallen behind its vocabulary cannot carry the mutations the implementation actually dispatches, and its orphaned records describe verbs nothing can emit.",
+        "Regenerate the protocol from the current mutation leaves, assigning a tag to each new kind and removing the records whose kind is gone.",
+        "medium",
+      ),
+    );
+  }
+  return breaches;
+}
+
+/** 🏗️ Scaffolds every leaf of one owner, so roster-level uniqueness can be checked before anything is written. */
+export function scaffoldOwnerDescriptors(repoRoot: string, ownerRel: string): LeafScaffold[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  if (!existsSync(vocabulary)) return [];
+  return readdirSync(vocabulary, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name))
+    .map((entry) => scaffoldLeafDescriptor(repoRoot, ownerRel, entry.name))
+    .sort((a, b) => a.kind.localeCompare(b.kind));
+}
+//#endregion 🏗️LeafScaffold
+
+//#region 🧬️PayloadSchema
+/** 🧬️ A derived payload schema, or the exact Rust type that defeated the derivation. */
+export type PayloadSchemaDerivation = Readonly<{ leaf: string; kind: string; schema: Record<string, unknown> | null; struct: string; refused: readonly string[] }>;
+
+const RUST_SCALARS: Readonly<Record<string, Record<string, unknown>>> = {
+  String: { type: "string" },
+  str: { type: "string" },
+  bool: { type: "boolean" },
+  u8: { type: "integer", minimum: 0 },
+  u16: { type: "integer", minimum: 0 },
+  u32: { type: "integer", minimum: 0 },
+  u64: { type: "integer", minimum: 0 },
+  usize: { type: "integer", minimum: 0 },
+  i8: { type: "integer" },
+  i16: { type: "integer" },
+  i32: { type: "integer" },
+  i64: { type: "integer" },
+  isize: { type: "integer" },
+  f32: { type: "number" },
+  f64: { type: "number" },
+};
+
+/** 🐍️ serde's `rename_all = "camelCase"` applied to one snake_case field name. */
+function camelCase(field: string): string {
+  return field.replace(/_([a-z0-9])/g, (_, character: string) => character.toUpperCase());
+}
+
+/**
+ * 🧬️ Maps ONE Rust type onto JSON Schema, or returns null when it is not a shape this can decide.
+ *
+ * Refusing an unknown type is the whole discipline. Emitting a permissive `{"type": "object"}` for a
+ * type it does not understand would produce a payload contract that accepts anything — which is
+ * indistinguishable, to every downstream gate, from a contract that was carefully written to accept
+ * exactly the right thing.
+ */
+export function rustTypeToJsonSchema(rustType: string, resolve?: (name: string) => Record<string, unknown> | null, seen: ReadonlySet<string> = new Set()): Record<string, unknown> | null {
+  const type = rustType.trim();
+  const scalar = RUST_SCALARS[type];
+  if (scalar !== undefined) return { ...scalar };
+  const option = type.match(/^Option\s*<\s*(.+)\s*>$/s);
+  if (option !== null) return rustTypeToJsonSchema(option[1]!, resolve, seen);
+  const vector = type.match(/^Vec\s*<\s*(.+)\s*>$/s);
+  if (vector !== null) {
+    const items = rustTypeToJsonSchema(vector[1]!, resolve, seen);
+    return items === null ? null : { type: "array", items };
+  }
+  const boxed = type.match(/^Box\s*<\s*(.+)\s*>$/s);
+  if (boxed !== null) return rustTypeToJsonSchema(boxed[1]!, resolve, seen);
+  const array = type.match(/^\[\s*([A-Za-z0-9_]+)\s*;\s*(\d+)\s*\]$/);
+  if (array !== null) {
+    const items = rustTypeToJsonSchema(array[1]!, resolve, seen);
+    return items === null ? null : { type: "array", items, minItems: Number(array[2]), maxItems: Number(array[2]) };
+  }
+  const map = type.match(/^(?:HashMap|BTreeMap)\s*<\s*String\s*,\s*(.+)\s*>$/s);
+  if (map !== null) {
+    const values = rustTypeToJsonSchema(map[1]!, resolve, seen);
+    return values === null ? null : { type: "object", additionalProperties: values };
+  }
+  // 🔁️A NEWTYPE or ALIAS is transparent on the wire — `EntityId(pub u64)` serialises as a number, and
+  // 130 leaves were refused for it alone. Resolving one level and recursing is not a guess about the
+  // domain type; it is reading the declaration serde reads. The `seen` set stops a cyclic alias from
+  // recursing forever rather than being caught by a stack overflow.
+  const bare = type.match(/^([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)$/);
+  if (bare !== null && resolve !== undefined && !seen.has(bare[1]!)) {
+    const inner = resolve(bare[1]!.split("::").pop()!);
+    if (inner !== null) return inner;
+  }
+  return null;
+}
+
+/**
+ * 🔁️ Indexes every transparent Rust type in the repository — `pub struct X(pub Inner);` newtypes and
+ * `pub type X = Inner;` aliases — so a payload field declared with one can still be projected onto the
+ * shape it actually serialises as.
+ */
+export function transparentRustTypes(repoRoot: string): ReadonlyMap<string, string> {
+  return rustTypeIndex(repoRoot).transparent;
+}
+
+/**
+ * 🗂️ One pass over every Rust file, indexing the two shapes a payload field can legitimately name:
+ * TRANSPARENT types (newtypes and aliases, which serialise as their inner type) and COMPOSITE structs
+ * (which serialise as an object of their own fields).
+ *
+ * A composite is only recorded when its name is UNAMBIGUOUS across the repository. Two different
+ * `ObjRef` structs in two plugins are two different contracts, and picking either would put one
+ * plugin's field list into the other's payload schema — a contract that validates the wrong shape is
+ * worse than an absent one, which is why an ambiguous name is dropped rather than resolved.
+ */
+export function rustTypeIndex(repoRoot: string): { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string> } {
+  const cached = rustIndexCache.get(repoRoot);
+  if (cached !== undefined) return cached;
+  const found = new Map<string, string>();
+  const composites = new Map<string, string>();
+  const ambiguous = new Set<string>();
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    for (const entry of readdirSync(abs, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".rs")) continue;
+      let text: string;
+      try {
+        text = withoutTestModules(readFileSync(join(abs, entry.name), "utf8"));
+      } catch {
+        continue;
+      }
+      for (const match of text.matchAll(/^pub struct ([A-Za-z0-9_]+)\s*\(\s*(?:pub\s+)?([^),]+)\s*\)\s*;/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
+      for (const match of text.matchAll(/^pub type ([A-Za-z0-9_]+)\s*=\s*([^;]+);/gm)) if (!found.has(match[1]!)) found.set(match[1]!, match[2]!.trim());
+      for (const match of text.matchAll(/^pub struct ([A-Za-z0-9_]+)\s*\{([\s\S]*?)\n\}/gm)) {
+        const name = match[1]!;
+        const body = match[2]!;
+        const existing = composites.get(name);
+        if (existing !== undefined && existing !== body) ambiguous.add(name);
+        else composites.set(name, body);
+      }
+    }
+    return "enter";
+  });
+  for (const name of ambiguous) composites.delete(name);
+  const index = { transparent: found, composite: composites };
+  rustIndexCache.set(repoRoot, index);
+  return index;
+}
+
+const rustIndexCache = new Map<string, { transparent: ReadonlyMap<string, string>; composite: ReadonlyMap<string, string> }>();
+
+/** 🧬️ Splits a struct body into `(fieldName, rustType)` pairs, ignoring attributes and comments. */
+function structFields(body: string): { name: string; type: string }[] {
+  const fields: { name: string; type: string }[] = [];
+  // 🧭️Depth-aware split: a field type may itself contain commas (`HashMap<String, Vec<T>>`), so the
+  // naive `body.split(",")` produced half-types and refused schemas that were perfectly derivable.
+  let depth = 0;
+  let current = "";
+  const parts: string[] = [];
+  for (const character of body) {
+    if (character === "<" || character === "(" || character === "[") depth += 1;
+    if (character === ">" || character === ")" || character === "]") depth -= 1;
+    if (character === "," && depth === 0) {
+      parts.push(current);
+      current = "";
+      continue;
+    }
+    current += character;
+  }
+  parts.push(current);
+  for (const raw of parts) {
+    const line = raw
+      .split("\n")
+      .map((candidate) => candidate.trim())
+      .filter((candidate) => candidate.length > 0 && !candidate.startsWith("//") && !candidate.startsWith("#["))
+      .join(" ")
+      .trim();
+    const declaration = line.match(/^pub\s+([a-z_][a-z0-9_]*)\s*:\s*(.+)$/s);
+    if (declaration !== null) fields.push({ name: declaration[1]!, type: declaration[2]!.trim() });
+  }
+  return fields;
+}
+
+/**
+ * 🧬️ Derives one mutation leaf's payload schema from the Rust payload struct it declares.
+ *
+ * A payload schema is the deepest blocker in the chain: you cannot author a fixture for a mutation
+ * whose payload has no contract, so 1 394 leaves were unreachable by any amount of testing effort. The
+ * struct IS the contract — it is what serde serialises on the wire — so the schema is a projection of
+ * it, not a second declaration to keep in sync.
+ */
+export function derivePayloadSchema(repoRoot: string, ownerRel: string, leafDirName: string): PayloadSchemaDerivation {
+  const taxonomy = testTaxonomy(repoRoot);
+  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  const leafAbs = join(vocabulary, leafDirName);
+  const leafRel = `${ownerRel}/🧬️schema/${taxonomy.testMutationVocabularyDirName}/${leafDirName}`;
+  const kind = leafDirName.match(/[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/)?.[0] ?? "";
+  const source = readFirst([join(leafAbs, "🦠️mutation", "🦀️.rs"), join(leafAbs, "🦠️mutation", "🦀️component.rs"), join(leafAbs, "🧬️operation", "🦀️.rs"), join(leafAbs, "🧬️operation", "🦀️component.rs"), join(leafAbs, "🦀️.rs"), join(leafAbs, "🦀️component.rs")]);
+  if (source === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: ["no Rust source in the leaf"] };
+
+  const declaration = source.text.match(/pub struct ([A-Za-z0-9_]+)\s*(\{([\s\S]*?)\n\})?/);
+  if (declaration === null) return { leaf: leafRel, kind, schema: null, struct: "", refused: [`no \`pub struct\` in ${relative(repoRoot, source.path).split(sep).join("/")}`] };
+  const struct = declaration[1]!;
+  // 🧬️A unit struct (`pub struct DeleteShapeModel;`) is a payload with no fields, and its schema is the
+  // empty object — that is a real contract, not a missing one.
+  const body = declaration[3] ?? "";
+  const fields = structFields(body);
+
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+  const refused: string[] = [];
+  const index = rustTypeIndex(repoRoot);
+  const resolve = (name: string, depth = 0, chain: ReadonlySet<string> = new Set()): Record<string, unknown> | null => {
+    // 🔁️Depth and cycle limits are both needed: depth bounds how far a payload contract may reach into
+    // the domain before it stops being a payload contract, and the chain stops a struct that contains
+    // itself from recursing forever.
+    if (depth > 5 || chain.has(name)) return null;
+    const transparent = index.transparent.get(name);
+    if (transparent !== undefined) return rustTypeToJsonSchema(transparent, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
+    const composite = index.composite.get(name);
+    if (composite === undefined) return null;
+    const properties: Record<string, unknown> = {};
+    const required: string[] = [];
+    for (const field of structFields(composite)) {
+      const schema = rustTypeToJsonSchema(field.type, (next) => resolve(next, depth + 1, new Set([...chain, name])), new Set([name]));
+      if (schema === null) return null;
+      properties[camelCase(field.name)] = schema;
+      if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
+    }
+    return { title: name, type: "object", additionalProperties: false, ...(required.length > 0 ? { required: required.sort() } : {}), properties };
+  };
+  for (const field of fields) {
+    const schema = rustTypeToJsonSchema(field.type, resolve);
+    if (schema === null) {
+      refused.push(`field ${field.name}: ${field.type} is not a shape this derivation decides`);
+      continue;
+    }
+    properties[camelCase(field.name)] = schema;
+    if (!/^Option\s*</.test(field.type)) required.push(camelCase(field.name));
+  }
+  if (refused.length > 0) return { leaf: leafRel, kind, schema: null, struct, refused };
+  return {
+    leaf: leafRel,
+    kind,
+    struct,
+    refused,
+    schema: {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      title: struct,
+      type: "object",
+      additionalProperties: false,
+      ...(required.length > 0 ? { required: required.sort() } : {}),
+      properties,
+    },
+  };
+}
+
+/** 🧬️ Derives every leaf's payload schema for one owner. */
+export function derivePayloadSchemas(repoRoot: string, ownerRel: string): PayloadSchemaDerivation[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const vocabulary = join(repoRoot, ownerRel, "🧬️schema", taxonomy.testMutationVocabularyDirName);
+  if (!existsSync(vocabulary)) return [];
+  return readdirSync(vocabulary, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && isMutationLeafDirectory(repoRoot, entry.name))
+    .map((entry) => derivePayloadSchema(repoRoot, ownerRel, entry.name))
+    .sort((a, b) => a.kind.localeCompare(b.kind));
+}
+//#endregion 🧬️PayloadSchema
 
 //#region 🗄️Storage
 /**
@@ -2926,6 +3868,10 @@ export type ProbeEntry = Readonly<{
   command?: readonly string[];
   rationale?: string;
   qualification?: ProbeQualification;
+  /** 🧩️ Further third-party packages this probe links beyond its primary one, each pinned and licensed in its own right. */
+  packages?: readonly OracleLinkedPackage[];
+  /** 🔒️ Pre-existing production reachability, recorded rather than hidden. Shrink-only, exactly as for an oracle. */
+  productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string };
 }>;
 
 /**
@@ -3054,7 +4000,15 @@ export type ComparisonPipeline = Readonly<{ id: string; description?: string; to
 export type AssertionVerdict = Readonly<{ stage: number; probe: string; key: string; expected: unknown; actual: unknown; ok: boolean; optional: boolean; reason: string }>;
 
 /** ⚖️ The verdict of one whole pipeline run. */
-export type PipelineVerdict = Readonly<{ pipeline: string; equal: boolean; verdicts: readonly AssertionVerdict[]; missingProbes: readonly string[]; unqualifiedStages: readonly string[] }>;
+export type PipelineVerdict = Readonly<{
+  pipeline: string;
+  equal: boolean;
+  verdicts: readonly AssertionVerdict[];
+  missingProbes: readonly string[];
+  unqualifiedStages: readonly string[];
+  /** 🚫️ Stages marked `optional` that are NOT excusable — their probe is qualified, or unregistered. The mark is ignored and reported. */
+  overclaimedOptional: readonly string[];
+}>;
 
 /**
  * ⚖️ Evaluates one stage's declarative assertions against one probe report. The vocabulary is small
@@ -3063,19 +4017,25 @@ export type PipelineVerdict = Readonly<{ pipeline: string; equal: boolean; verdi
  * compares for equality. Anything a probe cannot measure it must report as `unsupported` rather than
  * letting the orchestrator compute it.
  */
-export function evaluateStageAssertions(stageIndex: number, stage: ComparisonStage, report: ProbeReport): AssertionVerdict[] {
+export function evaluateStageAssertions(stageIndex: number, stage: ComparisonStage, report: ProbeReport, effectiveOptional?: boolean): AssertionVerdict[] {
   const verdicts: AssertionVerdict[] = [];
-  const optional = stage.optional === true;
+  // 🚫️The caller decides whether `optional` actually applies, because only it knows the probe's
+  // qualification. Called without that context this stays conservative and honours the raw mark.
+  const optional = effectiveOptional ?? stage.optional === true;
   if (report.status !== "ok") {
     verdicts.push({ stage: stageIndex, probe: stage.probe, key: "status", expected: "ok", actual: report.status, ok: false, optional, reason: `probe reported ${report.status}` });
     return verdicts;
   }
   for (const [key, expected] of Object.entries(stage.assertions ?? {})) {
     const bound = key.endsWith("Max") ? "max" : key.endsWith("Min") ? "min" : key.endsWith("Equal") ? "equal" : "value";
-    const measurementKey = bound === "value" ? key : key.slice(0, -{ max: 3, min: 3, equal: 5 }[bound]!);
-    const actual = report.measurements[bound === "value" ? key : measurementKey];
+    // 🔑️The EXACT key wins over the suffix-stripped one. A probe may legitimately name its own
+    // measurement `connectedComponentsEqual`, and stripping unconditionally looked up
+    // `connectedComponents`, found nothing, and failed a stage whose measurement was right there.
+    const strippedKey = bound === "value" ? key : key.slice(0, -{ max: 3, min: 3, equal: 5 }[bound]!);
+    const measurementKey = Object.hasOwn(report.measurements, key) ? key : strippedKey;
+    const actual = report.measurements[measurementKey];
     if (actual === undefined) {
-      verdicts.push({ stage: stageIndex, probe: stage.probe, key, expected, actual: undefined, ok: false, optional, reason: `probe ${stage.probe} reported no measurement ${JSON.stringify(bound === "value" ? key : measurementKey)}` });
+      verdicts.push({ stage: stageIndex, probe: stage.probe, key, expected, actual: undefined, ok: false, optional, reason: `probe ${stage.probe} reported no measurement ${JSON.stringify(strippedKey)}${strippedKey === key ? "" : ` (nor ${JSON.stringify(key)})`}` });
       continue;
     }
     if (bound === "max" || bound === "min") {
@@ -3100,18 +4060,31 @@ export function evaluatePipeline(pipeline: ComparisonPipeline, reports: Readonly
   const verdicts: AssertionVerdict[] = [];
   const missingProbes: string[] = [];
   const unqualifiedStages: string[] = [];
+  const overclaimedOptional: string[] = [];
   for (const [index, stage] of pipeline.stages.entries()) {
     const probe = probes.get(stage.probe);
     if (probe === undefined) missingProbes.push(stage.probe);
     else if (!isQualifiedProbe(probe)) unqualifiedStages.push(stage.probe);
+    // 🚫️`optional` EXCUSES ONLY WHAT IT WAS FOR: a stage whose probe is registered and not yet
+    // qualified. It was a free boolean, so a stage using a fully QUALIFIED probe could be marked
+    // optional and that probe's own `status: "failed"` was then silently excused — a qualifying
+    // reference reporting failure while the pipeline read `equal: true`, which is the sharpest
+    // possible violation of what this protocol claims. An UNREGISTERED probe cannot excuse anything
+    // either, or deleting a registration would become a way to switch a gate off.
+    const excusable = probe !== undefined && !isQualifiedProbe(probe);
+    if (stage.optional === true && !excusable) overclaimedOptional.push(stage.probe);
+    const effectiveOptional = stage.optional === true && excusable;
     const report = reports.get(index);
     if (report === undefined) {
-      verdicts.push({ stage: index, probe: stage.probe, key: "report", expected: "a probe report", actual: undefined, ok: false, optional: stage.optional === true, reason: `stage ${index} (${stage.probe}) produced no report` });
+      verdicts.push({ stage: index, probe: stage.probe, key: "report", expected: "a probe report", actual: undefined, ok: false, optional: effectiveOptional, reason: `stage ${index} (${stage.probe}) produced no report` });
       continue;
     }
-    verdicts.push(...evaluateStageAssertions(index, stage, report));
+    verdicts.push(...evaluateStageAssertions(index, stage, report, effectiveOptional));
   }
-  return { pipeline: pipeline.id, equal: verdicts.every((verdict) => verdict.ok || verdict.optional), verdicts, missingProbes, unqualifiedStages };
+  // 🚫️A stage whose probe is not registered at all cannot be evaluated, so the pipeline is not equal —
+  // `missingProbes` was computed and then ignored, which made an unrunnable pipeline read as passing.
+  const equal = missingProbes.length === 0 && verdicts.every((verdict) => verdict.ok || verdict.optional);
+  return { pipeline: pipeline.id, equal, verdicts, missingProbes, unqualifiedStages, overclaimedOptional };
 }
 
 /** ⚖️ The effective pipeline table: every contributed pipeline, keyed by id. */
@@ -3292,8 +4265,12 @@ export function computeRunKey(opts: {
     fixtureManifestDigest: setDigest(opts.fixtures.map((fixture) => [fixture.id, digest(JSON.stringify(canonicalize(fixture)))] as const)),
     fixtureFileDigests: setDigest(opts.fixtures.flatMap((fixture) => fixture.files.map((file) => [`${fixture.id}/${file.role}`, file.sha256] as const))),
     oracleLockDigest: opts.oracle === undefined ? "" : (opts.oracle.lockDigest ?? `${opts.oracle.package}@${opts.oracle.version ?? "*"}`),
-    oracleEngineDigest: opts.oracle === undefined ? "" : `${engineFamilyId(opts.oracle.engine)}@${opts.oracle.engine?.version ?? "*"}`,
-    probeDigest: setDigest(opts.probes.map((probe) => [probe.id, probe.lockDigest ?? `${probe.package}@${probe.version ?? "*"}`] as const)),
+    // ⚙️KIND and QUALIFICATION belong in the key, not beside it. Reclassifying an oracle from
+    // `cross-semio-implementation` to `third-party-library`, or promoting a probe from `provisional` to
+    // `qualified`, changes what a verdict MEANS — and without them in the key the reclassified run
+    // reused the old verdict and the promotion was never actually measured.
+    oracleEngineDigest: opts.oracle === undefined ? "" : `${opts.oracle.kind ?? "unclassified"}/${engineFamilyId(opts.oracle.engine)}@${opts.oracle.engine?.version ?? "*"}`,
+    probeDigest: setDigest(opts.probes.map((probe) => [probe.id, `${probe.qualification?.status ?? "unqualified"}/${probe.lockDigest ?? `${probe.package}@${probe.version ?? "*"}`}`] as const)),
     comparisonProfileDigest: digest(JSON.stringify(canonicalize({ profile: opts.comparison ?? null, pipeline: opts.pipeline ?? null, tolerance: opts.tolerance ?? null }))),
     subjectDigest: opts.subjectDigest,
     platform: opts.platform,
@@ -3349,10 +4326,30 @@ export function mutationInventoryBreaches(repoRoot: string, registry: OracleRegi
       for (const mutation of manifest.mutations) {
         const subset = owningSubsetOf(manifest, mutation);
         const coordinate = subsetCoordinate({ artifact: manifest.artifact, standard: manifest.standard, subset });
-        const key = `${manifest.artifact}@${manifest.standard}::${mutation.id}`;
+        // 🪆️THE KEY MUST CARRY THE SUBSET. Without it this check is artifact-level inside a platform whose
+        // entire point is subset-level scoping, and it reports a DUPLICATE whenever two genuinely different
+        // subsets of one artifact happen to share a mutation name — `semio@v1/cad` and `semio@v1/document`
+        // both declaring `set-snapshot`, `brep` and `mesh` both declaring `move-vertex`. Those are distinct
+        // mutations of distinct scopes, which is exactly what the taxonomy is for; only the SAME mutation
+        // of the SAME subset claimed by two manifests is a real duplicate.
+        const key = `${manifest.artifact}@${manifest.standard}/${subset}::${mutation.id}`;
         ownerOf.set(key, [...(ownerOf.get(key) ?? []), `${contribution.manifestPath}#${coordinate}`]);
         if (isWildcardSubset(subset)) {
-          breaches.push(breach("testing/contract", "wildcard-subset-owner", contribution.manifestPath, `Mutation ${mutation.id} is owned by wildcard subset ${JSON.stringify(subset)}`, "Testing at artifact level hides which part of the artifact a mutation actually changed, and lets one broad case stand in for every narrow one.", "Split the wildcard into real semantic subsets and give the mutation its smallest owner, or declare an explicit typed compound."));
+          const siblings = (declaredSubsets(repoRoot).get(`${manifest.artifact}@${manifest.standard}`) ?? []).filter((candidate) => !isWildcardSubset(candidate));
+          if (siblings.length > 0) {
+            // 🚫️The artifact HAS narrower scopes and this mutation declined them. Hard failure.
+            breaches.push(breach("testing/contract", "wildcard-subset-owner", contribution.manifestPath, `Mutation ${mutation.id} is owned by wildcard subset ${JSON.stringify(subset)} while ${manifest.artifact}@${manifest.standard} declares ${siblings.length} real subset(s): ${siblings.join(", ")}`, "Testing at artifact level hides which part of the artifact a mutation actually changed, and lets one broad case stand in for every narrow one.", `Give the mutation its smallest owner among ${siblings.join(", ")}, or declare an explicit typed compound.`));
+          } else if (!subsetPolicyIsSingle(repoRoot, manifest.artifact, manifest.standard)) {
+            // 🪆️The artifact declares NO narrower scope at all. That is sometimes the truth — RFC 8259
+            // JSON has no conformance classes — and sometimes an artifact that simply has not been
+            // split yet, which is the case the whole subset-scoping requirement exists for: `s.cad.cad`
+            // addresses shape, building, energy, structure, drawing, node and reference scopes through
+            // ONE `*` bucket. The two are indistinguishable from here, so this is a MEDIUM finding
+            // asking the owner to decide, not a hard failure asserting which one it is. Recording
+            // `"subsetPolicy": "single"` with a rationale in the artifact's own 🪆️subsets component
+            // settles it and silences this.
+            breaches.push(breach("testing/contract", "unsplit-artifact-subset", contribution.manifestPath, `Mutation ${mutation.id} is owned by ${JSON.stringify(subset)} and ${manifest.artifact}@${manifest.standard} declares no narrower subset at all`, "A mutation is owned by the SMALLEST semantic subset. An artifact with a single catch-all subset is either a format that genuinely has no narrower scope, or one that has not been split yet — and until the owner says which, every mutation on it is scoped to the whole artifact.", `Declare the real subsets of ${manifest.artifact}@${manifest.standard} and give this mutation its smallest owner, or record "subsetPolicy": "single" with a rationale in that artifact's 🪆️subsets component.`, "medium"));
+          }
         }
         breaches.push(...oracleRequirementBreaches(registry, contribution.manifestPath, manifest, mutation));
       }
@@ -3412,6 +4409,266 @@ export function oracleRequirementBreaches(registry: OracleRegistry, scope: strin
   return breaches;
 }
 
+/**
+ * 🧾️ Every mutation CAPABILITY the repository declares must be owned by a v2 mutation manifest.
+ *
+ * `mutationCatalogs` (v1's kind/vector vocabulary) and `mutationManifests` (v2's oracle/dispatch/outcome
+ * vocabulary) were two independent registries with no cross-check, and `buildCoverageMatrix` reads only
+ * the second. An owner could therefore be 100% v1-complete — every `mutate-<kind>` and `inverse-<kind>`
+ * scenario present — while contributing ZERO rows to `test matrix --enforce`, the actual release gate.
+ * Because the gated denominators pool across the whole registry, one properly-manifested owner kept
+ * them non-empty and the omission never even tripped the empty-denominator guard: a whole capability
+ * with un-oracled, un-inventoried mutations was not "missing", it was invisible.
+ */
+export function capabilityManifestBreaches(registry: OracleRegistry): BreachRecord[] {
+  const manifested = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => mutation.capability)));
+  const breaches: BreachRecord[] = [];
+  for (const contribution of registry.contributions) {
+    for (const catalog of contribution.mutationCatalogs) {
+      if (catalog.capability === "" || manifested.has(catalog.capability)) continue;
+      breaches.push(
+        breach(
+          "testing/contract",
+          "capability-without-manifest",
+          contribution.manifestPath,
+          `Catalog ${catalog.id} declares capability ${catalog.capability} (${catalog.kinds.length} kind(s)) and no mutation manifest owns it`,
+          "The coverage matrix is enumerated from manifests. A capability with no manifest contributes no rows at all, so its mutations are not reported as uncovered — they are absent from the denominator and invisible to every release gate.",
+          `Add a mutationManifests entry for ${catalog.capability} declaring each kind's subset, outcomes, production dispatch and oracle requirement.`,
+        ),
+      );
+    }
+  }
+  return breaches;
+}
+
+/** 🧾️ Validators for the v2 registry records that shipped with none — a record nothing checks is a record that can say anything. */
+export function registryRecordBreaches(registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const probes = probeTable(registry);
+  const tolerances = toleranceProfileTable(registry);
+  for (const probe of registry.probes) {
+    if (!MANIFEST_MUTATION_ID_RE.test(probe.id)) breaches.push(breach("testing/contract", "probe-record-invalid", probe.id, `Probe id ${JSON.stringify(probe.id)} is not kebab-case`, "Probe ids are referenced by every pipeline stage; a free-form id cannot be joined reliably.", "Rename the probe."));
+    if (probe.capabilities.length === 0) breaches.push(breach("testing/contract", "probe-record-invalid", probe.id, `Probe ${probe.id} declares no capabilities`, "A probe that claims no capability can never be selected deliberately.", "Declare what it measures."));
+    if (probe.outputSchema !== "semio.repository-test.probe-report/v2") breaches.push(breach("testing/contract", "probe-record-invalid", probe.id, `Probe ${probe.id} declares outputSchema ${JSON.stringify(probe.outputSchema)}`, "The orchestrator only evaluates the typed report shape it knows.", 'Emit "semio.repository-test.probe-report/v2".'));
+    if (probe.qualification !== undefined && probe.qualification.evidence.trim().length === 0) breaches.push(breach("testing/contract", "probe-record-invalid", probe.id, `Probe ${probe.id} claims qualification ${probe.qualification.status} with no evidence`, "A qualification status is a claim about a measurement somebody made; without the evidence it is an assertion.", "Record what was measured, and where."));
+  }
+  for (const profile of registry.toleranceProfiles) {
+    if (!MANIFEST_MUTATION_ID_RE.test(profile.id)) breaches.push(breach("testing/contract", "tolerance-record-invalid", profile.id, `Tolerance profile id ${JSON.stringify(profile.id)} is not kebab-case`, "Profile ids are joined from fixtures and pipelines.", "Rename the profile."));
+    for (const [key, value] of Object.entries(profile)) {
+      if (typeof value === "number" && !Number.isFinite(value)) breaches.push(breach("testing/contract", "tolerance-record-invalid", profile.id, `Tolerance profile ${profile.id} field ${key} is not finite`, "A non-finite tolerance accepts everything.", "Give it a finite value."));
+    }
+  }
+  for (const pipeline of registry.comparisonPipelines) {
+    if (pipeline.stages.length === 0) breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Pipeline ${pipeline.id} declares no stages`, "A pipeline with no stage compares nothing and reports equal.", "Declare at least one stage."));
+    if (pipeline.toleranceProfile !== undefined && !tolerances.has(pipeline.toleranceProfile)) {
+      breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Pipeline ${pipeline.id} names unknown tolerance profile ${pipeline.toleranceProfile}`, "An unresolved profile means every dimensional assertion is resolved against nothing.", `Use one of ${[...tolerances.keys()].sort().join(", ")}.`));
+    }
+    if (pipeline.stages.every((stage) => stage.optional === true)) {
+      breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Every stage of pipeline ${pipeline.id} is optional`, "A pipeline whose every stage is excusable gates nothing while reporting a verdict.", "Make at least one stage gating."));
+    }
+    for (const [index, stage] of pipeline.stages.entries()) {
+      const probe = probes.get(stage.probe);
+      if (probe === undefined) {
+        breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Pipeline ${pipeline.id} stage ${index} names unregistered probe ${stage.probe}`, "An unregistered probe has no licence, pin, engine family or qualification on record, and the stage cannot run.", "Register the probe, or remove the stage."));
+        continue;
+      }
+      // 🚫️`optional` is for a probe that is registered and NOT YET QUALIFIED. Marking a qualified
+      // probe's stage optional would excuse that probe's own reported failure.
+      if (stage.optional === true && isQualifiedProbe(probe)) {
+        breaches.push(breach("testing/contract", "optional-stage-overclaimed", pipeline.id, `Pipeline ${pipeline.id} stage ${index} marks QUALIFIED probe ${stage.probe} optional`, "`optional` exists for a probe whose qualification spike has not passed. On a qualified probe it would excuse that probe's own status: failed, which is the one thing this protocol must never do.", "Remove `optional`, or downgrade the probe's qualification honestly."));
+      }
+      if (stage.inputs.length === 0) breaches.push(breach("testing/contract", "pipeline-record-invalid", pipeline.id, `Pipeline ${pipeline.id} stage ${index} reads no inputs`, "A stage with no input measures nothing.", "Name the artifact roles it reads."));
+    }
+  }
+  return breaches;
+}
+
+/**
+ * 🎭️ A declared export dialect whose serializer does not actually emit that format.
+ *
+ * This is the root cause beneath a large share of "no qualifying oracle": a carrier oracle works by
+ * having a third-party reader of a STANDARD FORMAT verify what a mutation produced — `brepjs` reads the
+ * STEP a Boolean should have written. That is impossible when the exporter writes the artifact's own
+ * internal DSL text under the standard format's extension, because no third-party reader of PNG, OBJ,
+ * STL or Markdown can parse it. The artifact declares an export capability it does not have.
+ *
+ * 45% of the repository's serializers are in this state (85 of 187), and Markdown and DXF have no real
+ * exporter at all. The finding is severity-graded rather than uniform: for a BINARY format, DSL text is
+ * unambiguously not that format; for a text format it is still wrong but a reader may at least not
+ * crash, so it is reported one level lower rather than asserted with false confidence.
+ */
+export const BINARY_CARRIER_FORMATS: readonly string[] = ["png", "jpg", "jpeg", "gif", "tiff", "bmp", "stl", "ply", "las", "gltf", "glb", "zip", "pdf", "dwg", "docx", "xlsx", "pptx", "mp3", "mp4", "wav"];
+
+/** 🧪️ Strip `#[cfg(test)]` modules before judging a serializer. Their round-trip PROOFS legitimately call
+ *  the very functions a stub detector watches for, so scanning them flagged two genuinely real carriers —
+ *  `semio@v1/cad → step` and `semio@v1/drawing → svg` — as stubs. A gate must be wrong in neither
+ *  direction: a false stub hides a usable carrier exactly as a missed stub invents one. */
+function withoutTestModules(text: string): string {
+  let out = "";
+  let at = 0;
+  for (;;) {
+    const found = text.indexOf("#[cfg(test)]", at);
+    if (found === -1) return out + text.slice(at);
+    out += text.slice(at, found);
+    const open = text.indexOf("{", found);
+    if (open === -1) return out;
+    let depth = 0;
+    let i = open;
+    for (; i < text.length; i += 1) {
+      if (text[i] === "{") depth += 1;
+      else if (text[i] === "}") {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+    at = i + 1;
+  }
+}
+
+/** 🕳️ A serializer whose body NEVER READS ITS INPUT cannot represent a mutation, whatever else it does.
+ *  This one predicate subsumes several shapes that were each hiding separately: an `Err("not
+ *  implemented")` stub, a bridge returning `XmlDocument::default()` regardless of argument, and a DWG
+ *  leaf that ignores its parameter and returns a hardcoded empty document. Detecting the CAUSE rather
+ *  than each spelling is what keeps the gate from needing a new rule per author. */
+function ignoresItsInput(text: string): boolean {
+  for (const match of text.matchAll(/fn\s+serialize(?:_bytes|_text)?\s*(?:<[^>]*>)?\s*\(([^)]*)\)/g)) {
+    const parameter = (match[1] ?? "").split(",")[0]?.trim() ?? "";
+    const name = parameter.split(":")[0]?.trim().replace(/^(mut|&)\s*/, "") ?? "";
+    if (!name || name === "self" || name === "&self") continue;
+    const open = text.indexOf("{", (match.index ?? 0) + match[0].length);
+    if (open === -1) continue;
+    let depth = 0;
+    let i = open;
+    for (; i < text.length; i += 1) {
+      if (text[i] === "{") depth += 1;
+      else if (text[i] === "}") {
+        depth -= 1;
+        if (depth === 0) break;
+      }
+    }
+    const body = text.slice(open + 1, i);
+    // 🧭️`let _ = X;` is the idiom these stubs use to silence the unused-parameter warning; it is not a read.
+    const reads = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(body.replace(new RegExp(`let\\s+_\\s*=\\s*${name}\\s*;`, "g"), ""));
+    if (!reads) return true;
+  }
+  return false;
+}
+
+/**
+ * 🫥️ A QUALIFYING ORACLE MUST NOT BE THIS REPOSITORY'S OWN SECOND IMPLEMENTATION WEARING A LIBRARY'S NAME.
+ *
+ * The shape this catches, and it was found in five owners covering 156 mutations: an entry registered
+ * `third-party-library` on the strength of a real crate — `json`, `png`, `image` — where the crate only
+ * parses or encodes, and WHAT THE MUTATION SHOULD PRODUCE is computed by the owner's own
+ * `🧪️oracle/🦀️component.rs`. `gltf`'s implemented seven kinds and refused the other 113 while the
+ * manifest named it against all 120; `png`'s says in its own doc comment that it "deliberately mirrors"
+ * the production `diff`. Both halves then read the same specification, so a misreading of it yields two
+ * agreeing wrong answers — which is the one failure a differential test exists to prevent.
+ *
+ * A crate that decodes the artifact discharges "the result is a well-formed file of this format". It does
+ * not discharge "the mutation computed the right answer". Only the second is what a mutation oracle is for.
+ */
+export function reimplementationOracleBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const contribution of registry.contributions) {
+    const qualifying = contribution.oracles.filter((oracle) => isQualifyingOracleKind(oracle.kind));
+    if (qualifying.length === 0) continue;
+    const own = join(repoRoot, contribution.owner, "🧪️oracle", "🦀️component.rs");
+    if (!existsSync(own)) continue;
+    let text: string;
+    try {
+      text = readFileSync(own, "utf8");
+    } catch {
+      continue;
+    }
+    const predicts = /fn\s+(apply_kind|apply)\s*\(/.test(text) && /has no oracle implementation/.test(text);
+    const admits = /independent implementation|second implementation|deliberately mirrors|reimplemented from scratch/i.test(text);
+    if (!predicts && !admits) continue;
+    breaches.push(
+      breach(
+        "testing/oracle",
+        "reimplementation-registered-as-third-party",
+        `${contribution.owner}/🧪️oracle/🦀️component.rs`,
+        `${qualifying.map((oracle) => oracle.id).join(", ")} is registered as a qualifying third-party oracle, but this owner predicts mutation output in its own Rust`,
+        `The crate parses or encodes; the expected RESULT of each mutation is computed here. Both halves of the comparison then read the same specification, so a misreading of it produces two agreeing wrong answers — the one failure mode a differential test exists to prevent.`,
+        `Reclassify the entry as cross-semio-implementation (a required supplement, never a substitute) and register a domain-aware third-party reader for the mutation semantics, or narrow the crate's capability to file well-formedness only.`,
+        "high",
+      ),
+    );
+  }
+  return breaches;
+}
+
+export function stubSerializerBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    if (!rel.includes("🧵️serializers")) return "enter";
+    for (const entry of readdirSync(abs, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".rs")) continue;
+      let text: string;
+      try {
+        text = withoutTestModules(readFileSync(join(abs, entry.name), "utf8"));
+      } catch {
+        continue;
+      }
+      // 🧭️Any serializing entry point counts, not `serialize_bytes` alone. Several owners deleted their
+      // byte path entirely and kept only `serialize_text` returning `print_dsl` — cad exports STL, OBJ,
+      // glTF, IFC and STEP that way. Keying the gate on `serialize_bytes` skipped every one of them and
+      // reported the whole owner as having real carriers.
+      if (!/fn\s+serialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
+      const printsDsl = /print_dsl\s*\(/.test(text);
+      // 🕳️THE SECOND STUB SHAPE, and the worse of the two. `encode_pack` the SOURCE snapshot, then
+      // `decode_pack` those very bytes AS THE TARGET type — one artifact's binary envelope reinterpreted
+      // as another's. It is not an unimplemented export, it is type confusion: at best it fails on the
+      // envelope id, at worst a lenient decode yields a structurally valid document full of noise. A gate
+      // that only looked for `print_dsl` read these as REAL exporters, which is how they survived.
+      const transmutes = /encode_pack\s*\(\s*[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) && /decode_pack\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text);
+      // 🫥️THE QUIETEST SHAPE OF ALL. `serde_json::to_value` the source, then `from_value` into the target.
+      // Every non-`schema` field of these target snapshots carries `#[serde(default)]` and nothing rejects
+      // unknown keys, so deserialization SUCCEEDS and yields an EMPTY document — `architect/program`'s
+      // xlsx export turns 266 mutable registers into a workbook with no sheets, and reports Ok. It neither
+      // prints DSL nor transmutes an envelope, so both earlier detectors passed it, and 266 mutations were
+      // counted as having a real carrier on the strength of an exporter that can never show a mutation.
+      const coerces = /to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) && /from_value\s*[:(<]/.test(text);
+      const inert = ignoresItsInput(text);
+      if (!printsDsl && !transmutes && !coerces && !inert) continue;
+      const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
+      // 🧭️An artifact whose own carrier IS text or JSON may legitimately print its DSL; the finding is
+      // about a STANDARD format that the DSL is not.
+      if (format === "txt" || format === "json" || format === "") continue;
+      const binary = BINARY_CARRIER_FORMATS.includes(format);
+      breaches.push(
+        breach(
+          "testing/contract",
+          "stub-serializer",
+          `${rel}/${entry.name}`,
+          printsDsl
+            ? `The ${format} serializer emits the artifact's internal DSL text, not ${format}`
+            : transmutes
+              ? `The ${format} serializer reinterprets this artifact's own pack bytes as a ${format} snapshot`
+              : coerces
+                ? `The ${format} serializer coerces this artifact through serde into an empty ${format} document`
+                : `The ${format} serializer never reads its input`,
+          inert && !printsDsl && !transmutes && !coerces
+            ? `Its serialize function never mentions its own input parameter, so its output cannot depend on the snapshot and no mutation can ever be observable in it. This covers an explicit not-implemented stub, a bridge returning Default::default() whatever it is given, and a leaf that silences the unused-parameter warning with \`let _ = x;\` and then ignores it.`
+            : coerces && !printsDsl && !transmutes
+            ? `It serializes the source snapshot to a serde_json Value and deserializes that Value into the ${format} snapshot type. Because the target's fields carry #[serde(default)] and unknown keys are ignored, this SUCCEEDS and produces an empty ${format} document for every input — so no mutation is ever observable in the bytes, and the export reports Ok while carrying nothing.`
+            : transmutes && !printsDsl
+            ? `It encodes the source snapshot with encode_pack and decodes those same bytes as the ${format} snapshot type. That is not an export, it is a reinterpretation of one artifact's envelope as another's — it either fails on the envelope id or yields a structurally valid ${format} document whose content is unrelated to the source. No third-party ${format} reader can verify a mutation through it.`
+            : binary
+            ? `${format} is a binary format and DSL text is not it. The artifact declares an export dialect it does not implement, so no third-party reader of ${format} can verify what a mutation produced — which is exactly how a carrier oracle works.`
+            : `The artifact declares a ${format} export dialect and writes its own DSL text instead. A third-party ${format} reader cannot verify what a mutation produced.`,
+          `Implement the ${format} serializer, or remove ${format} from this subset's exportDialects so the capability is not claimed.`,
+          transmutes || coerces || inert || binary ? "high" : "medium",
+        ),
+      );
+    }
+    return "enter";
+  });
+  return breaches;
+}
+
 /** 🚫️ A no-oracle decision may never stand in for a mutation's external-oracle requirement. */
 export function noOracleMisuseBreaches(registry: OracleRegistry): BreachRecord[] {
   const mutationCapabilities = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.flatMap((mutation) => [mutation.capability, ...mutation.oracleRequirements.map((requirement) => requirement.capability)])));
@@ -3429,10 +4686,14 @@ export function noOracleMisuseBreaches(registry: OracleRegistry): BreachRecord[]
 export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegistry): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const oracles = new Map(registry.oracles.map((oracle) => [oracle.id, oracle]));
+  // 📏️A fixture naming a tolerance profile nobody defines is a fixture whose every dimensional
+  // assertion resolves against nothing — the name reads as policy while carrying none.
+  const tolerances = toleranceProfileTable(registry);
+  const profiles = profileTable(registry);
   for (const contribution of registry.contributions) {
     for (const [index, fixture] of contribution.fixtureManifests.entries()) {
       const scope = contribution.manifestPath;
-      for (const problem of fixtureManifestProblems(fixture)) {
+      for (const problem of fixtureManifestProblems(fixture, repoRoot)) {
         breaches.push(breach("testing/fixture", "fixture-manifest-invalid", scope, `fixtureManifests[${index}] ${problem}`, "A fixture is evidence; evidence with incomplete provenance cannot be audited or reproduced.", "Complete the fixture manifest record."));
       }
       for (const verification of verifyFixture(repoRoot, fixture)) {
@@ -3444,6 +4705,12 @@ export function fixtureProvenanceBreaches(repoRoot: string, registry: OracleRegi
         if (oracle === undefined) breaches.push(breach("testing/fixture", "fixture-generator-unregistered", `${scope}#${fixture.id}`, `Fixture generator oracle ${fixture.generator.oracle} is not registered`, "A generated fixture's authority is the tool that generated it; an unregistered tool has no licence, pin or engine family on record.", "Register the generating oracle."));
         else if (!isQualifyingOracleKind(oracle.kind)) breaches.push(breach("testing/fixture", "fixture-generated-by-non-qualifying-oracle", `${scope}#${fixture.id}`, `Fixture ${fixture.id} is generated by ${oracle.id}, whose kind is ${oracle.kind ?? "unclassified"}`, "An expected result produced by our own second implementation is not third-party evidence.", `Regenerate it with a ${QUALIFYING_ORACLE_KINDS.join(" / ")}.`));
         if (!fixture.reproducible) breaches.push(breach("testing/fixture", "fixture-not-reproducible", `${scope}#${fixture.id}`, `Generated fixture ${fixture.id} is marked non-reproducible`, "A generated expectation nobody can regenerate is indistinguishable from a hand-edited one.", "Make generation deterministic, or document the external canonicalization that makes it reproducible.", "medium"));
+      }
+      if (fixture.toleranceProfile !== undefined && !tolerances.has(fixture.toleranceProfile)) {
+        breaches.push(breach("testing/fixture", "fixture-tolerance-profile-unknown", `${scope}#${fixture.id}`, `Fixture ${fixture.id} names tolerance profile ${fixture.toleranceProfile}, which no profile defines`, "An unresolved profile means every dimensional assertion for this fixture is resolved against nothing, while the manifest reads as though a policy applies.", `Use one of ${[...tolerances.keys()].sort().join(", ")}, or contribute the profile.`));
+      }
+      if (fixture.comparisonProfile.length > 0 && !profiles.has(fixture.comparisonProfile)) {
+        breaches.push(breach("testing/fixture", "fixture-comparison-profile-unknown", `${scope}#${fixture.id}`, `Fixture ${fixture.id} names comparison profile ${fixture.comparisonProfile}, which no profile defines`, "The comparison profile decides how this fixture is compared at all; an unresolved one silently falls back to a default nobody chose.", "Contribute the profile, or name one that exists."));
       }
       if (fixture.toleranceOverride !== undefined) {
         const profile = toleranceProfileTable(registry).get(fixture.toleranceProfile ?? "");
@@ -3469,8 +4736,15 @@ export function isolationBreaches(registry: OracleRegistry): BreachRecord[] {
     }
   }
   for (const probe of registry.probes) {
-    if (probe.productionReachable === true) {
-      breaches.push(breach("testing/dependency", "probe-production-reachable", probe.id, `Probe ${probe.id} (${probe.package}) is production-reachable`, "A measurement tool linked into production stops being an independent measurement.", "Make the probe test-only."));
+    // 🔒️RECORDED DEBT IS EXEMPT, and only recorded debt — the same rule oracles get, and for the same
+    // reason: asserting unconditionally meant that honestly recording a package's reachability failed
+    // the very gate demanding it be recorded, leaving an owner the choice of hiding it or staying red.
+    // An UNRECORDED production-reachable probe is still a hard failure.
+    if (probe.productionReachable === true && probe.productionDebt === undefined) {
+      breaches.push(breach("testing/dependency", "probe-production-reachable", probe.id, `Probe ${probe.id} (${probe.package}) is production-reachable and records no debt`, "A measurement tool linked into production stops being an independent measurement.", "Make the probe test-only, or record the reachability as shrink-only productionDebt with an owner and a plan."));
+    }
+    if (probe.productionDebt !== undefined && (probe.productionDebt.reachableFrom.length === 0 || probe.productionDebt.owner.length === 0 || probe.productionDebt.plan.length === 0)) {
+      breaches.push(breach("testing/dependency", "probe-debt-incomplete", probe.id, `Probe ${probe.id} records productionDebt without a path, an owner or a retirement plan`, "Debt that names nobody and no plan is not a record, it is an excuse.", "Name the reachable path, the owning module and how the debt shrinks."));
     }
     if (probe.networkDuringExecution === true) {
       breaches.push(breach("testing/dependency", "probe-needs-network", probe.id, `Probe ${probe.id} requires network access during execution`, "A probe that phones home cannot produce a reproducible measurement.", "Vendor or pre-provision whatever it fetches."));
@@ -3621,8 +4895,14 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   const nowMs = opts.nowMs ?? Date.now();
   const cacheRoot = resolve(testCacheRoot(repoRoot));
   if (!existsSync(cacheRoot)) return { dry, candidates: [], removed: [], markedBlobs: 0, sweptBlobs: 0, reclaimedBytes: 0 };
-  if (realpathSync(cacheRoot) !== cacheRoot && !realpathSync(cacheRoot).startsWith(resolve(getRepoMetaDir(repoRoot)))) {
-    throw new Error(`refusing to collect: ${cacheRoot} resolves outside the repository cache`);
+  // 🚫️Both sides are RESOLVED before they are compared. Comparing a resolved path against an
+  // unresolved literal rejected every legitimate cache root on a platform where the repository itself
+  // sits behind a symlink — `/var` → `/private/var` on macOS is the ordinary case, not the attack —
+  // while still letting a cache root that is symlinked OUT of the repository through unexamined.
+  const resolvedCacheRoot = realpathSync(cacheRoot);
+  const resolvedMetaRoot = realpathSync(resolve(getRepoMetaDir(repoRoot)));
+  if (resolvedCacheRoot !== resolvedMetaRoot && !resolvedCacheRoot.startsWith(resolvedMetaRoot + sep)) {
+    throw new Error(`refusing to collect: ${cacheRoot} resolves to ${resolvedCacheRoot}, outside the repository cache at ${resolvedMetaRoot}`);
   }
 
   const candidates: GcCandidate[] = [];
@@ -3719,6 +4999,7 @@ export const COVERAGE_DIMENSIONS = [
   "runtimeMutationCoverage",
   "subsetOwnershipCoverage",
   "externalOracleCoverage",
+  "oracleEvidenceCoverage",
   "oracleCapabilityCoverage",
   "productionBridgeCoverage",
   "fixtureClassCoverage",
@@ -3736,7 +5017,7 @@ export const COVERAGE_DIMENSIONS = [
 export type CoverageDimension = (typeof COVERAGE_DIMENSIONS)[number];
 
 /** 📈️ Dimensions that must be exactly 100% to release. */
-export const RELEASE_GATED_DIMENSIONS: readonly CoverageDimension[] = ["runtimeMutationCoverage", "subsetOwnershipCoverage", "externalOracleCoverage", "productionBridgeCoverage", "fixtureProvenanceCoverage", "dependencyIsolationCoverage"];
+export const RELEASE_GATED_DIMENSIONS: readonly CoverageDimension[] = ["runtimeMutationCoverage", "subsetOwnershipCoverage", "externalOracleCoverage", "oracleEvidenceCoverage", "productionBridgeCoverage", "fixtureProvenanceCoverage", "dependencyIsolationCoverage"];
 
 /** 📊️ One report row, keyed by the FULL coordinate. Reporting at artifact level is what this shape prevents. */
 export type CoverageRow = Readonly<{
@@ -3780,6 +5061,11 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
   const fixturesByTarget = new Map<string, FixtureManifest[]>();
   for (const contribution of registry.contributions) {
     for (const fixture of contribution.fixtureManifests) {
+      // 🛡️A malformed fixture must not take the whole matrix down. Three fixtures registered without a
+      // `target` threw here, and every caller that swallowed the throw reported coverage computed over a
+      // silently smaller set — the provenance dimension read 300/300 against 303 registered fixtures,
+      // because the three that FAILED it had been dropped from the denominator by the crash.
+      if (fixture?.target?.artifact === undefined) continue;
       const key = `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}::${fixture.mutation ?? ""}::${fixture.outcome ?? ""}`;
       fixturesByTarget.set(key, [...(fixturesByTarget.get(key) ?? []), fixture]);
     }
@@ -3853,16 +5139,24 @@ export function buildCoverageMatrix(repoRoot: string, registry: OracleRegistry, 
 }
 
 /** 📈️ Measures all sixteen dimensions from the matrix, the registry and the run's results. */
-export function measureCoverage(registry: OracleRegistry, rows: readonly CoverageRow[], results: readonly TestResult[], runtimeInventories: readonly RuntimeMutationInventory[]): DimensionMeasurement[] {
+export function measureCoverage(registry: OracleRegistry, rows: readonly CoverageRow[], results: readonly TestResult[], runtimeInventories: readonly RuntimeMutationInventory[], repoRoot: string = repoRootFromHere()): DimensionMeasurement[] {
   const manifestMutations = registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => ({ manifest, mutation })));
   const owned = new Set(manifestMutations.map(({ manifest, mutation }) => `${manifest.artifact}@${manifest.standard}::${mutation.id}`));
   const runtimeIds = runtimeInventories.flatMap((inventory) => inventory.mutations.map((mutation) => `${inventory.artifact}@${inventory.standard}::${mutation.id}`));
+  // 🏭️A SUBSET WITH NO INVENTORY IS UNMEASURED, not covered. Pooling denominators across the registry
+  // meant one subset that had run the bridge kept the denominator non-empty, and every subset that had
+  // never run it simply contributed nothing — invisible rather than reported. Each such subset is
+  // counted as one uncovered coordinate so it appears in the gate's `missing` list by name.
+  const inventoried = new Set(runtimeInventories.map((inventory) => subsetCoordinate(inventory)));
+  const uninventoried = registry.mutationManifests.map((manifest) => subsetCoordinate(manifest)).filter((coordinate) => !inventoried.has(coordinate)).map((coordinate) => `${coordinate} (no runtime inventory)`);
 
-  const runtimeMissing = runtimeIds.filter((id) => !owned.has(id));
-  const wildcards = manifestMutations.filter(({ manifest, mutation }) => isWildcardSubset(owningSubsetOf(manifest, mutation))).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
+  const runtimeMissing = [...runtimeIds.filter((id) => !owned.has(id)), ...uninventoried];
+  const wildcards = manifestMutations.filter(({ manifest, mutation }) => isWildcardSubsetFor(repoRoot, manifest.artifact, manifest.standard, owningSubsetOf(manifest, mutation))).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const withoutOracle = manifestMutations
-    .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability))))
+    .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability) && (requirement.oracle === undefined || oracle.id === requirement.oracle))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
+  const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`));
+  const withoutEvidence = manifestMutations.filter(({ manifest }) => !fixtureSubsets.has(`${manifest.artifact}@${manifest.standard}/${manifest.subset}`)).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const requiredCapabilities = [...new Set(manifestMutations.flatMap(({ mutation }) => mutation.oracleRequirements.map((requirement) => requirement.capability)))];
   const unsupportedCapabilities = requiredCapabilities.filter((capability) => !registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(capability)));
 
@@ -3870,7 +5164,7 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const replaying = subjectResults.filter((result) => result.productionDispatch?.invoked !== true).map((result) => result.testId);
 
   const fixtures = registry.contributions.flatMap((contribution) => contribution.fixtureManifests);
-  const withoutProvenance = fixtures.filter((fixture) => fixtureManifestProblems(fixture).length > 0).map((fixture) => fixture.id);
+  const withoutProvenance = fixtures.filter((fixture) => fixtureManifestProblems(fixture, repoRoot).length > 0).map((fixture) => fixture.id);
   const notReproducible = fixtures.filter((fixture) => fixture.class === "third-party-generated" && !fixture.reproducible).map((fixture) => fixture.id);
   const outcomeCoordinates = manifestMutations.flatMap(({ manifest, mutation }) => mutation.outcomes.map((outcome) => `${manifest.artifact}::${mutation.id}::${outcome}`));
   const coveredOutcomes = new Set(rows.filter((row) => row.status === "passed").map((row) => `${row.artifact}::${row.mutation}::${row.outcome}`));
@@ -3888,9 +5182,15 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const leakyProbes = registry.probes.filter((probe) => probe.productionReachable === true).map((probe) => probe.id);
 
   return [
-    measure("runtimeMutationCoverage", runtimeIds.length - runtimeMissing.length, runtimeIds.length, runtimeMissing),
+    measure("runtimeMutationCoverage", runtimeIds.length - runtimeIds.filter((id) => !owned.has(id)).length, runtimeIds.length + uninventoried.length, runtimeMissing),
     measure("subsetOwnershipCoverage", manifestMutations.length - wildcards.length, manifestMutations.length, wildcards),
     measure("externalOracleCoverage", manifestMutations.length - withoutOracle.length, manifestMutations.length, withoutOracle),
+    // 🧪️AN ORACLE THAT HAS NEVER BEEN RUN AGAINST ANYTHING PROVES NOTHING. `externalOracleCoverage`
+    // asks only whether a qualifying oracle is REGISTERED for a mutation; it says nothing about whether
+    // any artifact exists to run it on. 271 of 369 manifested mutations had zero fixtures targeting their
+    // subset while counting as covered — the empty-denominator failure this protocol already forbids at
+    // the dimension level, reappearing one level down at the mutation level.
+    measure("oracleEvidenceCoverage", manifestMutations.length - withoutEvidence.length, manifestMutations.length, withoutEvidence),
     measure("oracleCapabilityCoverage", requiredCapabilities.length - unsupportedCapabilities.length, requiredCapabilities.length, unsupportedCapabilities),
     measure("productionBridgeCoverage", subjectResults.length - replaying.length, subjectResults.length, replaying),
     measure("fixtureClassCoverage", FIXTURE_CLASSES.filter((klass) => fixtures.some((fixture) => fixture.class === klass)).length, FIXTURE_CLASSES.length, FIXTURE_CLASSES.filter((klass) => !fixtures.some((fixture) => fixture.class === klass))),
@@ -3915,6 +5215,13 @@ export function enforceReleaseGates(measurements: readonly DimensionMeasurement[
     const measurement = byDimension.get(dimension);
     if (measurement === undefined) {
       failures.push(`${dimension} was never measured — a gate that reads nothing cannot be satisfied`);
+      continue;
+    }
+    // 🚦️An EMPTY denominator is not 100%. `measure` reports ratio 1 for an empty set so the display
+    // reads "n/a" rather than a false 0%, but a release gate that accepted it would be satisfied by a
+    // run in which nothing was measured at all — which is precisely the failure the gate exists for.
+    if (measurement.total === 0) {
+      failures.push(`${dimension} has an EMPTY denominator — nothing was measured, and an unmeasured dimension cannot be 100%`);
       continue;
     }
     if (measurement.ratio < 1) failures.push(`${dimension} is ${(measurement.ratio * 100).toFixed(2)}% (${measurement.covered}/${measurement.total}); release requires 100% — missing: ${measurement.missing.slice(0, 10).join(", ")}${measurement.missing.length > 10 ? ` (+${measurement.missing.length - 10} more)` : ""}`);

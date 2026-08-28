@@ -88,6 +88,10 @@ impl SurfaceSlot {
     }
 }
 
+impl Drop for SurfaceSlot {
+    fn drop(&mut self) { self.reconciler.close_transaction_oracle(); }
+}
+
 //#endregion 🧬️Erasure
 
 /// 💥️ A fault [`FrameTransaction::step`] surfaces in its result instead of hanging or silently dropping
@@ -121,11 +125,47 @@ pub const PROJECTION_DRAIN_LIMIT: usize = 256;
 /// (if any) that should wake the next transaction.
 #[derive(Debug, Default)]
 pub struct Transacted {
-    pub patches: Vec<ui_contract::UiPatch>,
+    pub patches: Vec<TransactionPatch>,
     pub commands: Vec<crate::Command>,
     pub presence: Vec<ui_contract::PresenceUpdate>,
     pub faults: Vec<TransactFault>,
     pub next_wake_ms: Option<u64>,
+}
+
+/// 🧪️ Test-only paired publication owner; serialization borrows its exact retained payload.
+pub struct TransactionPatch {
+    payload: ui_contract::UiPendingPatch,
+    published: Option<crate::SurfaceReconcilePublishedPatch>,
+}
+
+impl TransactionPatch {
+    fn from_ready(ready: &mut crate::SurfaceReconcileReadyPatch) -> Self {
+        let mut owner = Self { payload: ui_contract::UiPendingPatch::default(), published: None };
+        assert!(ready.publish_into(&mut owner.payload, &mut owner.published, crate::SurfaceReconcileReadyPatch::required_publish_bytes()).unwrap() > 0);
+        assert!(ready.terminal_is_empty());
+        owner
+    }
+}
+
+impl std::ops::Deref for TransactionPatch {
+    type Target = ui_contract::UiPatch;
+    fn deref(&self) -> &Self::Target { self.payload.get().expect("test publication retains its payload") }
+}
+
+impl std::fmt::Debug for TransactionPatch {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { std::fmt::Debug::fmt(&**self, formatter) }
+}
+
+impl serde::Serialize for TransactionPatch {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> { serde::Serialize::serialize(&**self, serializer) }
+}
+
+impl Drop for TransactionPatch {
+    fn drop(&mut self) {
+        while !self.payload.terminal_is_empty() { self.payload.close_step(1, 4096).unwrap(); }
+        if let Some(published) = self.published.as_mut() { while !published.close_step_with_grant(1, 4096).unwrap().complete {} }
+        self.published = None;
+    }
 }
 
 /// 🧠️ The headless runtime for one embedder: every entity, the dependency graph presenting reads
@@ -296,16 +336,34 @@ pub enum FrameTransactionStep {
 
 struct ReconciledSurface {
     surface: ui_contract::SurfaceId,
-    reconciler: crate::SurfaceReconciler,
-    patch: Option<ui_contract::UiPatch>,
+    reconciler: Option<crate::SurfaceReconciler>,
+    patch: Option<crate::SurfaceReconcileReadyPatch>,
+}
+
+impl Drop for ReconciledSurface {
+    fn drop(&mut self) {
+        if let Some(patch) = self.patch.as_mut() { while !patch.close_step_with_grant(1, 4096).unwrap().complete {} }
+        if let Some(reconciler) = self.reconciler.as_mut() { reconciler.close_transaction_oracle(); }
+    }
 }
 
 struct ActiveReconcile {
     surface: ui_contract::SurfaceId,
-    cursor: crate::reconcile::SurfaceReconcileCursor,
+    generation: u64,
+    job: Option<crate::SurfaceReconcileJob>,
+    current: Option<crate::SurfaceReconciler>,
+    ready: Option<crate::SurfaceReconcileReadyPatch>,
 }
 
-/// 🔄️ Persistent worker-local frame state. Reconciliation occurs against cloned shadow state and
+impl Drop for ActiveReconcile {
+    fn drop(&mut self) {
+        if let Some(job) = self.job.take() { let mut terminal = job.into_terminal(); while !terminal.close_step() {} }
+        if let Some(ready) = self.ready.as_mut() { while !ready.close_step_with_grant(1, 4096).unwrap().complete {} }
+        if let Some(current) = self.current.as_mut() { current.close_transaction_oracle(); }
+    }
+}
+
+/// 🧪️ Test-only frame oracle. Reconciliation reads the same canonical root through an alias and
 /// becomes visible only in `PublishSnapshot`, so newer input can discard obsolete trees and patches
 /// without corrupting revision state or losing commands already accepted by the gateway.
 pub struct FrameTransaction {
@@ -327,7 +385,7 @@ pub struct FrameTransaction {
     trees: VecDeque<(ui_contract::SurfaceId, crate::ComponentTree)>,
     active_reconcile: Option<ActiveReconcile>,
     reconciled: VecDeque<ReconciledSurface>,
-    commits: Vec<(ui_contract::SurfaceId, crate::SurfaceReconciler)>,
+    commits: Vec<ReconciledSurface>,
 }
 
 impl FrameTransaction {
@@ -559,34 +617,56 @@ impl FrameTransaction {
                 return false;
             };
             if let Some(slot) = runtime.surfaces.get(&surface) {
-                self.active_reconcile = Some(ActiveReconcile { surface, cursor: crate::reconcile::SurfaceReconcileCursor::new(tree, &slot.reconciler) });
+                let generation = self.observed_input_epoch.checked_add(1).expect("test transaction generation exhausted");
+                let reservation = crate::SurfaceReconcileReservation::try_new(generation).expect("test transaction admits paired output before reconciliation");
+                let current = slot.reconciler.transaction_reader();
+                let job = match crate::SurfaceReconcileJob::try_new_reserved(current, tree, reservation) {
+                    Ok(job) => job,
+                    Err(mut rejected) => { while !rejected.close_step() {} self.credit_fault(); return true; }
+                };
+                self.active_reconcile = Some(ActiveReconcile { surface, generation, job: Some(job), current: None, ready: None });
+                self.charge(1, 0, size_of::<ActiveReconcile>());
+                return true;
             } else {
                 return true;
             }
         }
         let active = self.active_reconcile.as_mut().expect("active reconcile was initialized");
-        let slot = runtime.surfaces.get(&active.surface).expect("surface disappeared without changing the input epoch");
-        match active.cursor.step(&slot.reconciler) {
-            crate::reconcile::SurfaceReconcileStep::Yield { nodes, bytes } => self.charge(1, nodes, bytes),
-            crate::reconcile::SurfaceReconcileStep::Complete { reconciler, patch } => {
-                let active = self.active_reconcile.take().expect("completed reconcile remained active");
-                self.reconciled.push_back(ReconciledSurface { surface: active.surface, reconciler, patch });
-                self.charge(1, 0, 0);
-            }
-            crate::reconcile::SurfaceReconcileStep::Fault(_) => self.credit_fault(),
+        if active.current.is_some() {
+            let mut active = self.active_reconcile.take().unwrap();
+            self.reconciled.push_back(ReconciledSurface { surface: active.surface.clone(), reconciler: active.current.take(), patch: active.ready.take() });
+            self.charge(1, 0, size_of::<ReconciledSurface>());
+            return true;
+        }
+        let job = active.job.as_mut().unwrap();
+        if job.is_ready() {
+            assert!(job.take_ready_into(&mut active.current, &mut active.ready, crate::SurfaceReconcileJob::required_ready_transfer_bytes()).unwrap());
+            self.charge(1, 0, crate::SurfaceReconcileJob::required_ready_transfer_bytes());
+            return true;
+        }
+        let mut sequence = 0;
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(active.generation), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence);
+        let before = job.transaction_usage();
+        let outcome = job.drive_one(&mut context);
+        let after = job.transaction_usage();
+        self.charge(1, after.nodes.checked_sub(before.nodes).expect("test job node census is monotonic"), after.bytes.checked_sub(before.bytes).expect("test job byte census is monotonic"));
+        match outcome {
+            crate::SurfaceReconcileJobStep::MoreWork | crate::SurfaceReconcileJobStep::Ready => {},
+            crate::SurfaceReconcileJobStep::Fault => self.credit_fault(),
         }
         true
     }
 
     fn build_render_packet(&mut self) -> bool {
-        let Some(candidate) = self.reconciled.pop_front() else {
+        let Some(mut candidate) = self.reconciled.pop_front() else {
             self.stage = FrameTransactionStage::PublishSnapshot;
             return false;
         };
-        if let Some(patch) = candidate.patch {
-            self.transacted.patches.push(patch);
+        if let Some(patch) = candidate.patch.as_mut() {
+            self.transacted.patches.push(TransactionPatch::from_ready(patch));
         }
-        self.commits.push((candidate.surface, candidate.reconciler));
+        candidate.patch = None;
+        self.commits.push(candidate);
         self.charge(1, 0, 0);
         true
     }
@@ -621,9 +701,10 @@ impl FrameTransaction {
     }
 
     fn publish<S: crate::CommandSink, D: crate::ProjectionDelta>(&mut self, runtime: &mut UiRuntime<S, D>) -> FrameTransactionStep {
-        for (surface, reconciler) in self.commits.drain(..) {
-            if let Some(slot) = runtime.surfaces.get_mut(&surface) {
-                slot.reconciler = reconciler;
+        for mut candidate in self.commits.drain(..) {
+            if let Some(slot) = runtime.surfaces.get_mut(&candidate.surface) {
+                slot.reconciler.close_transaction_oracle();
+                slot.reconciler = candidate.reconciler.take().unwrap();
             }
         }
         runtime.presence.expire(self.now_ms);
@@ -1137,6 +1218,23 @@ mod tests {
 
         assert!(matches!(transaction.step(&mut runtime, &mut cx), FrameTransactionStep::Yield { usage: FrameTransactionUsage { items: 0, .. }, .. }));
         assert_eq!(runtime.inbox.len(), 1);
+    }
+
+    #[test]
+    fn transaction_canonical_job_preserves_independent_node_credit() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🔄️transaction/🧪️fixture.json")).unwrap();
+        for row in fixture["cases"].as_array().unwrap() {
+            let mut runtime = test_runtime();
+            register_test_surface(&mut runtime, surface("node-credit"));
+            let mut transaction = FrameTransaction::new(FrameTransactionLimits {
+                max_items: fixture["maximumItems"].as_u64().unwrap() as usize,
+                max_nodes: row["maximumNodes"].as_u64().unwrap() as usize,
+                max_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize,
+            });
+            let (output, _) = drive_stepped(&mut transaction, &mut runtime, 1);
+            assert_eq!(output.patches.len(), row["patches"].as_u64().unwrap() as usize);
+            assert_eq!(output.faults.iter().any(|fault| matches!(fault, TransactFault::CreditsExceeded { .. })), row["creditFault"].as_bool().unwrap());
+        }
     }
 
     #[test]

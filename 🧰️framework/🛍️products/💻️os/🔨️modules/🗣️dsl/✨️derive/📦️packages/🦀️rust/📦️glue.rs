@@ -1745,6 +1745,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     let aggregate_ty = quote! { #name #ty_generics };
     let mut diff_arms = Vec::new();
     let mut inverse_arms = Vec::new();
+    let mut timestamp_arms = Vec::new();
     let mut descriptor_arms = Vec::new();
     let mut semantics_arms = Vec::new();
     let mut label_arms = Vec::new();
@@ -1778,6 +1779,7 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         let leaf = quote! { <#payload_ty as ::semio_framework_os_kernel::MutationLeaf> };
         diff_arms.push(quote! { Self::#variant_ident(payload) => #kind::diff(payload, base) });
         inverse_arms.push(quote! { Self::#variant_ident(payload) => #kind::inverse(payload, base) });
+        timestamp_arms.push(quote! { Self::#variant_ident(payload) => #kind::timestamp(payload) });
         descriptor_arms.push(quote! { Self::#variant_ident(_) => &<Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS[#index] });
         semantics_arms.push(quote! { Self::#variant_ident(_) => &#kind::SEMANTICS });
         label_arms.push(quote! { Self::#variant_ident(payload) => #kind::label(payload) });
@@ -1805,13 +1807,13 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
             }
         });
         register_calls.push(quote! {
-            ::semio_framework_os_kernel::register_mutation_descriptor(
-                ::semio_framework_os_kernel::MutationDescriptor::new(
-                    ::semio_framework_os_kernel::SchemaId(format!("{}#{}", #schema, #kind::SEMANTICS.kind)),
-                    ::semio_framework_os_kernel::SchemaVersion(1),
-                    ::semio_framework_os_kernel::StateClass::Artifact,
-                ).with_semantics(&#kind::SEMANTICS),
-            );
+            ::semio_framework_os_kernel::MutationDescriptor::new(
+                ::semio_framework_os_kernel::SchemaId(format!("{}#{}", #schema, #kind::SEMANTICS.kind)),
+                ::semio_framework_os_kernel::SchemaVersion(1),
+                state_class,
+                #leaf::DESCRIPTOR,
+                #kind::SEMANTICS,
+            )?
         });
     }
 
@@ -1849,6 +1851,10 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#inverse_arms),* }
             }
+            fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {
+                let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
+                match self { #(#timestamp_arms),* }
+            }
             fn may_emit_foreign_steps(&self) -> bool {
                 let _ = <Self as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
                 match self { #(#may_emit_foreign_steps_arms),* }
@@ -1879,9 +1885,12 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
         }
 
         /// 🪪️ Registers the validated leaf roster during owner startup.
-        pub fn #register_fn_ident #impl_generics () #where_clause {
+        pub fn #register_fn_ident #impl_generics (
+            state_class: ::semio_framework_os_kernel::StateClass,
+        ) -> ::core::result::Result<(), ::semio_framework_os_kernel::MutationDescriptorError> #where_clause {
             let _ = <#aggregate_ty as ::semio_framework_os_kernel::Mutation<#snapshot_ty>>::DESCRIPTORS;
-            #(#register_calls)*
+            let descriptors = [#(#register_calls),*];
+            ::semio_framework_os_kernel::register_mutation_descriptors(descriptors)
         }
     })
 }
@@ -1915,8 +1924,21 @@ mod mandatory_mutations_tests {
             }).collect();
             assert!(names.iter().any(|name| name == "DESCRIPTORS"));
             assert!(names.iter().any(|name| name == "descriptor"));
+            assert!(names.iter().any(|name| name == "timestamp"));
             let conversions = implementations.iter().filter(|item| item.trait_.as_ref().unwrap().1.segments.last().unwrap().ident == "From").count();
             assert_eq!(conversions, case["leaves"].as_u64().unwrap() as usize);
+            let timestamp = mutation.items.iter().find_map(|item| match item {
+                syn::ImplItem::Fn(item) if item.sig.ident == "timestamp" => Some(item),
+                _ => None,
+            }).unwrap();
+            let Some(syn::Stmt::Expr(syn::Expr::Match(dispatch), _)) = timestamp.block.stmts.last() else { panic!("timestamp must directly delegate by leaf") };
+            assert_eq!(dispatch.arms.len(), conversions);
+            for arm in &dispatch.arms {
+                let syn::Expr::Call(call) = arm.body.as_ref() else { panic!("timestamp must call the leaf hook") };
+                assert_eq!(call.args.len(), 1);
+                assert!(matches!(&call.func.as_ref(), syn::Expr::Path(path) if path.path.segments.last().unwrap().ident == "timestamp"));
+                assert!(matches!(&call.args[0], syn::Expr::Path(path) if path.path.is_ident("payload")));
+            }
             assert_eq!(!mutation.generics.params.is_empty(), case["generic"].as_bool().unwrap());
             if case["generic"] == true { assert!(mutation.generics.where_clause.is_some()); }
             let expanded = tokens.to_string();
@@ -1926,6 +1948,26 @@ mod mandatory_mutations_tests {
             assert!(!expanded.contains("include !"));
             assert!(expanded.contains("MutationLeaf > :: DESCRIPTOR"));
             assert!(expanded.contains("MutationLeaf > :: PROVENANCE"));
+            let registration = syntax.items.iter().find_map(|item| match item {
+                syn::Item::Fn(item) if item.sig.ident.to_string().starts_with("register_") => Some(item),
+                _ => None,
+            }).unwrap();
+            assert_eq!(registration.sig.inputs.len(), 1);
+            assert!(matches!(&registration.sig.output, syn::ReturnType::Type(_, ty) if matches!(ty.as_ref(), syn::Type::Path(path) if path.path.segments.last().unwrap().ident == "Result")));
+            assert_eq!(registration.sig.generics, mutation.generics);
+            let descriptors = registration.block.stmts.iter().find_map(|statement| match statement {
+                syn::Stmt::Local(local) if matches!(&local.pat, syn::Pat::Ident(name) if name.ident == "descriptors") => Some(local.init.as_ref().unwrap().expr.as_ref()),
+                _ => None,
+            }).unwrap();
+            let syn::Expr::Array(descriptors) = descriptors else { panic!("registration must preconstruct the complete descriptor array") };
+            assert_eq!(descriptors.elems.len(), conversions);
+            for descriptor in &descriptors.elems {
+                let syn::Expr::Try(checked) = descriptor else { panic!("descriptor errors must propagate") };
+                let syn::Expr::Call(constructor) = checked.expr.as_ref() else { panic!("expected complete descriptor constructor") };
+                assert_eq!(constructor.args.len(), 5);
+            }
+            assert_eq!(expanded.matches("register_mutation_descriptors").count(), 1);
+            assert!(!expanded.contains("with_semantics"));
         }
         assert!(workspace.exists());
     }
@@ -1993,10 +2035,17 @@ mod composite_attrs_tests {
 // 🚫️async: E3 proc-macro entry
 pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
+    match expand_composite_mutation(&input) {
+        Ok(expanded) => expanded.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+fn expand_composite_mutation(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     let name = input.ident.clone();
-    let attrs = match parse_composite_attrs(&input) { Ok(attrs) => attrs, Err(error) => return error.to_compile_error().into() };
+    let attrs = parse_composite_attrs(input)?;
     let (Some(snapshot_ty), Some(op_ty)) = (attrs.snapshot, attrs.op) else {
-        return syn::Error::new_spanned(&input, "#[derive(CompositeMutation)] requires #[composite(snapshot = YourSnapshot, op = YourOp)]").to_compile_error().into();
+        return Err(syn::Error::new_spanned(input, "#[derive(CompositeMutation)] requires #[composite(snapshot = YourSnapshot, op = YourOp)]"));
     };
 
     let expected_kebab = to_kebab(&name.to_string());
@@ -2018,6 +2067,9 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
             fn label(&self) -> String {
                 ::semio_framework_os_kernel::CompositeMutationKind::label(self)
             }
+            fn timestamp(&self) -> Option<::semio_framework_os_kernel::HybridLogicalTimestamp> {
+                ::semio_framework_os_kernel::CompositeMutationKind::timestamp(self)
+            }
             fn target(&self) -> Vec<String> {
                 ::semio_framework_os_kernel::CompositeMutationKind::target(self)
             }
@@ -2029,9 +2081,36 @@ pub fn derive_composite_mutation(input: TokenStream) -> TokenStream {
             }
         }
     };
-    expanded.into()
+    Ok(expanded)
 }
 //#endregion 🔖️CompositeMutation
+
+//#region 🧪️CompositeTimestamp
+#[cfg(test)]
+mod composite_timestamp_tests {
+    use super::*;
+
+    #[test]
+    fn composite_timestamp_expansion_preserves_the_authored_leaf_hook() {
+        let input: DeriveInput = syn::parse_str("#[composite(snapshot = Doc, op = Ops)] struct ApplyBatch { clock: Option<Clock> }").unwrap();
+        let syntax: syn::File = syn::parse2(expand_composite_mutation(&input).unwrap()).unwrap();
+        let implementation = syntax.items.iter().find_map(|item| match item {
+            syn::Item::Impl(item) if item.trait_.as_ref().is_some_and(|(_, path, _)| path.segments.last().unwrap().ident == "MutationKind") => Some(item),
+            _ => None,
+        }).unwrap();
+        let timestamp = implementation.items.iter().find_map(|item| match item {
+            syn::ImplItem::Fn(item) if item.sig.ident == "timestamp" => Some(item),
+            _ => None,
+        }).unwrap();
+        assert_eq!(timestamp.block.stmts.len(), 1);
+        let syn::Stmt::Expr(syn::Expr::Call(call), _) = &timestamp.block.stmts[0] else { panic!("composite timestamp must delegate directly") };
+        let syn::Expr::Path(function) = call.func.as_ref() else { panic!("expected composite timestamp hook") };
+        assert_eq!(function.path.segments.iter().map(|segment| segment.ident.to_string()).collect::<Vec<_>>(), ["semio_framework_os_kernel", "CompositeMutationKind", "timestamp"]);
+        assert_eq!(call.args.len(), 1);
+        assert!(matches!(&call.args[0], syn::Expr::Path(path) if path.path.is_ident("self")));
+    }
+}
+//#endregion 🧪️CompositeTimestamp
 
 //#region 🔖️VariantHelpers
 /// @emoji 🔡️ Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into

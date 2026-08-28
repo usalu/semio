@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Captured Instance Scheduler Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actor", "instance", "guestLifetime", "closeGeneration", "work", "events", "phases", "refusedWork", "mailbox", "uiAcknowledgement"],
+  "properties": {
+    "actor": { "type": "string", "minLength": 1 },
+    "instance": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "guestLifetime": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "closeGeneration": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+    "work": { "const": ["open", "receipt-ack", "poll", "close", "receipt-ack", "receipt-ack"] },
+    "events": { "const": ["instance-open", "instance-lifecycle-ack", null, "instance-close", "instance-lifecycle-ack", "instance-lifecycle-ack"] },
+    "phases": { "const": ["captured", "open", "open", "accepted", "retired", "complete"] },
+    "refusedWork": { "const": ["app-command", "events", "callback"] },
+    "mailbox": { "const": { "capacity": 32, "overflow": ["operation", "lifecycle"], "outcome": "refused" } },
+    "uiAcknowledgement": { "const": { "surface": "window", "revision": 1, "baseRevision": 0, "operationCount": 0, "patchSequence": "9007199254740993" } }
+  }
+}

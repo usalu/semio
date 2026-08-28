@@ -8,15 +8,154 @@
 import { basename, dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
+//#region 📋️PagedListOracle
+export function fixedListStorageSelfTests(): number {
+  const fixture = JSON.parse(readFileSync(new URL("../../📋️list/🧪️fixture.json", import.meta.url), "utf8"));
+  const schema = JSON.parse(readFileSync(new URL("../../📋️list/🧬️schema.json", import.meta.url), "utf8"));
+  const Ajv = createRequire(import.meta.url)("ajv");
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  const ordered = Buffer.alloc(fixture.ordered.count * 8);
+  for (let index = 0; index < fixture.ordered.count; index++) ordered.writeBigUInt64LE(BigInt(index), index * 8);
+  let sum = 0n;
+  for (let index = 0; index < fixture.ordered.count; index++) sum += ordered.readBigUInt64LE(index * 8);
+  assert.equal(sum, BigInt(fixture.ordered.sum));
+  assert.equal(ordered.readBigUInt64LE(0), BigInt(fixture.ordered.first));
+  assert.equal(ordered.readBigUInt64LE(ordered.byteLength - 8), BigInt(fixture.ordered.last));
+  assert(Buffer.alloc(fixture.binding.elementBytes).byteLength > fixture.binding.smallGrantBytes);
+  assert(Buffer.alloc(fixture.oversized.elementBytes).byteLength > fixture.maximumGrantBytes);
+  assert.equal(Buffer.alloc(fixture.edgeCases.zeroCapacity).byteLength, 0);
+  assert.equal(Array.from({ length: fixture.edgeCases.zeroSizedCount }, () => null).length, 7);
+  const retained = ordered.subarray(0, fixture.edgeCases.retainedPrefix * 8);
+  assert.equal(retained.readBigUInt64LE(retained.byteLength - 8), 511n);
+  assert.equal(ordered.byteLength - retained.byteLength, (fixture.edgeCases.tailCount - fixture.edgeCases.retainedPrefix) * 8);
+  for (const bits of [32, 64]) {
+    const maximum = (1n << BigInt(bits - 1)) - 1n;
+    const counter = Buffer.alloc(8);
+    counter.writeBigUInt64LE(maximum);
+    assert(counter.readBigUInt64LE() + 384n > maximum);
+  }
+  assert.equal(Buffer.alloc(384 * fixture.counter.allocatorMultiplier).byteLength, 768);
+  assert.equal(validate({ ...fixture, fanout: 32 }), false);
+  assert.equal(validate({ ...fixture, retirement: { ...fixture.retirement, releasesLivePayload: true } }), false);
+  const copy = JSON.parse(readFileSync(new URL("../../🔗️bindings/📋️copy/🧪️fixture.json", import.meta.url), "utf8"));
+  const copySchema = JSON.parse(readFileSync(new URL("../../🔗️bindings/📋️copy/🧬️schema.json", import.meta.url), "utf8"));
+  const validateCopy = new Ajv({ strict: true, allErrors: true }).compile(copySchema);
+  assert(validateCopy(copy), JSON.stringify(validateCopy.errors));
+  const bindingBytes = Buffer.alloc(copy.elementBytes);
+  assert(bindingBytes.byteLength <= copy.grantBytes && bindingBytes.byteLength > copy.smallGrantBytes);
+  const expected = Array.from({ length: copy.count }, (_, index) => ({ trigger: "activate", action: { scope: copy.scope, name: `action-${index}`, version: 1 } }));
+  assert.deepEqual(JSON.parse(JSON.stringify(expected)).slice(0, 3).map((binding: typeof expected[number]) => binding.action.name), copy.names);
+  assert.equal(validateCopy({ ...copy, heldReaderSurvives: false }), false);
+  const componentCopy = JSON.parse(readFileSync(new URL("../../📋️copy/🧪️fixture.json", import.meta.url), "utf8"));
+  const componentCopySchema = JSON.parse(readFileSync(new URL("../../📋️copy/🧬️schema.json", import.meta.url), "utf8"));
+  const validateComponentCopy = new Ajv({ strict: true, allErrors: true }).compile(componentCopySchema);
+  assert(validateComponentCopy(componentCopy), JSON.stringify(validateComponentCopy.errors));
+  const components = JSON.parse(readFileSync(new URL("../../♻️retirement/🌳️typed/🧪️components.json", import.meta.url), "utf8"));
+  assert.equal(new Set(components.cases.map((row: { component: { type: string } }) => row.component.type)).size, componentCopy.componentCount);
+  const textBytes = Buffer.from(componentCopy.text.repeat(componentCopy.textRepeats));
+  assert.equal(textBytes.byteLength, 512);
+  assert.equal(Buffer.concat(Array(componentCopy.listItems * 2).fill(textBytes)).byteLength, 32768);
+  assert.equal(Buffer.alloc(componentCopy.allocationGrant * componentCopy.allocatorMultiplier).byteLength, 65536);
+  assert.equal(Buffer.alloc(componentCopy.allocationGrant).byteLength / componentCopy.runtimeWorkGrant, 8);
+  assert.equal(validateComponentCopy({ ...componentCopy, partialCandidateReadable: true }), false);
+  assert.equal(validateComponentCopy({ ...componentCopy, allocationGrant: 65536 }), false);
+  const comparison = JSON.parse(readFileSync(new URL("../../⚖️compare/🧪️fixture.json", import.meta.url), "utf8"));
+  const comparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/🧬️schema.json", import.meta.url), "utf8"));
+  const validateComparison = new Ajv({ strict: true, allErrors: true }).compile(comparisonSchema);
+  assert(validateComparison(comparison), JSON.stringify(validateComparison.errors));
+  for (const row of comparison.cases) assert.equal(Buffer.from(JSON.stringify(row.left)).equals(Buffer.from(JSON.stringify(row.right))), row.equal);
+  assert.equal(validateComparison({ ...comparison, differentBackingMayBeEqual: false }), false);
+  assert.equal(validateComparison({ ...comparison, contendedProgress: true }), false);
+  const frameOracle = Buffer.alloc(comparison.frame.bytes);
+  frameOracle.writeUInt16LE(comparison.frame.pageCount - 1, 0);
+  frameOracle.writeUInt16LE(comparison.frame.maximumTextBytes * 2, 4);
+  assert.equal(frameOracle.toString("hex"), comparison.frame.littleEndian);
+  assert.equal(frameOracle.readUInt16LE(4), comparison.frame.maximumPosition);
+  assert.equal(validateComparison({ ...comparison, frame: { ...comparison.frame, bytes: 32 } }), false);
+  const documentComparison = JSON.parse(readFileSync(new URL("../../⚖️compare/📄️document/🧪️fixture.json", import.meta.url), "utf8"));
+  const documentComparisonSchema = JSON.parse(readFileSync(new URL("../../⚖️compare/📄️document/🧬️schema.json", import.meta.url), "utf8"));
+  const validateDocumentComparison = new Ajv({ strict: true, allErrors: true }).compile(documentComparisonSchema);
+  assert(validateDocumentComparison(documentComparison), JSON.stringify(validateDocumentComparison.errors));
+  const nodeIds = Buffer.alloc(documentComparison.nodeIds.length * 8);
+  documentComparison.nodeIds.forEach((id: number, index: number) => nodeIds.writeBigUInt64LE(BigInt(id), index * 8));
+  assert.deepEqual(documentComparison.nodeIds.map((_: number, index: number) => Number(nodeIds.readBigUInt64LE(index * 8))), documentComparison.wireOrder);
+  assert.equal(Buffer.from(documentComparison.text.repeat(documentComparison.textRepeats)).byteLength, 512);
+  assert.equal(validateDocumentComparison({ ...documentComparison, copiesOldComponent: true }), false);
+  assert.equal(validateDocumentComparison({ ...documentComparison, waitsForLiveDocumentOnCancel: true }), false);
+  assert.equal(validateDocumentComparison({ ...documentComparison, frames: 1 }), false);
+  const wholePatch = JSON.parse(readFileSync(new URL("../../♻️retirement/📋️patch/📨️pending/📄️whole/🧪️fixture.json", import.meta.url), "utf8"));
+  const wholePatchSchema = JSON.parse(readFileSync(new URL("../../♻️retirement/📋️patch/📨️pending/📄️whole/🧬️schema.json", import.meta.url), "utf8"));
+  const validateWholePatch = new Ajv({ strict: true, allErrors: true }).compile(wholePatchSchema);
+  assert(validateWholePatch(wholePatch), JSON.stringify(validateWholePatch.errors));
+  assert.equal(Buffer.from(wholePatch.surface).byteLength, wholePatch.surfaceBytes);
+  assert.equal(validateWholePatch({ ...wholePatch, includesEmptyBacking: false }), false);
+  assert.equal(validateWholePatch({ ...wholePatch, readableAfterCloseStarts: true }), false);
+  const assembly = JSON.parse(readFileSync(new URL("../../📄️document/🎟️assembly/🧪️fixture.json", import.meta.url), "utf8"));
+  const assemblySchema = JSON.parse(readFileSync(new URL("../../📄️document/🎟️assembly/🧬️schema.json", import.meta.url), "utf8"));
+  const validateAssembly = new Ajv({ strict: true, allErrors: true }).compile(assemblySchema);
+  assert(validateAssembly(assembly), JSON.stringify(validateAssembly.errors));
+  const assemblyIds = Buffer.alloc(assembly.nodeIds.length * 8);
+  assembly.nodeIds.forEach((id: number, index: number) => assemblyIds.writeBigUInt64LE(BigInt(id), index * 8));
+  assert.equal(assemblyIds.toString("hex"), assembly.wireHex);
+  assert.equal(Buffer.from(assembly.surface).byteLength, 6);
+  assert.equal(Buffer.concat([assemblyIds.subarray(0, 8), assemblyIds.subarray(0, 8)]).byteLength, assembly.comparisonBytesPerIdentity);
+  for (const field of ["zeroGrantAllocates", "copyOldRoot", "contentionWaits"]) assert.equal(validateAssembly({ ...assembly, [field]: true }), false);
+  assert.equal(validateAssembly({ ...assembly, duplicateRetainsInput: false }), false);
+  const resident = JSON.parse(readFileSync(new URL("../../🎟️resident/🧪️fixture.json", import.meta.url), "utf8"));
+  const residentSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🧬️schema.json", import.meta.url), "utf8"));
+  const validateResident = new Ajv({ strict: true, allErrors: true }).compile(residentSchema);
+  assert(validateResident(resident), JSON.stringify(validateResident.errors));
+  const residentBytes = Buffer.alloc(8);
+  residentBytes.writeBigUInt64LE(BigInt(resident.surfaceBytes) * 4n);
+  assert.equal(Number(residentBytes.readBigUInt64LE()), resident.aggregateBytes);
+  let mask = resident.rootOwner | resident.outputOwner;
+  assert.deepEqual(resident.returnOrder.map((owner: number) => { mask &= ~owner; return mask === 0 ? resident.smallBytes : 0; }), resident.returnedBytes);
+  assert(resident.smallReservations * resident.smallBytes < resident.aggregateBytes);
+  for (const field of ["dropWaits", "reusesBeforeFinalOwner", "duplicateReturnAfterExplicitClose"]) assert.equal(validateResident({ ...resident, [field]: true }), false);
+  assert.equal(validateResident({ ...resident, aggregateBytes: resident.aggregateBytes * 2 }), false);
+  const residentFixed = JSON.parse(readFileSync(new URL("../../🎟️resident/🗃️fixed/🧪️fixture.json", import.meta.url), "utf8"));
+  const residentFixedSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/🗃️fixed/🧬️schema.json", import.meta.url), "utf8"));
+  const validateResidentFixed = new Ajv({ strict: true, allErrors: true }).compile(residentFixedSchema);
+  assert(validateResidentFixed(residentFixed), JSON.stringify(validateResidentFixed.errors));
+  const fixedArithmetic = residentFixed.arithmetic;
+  residentBytes.writeBigUInt64LE(BigInt(fixedArithmetic.contract) + BigInt(fixedArithmetic.runtime) + BigInt(fixedArithmetic.payload));
+  assert.equal(Number(residentBytes.readBigUInt64LE()), fixedArithmetic.admitted);
+  assert.equal(Number(residentBytes.readBigUInt64LE() - BigInt(fixedArithmetic.payload)), fixedArithmetic.final);
+  for (const field of ["finalOwnerReleasesStatic", "repeatRegistrationChargesAgain", "changedRegistrationAccepted", "zeroGrantMutates"]) assert.equal(validateResidentFixed({ ...residentFixed, [field]: true }), false);
+  assert.equal(validateResidentFixed({ ...residentFixed, staticCountsAgainstAggregate: false }), false);
+  const residentRoot = JSON.parse(readFileSync(new URL("../../🎟️resident/📄️root/🧪️fixture.json", import.meta.url), "utf8"));
+  const residentRootSchema = JSON.parse(readFileSync(new URL("../../🎟️resident/📄️root/🧬️schema.json", import.meta.url), "utf8"));
+  const validateResidentRoot = new Ajv({ strict: true, allErrors: true }).compile(residentRootSchema);
+  assert(validateResidentRoot(residentRoot), JSON.stringify(validateResidentRoot.errors));
+  assert.equal(Buffer.from(residentRoot.surface).toString("hex"), residentRoot.surfaceUtf8);
+  assert.equal(Buffer.byteLength(residentRoot.payload), residentRoot.payloadUtf8Bytes);
+  const rootId = Buffer.alloc(8); rootId.writeBigUInt64LE(BigInt(residentRoot.rootId));
+  assert.equal(rootId.toString("hex"), residentRoot.wireHex);
+  for (const field of ["separateLedger", "reusesBeforeFinalReader", "dropWaits"]) assert.equal(validateResidentRoot({ ...residentRoot, [field]: true }), false);
+  assert.equal(residentRoot.pressureRoots * residentRoot.pressureReservationBytes, residentRoot.pressureAggregateBytes);
+  assert.equal(validateResidentRoot({ ...residentRoot, slotReuseRequiresTypedTerminal: false }), false);
+  for (const order of residentRoot.outputOrders) {
+    let pending = 3;
+    assert.deepEqual(order.map((owner: number) => { pending &= ~owner; return pending === 0 ? residentRoot.sealedBytes : 0; }), [0, 32768]);
+  }
+  assert.equal(validateResidentRoot({ ...residentRoot, shrinkAfterSplit: true }), false);
+  return 75;
+}
+//#endregion 📋️PagedListOracle
+
 //#region 🔖️test
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    console.log(`[DEBUG] fixed-list-page-oracle checks=${fixedListStorageSelfTests()}`);
     await runCargoTestBudgeted([], packageRoot, ["--all-features", ...rest]);
   }
 }

@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "admissionFailures": ["owner", "record", "page", "reader", "external"],
+  "capacity": { "bytes": 16384, "slots": 64, "owners": 32, "control": { "bytes": 2048, "slots": 8, "owners": 4 } },
+  "invalidCapacities": [
+    { "name": "control-bytes-exceed-total", "value": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 2, "slots": 0, "owners": 0 } } },
+    { "name": "control-slots-exceed-total", "value": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 2, "owners": 0 } } },
+    { "name": "control-owners-exceed-total", "value": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 2 } } },
+    { "name": "unsafe-bytes", "value": { "bytes": 9007199254740992, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } },
+    { "name": "fractional-slot", "value": { "bytes": 1, "slots": 0.5, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } },
+    { "name": "negative-owner", "value": { "bytes": 1, "slots": 1, "owners": -1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } }
+  ],
+  "overflow": { "capacity": 9007199254740991, "used": 9007199254740990, "request": 2, "accepted": false },
+  "recordCharges": { "owner": { "bytes": 128, "slots": 1, "owners": 1 }, "storage": { "bytes": 192, "slots": 1, "owners": 1 }, "reader": { "bytes": 64, "slots": 1, "owners": 1 }, "witness": { "bytes": 64, "slots": 1, "owners": 1 }, "pageBacking": { "bytes": 256, "slots": 1, "owners": 0 } },
+  "storageCases": [
+    { "name": "pre-open-response", "bytes": 4161, "posted": true },
+    { "name": "ui-destination", "bytes": 256, "posted": false },
+    { "name": "decoder-scratch", "bytes": 256, "posted": false }
+  ],
+  "lifecycle": ["caller-lost-before-allocation", "caller-lost-after-allocation", "reader-owner-registered-before-exposure", "writer-close-preserves-reader", "unsubmitted-cancel-refunds", "posted-empty-cancel-retains", "posted-custody-retirement", "constructor-finalization-throw", "foreign-witness-rejected", "control-headroom", "zero-grant", "terminal-child-wrapper-next-turn"],
+  "pattern": { "length": 256, "multiplier": 73, "addend": 19 },
+  "pageLengths": [0, 1, 255, 256],
+  "controlCases": [
+    { "name": "bytes", "control": { "bytes": 704, "slots": 8, "owners": 8 } },
+    { "name": "slots", "control": { "bytes": 2048, "slots": 5, "owners": 8 } },
+    { "name": "owners", "control": { "bytes": 2048, "slots": 8, "owners": 4 } }
+  ],
+  "externalFailures": ["view-constructor-after-transfer", "custody-finalization", "external-finalization", "retirement-finalization", "hostile-wrapper", "typed-subview", "oversized-backing"],
+  "closeChildren": ["blocked", "rejected", "throw", "over-grant", "full-grant-complete"],
+  "domainRecord": { "envelope": { "bytes": 512, "slots": 3, "owners": 2 }, "intrinsic": { "bytes": 256, "slots": 3, "owners": 3 }, "cases": ["unused-close", "capacity-before-construction", "install-exact", "foreign-install", "install-then-throw", "installed-blocks-neutral-close", "foreign-detach", "detach-then-throw", "exact-observation-recovery", "replay-rejected", "zero-final-grant", "short-final-grant", "record-finalization-fault", "witness-finalization-fault", "observation-finalization-fault"] }
+}

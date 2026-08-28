@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import glob from "fast-glob";
@@ -33,6 +33,28 @@ test("Bun and esbuild accept the complete actual root task router", () => {
   expect(transformSync(text, { loader: "ts", format: "esm", target: "es2022" }).code.length).toBeGreaterThan(0);
 });
 
+test("eager policy vocabulary avoids workspace output reads while default lookup stays strict", () => {
+  const expected = vector.eagerVocabulary, names = Object.keys(expected.values);
+  const declarations = source.statements.filter(ts.isVariableStatement).flatMap((statement) => statement.declarationList.declarations).filter((node) => ts.isIdentifier(node.name) && names.includes(node.name.text));
+  expect(declarations.map((node) => node.name.getText(source))).toEqual(names);
+  const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(root, library, "🔍️discovery/🟦️component.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const helpers = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && ["canonicalFilenamesForKind", "canonicalPrimaryFilenameForKind"].includes(node.name?.text ?? ""));
+  expect(helpers).toHaveLength(2);
+  const input = [...helpers.map((node) => node.getText(discovery).replace(/^export /u, "")), ...declarations.map((node) => `const ${node.getText(source)};`)].join("\n");
+  const taxonomy = JSON.parse(readFileSync(join(root, library, "🔣️taxonomy.json"), "utf8"));
+  for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(input), transformSync(input, { loader: "ts", target: "es2022" }).code]) {
+    let workspaceReads = 0, lookups = 0;
+    const catalog = { ...taxonomy, fileKinds: new Proxy(taxonomy.fileKinds, { get: (target, key) => { lookups++; return Reflect.get(target, key); } }) };
+    const actual = new Function("loadCatalogTaxonomy", "loadTaxonomy", `${compiled}\nreturn { values: {${names.join(",")}}, strictLookup: () => canonicalPrimaryFilenameForKind("json") };`)(() => catalog, () => { workspaceReads++; throw new Error(expected.missingActiveOutput); });
+    expect(actual.values).toEqual(expected.values);
+    expect(lookups).toBe(expected.lookupCount);
+    expect(workspaceReads).toBe(0);
+    expect(() => actual.strictLookup()).toThrow(expected.missingActiveOutput);
+    expect(workspaceReads).toBe(1);
+  }
+  console.log("[DEBUG] root policy vocabulary matched both compilers; implicit workspace lookup remained strict");
+});
+
 test("field naming retains the actual Bun schema-extractor semantics", async () => {
   for (const implementation of implementations("policySnakeToCamel")) for (const row of vector.fieldNames) expect(implementation(row.input)).toBe(row.output);
   const declarations = functions.filter((node) => node.name?.text === "policySnakeToCamel").map((node) => node.getText(source)).join("\n");
@@ -50,7 +72,17 @@ test("field naming retains the actual Bun schema-extractor semantics", async () 
 });
 
 test("glue path discovery retains its declared targets with independent compiler parity", () => {
-  const directory = mkdtempSync(join(ticket, "🧪️root-script-glue-"));
+  expect(vector.fixtureRetention).toEqual({ ownerPath: "📓️root-script-compiler/🧾️runs", prefix: "🧪️glue-" });
+  const parent = join(ticket, vector.fixtureRetention.ownerPath);
+  let ancestor = root;
+  for (const part of relative(root, parent).split(/[\\/]/u)) {
+    ancestor = join(ancestor, part);
+    try { lstatSync(ancestor); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; mkdirSync(ancestor); }
+    const state = lstatSync(ancestor);
+    expect(state.isDirectory() && !state.isSymbolicLink()).toBe(true);
+  }
+  const directory = mkdtempSync(join(parent, vector.fixtureRetention.prefix));
+  writeFileSync(join(directory, "📝️.md"), "# Root Script Compiler Fixture\n\nFresh authored inputs and active test evidence are retained; no historical fixture is reconstructed.\n", { flag: "wx" });
   for (const [path, content] of Object.entries(vector.glue.inputs)) { mkdirSync(dirname(join(directory, path)), { recursive: true }); writeFileSync(join(directory, path), content as string); }
   const oracle = glob.sync("**/*.rs", { cwd: directory, onlyFiles: true, dot: true }).filter((path) => path !== vector.glue.entry).sort();
   expect(oracle).toEqual(vector.glue.targets);

@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ AVI 1.0/✳️any's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). No standalone Rust crate reads AND writes AVI credibly (`avirus` 0.2.5 never parses a typed header and its 'write' path copies the whole hdrl section byte-for-byte; `rff-format-avi` 0.1.0's own doc comment says its muxer is 'still scaffolded'; `oxideav-avi` 0.0.9 has real depth but zero independent adoption — created 2026-04-19, 0 GitHub stars/forks, would pull in an equally unvalidated `oxideav-core`). AVI IS a RIFF container, so the reference here composes `riff` 2.0 — a mature, independent, heavily used (11.9M downloads) generic RIFF/LIST/chunk reader/writer, MIT, unrelated to this repository — with a hand-written AVI 1.0 hdrl/strl/movi/idx1 codec against the format's own public byte layout. Same composition shape ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf's oracle already established for zip+quick-xml, for the identical reason: no standalone crate exists for the specific format, so two independent, credible, more-generic layers are composed instead of adopting a weaker/unlicensed substitute. Full investigation and evidence: .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/📓️w7-avi-1-0-mutate-report.md. Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "riff",
       "version": "2.0",
-      "capabilities": ["avi-1-0-mutate"],
-      "comparisonProfiles": ["semantic-avi-v1"],
+      "capabilities": [
+        "avi-1-0-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-avi-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/frabert/riff",
       "rationale": "What `riff` provides: the generic RIFF layer only — chunk id/size framing, LIST nesting with a 4-byte type tag, even-byte padding, all read AND written through `riff::Chunk`/`riff::ChunkContents` (not this subset's own `🚪️io/🦀️component.rs`, which hand-rolls the same primitives independently). What this module provides on top: AVI 1.0's OWN semantics against the format's public specification — `avih`/`strh`/`strf` (BITMAPINFOHEADER/WAVEFORMATEX) field layouts, the movi-fourcc-to-stream-index numbering convention, and the idx1 AVIIF_KEYFRAME/offset convention — none of which `riff` knows anything about. This is the same composition shape ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf's oracle already established for zip+quick-xml (no standalone BCF crate exists either): two independent, credible, more-generic reference libraries composed over the real format's own documented shape, rather than a single weaker or unvalidated format-specific crate. Genuinely differential: this composition both decodes AND re-encodes every one of the 13 declared AviMutation kinds through riff's own chunk writer, never by echoing input bytes.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "riff",
+        "implementation": "riff Rust generic RIFF chunk layer",
+        "version": "2.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

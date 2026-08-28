@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧬️ Exact 2-leaf PDF 1.4/X catalog. Reference lopdf never links the subject implementation.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
       "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf Rust PDF object-graph library",
+        "version": "0.44"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

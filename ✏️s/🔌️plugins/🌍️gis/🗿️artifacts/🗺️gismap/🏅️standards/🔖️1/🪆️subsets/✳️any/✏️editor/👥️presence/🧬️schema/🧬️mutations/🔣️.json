@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/gis/gis2d-presence/mutations",
+  "type": "object",
+  "oneOf": [
+    {
+      "allOf": [
+        {"$ref": "https://semio.tech/schema/gis/gis2d-presence/set-camera#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setCamera"}}}
+      ],
+      "unevaluatedProperties": false
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -23,7 +23,7 @@ use semio_repo_test_host::Json;
 //#region 🔖️SpecReading
 /// 🔎️ A byte payload as the wire protocol carries it: a plain JSON array of 0-255 numbers (the
 /// protocol's `Json` has no base64 accessor and no other case in this repository uses one — see
-/// `../../../../🎥️mp4/🧪️tests/mutate-mp4-isobmff/🦀️component.rs`'s own local `bytes` helper).
+/// `../../../../🎥️mp4/🧪️tests/mutate-mp4-isobmff/🦀️.rs`'s own local `bytes` helper).
 #[cfg(feature = "oracles")]
 fn bytes_field(value: &Json, key: &str) -> Vec<u8> {
     match value.get(key) {

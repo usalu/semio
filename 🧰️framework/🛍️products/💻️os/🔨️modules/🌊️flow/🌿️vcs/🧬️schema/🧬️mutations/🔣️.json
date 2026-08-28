@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/mutations",
+  "title": "FlowMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/add-widget#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "addWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/remove-widget#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "removeWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/move-widget#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "moveWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/change-widget#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeWidget"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/add-synapse#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "addSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/remove-synapse#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "removeSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/move-synapse#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "moveSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/change-synapse#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeSynapse"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/change-layout#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "changeLayout"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/replace-flow-fixture#/$defs/payload"
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "replaceFlowFixture"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  ]
+}
+

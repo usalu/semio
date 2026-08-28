@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. MP3 is two independent layers in one byte stream — ID3 metadata and the ISO/IEC 11172-3 MPEG audio frame sequence — and no single crate is authoritative over both. `id3` is registered as the reference for the ID3 layer; the frame layer is walked by a hand-written ISO 11172-3 header/frame-size reader in this subset's own oracle module, the same composition shape 📼️avi (riff + hand-written hdrl/strl/movi codec) and 💬️bcf (zip + quick-xml) already establish. LICENCE NOTE: `symphonia`, the obvious pure-Rust MP3 DECODER, is MPL-2.0 and no owner ruling on that licence exists in this repository, so it was NOT registered; `id3` is MIT, and decoding PCM audio is not needed to exercise this subset's vocabulary (which addresses `id3v2`/`frames`/`id3v1`, never sample data).",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://codeberg.org/polyfloyd/rust-id3",
       "rationale": "The reference ID3 implementation of the Rust ecosystem (11.5M downloads, MIT, pure Rust; its only transitive dependencies are flate2 — already linked here — plus byteorder and bitflags). It READS AND WRITES ID3v2.2/2.3/2.4, which is what makes it usable as a mutation oracle rather than only an independent reader: `Tag::read_from2` parses the tag, `Tag::write_to` re-serializes it from its own frame model alone, and `Tag::skip` independently locates the end of the ID3v2 region — the byte boundary this subset's `decode_mp3` also has to find, computed here by the reference rather than by the subject. Its ID3v1 half (`id3::v1::Tag::read_from`) is read-only, so `set-id3v1` WRITES the 128-byte trailer from the ID3v1 field layout directly (fixed-width ISO-8859-1 fields, no encoder freedom at all) and `id3::v1::Tag::read_from` reads it back independently — a genuine differential on the read side, honestly narrower on the write side. The MPEG audio frame layer is NOT this crate's business and is not claimed here: the frame walk (11-bit sync word, version/layer/bitrate/sample-rate fields, and the Layer I vs Layer II/III frame-size formula) is hand-written from ISO/IEC 11172-3 in this subset's oracle module and never calls this subset's own `find_frame_sync`/`parse_frame_header`.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "rust-id3",
+        "implementation": "rust-id3 ID3v1/v2 reader/writer",
+        "version": "1.17"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

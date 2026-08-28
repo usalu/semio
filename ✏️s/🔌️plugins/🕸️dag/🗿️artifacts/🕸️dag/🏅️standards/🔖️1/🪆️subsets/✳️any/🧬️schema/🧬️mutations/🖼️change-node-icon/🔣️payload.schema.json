@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeNodeIcon",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newIcon"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newIcon": {
+      "type": "string"
+    }
+  }
+}

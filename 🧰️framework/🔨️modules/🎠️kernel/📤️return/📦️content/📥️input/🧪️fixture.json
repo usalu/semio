@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "vectors": [
+    {"opcode":0,"name":"upsert","node":null,"field":"node","payloadHex":"010203","headerHex":"0003","bodyHex":"0003010203"},
+    {"opcode":1,"name":"setComponent","node":"7","field":"component","payloadHex":"00ff","headerHex":"010702","bodyHex":"01070200ff"},
+    {"opcode":2,"name":"setLayout","node":"128","field":"layout","payloadHex":"abcd","headerHex":"02800102","bodyHex":"02800102abcd"},
+    {"opcode":3,"name":"setActivity","node":"7","field":"activity","payloadHex":"0100","headerHex":"030702","bodyHex":"0307020100"},
+    {"opcode":4,"name":"setChildren","node":"7","field":"children","payloadHex":"03018001ffffffffffffffffff01","headerHex":"0407","bodyHex":"040703018001ffffffffffffffffff01"},
+    {"opcode":5,"name":"setStyle","node":"7","field":"style","payloadHex":"9a","headerHex":"050701","bodyHex":"0507019a"},
+    {"opcode":6,"name":"setAccessibility","node":"7","field":"accessibility","payloadHex":"c3a4","headerHex":"060702","bodyHex":"060702c3a4"},
+    {"opcode":7,"name":"setBindings","node":"7","field":"bindings","payloadHex":"010001","headerHex":"070703","bodyHex":"070703010001"},
+    {"opcode":8,"name":"setMenu","node":"7","field":"menu","payloadHex":"00","headerHex":"080701","bodyHex":"08070100"},
+    {"opcode":9,"name":"remove","node":"7","field":null,"payloadHex":"","headerHex":"0907","bodyHex":"0907"},
+    {"opcode":10,"name":"setRoot","node":"18446744073709551615","field":null,"payloadHex":"","headerHex":"0affffffffffffffffff01","bodyHex":"0affffffffffffffffff01"},
+    {"opcode":4,"name":"setChildren","node":"0","field":"children","payloadHex":"00","headerHex":"0400","bodyHex":"040000"},
+    {"opcode":0,"name":"upsert","node":null,"field":"node","payloadHex":"","headerHex":"0000","bodyHex":"0000"}
+  ],
+  "invalid": [
+    {"length":"2","headerHex":"0b00","reason":"opcode"},
+    {"length":"2","headerHex":"0980","reason":"truncated"},
+    {"length":"3","headerHex":"098000","reason":"noncanonical"},
+    {"length":"11","headerHex":"09ffffffffffffffffff02","reason":"overflow"},
+    {"length":"3","headerHex":"0907","reason":"scalar-trailing"},
+    {"length":"4","headerHex":"0003","reason":"payload-length"},
+    {"length":"3","headerHex":"0000","reason":"payload-length"},
+    {"length":"2","headerHex":"0407","reason":"children-count"},
+    {"length":"3","headerHex":"010780","reason":"truncated"},
+    {"length":"4","headerHex":"000180","reason":"payload-length"}
+  ],
+  "large":{"length":"18446744073709551615","headerHex":"00f4ffffffffffffffff01","payloadLength":"18446744073709551604","allocations":0},
+  "laws":{"oneBytePerPush":true,"payloadNotReadByHeader":true,"childrenCountRetained":true,"declaredLengthAdmitsAllocation":false,"publicFormatMintsAuthority":false}
+}

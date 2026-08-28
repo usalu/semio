@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-source-commit-route-v1",
+  "command": "artifact-source-commit",
+  "target": "test-artifact-source-commit",
+  "budgetMs": 120000,
+  "bunTimeoutMs": 120000,
+  "testName": "rolls back and atomically applies CAD and Draw projections to an empty second plan",
+  "runner": "runTestBudgeted",
+  "extraArguments": false,
+  "launchName": "🧹clean🧩️taxonomy🧪️artifact-source-commit",
+  "launchOrder": 410.198
+}

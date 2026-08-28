@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "componentCount": 18,
+  "grants": [1, 64, 4096],
+  "closeGrant": 64,
+  "text": "é",
+  "textRepeats": 256,
+  "nestedItems": 32,
+  "cancelFrontiers": [0, 1, 2, 5, 16, 64, 128],
+  "differentBackingMayBeEqual": true,
+  "contendedProgress": false,
+  "frame": {"logicalDepth":256,"pageCount":256,"maximumTextBytes":512,"maximumPosition":1024,"none":65535,"bytes":8,"maximumCursorBytes":4096,"littleEndian":"ff00000000040000"},
+  "cases": [
+    {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"same"}, "equal":true},
+    {"left": {"type":"text","value":"same"}, "right": {"type":"text","value":"diff"}, "equal":false},
+    {"left": {"type":"text","value":"same"}, "right": {"type":"button","icon":"","label":"same"}, "equal":false},
+    {"left": {"type":"extension","extension":"x","props":{"a":[1,"é",true,null]}}, "right": {"type":"extension","extension":"x","props":{"a":[1,"é",true,null]}}, "equal":true},
+    {"left": {"type":"extension","extension":"x","props":{"a":[1,"é",true,null]}}, "right": {"type":"extension","extension":"x","props":{"a":[1,"é",false,null]}}, "equal":false},
+    {"left": {"type":"extension","extension":"x","props":{"a":[]}}, "right": {"type":"extension","extension":"x","props":{"b":[]}}, "equal":false},
+    {"left": {"type":"extension","extension":"x","props":[]}, "right": {"type":"extension","extension":"x","props":[null]}, "equal":false}
+  ]
+}

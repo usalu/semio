@@ -2,6 +2,7 @@
   "declaredOutcome": "disjoint",
   "solids": 2,
   "empty": false,
+  "measuredFrom": "expected.step, re-imported",
   "volume": 1999.999999999999,
   "area": 1200,
   "boundingBox": {
@@ -14,9 +15,10 @@
   },
   "boundingBoxDiagonal": 30.000000333333336,
   "faces": 12,
-  "edges": 23,
-  "vertices": 14,
+  "edges": 24,
+  "vertices": 16,
   "validSolid": true,
+  "tessellationTolerance": 0.0009000000100000002,
   "meshVertexCount": 48,
   "meshTriangleCount": 24
 }

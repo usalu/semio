@@ -104,6 +104,7 @@ pub trait InferenceSpec<P>: Inference<P> {
 /// Generic snapshot replacement and absence sentinels remain outside this vocabulary.
 pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("add", "Added"),
+    ("append", "Appended"),
     ("apply", "Applied"),
     ("bind", "Bound"),
     ("change", "Changed"),
@@ -117,6 +118,7 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("duplicate", "Duplicated"),
     ("edit", "Edited"),
     ("extract", "Extracted"),
+    ("finish", "Finished"),
     ("fix", "Fixed"),
     ("flatten", "Flattened"),
     ("group", "Grouped"),
@@ -132,8 +134,10 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("restore", "Restored"),
     ("rotate", "Rotated"),
     ("scale", "Scaled"),
+    ("seal", "Sealed"),
     ("set", "Set"),
     ("split", "Split"),
+    ("start", "Started"),
     ("switch", "Switched"),
     ("toggle", "Toggled"),
     ("unbind", "Unbound"),
@@ -211,6 +215,10 @@ where
     fn inverse(&self, base: &P) -> Vec<Op>;
     /// @emoji 🏷️ Human undo/history label, e.g. `Rename piece "a" to "b"`.
     fn label(&self) -> String;
+    /// ⏱️ Returns the authored clock, or absence when this leaf does not carry one.
+    fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
+        None
+    }
     /// @emoji 🎯️ Structured address of the target inside the artifact (outermost segment first);
     /// empty means whole-artifact scope.
     fn target(&self) -> Vec<String> {
@@ -402,95 +410,146 @@ where
 //#endregion 🔖️DiffKit
 
 //#region 🔖️Descriptor
-/// @emoji 🪪️ A registered operation kind's runtime descriptor: schema identity/version, its
-/// `StateClass`, and a content-addressed `fingerprint` over those three fields. Lost `conflict_rule`
-/// (ticket `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C4) — merge
-/// policy is authority-local state now (`MergePolicy`), never a per-schema descriptor field.
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+/// 🪪️ Immutable schema, state and complete leaf identity registered for one mutation kind.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MutationDescriptor {
-    pub id: crate::os_spr::ids::SchemaId,
-    pub schema_version: crate::os_spr::ids::SchemaVersion,
-    pub state_class: crate::os_spr::StateClass,
-    pub fingerprint: [u8; 32],
-    /// @emoji 🗣️ Semantic identity, present once a mutation kind moves off generic vocabulary —
-    /// additive fields, `None` for descriptors registered before the semantic-mutations overhaul.
-    /// Not part of `fingerprint` (kept golden-pin stable): the fingerprint identifies the schema
-    /// contract, not its human-facing naming.
-    pub verb: Option<&'static str>,
-    pub entity: Option<&'static str>,
-    pub record: Option<&'static str>,
-    /// @emoji 🔌️ Contributing plugin id, present iff this descriptor was registered by a
-    /// contributor rather than the artifact's own owner. Not part of `fingerprint`.
-    #[serde(default)]
-    pub contributor: Option<String>,
-    /// @emoji 🎯️ Target artifact kind this contributed descriptor's mutation/inference applies to.
-    /// Not part of `fingerprint`.
-    #[serde(default)]
-    pub artifact_kind: Option<String>,
+    id: crate::os_spr::ids::SchemaId,
+    schema_version: crate::os_spr::ids::SchemaVersion,
+    state_class: crate::os_spr::StateClass,
+    leaf: MutationLeafDescriptor,
+    semantics: SemanticDescriptor,
+    fingerprint: [u8; 32],
 }
 
 impl MutationDescriptor {
-    /// @emoji 🏗️ Constructs a descriptor, computing `fingerprint` deterministically from the other
-    /// three fields. The contract fixes the struct's shape but not how `fingerprint` is derived; our
-    /// choice is a canonical-JSON encoding of `(id, schema_version, state_class)` hashed with
-    /// blake3 — stable across process runs and platforms, pinned by a golden test below (re-baked
-    /// when `conflict_rule` left this encoding, see the golden pin's own comment).
-    pub fn new(id: crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> Self {
-        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class);
-        Self { id, schema_version, state_class, fingerprint, verb: None, entity: None, record: None, contributor: None, artifact_kind: None }
+    /// 🏗️ Validates all required metadata and fingerprints the complete immutable identity.
+    pub fn new(
+        id: crate::os_spr::ids::SchemaId,
+        schema_version: crate::os_spr::ids::SchemaVersion,
+        state_class: crate::os_spr::StateClass,
+        leaf: MutationLeafDescriptor,
+        semantics: SemanticDescriptor,
+    ) -> Result<Self, MutationDescriptorError> {
+        if id.0.trim().is_empty() {
+            return Err(MutationDescriptorError::InvalidField { field: "id", requirement: "must be nonblank" });
+        }
+        if schema_version.0 == 0 {
+            return Err(MutationDescriptorError::InvalidField { field: "schemaVersion", requirement: "must be positive" });
+        }
+        leaf.validate().map_err(|error| MutationDescriptorError::InvalidField { field: error.field, requirement: error.requirement })?;
+        if !is_approved_verb(semantics.verb) {
+            return Err(MutationDescriptorError::InvalidField { field: "semantics.verb", requirement: "must be an approved imperative verb" });
+        }
+        if semantics.entity.trim().is_empty() || semantics.record.trim().is_empty() {
+            return Err(MutationDescriptorError::InvalidField { field: "semantics", requirement: "entity and record must be nonblank" });
+        }
+        if leaf.semantic_kind != semantics.kind {
+            return Err(MutationDescriptorError::InvalidField { field: "semantics.kind", requirement: "must equal the leaf semantic kind" });
+        }
+        let fingerprint = descriptor_fingerprint(&id, schema_version, state_class, &leaf, &semantics);
+        Ok(Self { id, schema_version, state_class, leaf, semantics, fingerprint })
     }
 
-    /// @emoji 🗣️ Attaches semantic identity (`SemanticDescriptor`'s fields) to an already-built
-    /// descriptor — used by `#[derive(Mutations)]`'s generated `register_*_descriptors` calls.
-    pub fn with_semantics(mut self, semantics: &SemanticDescriptor) -> Self {
-        self.verb = Some(semantics.verb);
-        self.entity = Some(semantics.entity);
-        self.record = Some(semantics.record);
-        self
-    }
-
-    /// @emoji 🔌️ Attaches the contributing plugin's id — set when this descriptor was registered
-    /// via a contribution (`contributor.list-artifact-mutations`/`list-artifact-inferences`) rather
-    /// than by the artifact's own owner. Not part of `fingerprint` (see `with_semantics` above).
-    pub fn with_contributor(mut self, contributor: impl Into<String>) -> Self {
-        self.contributor = Some(contributor.into());
-        self
-    }
-
-    /// @emoji 🎯️ Attaches the target artifact kind this contributed descriptor's mutation/inference
-    /// applies to. Not part of `fingerprint`.
-    pub fn with_artifact_kind(mut self, artifact_kind: impl Into<String>) -> Self {
-        self.artifact_kind = Some(artifact_kind.into());
-        self
-    }
+    pub fn id(&self) -> &crate::os_spr::ids::SchemaId { &self.id }
+    pub fn schema_version(&self) -> crate::os_spr::ids::SchemaVersion { self.schema_version }
+    pub fn state_class(&self) -> crate::os_spr::StateClass { self.state_class }
+    pub fn leaf(&self) -> &MutationLeafDescriptor { &self.leaf }
+    pub fn semantics(&self) -> &SemanticDescriptor { &self.semantics }
+    pub fn fingerprint(&self) -> &[u8; 32] { &self.fingerprint }
 }
 
-fn descriptor_fingerprint(id: &crate::os_spr::ids::SchemaId, schema_version: crate::os_spr::ids::SchemaVersion, state_class: crate::os_spr::StateClass) -> [u8; 32] {
+fn descriptor_fingerprint(
+    id: &crate::os_spr::ids::SchemaId,
+    schema_version: crate::os_spr::ids::SchemaVersion,
+    state_class: crate::os_spr::StateClass,
+    leaf: &MutationLeafDescriptor,
+    semantics: &SemanticDescriptor,
+) -> [u8; 32] {
     #[derive(serde::Serialize)]
+    #[serde(rename_all = "camelCase")]
     struct Canonical<'a> {
         id: &'a str,
         schema_version: u32,
         state_class: crate::os_spr::StateClass,
+        leaf: &'a MutationLeafDescriptor,
+        semantics: &'a SemanticDescriptor,
     }
-    let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class };
-    let bytes = serde_json::to_vec(&canonical).expect("descriptor canonical encoding never fails");
-    *blake3::hash(&bytes).as_bytes()
+    let canonical = Canonical { id: &id.0, schema_version: schema_version.0, state_class, leaf, semantics };
+    let mut bytes = b"semio.mutation-descriptor/v1\0".to_vec();
+    bytes.extend(serde_json::to_vec(&canonical).expect("primitive descriptor identity is JSON serializable"));
+    semio_framework_hash::Sha256::digest(&bytes)
 }
 
-static MUTATION_DESCRIPTOR_REGISTRY: std::sync::OnceLock<std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>>> = std::sync::OnceLock::new();
-
-fn mutation_descriptor_registry() -> &'static std::sync::RwLock<std::collections::HashMap<String, MutationDescriptor>> {
-    MUTATION_DESCRIPTOR_REGISTRY.get_or_init(|| std::sync::RwLock::new(std::collections::HashMap::new()))
+/// 🚫️ Invalid metadata or a conflicting immutable identity; registration never overwrites.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum MutationDescriptorError {
+    InvalidField { field: &'static str, requirement: &'static str },
+    Conflict { id: String, existing_fingerprint: [u8; 32], incoming_fingerprint: [u8; 32] },
 }
 
-/// @emoji 📝️ Registers (or overwrites) a descriptor by `descriptor.id`. Mirrors
-/// `crate::os_store::CodecRegistry`'s `OnceLock<RwLock<HashMap>>` pattern; idempotent, safe to call repeatedly.
-pub fn register_mutation_descriptor(descriptor: MutationDescriptor) {
+impl std::fmt::Display for MutationDescriptorError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidField { field, requirement } => write!(formatter, "invalid mutation descriptor {field}: {requirement}"),
+            Self::Conflict { id, .. } => write!(formatter, "conflicting mutation descriptor for {id}"),
+        }
+    }
+}
+
+impl std::error::Error for MutationDescriptorError {}
+
+/// 🗂️ One owned registry with equality-based idempotence and atomic batch admission.
+#[derive(Debug, Default)]
+pub struct MutationDescriptorRegistry {
+    entries: std::collections::HashMap<String, MutationDescriptor>,
+}
+
+impl MutationDescriptorRegistry {
+    pub fn new() -> Self { Self::default() }
+    pub fn len(&self) -> usize { self.entries.len() }
+    pub fn is_empty(&self) -> bool { self.entries.is_empty() }
+    pub fn get(&self, id: &str) -> Option<&MutationDescriptor> { self.entries.get(id) }
+
+    pub fn register(&mut self, descriptor: MutationDescriptor) -> Result<(), MutationDescriptorError> {
+        self.register_all([descriptor])
+    }
+
+    /// 🧷️ Checks every candidate before inserting any, including duplicates within the batch.
+    pub fn register_all(&mut self, descriptors: impl IntoIterator<Item = MutationDescriptor>) -> Result<(), MutationDescriptorError> {
+        let mut pending: std::collections::HashMap<String, MutationDescriptor> = std::collections::HashMap::new();
+        for descriptor in descriptors {
+            if let Some(existing) = self.entries.get(&descriptor.id.0).or_else(|| pending.get(&descriptor.id.0)) {
+                if existing != &descriptor {
+                    return Err(MutationDescriptorError::Conflict { id: descriptor.id.0.clone(), existing_fingerprint: existing.fingerprint, incoming_fingerprint: descriptor.fingerprint });
+                }
+            } else {
+                pending.insert(descriptor.id.0.clone(), descriptor);
+            }
+        }
+        self.entries.extend(pending);
+        Ok(())
+    }
+}
+
+static MUTATION_DESCRIPTOR_REGISTRY: std::sync::OnceLock<std::sync::RwLock<MutationDescriptorRegistry>> = std::sync::OnceLock::new();
+
+fn mutation_descriptor_registry() -> &'static std::sync::RwLock<MutationDescriptorRegistry> {
+    MUTATION_DESCRIPTOR_REGISTRY.get_or_init(|| std::sync::RwLock::new(MutationDescriptorRegistry::new()))
+}
+
+/// 📝️ Registers an equal identity idempotently, rejecting a conflicting same-id value.
+pub fn register_mutation_descriptor(descriptor: MutationDescriptor) -> Result<(), MutationDescriptorError> {
+    register_mutation_descriptors([descriptor])
+}
+
+/// 📝️ Atomically registers a complete roster in the process-wide registry.
+pub fn register_mutation_descriptors(descriptors: impl IntoIterator<Item = MutationDescriptor>) -> Result<(), MutationDescriptorError> {
     let mut registry = mutation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
-    registry.insert(descriptor.id.0.clone(), descriptor);
+    registry.register_all(descriptors)
 }
 
-/// @emoji 🔎️ Looks up the descriptor registered for `schema`, if any.
+/// 🔎️ Looks up a complete immutable descriptor registered for a schema id.
 pub fn mutation_descriptor(schema: &str) -> Option<MutationDescriptor> {
     let registry = mutation_descriptor_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.get(schema).cloned()
@@ -696,6 +755,10 @@ pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + serd
     const SEMANTICS: SemanticDescriptor;
     fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
     fn label(&self) -> String;
+    /// ⏱️ Returns only the clock explicitly carried by this composite payload.
+    fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
+        None
+    }
     fn target(&self) -> Vec<String> {
         Vec::new()
     }
@@ -751,11 +814,11 @@ pub fn fold_plan_diff<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>
     MutationOutcome::new(folded).absorb_messages(messages)
 }
 
-/// @emoji ↩️ The inverse of [`fold_plan_diff`]'s effect: each local step's `Mutation::inverse` is
-/// computed against the snapshot state right BEFORE that step applied, then the whole sequence is
-/// reversed — the same "collect per-op inverses, then reverse the batch" shape
-/// `🏪️store/🦀️component.rs`'s own replay/rewrite paths already use — so applying the composite
-/// then this restores `base`. A planning failure folds to `Vec::new()`, never a panic.
+/// ↩️ Stores each local step's inverse against its own pre-state in forward local-step order.
+/// The returned flat vector uses the same storage order as [`Mutation::inverse`]; Store reverses
+/// that entire vector once when applying it. Preserving both the group order and each group's
+/// stored order is required for checked or otherwise noncommutative steps. A planning failure
+/// folds to an empty vector.
 pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Vec<Op> {
     let mut planner = Planner::new(base);
     if kind.plan(base, &mut planner).is_err() {
@@ -769,7 +832,7 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
         }
     }
     let mut inverses = Vec::new();
-    for (op, pre_state) in local_steps.into_iter().rev() {
+    for (op, pre_state) in local_steps.into_iter() {
         inverses.extend(op.inverse(&pre_state));
     }
     inverses
@@ -794,8 +857,17 @@ pub fn plan_foreign_steps<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P,
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🧬️registry/🦀️.rs"]
+mod registry_fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️mutation-laws/🦀️.rs"]
+mod mutation_laws_fixture;
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, AddCounterFourTimes, AddCounterThenNotifyForeign, CounterDiff, CounterMutation, foreign_step_fixture};
 
     //#region 🧪️ApplyErrorContract
     #[test]
@@ -814,45 +886,6 @@ mod tests {
     //#endregion 🧪️ApplyErrorContract
 
     //#region 🧸️Fixtures
-    // Dummy (P=i64, Op=AddOp) pair: the smallest possible Mutation/MutationDiff/OpText impl,
-    // used across every law test below instead of a real technology's op set.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct AddDiff {
-        delta: i64,
-    }
-    impl MutationDiff<i64> for AddDiff {
-        fn apply(&self, base: &i64) -> MutationApplyResult<i64> {
-            Ok(base + self.delta)
-        }
-        fn absorb(&mut self, other: Self) {
-            self.delta += other.delta;
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct AddOp {
-        delta: i64,
-    }
-    impl Mutation<i64> for AddOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> MutationOutcome<AddDiff> {
-            MutationOutcome::new(AddDiff { delta: self.delta })
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            vec![AddOp { delta: -self.delta }]
-        }
-    }
-    impl OpText for AddOp {
-        fn print_op(&self) -> String {
-            format!("add {}", self.delta)
-        }
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
-            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
-            Ok(AddOp { delta })
-        }
-    }
-
     #[derive(Clone, Debug, PartialEq)]
     struct Item {
         id: String,
@@ -879,97 +912,29 @@ mod tests {
     }
     //#endregion 🧸️Fixtures
 
-    //#region 🧸️CompositeFixtures
-    // Composite fixtures reuse the same (P=i64, Op=AddOp) pair as the plain Mutation laws above.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct DoubleAdd {
-        delta: i64,
-    }
-    impl CompositeMutationKind<i64, AddOp> for DoubleAdd {
-        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "double-add", record: "DoubleAdded" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
-            planner.call(AddOp { delta: self.delta })?;
-            planner.call(AddOp { delta: self.delta })?;
-            Ok(())
-        }
-        fn label(&self) -> String {
-            format!("Add {} twice", self.delta)
-        }
-    }
-
-    // 🪆️ Composite-of-composite: embeds `DoubleAdd` twice by calling its `plan` directly against
-    // the SAME shared `planner` — the mechanism `#[derive(CompositeMutation)]` relies on to make
-    // nesting fold identically to a flattened plan (Law 3).
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct QuadAdd {
-        delta: i64,
-    }
-    impl CompositeMutationKind<i64, AddOp> for QuadAdd {
-        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "quad-add", record: "QuadAdded" };
-        fn plan(&self, base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
-            DoubleAdd { delta: self.delta }.plan(base, planner)?;
-            let mid = *planner.base();
-            DoubleAdd { delta: self.delta }.plan(&mid, planner)?;
-            Ok(())
-        }
-        fn label(&self) -> String {
-            format!("Add {} four times", self.delta)
-        }
-    }
-
-    fn foreign_step_fixture(n: u8) -> ForeignStep {
-        ForeignStep {
-            target: ForeignTarget { artifact_id: format!("artifact-{n}"), artifact_kind: "s.demo.widget".into(), dialect: None },
-            mutation_id: crate::os_spr::ids::SchemaId("widget.doc#set-color".into()),
-            payload: vec![n],
-            label: format!("Recolor widget {n}"),
-        }
-    }
-
-    // 🌐️ A local `add` plus N distinct foreign hops — proves foreign steps are excluded from
-    // `fold_plan_diff` (Law 5) and exercises `Planner::call_foreign`'s depth/cycle bookkeeping.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct AddThenNotifyForeign {
-        delta: i64,
-        foreign_count: u8,
-    }
-    impl CompositeMutationKind<i64, AddOp> for AddThenNotifyForeign {
-        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "add-then-notify-foreign", record: "AddedThenNotifiedForeign" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
-            planner.call(AddOp { delta: self.delta })?;
-            for n in 0..self.foreign_count {
-                planner.call_foreign(foreign_step_fixture(n))?;
-            }
-            Ok(())
-        }
-        fn label(&self) -> String {
-            "Add then notify foreign".into()
-        }
-    }
-    //#endregion 🧸️CompositeFixtures
-
     //#region 🧪️MutationLaws
     #[test]
     fn operation_diff_apply_matches_backwards_inverse() {
         let base: i64 = 10;
-        let op = AddOp { delta: 5 };
+        let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
         let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
+        let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base)).unwrap();
         let restored = undo.diff(&forward).diff().apply(&forward).expect("valid inverse diff");
         assert_eq!(restored, base);
     }
 
     #[test]
     fn operation_diff_absorb_accumulates() {
-        let mut a = AddDiff { delta: 3 };
-        a.absorb(AddDiff { delta: 4 });
-        assert_eq!(a.delta, 7);
+        let mut a = CounterDiff { deltas: vec![3] };
+        a.absorb(CounterDiff { deltas: vec![4] });
+        assert_eq!(a.deltas, vec![3, 4]);
+        assert_eq!(a.apply(&0), Ok(7));
     }
 
     #[test]
     fn operation_defaults_are_stable() {
-        let op = AddOp { delta: 1 };
+        let op = CounterMutation::AddCounter(AddCounter { delta: 1 });
         assert_eq!(op.mutation_id(), None);
         assert!(op.dependencies().is_empty());
         assert_eq!(op.base_version(), None);
@@ -984,16 +949,16 @@ mod tests {
     //#region 🧪️OpTextLaws
     #[test]
     fn op_text_round_trip() {
-        let op = AddOp { delta: -7 };
+        let op = CounterMutation::AddCounter(AddCounter { delta: -7 });
         let line = op.print_op();
         assert!(!line.contains('\n'));
-        let parsed = AddOp::parse_op(&line).expect("round trip parse");
+        let parsed = CounterMutation::parse_op(&line).expect("round trip parse");
         assert_eq!(parsed, op);
     }
 
     #[test]
     fn op_text_parse_error_carries_message() {
-        let error = AddOp::parse_op("nope").unwrap_err();
+        let error = CounterMutation::parse_op("nope").unwrap_err();
         assert!(!error.message.is_empty());
     }
     //#endregion 🧪️OpTextLaws
@@ -1028,11 +993,11 @@ mod tests {
 
     #[test]
     fn edit_serde_round_trip() {
-        let edit = Edit::<AddOp> {
+        let edit = Edit::<CounterMutation> {
             id: "edit-1".into(),
             actor: Some("actor-1".into()),
-            forwards: vec![AddOp { delta: 1 }, AddOp { delta: 2 }],
-            inverse: vec![AddOp { delta: -2 }, AddOp { delta: -1 }],
+            forwards: vec![CounterMutation::AddCounter(AddCounter { delta: 1 }), CounterMutation::AddCounter(AddCounter { delta: 2 })],
+            inverse: vec![CounterMutation::AddCounter(AddCounter { delta: -1 }), CounterMutation::AddCounter(AddCounter { delta: -2 })],
             mutation_meta: vec![MutationMeta {
                 mutation_id: None,
                 dependencies: Vec::new(),
@@ -1053,7 +1018,7 @@ mod tests {
             finished_at: None,
         };
         let json = serde_json::to_string(&edit).expect("serialize");
-        let round_tripped: Edit<AddOp> = serde_json::from_str(&json).expect("deserialize");
+        let round_tripped: Edit<CounterMutation> = serde_json::from_str(&json).expect("deserialize");
         assert_eq!(round_tripped, edit);
     }
     //#endregion 🧪️MetaSerde
@@ -1219,110 +1184,67 @@ mod tests {
     }
 
     #[test]
-    fn mutation_descriptor_with_semantics_attaches_without_changing_fingerprint() {
-        let semantics = SemanticDescriptor { verb: "rename", entity: "widget", kind: "rename-widget", record: "RenamedWidget" };
-        let base = MutationDescriptor::new(crate::os_spr::ids::SchemaId("demo.rename-widget".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
-        let fingerprint_before = base.fingerprint;
-        let with_semantics = base.with_semantics(&semantics);
-        assert_eq!(with_semantics.fingerprint, fingerprint_before, "attaching semantics must not change the fingerprint");
-        assert_eq!(with_semantics.verb, Some("rename"));
-        assert_eq!(with_semantics.entity, Some("widget"));
-        assert_eq!(with_semantics.record, Some("RenamedWidget"));
+    fn mutation_descriptor_semantics_participate_in_immutable_identity() {
+        use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
+        let semantics = <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS;
+        let construct = |semantics| MutationDescriptor::new(crate::os_spr::SchemaId("mini.doc#rename-mini".into()), crate::os_spr::SchemaVersion(1), crate::os_spr::StateClass::Artifact, RenameMini::DESCRIPTOR, semantics).unwrap();
+        let base = construct(semantics);
+        let changed = construct(SemanticDescriptor { record: "RenamedMiniLabel", ..semantics });
+        assert_ne!(base.fingerprint(), changed.fingerprint());
+        assert_eq!(base.semantics(), &semantics);
+        assert_eq!(base.leaf(), &RenameMini::DESCRIPTOR);
     }
     //#endregion 🧪️SemanticsLaws
 
     //#region 🧪️MutationsDeriveLaws
-    // Smallest possible end-to-end proof that `#[derive(dsl_derive::Mutations)]` (📖
-    // `🗣️dsl/✨️derive/🦀️component.rs`'s `🔖️Mutations` region) actually wires a triad leaf's
-    // `MutationKind` impl into a working `Mutation`/`SemanticMutation` dispatch enum — real
-    // artifacts follow this exact shape (payload struct in a `🦠️mutation` leaf, dispatch enum with
-    // `#[mutations(...)]`), just with more variants and real leaf files instead of a nested module.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct MiniDoc {
-        name: String,
-    }
-
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct MiniDiff {
-        name: Option<String>,
-    }
-    impl MutationDiff<MiniDoc> for MiniDiff {
-        fn apply(&self, base: &MiniDoc) -> MutationApplyResult<MiniDoc> {
-            Ok(MiniDoc { name: self.name.clone().unwrap_or_else(|| base.name.clone()) })
-        }
-        fn absorb(&mut self, other: Self) {
-            if other.name.is_some() {
-                self.name = other.name;
-            }
-        }
-    }
-
-    mod rename_mini {
-        use super::*;
-
-        #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-        pub struct RenameMini {
-            pub new_name: String,
-        }
-        impl MutationKind<MiniDoc, MiniMutation> for RenameMini {
-            const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "rename", entity: "mini", kind: "rename-mini", record: "RenamedMini" };
-            fn diff(&self, _base: &MiniDoc) -> MutationOutcome<MiniDiff> {
-                MutationOutcome::new(MiniDiff { name: Some(self.new_name.clone()) })
-            }
-            fn inverse(&self, base: &MiniDoc) -> Vec<MiniMutation> {
-                vec![MiniMutation::RenameMini(RenameMini { new_name: base.name.clone() })]
-            }
-            fn label(&self) -> String {
-                format!("Rename mini to \"{}\"", self.new_name)
-            }
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::Mutations)]
-    #[mutations(snapshot = MiniDoc, diff = MiniDiff, schema = "mini.doc")]
-    enum MiniMutation {
-        RenameMini(rename_mini::RenameMini),
-    }
-
     #[test]
-    fn derive_mutations_wires_mutation_and_semantic_mutation() {
+    fn derive_mutations_wires_complete_leaf_and_atomic_registration() {
+        use super::registry_fixture::*;
         let base = MiniDoc { name: "a".into() };
-        let mutation = MiniMutation::RenameMini(rename_mini::RenameMini { new_name: "b".into() });
-
+        let mutation: MiniMutation = RenameMini { new_name: "b".into() }.into();
         let after = mutation.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(after.name, "b");
-
         let inverse = mutation.inverse(&base);
-        assert_eq!(inverse.len(), 1, "inverse of a single rename is a single rename back");
-        let MiniMutation::RenameMini(undo) = &inverse[0];
-        assert_eq!(undo.diff(&after).diff().apply(&after), Ok(base), "inverse computed from base must restore base");
-
-        assert_eq!(MiniMutation::kinds().len(), 1);
-        assert_eq!(MiniMutation::kinds()[0].kind, "rename-mini");
-        assert_eq!(mutation.semantics().kind, "rename-mini");
+        assert_eq!(inverse.len(), 1);
+        assert_eq!(inverse[0].diff(&after).diff().apply(&after), Ok(base));
+        assert_eq!(MiniMutation::DESCRIPTORS, &[RenameMini::DESCRIPTOR]);
+        assert_eq!(mutation.descriptor(), &RenameMini::DESCRIPTOR);
+        assert_eq!(MiniMutation::kinds(), &[<RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS]);
         assert_eq!(mutation.semantics().record, "RenamedMini");
         assert_eq!(mutation.label(), "Rename mini to \"b\"");
-        assert!(mutation.target().is_empty(), "MutationKind::target defaults to empty (whole-artifact scope)");
-
-        register_mini_mutation_descriptors();
-        let descriptor = mutation_descriptor("mini.doc#rename-mini").expect("derive-generated register fn must register the descriptor");
-        assert_eq!(descriptor.verb, Some("rename"));
-        assert_eq!(descriptor.entity, Some("mini"));
-        assert_eq!(descriptor.record, Some("RenamedMini"));
+        assert!(mutation.target().is_empty());
+        register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();
+        register_mini_mutation_descriptors(crate::os_spr::StateClass::Artifact).unwrap();
+        let descriptor = mutation_descriptor("mini.doc#rename-mini").unwrap();
+        assert_eq!(descriptor.semantics(), mutation.semantics());
+        assert_eq!(descriptor.leaf(), mutation.descriptor());
+        let declared: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🧬️registry/🧬️mutations/📛️rename-mini/🔣️.json")).unwrap();
+        assert_eq!(serde_json::to_value(descriptor.leaf()).unwrap(), declared);
+        assert!(register_mini_mutation_descriptors(crate::os_spr::StateClass::Config).is_err());
+        assert_eq!(mutation_descriptor("mini.doc#rename-mini"), Some(descriptor));
     }
     //#endregion 🧪️MutationsDeriveLaws
 
     //#region 🧪️DescriptorLaws
     #[test]
-    fn operation_descriptor_fingerprint_is_golden_pinned() {
-        let descriptor = MutationDescriptor::new(crate::os_spr::ids::SchemaId("note.append".into()), crate::os_spr::ids::SchemaVersion(1), crate::os_spr::StateClass::Artifact);
-        let hex: String = descriptor.fingerprint.iter().map(|b| format!("{b:02x}")).collect();
-        // Golden pin computed once from `descriptor_fingerprint`'s canonical-JSON+blake3 encoding;
-        // any change to that encoding (or to serde's field order/derives on the id/enum types it
-        // hashes) is a breaking change to every persisted `MutationDescriptor` and must update this.
-        // Re-baked (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C4):
-        // `conflict_rule` dropped out of both the struct and this canonical encoding.
-        assert_eq!(hex, "334fc1a502f10a879eec47edbbd526249432f67f4ccee1daa10a1f40821c8bdd");
+    fn descriptor_registry_rejects_conflicts_without_partial_publication() {
+        use super::registry_fixture::{MiniDoc, MiniMutation, RenameMini};
+        let build = |id: &str, state| MutationDescriptor::new(crate::os_spr::SchemaId(id.into()), crate::os_spr::SchemaVersion(1), state, RenameMini::DESCRIPTOR, <RenameMini as MutationKind<MiniDoc, MiniMutation>>::SEMANTICS).unwrap();
+        let first = build("mini.first", crate::os_spr::StateClass::Artifact);
+        let conflict = build("mini.first", crate::os_spr::StateClass::Config);
+        let second = build("mini.second", crate::os_spr::StateClass::Artifact);
+        assert_ne!(first.fingerprint(), conflict.fingerprint());
+        let mut registry = MutationDescriptorRegistry::new();
+        assert!(registry.register_all([first.clone(), conflict.clone()]).is_err());
+        assert!(registry.is_empty());
+        registry.register(first.clone()).unwrap();
+        assert!(registry.register_all([second.clone(), conflict]).is_err());
+        assert_eq!(registry.len(), 1);
+        assert_eq!(registry.get("mini.first"), Some(&first));
+        assert!(registry.get("mini.second").is_none());
+        registry.register_all([first.clone(), second.clone(), second]).unwrap();
+        assert_eq!(registry.len(), 2);
+        assert_eq!(registry.get("mini.first"), Some(&first));
     }
     //#endregion 🧪️DescriptorLaws
 
@@ -1530,7 +1452,7 @@ mod tests {
 
     //#region 🧪️InferenceLaws
     // Smallest possible (P=i64) Inference/InferenceSpec/DiffRegions fixture: infers "is_even" and
-    // "abs_value" from an i64 snapshot, reusing the same AddDiff/AddOp pair as the Mutation laws
+    // "abs_value" from an i64 snapshot, reusing the same CounterDiff/CounterMutation pair as the Mutation laws
     // above so this proves the inference traits interoperate with the existing diff/mutation shape.
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
     struct AddInference {
@@ -1560,15 +1482,7 @@ mod tests {
             &[InferenceFieldSpec { id: "isEven", reads: &["value"] }, InferenceFieldSpec { id: "absValue", reads: &["value"] }]
         }
     }
-    impl DiffRegions for AddDiff {
-        fn touches(&self) -> TouchedPaths {
-            if self.delta == 0 {
-                TouchedPaths::default()
-            } else {
-                TouchedPaths::new(["value"])
-            }
-        }
-    }
+
 
     #[test]
     fn inference_determinism_law() {
@@ -1587,11 +1501,11 @@ mod tests {
     #[test]
     fn inference_diff_consistency_law() {
         let base: i64 = 10;
-        let noop = AddDiff { delta: 0 };
+        let noop = CounterDiff { deltas: vec![0] };
         assert!(!noop.touches().intersects_any(AddInference::fields()[0].reads));
         assert_eq!(AddInference::infer(&noop.apply(&base).expect("valid no-op diff")), AddInference::infer(&base));
 
-        let real = AddDiff { delta: 1 };
+        let real = CounterDiff { deltas: vec![1] };
         assert!(real.touches().intersects_any(AddInference::fields()[0].reads));
         assert_ne!(AddInference::infer(&real.apply(&base).expect("valid real diff")), AddInference::infer(&base));
     }
@@ -1633,7 +1547,7 @@ mod tests {
     //#region 🧪️OutcomeLaws
     #[test]
     fn command_outcome_default_is_empty() {
-        let outcome: CommandOutcome<AddDiff> = CommandOutcome::default();
+        let outcome: CommandOutcome<CounterDiff> = CommandOutcome::default();
         assert!(outcome.persistent.is_empty());
         assert!(outcome.shared_ui.is_empty());
         assert!(outcome.local_ui.is_empty());
@@ -1654,7 +1568,7 @@ mod tests {
     #[test]
     fn fold_plan_diff_equals_sequential_apply() {
         let base: i64 = 10;
-        let kind = DoubleAdd { delta: 3 };
+        let kind = AddCounterTwice { delta: 3 };
         let diff = fold_plan_diff(&kind, &base);
         assert_eq!(diff.diff().apply(&base), Ok(16));
 
@@ -1671,12 +1585,12 @@ mod tests {
     #[test]
     fn fold_plan_inverse_restores_base() {
         let base: i64 = 10;
-        let kind = DoubleAdd { delta: 3 };
+        let kind = AddCounterTwice { delta: 3 };
         let forward = fold_plan_diff(&kind, &base).diff().apply(&base).expect("valid folded diff");
         assert_ne!(forward, base);
         let inverses = fold_plan_inverse(&kind, &base);
         let mut restored = forward;
-        for op in &inverses {
+        for op in inverses.iter().rev() {
             restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base, "fold_plan_inverse applied after the composite must restore base");
@@ -1685,23 +1599,23 @@ mod tests {
     #[test]
     fn composite_of_composite_nests_and_folds_identically_to_flattened_plan() {
         let base: i64 = 0;
-        let quad = QuadAdd { delta: 2 };
+        let quad = AddCounterFourTimes { delta: 2 };
         let diff = fold_plan_diff(&quad, &base);
-        assert_eq!(diff.diff().apply(&base), Ok(8), "two nested DoubleAdd{{delta:2}} embeds must fold to +8");
+        assert_eq!(diff.diff().apply(&base), Ok(8), "two nested AddCounterTwice{{delta:2}} embeds must fold to +8");
 
         let steps = plan_of(&quad, &base).expect("plan succeeds");
         let local_deltas: Vec<i64> = steps
             .iter()
             .filter_map(|step| match step {
-                PlanStep::Local(op) => Some(op.delta),
-                PlanStep::Foreign(_) => None,
+                PlanStep::Local(CounterMutation::AddCounter(op)) => Some(op.delta),
+                _ => None,
             })
             .collect();
         assert_eq!(local_deltas, vec![2, 2, 2, 2], "nesting must flatten to four local steps, identical to the un-nested plan");
 
         let inverses = fold_plan_inverse(&quad, &base);
         let mut restored = diff.diff().apply(&base).expect("valid folded diff");
-        for op in &inverses {
+        for op in inverses.iter().rev() {
             restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base);
@@ -1710,7 +1624,7 @@ mod tests {
     #[test]
     fn plan_depth_beyond_max_is_typed_error_never_panics() {
         let base: i64 = 0;
-        let kind = AddThenNotifyForeign { delta: 1, foreign_count: MAX_PLAN_DEPTH + 1 };
+        let kind = AddCounterThenNotifyForeign { delta: 1, foreign_count: MAX_PLAN_DEPTH + 1 };
         let error = plan_of(&kind, &base).expect_err("a plan with more foreign hops than MAX_PLAN_DEPTH must be rejected, not panic");
         assert_eq!(error, PlanError::DepthExceeded(MAX_PLAN_DEPTH));
     }
@@ -1718,7 +1632,7 @@ mod tests {
     #[test]
     fn plan_cycle_is_typed_error_never_panics() {
         let base: i64 = 0;
-        let mut planner: Planner<i64, AddOp> = Planner::new(&base);
+        let mut planner: Planner<i64, CounterMutation> = Planner::new(&base);
         planner.call_foreign(foreign_step_fixture(0)).expect("first hop to a fresh target succeeds");
         let error = planner.call_foreign(foreign_step_fixture(0)).expect_err("repeating the identical (mutation_id, payload) pair must be rejected as a cycle, not panic");
         assert_eq!(error, PlanError::Cycle("artifact-0".to_string()));
@@ -1727,9 +1641,9 @@ mod tests {
     #[test]
     fn foreign_steps_are_excluded_from_fold_plan_diff() {
         let base: i64 = 5;
-        let kind = AddThenNotifyForeign { delta: 4, foreign_count: 2 };
+        let kind = AddCounterThenNotifyForeign { delta: 4, foreign_count: 2 };
         let diff = fold_plan_diff(&kind, &base);
-        assert_eq!(diff.diff().apply(&base), Ok(9), "only the local AddOp{{delta:4}} may contribute to the folded diff");
+        assert_eq!(diff.diff().apply(&base), Ok(9), "only the local AddCounter{{delta:4}} may contribute to the folded diff");
 
         let foreign = plan_foreign_steps(&kind, &base);
         assert_eq!(foreign.len(), 2);
@@ -1737,41 +1651,20 @@ mod tests {
         assert_eq!(foreign[1].target.artifact_id, "artifact-1");
     }
 
-    // 🌉️ Smallest possible end-to-end proof that `#[derive(dsl_derive::CompositeMutation)]`
-    // (`🗣️dsl/✨️derive/🦀️component.rs`'s `🔖️CompositeMutation` region) wires a handcrafted
-    // `CompositeMutationKind` impl into a working `MutationKind` — mirrors
-    // `derive_mutations_wires_mutation_and_semantic_mutation` above, one region down.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl_derive::CompositeMutation)]
-    #[composite(snapshot = i64, op = AddOp)]
-    struct DerivedDoubleAdd {
-        delta: i64,
-    }
-    impl CompositeMutationKind<i64, AddOp> for DerivedDoubleAdd {
-        const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "counter", kind: "derived-double-add", record: "DerivedDoubleAdded" };
-        fn plan(&self, _base: &i64, planner: &mut Planner<i64, AddOp>) -> Result<(), PlanError> {
-            planner.call(AddOp { delta: self.delta })?;
-            planner.call(AddOp { delta: self.delta })?;
-            Ok(())
-        }
-        fn label(&self) -> String {
-            format!("Add {} twice (derived)", self.delta)
-        }
-    }
-
     #[test]
     fn derive_composite_mutation_wires_delegating_mutation_kind() {
         let base: i64 = 1;
-        let kind = DerivedDoubleAdd { delta: 5 };
-        let diff = MutationKind::<i64, AddOp>::diff(&kind, &base);
+        let kind = AddCounterTwice { delta: 5 };
+        let diff = MutationKind::<i64, CounterMutation>::diff(&kind, &base);
         assert_eq!(diff.diff().apply(&base), Ok(11));
-        let inverse = MutationKind::<i64, AddOp>::inverse(&kind, &base);
+        let inverse = MutationKind::<i64, CounterMutation>::inverse(&kind, &base);
         let mut restored = diff.diff().apply(&base).expect("valid folded diff");
-        for op in &inverse {
+        for op in inverse.iter().rev() {
             restored = op.diff(&restored).diff().apply(&restored).expect("valid inverse diff");
         }
         assert_eq!(restored, base);
-        assert_eq!(<DerivedDoubleAdd as MutationKind<i64, AddOp>>::SEMANTICS.kind, "derived-double-add");
-        assert!(MutationKind::<i64, AddOp>::foreign_steps(&kind, &base).is_empty());
+        assert_eq!(<AddCounterTwice as MutationKind<i64, CounterMutation>>::SEMANTICS.kind, "add-counter-twice");
+        assert!(MutationKind::<i64, CounterMutation>::foreign_steps(&kind, &base).is_empty());
     }
     //#endregion 🧪️CompositeLaws
 }

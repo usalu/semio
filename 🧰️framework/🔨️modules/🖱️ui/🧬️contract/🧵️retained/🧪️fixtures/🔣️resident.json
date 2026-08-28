@@ -1,0 +1,27 @@
+{
+  "capacity": { "maxResidentBytes": 512, "maxPages": 2, "maxOwners": 8 },
+  "pageBytes": 256,
+  "grant": { "maxItems": 1, "maxBytes": 4096 },
+  "states": [
+    { "event": "bind-two-instances", "bytes": 0, "pages": 0, "owners": 2 },
+    { "event": "begin-two-payloads", "bytes": 0, "pages": 0, "owners": 4 },
+    { "event": "reserve-two-pages", "bytes": 512, "pages": 2, "owners": 6 },
+    { "event": "capture-first-page", "bytes": 512, "pages": 2, "owners": 7 },
+    { "event": "close-first-handle", "bytes": 512, "pages": 2, "owners": 6 },
+    { "event": "close-first-final-alias", "bytes": 256, "pages": 1, "owners": 5 },
+    { "event": "close-second-page", "bytes": 0, "pages": 0, "owners": 4 },
+    { "event": "close-payloads", "bytes": 0, "pages": 0, "owners": 2 },
+    { "event": "close-instances", "bytes": 0, "pages": 0, "owners": 0 }
+  ],
+  "bytes": [0, 1, 127, 128, 255],
+  "cancelPrefixes": [0, 1, 2, 4, 6, 7],
+  "invalidCapacities": [
+    { "maxResidentBytes": -1, "maxPages": 2, "maxOwners": 8 },
+    { "maxResidentBytes": 512, "maxPages": 0.5, "maxOwners": 8 },
+    { "maxResidentBytes": 512, "maxPages": 2, "maxOwners": 9007199254740992 }
+  ],
+  "forgedAccepted": false,
+  "lostWriterRecovered": true,
+  "liveAliasSurvivesParentClose": true,
+  "earlyInstanceWitness": false
+}

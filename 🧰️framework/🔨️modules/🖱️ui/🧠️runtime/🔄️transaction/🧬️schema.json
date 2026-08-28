@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "requiredNodes", "maximumItems", "maximumBytes", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "requiredNodes": { "const": 1 },
+    "maximumItems": { "const": 262144 },
+    "maximumBytes": { "const": 67108864 },
+    "cases": { "const": [
+      { "maximumNodes": 0, "patches": 0, "creditFault": true },
+      { "maximumNodes": 1, "patches": 1, "creditFault": false }
+    ] }
+  }
+}

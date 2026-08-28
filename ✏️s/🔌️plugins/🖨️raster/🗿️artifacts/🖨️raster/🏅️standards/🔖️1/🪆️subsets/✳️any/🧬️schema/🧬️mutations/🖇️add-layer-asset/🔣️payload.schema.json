@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddLayerAsset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset",
+    "assetId"
+  ],
+  "properties": {
+    "assetId": {
+      "type": "string"
+    },
+    "asset": {
+      "title": "RasterImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "mime"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

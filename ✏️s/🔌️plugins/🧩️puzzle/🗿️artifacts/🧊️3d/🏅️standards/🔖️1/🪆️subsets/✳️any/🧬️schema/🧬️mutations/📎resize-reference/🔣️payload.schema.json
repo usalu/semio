@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResizeReference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWidthWorld"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newWidthWorld": {
+      "type": "number"
+    }
+  }
+}

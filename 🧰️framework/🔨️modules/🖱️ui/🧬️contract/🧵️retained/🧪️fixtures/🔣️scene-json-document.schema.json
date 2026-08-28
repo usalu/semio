@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["valid", "invalid", "large", "depth", "cancelPrefixes", "maxItems", "maxBytes", "readerCount", "terminalChildBytes", "terminalReleaseBytes", "forgedRootAccepted"],
+  "properties": {
+    "valid": { "type": "array", "minItems": 5, "items": { "type": "object", "additionalProperties": false, "required": ["name", "text", "keys"], "properties": { "name": { "type": "string" }, "text": { "type": "string" }, "keys": { "type": "array", "items": { "type": "string" } } } } },
+    "invalid": { "type": "array", "minItems": 4, "items": { "type": "string" } },
+    "large": { "type": "object", "additionalProperties": false, "required": ["key", "value", "repeat"], "properties": { "key": { "type": "string" }, "value": { "type": "string" }, "repeat": { "const": 4096 } } },
+    "depth": { "const": 4096 },
+    "cancelPrefixes": { "type": "array", "minItems": 8, "items": { "type": "integer", "minimum": 0 } },
+    "maxItems": { "const": 1 },
+    "maxBytes": { "const": 4096 },
+    "readerCount": { "const": 2 },
+    "terminalChildBytes": { "const": 4096 },
+    "terminalReleaseBytes": { "const": 32 },
+    "forgedRootAccepted": { "const": false }
+  }
+}

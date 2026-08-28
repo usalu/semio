@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-value-resident"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "framework"
+id = "value-resident"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_resident"
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+serde_json.workspace = true

@@ -1,0 +1,211 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧬️ Exact 5-leaf PDF 1.4/ANY catalog. Reference lopdf never links the subject implementation.",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-4-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-4-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "Independently reads all pages through lopdf, applies this subset's concrete page operations, reconstructs document bytes, and verifies inverse closure against the original projection.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf Rust PDF object-graph library",
+        "version": "0.44"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-4-base",
+      "capability": "pdf-1-4-mutate",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️base",
+      "vectors": [
+        {
+          "mutationId": "insert-page",
+          "sourceMutationDirectoryName": "📥️insert-page",
+          "mutationDirectoryName": "📥️insert-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-page",
+          "sourceMutationDirectoryName": "🗑️remove-page",
+          "mutationDirectoryName": "🗑️remove-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-page",
+          "sourceMutationDirectoryName": "🔀️move-page",
+          "mutationDirectoryName": "🔀️move-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "resize-page",
+          "sourceMutationDirectoryName": "📐️resize-page",
+          "mutationDirectoryName": "📐️resize-page",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        },
+        {
+          "mutationId": "replace-page-text",
+          "sourceMutationDirectoryName": "📝️replace-page-text",
+          "mutationDirectoryName": "📝️replace-page-text",
+          "scenarios": [
+            {
+              "id": "round-trips-the-concrete-inverse",
+              "directoryName": "🧪️round-trips-the-concrete-inverse"
+            }
+          ]
+        }
+      ],
+      "kinds": [
+        "insert-page",
+        "remove-page",
+        "move-page",
+        "resize-page",
+        "replace-page-text"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "base",
+      "standardDirectoryName": "🔖️1.4",
+      "subsetDirectoryName": "✳️base",
+      "mutations": [
+        {
+          "id": "insert-page",
+          "capability": "pdf-1-4-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-page",
+            "bridgeVersion": 1,
+            "variant": "InsertPage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-4-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-page",
+          "capability": "pdf-1-4-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-page",
+            "bridgeVersion": 1,
+            "variant": "MovePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-4-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-page",
+          "capability": "pdf-1-4-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-page",
+            "bridgeVersion": 1,
+            "variant": "RemovePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-4-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-page-text",
+          "capability": "pdf-1-4-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-page-text",
+            "bridgeVersion": 1,
+            "variant": "ReplacePageText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-4-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-page",
+          "capability": "pdf-1-4-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-page",
+            "bridgeVersion": 1,
+            "variant": "ResizePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-4-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

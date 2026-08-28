@@ -1,0 +1,18 @@
+{
+  "declaredOutcome": "empty",
+  "kind": "create-solid",
+  "hasExpected": false,
+  "solids": 0,
+  "shells": 0,
+  "faces": 0,
+  "edges": 0,
+  "vertices": 0,
+  "boundingBox": null,
+  "boundingBoxDiagonal": null,
+  "volume": 0,
+  "area": 0,
+  "validSolid": true,
+  "eulerCharacteristic": 0,
+  "genus": null,
+  "measuredFrom": "in-memory result — the kernel's own shape has no sub-entities at all; STEP export refuses to serialize empty geometry"
+}

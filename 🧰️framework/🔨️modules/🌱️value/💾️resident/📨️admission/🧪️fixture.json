@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "bootstrap": ["original-prepare-then-wrapper-throw", "same-consumer-stable-read", "foreign-consumer-refused", "claim-after-parent-storage", "claim-then-wrapper-throw", "short-grant-before-allocation", "caller-loss-parent-close"],
+  "resourceKinds": ["owner", "record", "page", "reader", "external"],
+  "faultKinds": ["object", "null", "undefined", "proxy"],
+  "ownership": ["exact-original-result-before-return", "occupied-cell-rejects-before-mutation", "foreign-ledger-refused", "first-root-never-overwritten", "typed-storage-can-retire", "fault-cell-cannot-refund", "final-witness-absent-with-fault", "unrelated-byte-remains-73"],
+  "grants": [{ "maxItems": 0, "maxBytes": 4096 }, { "maxItems": 1, "maxBytes": 295 }, { "maxItems": 1, "maxBytes": 4096 }],
+  "unrelatedByte": 73
+}

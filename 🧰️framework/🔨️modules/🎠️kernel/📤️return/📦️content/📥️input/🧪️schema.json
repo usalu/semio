@@ -1,0 +1,15 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.kernel.return-input.fixture.v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["version","vectors","invalid","large","laws"],
+  "properties":{
+    "version":{"const":1},
+    "vectors":{"type":"array","minItems":13,"maxItems":13,"items":{"type":"object","additionalProperties":false,"required":["opcode","name","node","field","payloadHex","headerHex","bodyHex"],"properties":{"opcode":{"type":"integer","minimum":0,"maximum":10},"name":{"type":"string","enum":["upsert","setComponent","setLayout","setActivity","setChildren","setStyle","setAccessibility","setBindings","setMenu","remove","setRoot"]},"node":{"anyOf":[{"type":"null"},{"$ref":"#/definitions/u64"}]},"field":{"enum":[null,"node","component","layout","activity","children","style","accessibility","bindings","menu"]},"payloadHex":{"$ref":"#/definitions/hex"},"headerHex":{"$ref":"#/definitions/hex"},"bodyHex":{"$ref":"#/definitions/hex"}}}},
+    "invalid":{"type":"array","minItems":10,"maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["length","headerHex","reason"],"properties":{"length":{"$ref":"#/definitions/u64"},"headerHex":{"$ref":"#/definitions/hex"},"reason":{"type":"string","minLength":1}}}},
+    "large":{"type":"object","additionalProperties":false,"required":["length","headerHex","payloadLength","allocations"],"properties":{"length":{"const":"18446744073709551615"},"headerHex":{"const":"00f4ffffffffffffffff01"},"payloadLength":{"const":"18446744073709551604"},"allocations":{"const":0}}},
+    "laws":{"type":"object","additionalProperties":false,"required":["oneBytePerPush","payloadNotReadByHeader","childrenCountRetained","declaredLengthAdmitsAllocation","publicFormatMintsAuthority"],"properties":{"oneBytePerPush":{"const":true},"payloadNotReadByHeader":{"const":true},"childrenCountRetained":{"const":true},"declaredLengthAdmitsAllocation":{"const":false},"publicFormatMintsAuthority":{"const":false}}}
+  },
+  "definitions":{"hex":{"type":"string","pattern":"^(?:[0-9a-f]{2})*$"},"u64":{"type":"string","pattern":"^(?:0|[1-9][0-9]{0,19})$","maxLength":20}}
+}

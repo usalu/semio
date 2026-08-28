@@ -1,13 +1,13 @@
 //! 📮️ Fixed arena-slot handback obligations; producers never acquire the arena mutex.
 
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum UiArenaHandback { ReleaseAlias, ReturnClaim }
 
 //#region 📫️FixedObligations
 pub(crate) struct UiArenaHandbacks<const SLOTS: usize, const WORDS: usize> {
-    releases: [AtomicUsize; SLOTS],
+    releases: [AtomicU64; SLOTS],
     claims: [AtomicBool; SLOTS],
     ready: [AtomicU64; WORDS],
 }
@@ -15,13 +15,13 @@ pub(crate) struct UiArenaHandbacks<const SLOTS: usize, const WORDS: usize> {
 impl<const SLOTS: usize, const WORDS: usize> UiArenaHandbacks<SLOTS, WORDS> {
     pub(crate) const fn new() -> Self {
         assert!(WORDS * 64 >= SLOTS);
-        Self { releases: [const { AtomicUsize::new(0) }; SLOTS], claims: [const { AtomicBool::new(false) }; SLOTS], ready: [const { AtomicU64::new(0) }; WORDS] }
+        Self { releases: [const { AtomicU64::new(0) }; SLOTS], claims: [const { AtomicBool::new(false) }; SLOTS], ready: [const { AtomicU64::new(0) }; WORDS] }
     }
 
     /// 📨️ Records an admitted owner; slot reuse remains forbidden until its obligation is consumed.
     pub(crate) fn record(&self, slot: usize, obligation: UiArenaHandback) {
         match obligation {
-            UiArenaHandback::ReleaseAlias => { let previous = self.releases[slot].fetch_add(1, Ordering::AcqRel); assert!(previous != usize::MAX, "pending releases exceed admitted aliases"); }
+            UiArenaHandback::ReleaseAlias => { let previous = self.releases[slot].fetch_add(1, Ordering::AcqRel); assert!(previous != u64::MAX, "pending releases exceed admitted aliases"); }
             UiArenaHandback::ReturnClaim => { assert!(!self.claims[slot].swap(true, Ordering::AcqRel), "one exact claim returned twice"); }
         }
         self.ready[slot / 64].fetch_or(1u64 << (slot % 64), Ordering::Release);

@@ -1,0 +1,23 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.actor.return-response.v1",
+  "title":"Captured Worker Return Response",
+  "description":"Single replacement for the canonical return-drive worker response. Fixed magic 73727201, one tag byte (result 0, fault 1), positive activationGeneration ULEB64, actual transportRequestSequence canonical ULEB53, then canonical ActorReturnResult bytes to EOF or exactly one closed transport fault byte. Maximum 4161 bytes. This does not change WIT or native return origin.",
+  "definitions":{
+    "transportRequestSequence":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "transportFault":{"enum":["requestRefused","executionFault","resultFault"]},
+    "header":{
+      "type":"object","additionalProperties":false,"required":["kind","activationGeneration","transportRequestSequence"],
+      "properties":{"kind":{"enum":["result","fault"]},"activationGeneration":{"$ref":"semio.actor.retained-return.v1#/definitions/u64"},"transportRequestSequence":{"$ref":"#/definitions/transportRequestSequence"}}
+    },
+    "result":{
+      "type":"object","additionalProperties":false,"required":["kind","activationGeneration","transportRequestSequence","result"],
+      "properties":{"kind":{"const":"result"},"activationGeneration":{"$ref":"semio.actor.retained-return.v1#/definitions/u64"},"transportRequestSequence":{"$ref":"#/definitions/transportRequestSequence"},"result":{"$ref":"semio.actor.retained-return.v1#/definitions/result"}}
+    },
+    "fault":{
+      "type":"object","additionalProperties":false,"required":["kind","activationGeneration","transportRequestSequence","fault"],
+      "properties":{"kind":{"const":"fault"},"activationGeneration":{"$ref":"semio.actor.retained-return.v1#/definitions/u64"},"transportRequestSequence":{"$ref":"#/definitions/transportRequestSequence"},"fault":{"$ref":"#/definitions/transportFault"}}
+    }
+  },
+  "oneOf":[{"$ref":"#/definitions/result"},{"$ref":"#/definitions/fault"}]
+}

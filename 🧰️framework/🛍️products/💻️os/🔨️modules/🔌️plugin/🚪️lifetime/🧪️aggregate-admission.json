@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "scope": {"nativeAggregateMounted": false, "nativeLayoutMeasured": false, "allocatorFailureExecuted": false, "strictCallbackTimingProven": false},
+  "registry": {
+    "owner": "PluginRuntime::RuntimeInstanceRegistry",
+    "logicalSlots": 1024,
+    "initializationGrantBytes": 4096,
+    "injectedLayouts": [
+      {"slotBytes": 8, "allocationGrantBytes": 8191, "allocationCalls": 0, "requestedBytes": 8192, "initializationTurns": 0},
+      {"slotBytes": 8, "allocationGrantBytes": 8192, "allocationCalls": 1, "requestedBytes": 8192, "initializationTurns": 2},
+      {"slotBytes": 16, "allocationGrantBytes": 16384, "allocationCalls": 1, "requestedBytes": 16384, "initializationTurns": 4},
+      {"slotBytes": 64, "allocationGrantBytes": 32768, "allocationCalls": 0, "requestedBytes": 65536, "initializationTurns": 0}
+    ],
+    "allocatorOvershoot": {"requestedBytes": 16384, "actualBytes": 20480, "admittedBytes": 16384, "retainedBytes": 20480, "appConstructed": false}
+  },
+  "beforeDetach": {
+    "required": ["RuntimeCloseWorkerState", "runtime.close_quarantine", "REACTOR_CLOSES", "PATCHES", "PENDING_PATCHES", "COMMAND_INGRESS", "JOB_RENDER_BINDINGS", "PRESENCE", "return-source"],
+    "cases": [
+      {"missing": [], "sameCapturedKey": true, "generationAvailable": true, "detach": true},
+      {"missing": ["RuntimeCloseWorkerState"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["runtime.close_quarantine"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["REACTOR_CLOSES"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["PATCHES"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["PENDING_PATCHES"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["COMMAND_INGRESS"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["JOB_RENDER_BINDINGS"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["PRESENCE"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": ["return-source"], "sameCapturedKey": true, "generationAvailable": true, "detach": false},
+      {"missing": [], "sameCapturedKey": false, "generationAvailable": true, "detach": false},
+      {"missing": [], "sameCapturedKey": true, "generationAvailable": false, "detach": false}
+    ]
+  },
+  "descendants": {
+    "resumeLogicalCapBytes": 196608,
+    "fields": [
+      {"owner": "PendingResume.meta.actor", "length": 8, "capacity": 64},
+      {"owner": "TaskResumeOutcome.Emit.artifact_ops", "length": 1, "capacity": 4096},
+      {"owner": "TaskResumeOutcome.Emit.config_ops", "length": 0, "capacity": 4096},
+      {"owner": "TaskResumeOutcome.Emit.draft_ops", "length": 4097, "capacity": 8192},
+      {"owner": "InstanceMetadata.app_id", "length": 7, "capacity": 64}
+    ],
+    "logicalBytes": 4113,
+    "physicalCapacityBytes": 16512,
+    "retirementGrants": [0, 1, 64, 4096],
+    "emptyReservedFieldStillOwnsBacking": true
+  },
+  "terminal": {
+    "ready": {"appEmpty": true, "pumpEmpty": true, "descendantsEmpty": true, "schedulingRevoked": true, "queuedCallbacks": 0, "runningCallbacks": 0, "quarantineAlias": false, "shellReleased": true, "elapsedUs": 7999},
+    "cases": [
+      {"name": "exact-final-release", "changes": {}, "ackConsumed": true},
+      {"name": "app-root", "changes": {"appEmpty": false}, "ackConsumed": false},
+      {"name": "pump-root", "changes": {"pumpEmpty": false}, "ackConsumed": false},
+      {"name": "typed-descendant", "changes": {"descendantsEmpty": false}, "ackConsumed": false},
+      {"name": "future-weak-upgrade", "changes": {"schedulingRevoked": false}, "ackConsumed": false},
+      {"name": "queued-callback", "changes": {"queuedCallbacks": 1}, "ackConsumed": false},
+      {"name": "callback-tail-arc", "changes": {"runningCallbacks": 1}, "ackConsumed": false},
+      {"name": "quarantine-alias", "changes": {"quarantineAlias": true}, "ackConsumed": false},
+      {"name": "final-shell-not-released", "changes": {"shellReleased": false}, "ackConsumed": false},
+      {"name": "strict-equality-retains-ack", "changes": {"elapsedUs": 8000}, "ackConsumed": false},
+      {"name": "late-clock-retains-ack", "changes": {"elapsedUs": 8001}, "ackConsumed": false},
+      {"name": "missing-clock-retains-ack", "changes": {"elapsedUs": null}, "ackConsumed": false}
+    ],
+    "lateVerdictKeepsReleasedShellWitness": true,
+    "faultDoesNotEraseStructuralOwner": true
+  }
+}

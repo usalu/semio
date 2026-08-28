@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "sourceCase": "sparse-anchor-comma-private-preserved",
+  "grants": [0, 1, 64, 4096],
+  "wireFields": ["selection", "activeMode", "activeGranularity"],
+  "rootClonePayloadBytes": 0,
+  "sharedOwnerRetiredBytes": 0,
+  "finalOwnerRetiredBytes": 73,
+  "largeSourceCase": "semantic-unicode-over-page",
+  "largeFinalOwnerRetiredBytes": 33265,
+  "hoverIsCaptured": false,
+  "privateDomainIsCaptured": true,
+  "anchorIsCaptured": true,
+  "commaIdIsSplit": false,
+  "zeroGrantChangesOwner": false,
+  "coldDecodeEarnsInteractiveCredit": false
+}

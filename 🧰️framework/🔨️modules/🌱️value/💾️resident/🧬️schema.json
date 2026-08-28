@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.value.resident.capacity.v1",
+  "title": "Shared Resident Capacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["bytes", "slots", "owners", "control"],
+  "properties": {
+    "bytes": { "$ref": "#/definitions/count" },
+    "slots": { "$ref": "#/definitions/count" },
+    "owners": { "$ref": "#/definitions/count" },
+    "control": { "$ref": "#/definitions/resources" }
+  },
+  "definitions": {
+    "count": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+    "resources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bytes", "slots", "owners"],
+      "properties": { "bytes": { "$ref": "#/definitions/count" }, "slots": { "$ref": "#/definitions/count" }, "owners": { "$ref": "#/definitions/count" } }
+    }
+  }
+}

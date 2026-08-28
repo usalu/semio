@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️change-block-font-size",
+  "semanticKind": "change-block-font-size",
+  "displayName": "Change Block Font Size",
+  "emoji": "🔤️",
+  "aggregateVariant": "ChangeBlockFontSize",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-block-font-size",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

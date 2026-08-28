@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "domain": "composition-shared-resident-admission",
+  "capacitySchema": "semio.value.resident.capacity.v1",
+  "capacity": {
+    "default": null,
+    "axes": ["bytes", "slots", "owners"],
+    "controlWithinTotal": true,
+    "dataMaximum": "total minus explicit control reserve on each axis",
+    "controlMaximum": "explicit control reserve on each axis",
+    "checkedArithmetic": "nonnegative safe integers; compare remaining capacity before addition"
+  },
+  "authority": {
+    "provenanceMinted": false,
+    "requiresUiInstance": false,
+    "requiresOpenGuest": false,
+    "compositionInjectionRequired": true,
+    "structuralRetirementWitnessAccepted": false,
+    "publicCounterSubtraction": false,
+    "privateExactConsumerReleaseRequired": true
+  },
+  "ownership": {
+    "reserveBeforeAllocation": true,
+    "strongRegistrationBeforeExposure": true,
+    "reservationSurvivesCallerLoss": true,
+    "parentDrivesOneRetainedChildPerTurn": true,
+    "refundAfterActualConsumerRetirement": true,
+    "refundOnCancellationRequest": false,
+    "simultaneousCopiesChargedSeparately": true,
+    "dataSaturationPreservesReservedControl": true
+  },
+  "admissionResult": {
+    "canonical": "every constructor admission returns step plus the exact registered owner/page/reader/slot/record or null",
+    "capacityRefusal": "blocked with null; no new registration or resource mutation",
+    "constructorFailure": "rejected with the original already registered facade in closing-only state; caller can retire it without closing unrelated ledger users",
+    "replacementOnFailure": false,
+    "outerWrapperFailure": "distinct concrete composition pending-slot handoff; a returned result alone does not recover a wrapper that throws after delivery"
+  },
+  "logicalRecords": {
+    "owner": { "bytes": 128, "slots": 1, "owners": 1 },
+    "storage": { "bytes": 192, "slots": 1, "owners": 1 },
+    "reader": { "bytes": 64, "slots": 1, "owners": 1 },
+    "retirementWitness": { "bytes": 64, "slots": 1, "owners": 1 },
+    "custodyReceipt": { "bytes": 64, "slots": 1, "owners": 1 },
+    "pageBacking": { "bytes": 256, "slots": 1, "owners": 0 },
+    "externalBacking": { "bytes": "explicit maximumBytes", "slots": 1, "owners": 0 },
+    "meaning": "fixed logical state/facade records, not measured JS heap sizes; one composition ledger root is outside admitted descendants",
+    "witnessTiming": "charge and strongly install before finalization, storage retirement or refund",
+    "terminalFacade": "released intrinsic storage and registration credit does not certify collection of externally retained empty facades or immutable proofs"
+  },
+  "page": { "backingBytes": 256, "logicalLength": "checked integer 0..256 at reservation", "seal": "written equals logical length", "paddingCopy": false, "readerRegistrationRequired": true },
+  "external": {
+    "fenceBeforePost": true, "cancelledUnsubmittedCanRetire": true, "postedEmptyCancellationCanRefund": false,
+    "adopt": "intrinsic fixed ArrayBuffer brand/extent plus actual transfer and checked detachment; no typed-array subview or structural reader",
+    "transferBeforeViewFailure": "retain exact moved backing; no custody receipt; bounded close remains serviceable",
+    "controlCorrelation": "actor-owned; intrinsic custody does not prove worker/request/lifetime",
+    "noResponseClose": "unimplemented until exact concrete transport-close witness is joined"
+  },
+  "domainRecord": {
+    "envelope": "explicit checked bytes/slots/owners, added to intrinsic record metadata before construction",
+    "intrinsicMetadata": { "bytes": 256, "slots": 3, "owners": 3 },
+    "metadataParts": ["128-byte registration", "64-byte retirement witness", "64-byte exact detach observation"],
+    "capabilityOwner": "concrete typed composition private state; never a public domain facade property",
+    "install": "one exact shell strongly installed before fallible field construction/finalization",
+    "neutralClose": "blocks while shell installed; does not enumerate or invoke the shell",
+    "detach": "private composition verifies real domain terminal witness, then exact capability detaches only its original shell",
+    "detachObservation": "preadmitted exact record-and-shell observation survives detach-then-wrapper-throw; replay mutation rejects without regranting domain authority",
+    "refund": "separate granted intrinsic unlink after detachment; empty unused reservation has distinct path",
+    "terminalClaim": "intrinsic registration only, never domain terminal proof"
+  },
+  "separateFrom": ["step fuel", "step byte work", "wall clock deadline", "wire extent limit", "actor activation", "native guest lifetime", "native input acknowledgement", "UI publication acknowledgement", "physical heap certification"],
+  "implementationStatus": "intrinsic owner/page/reader/witness source and standalone tests; external custody fault laws in progress; UI and actor consumers not adopted"
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeImportanceClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newImportanceClass"
+  ],
+  "properties": {
+    "newImportanceClass": {
+      "type": "string"
+    }
+  }
+}

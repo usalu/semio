@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeShearAreaMm2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newShearAreaMm2"
+  ],
+  "properties": {
+    "newShearAreaMm2": {
+      "type": "number"
+    }
+  }
+}

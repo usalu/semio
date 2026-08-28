@@ -368,7 +368,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn every_mutation_registers_a_semantic_descriptor() {
-        register_fem2d_mutation_descriptors();
+        register_fem2d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
         let kinds = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::kinds();
         assert_eq!(kinds.len(), 25, "every semantic mutation kind must be registered exactly once");
         for descriptor in kinds {

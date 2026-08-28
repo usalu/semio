@@ -1,0 +1,582 @@
+{
+  "baselineSha": "a8d1caf41f68204e73ff5e47ce40c5f543ed442d",
+  "passed": 114,
+  "total": 115,
+  "results": [
+    {
+      "id": "registry/contributions-discovered",
+      "ok": true,
+      "detail": "169 owner contributions"
+    },
+    {
+      "id": "registry/no-malformed-contribution",
+      "ok": false,
+      "detail": "1 malformed"
+    },
+    {
+      "id": "registry/probes-registered",
+      "ok": true,
+      "detail": "34 probes"
+    },
+    {
+      "id": "registry/unqualified-probes-are-marked",
+      "ok": true,
+      "detail": "unqualified: step-external-canonicalizer(provisional), step-external-canonicalizer(provisional)"
+    },
+    {
+      "id": "registry/unqualified-probes-never-gate",
+      "ok": true,
+      "detail": "no unqualified probe gates any pipeline"
+    },
+    {
+      "id": "registry/qualified-probes-carry-evidence",
+      "ok": true,
+      "detail": "32 qualified, each with evidence and criteria"
+    },
+    {
+      "id": "manifest/valid",
+      "ok": true,
+      "detail": "4 mutations, 0 problems"
+    },
+    {
+      "id": "manifest/wildcard-subset-refused-in-context",
+      "ok": true,
+      "detail": "step@ap214/any=true step@ap214/cc6=false"
+    },
+    {
+      "id": "manifest/wildcard-owner-is-a-hard-breach",
+      "ok": true,
+      "detail": "step@ap214/any → runtime-inventory-missing, test-only-mutation, wildcard-subset-owner"
+    },
+    {
+      "id": "manifest/unsplit-artifact-is-reported",
+      "ok": true,
+      "detail": "unsplit@1/any → unsplit-artifact-subset(medium), unsplit-artifact-subset(medium), unsplit-artifact-subset(medium), unsplit-artifact-subset(medium)"
+    },
+    {
+      "id": "manifest/real-subset-is-not-flagged",
+      "ok": true,
+      "detail": "step@ap214/cc6 raises no subset finding"
+    },
+    {
+      "id": "manifest/duplicate-mutation-refused",
+      "ok": true,
+      "detail": "duplicate id → breach"
+    },
+    {
+      "id": "manifest/unknown-outcome-refused",
+      "ok": true,
+      "detail": "outcome 'maybe' → breach"
+    },
+    {
+      "id": "manifest/oracle-requirement-mandatory",
+      "ok": true,
+      "detail": "empty oracleRequirements → breach"
+    },
+    {
+      "id": "manifest/digest-changes-with-content",
+      "ok": true,
+      "detail": "a manifest edit changes its digest"
+    },
+    {
+      "id": "equality/exact-match-is-clean",
+      "ok": true,
+      "detail": "runtime = manifest = tests → no difference"
+    },
+    {
+      "id": "equality/runtime-only-detected",
+      "ok": true,
+      "detail": "a mutation production can dispatch but no manifest owns"
+    },
+    {
+      "id": "equality/manifest-only-detected",
+      "ok": true,
+      "detail": "a manifest row with no dispatch behind it"
+    },
+    {
+      "id": "equality/test-only-detected",
+      "ok": true,
+      "detail": "a catalog kind no manifest owns"
+    },
+    {
+      "id": "equality/outcome-mismatch-detected",
+      "ok": true,
+      "detail": "declared outcomes ≠ dispatched outcomes"
+    },
+    {
+      "id": "equality/variant-mismatch-detected",
+      "ok": true,
+      "detail": "dispatch variant renamed under the manifest"
+    },
+    {
+      "id": "equality/missing-runtime-is-not-a-pass",
+      "ok": true,
+      "detail": "no bridge output ⇒ runtimeMissing, never silent success"
+    },
+    {
+      "id": "oracle/qualifying-kinds-only",
+      "ok": true,
+      "detail": "a second Semio implementation never qualifies"
+    },
+    {
+      "id": "oracle/missing-external-oracle-detected",
+      "ok": true,
+      "detail": "no qualifying oracle → blocking breach"
+    },
+    {
+      "id": "oracle/semio-derived-does-not-discharge",
+      "ok": true,
+      "detail": "reclassifying every oracle as Semio-derived reopens the gap"
+    },
+    {
+      "id": "oracle/engine-independence-enforced",
+      "ok": true,
+      "detail": "collapsing both oracles onto one kernel → breach"
+    },
+    {
+      "id": "oracle/no-oracle-cannot-cover-mutation",
+      "ok": true,
+      "detail": "a no-oracle decision naming a mutation capability → breach"
+    },
+    {
+      "id": "oracle/subject-sharing-engine-reported",
+      "ok": true,
+      "detail": "subject on the oracle's kernel → reported"
+    },
+    {
+      "id": "isolation/clean-today",
+      "ok": true,
+      "detail": "156 oracles + 34 probes, 0 leaks"
+    },
+    {
+      "id": "isolation/production-reachable-oracle-detected",
+      "ok": true,
+      "detail": "an oracle production can import → breach"
+    },
+    {
+      "id": "isolation/networked-probe-detected",
+      "ok": true,
+      "detail": "a probe that phones home → breach"
+    },
+    {
+      "id": "isolation/unseeded-nondeterministic-probe-detected",
+      "ok": true,
+      "detail": "sampled metric with no seed → breach"
+    },
+    {
+      "id": "fixture/corpus-present",
+      "ok": true,
+      "detail": "348 fixture bundles"
+    },
+    {
+      "id": "fixture/none-registered-without-a-target",
+      "ok": true,
+      "detail": "0 fixture(s) registered without a target: none"
+    },
+    {
+      "id": "fixture/provenance-failures-are-named",
+      "ok": true,
+      "detail": "every registered fixture passes the provenance contract"
+    },
+    {
+      "id": "fixture/wildcard-with-siblings-still-breaches",
+      "ok": true,
+      "detail": "s.stdio.pdf has real sibling subsets, so \"any\" is still refused there"
+    },
+    {
+      "id": "fixture/wildcard-on-single-subset-artifact-settled",
+      "ok": true,
+      "detail": "an artifact with exactly one subset is not \"everything\"; the name is settled, not spelled"
+    },
+    {
+      "id": "fixture/digests-match-disk",
+      "ok": true,
+      "detail": "1428 files, 0 mismatched"
+    },
+    {
+      "id": "fixture/families-covered",
+      "ok": true,
+      "detail": "blocks, booleans, degenerate, document, dxf-entities, elevated, failure, geometry-replace, handcrafted, holes, mechanical, move-vertex, polygons, primitives, real-world, rectangles, robustness, runs, scale, shape-complexity, spatial-relationship, step-line-circle, structural, styles, topology, topology-build, topology-remove"
+    },
+    {
+      "id": "fixture/outcomes-covered",
+      "ok": true,
+      "detail": "applied, disjoint, empty, no-op, rejected, "
+    },
+    {
+      "id": "fixture/all-three-classes-present",
+      "ok": true,
+      "detail": "handcrafted, real-world, third-party-generated"
+    },
+    {
+      "id": "fixture/handcrafted-present",
+      "ok": true,
+      "detail": "6 handcrafted"
+    },
+    {
+      "id": "fixture/real-world-present",
+      "ok": true,
+      "detail": "1 real-world"
+    },
+    {
+      "id": "fixture/missing-licence-detected",
+      "ok": true,
+      "detail": "a fixture with no licence → breach"
+    },
+    {
+      "id": "fixture/wildcard-target-detected",
+      "ok": true,
+      "detail": "a fixture scoped to a wildcard subset → breach"
+    },
+    {
+      "id": "fixture/generated-without-generator-detected",
+      "ok": true,
+      "detail": "generated class with no generator record → breach"
+    },
+    {
+      "id": "fixture/unexplained-override-detected",
+      "ok": true,
+      "detail": "an override with no reason and no approver → breach"
+    },
+    {
+      "id": "fixture/copy-verifies-clean",
+      "ok": true,
+      "detail": "3 files re-hashed from a fresh copy"
+    },
+    {
+      "id": "fixture/tampered-digest-detected",
+      "ok": true,
+      "detail": "1 of 3 files flagged after a one-byte edit"
+    },
+    {
+      "id": "fixture/missing-file-detected",
+      "ok": true,
+      "detail": "1 file(s) reported missing"
+    },
+    {
+      "id": "cas/content-addressed",
+      "ok": true,
+      "detail": "sha256:e9e061fe2f0a3bf…"
+    },
+    {
+      "id": "cas/blob-path-sharded",
+      "ok": true,
+      "detail": "first two hex digits shard the directory"
+    },
+    {
+      "id": "cas/materializes-into-run-dir",
+      "ok": true,
+      "detail": "mode=reflink"
+    },
+    {
+      "id": "cas/mutable-copy-never-hardlinks",
+      "ok": true,
+      "detail": "mode=reflink — a mutation scenario handed a link would write into shared storage"
+    },
+    {
+      "id": "cas/refuses-non-digest",
+      "ok": true,
+      "detail": "a blob name that is not its content is refused"
+    },
+    {
+      "id": "lease/active-never-reclaimed",
+      "ok": true,
+      "detail": "a fresh active lease is held"
+    },
+    {
+      "id": "lease/own-lease-never-reclaimed",
+      "ok": true,
+      "detail": "an agent never reclaims its own lease, however stale"
+    },
+    {
+      "id": "lease/live-process-holds",
+      "ok": true,
+      "detail": "stale heartbeat + LIVE process → still held"
+    },
+    {
+      "id": "lease/dead-and-stale-reclaimable",
+      "ok": true,
+      "detail": "stale heartbeat + dead process + another agent → reclaimable"
+    },
+    {
+      "id": "lease/failed-never-reclaimed",
+      "ok": true,
+      "detail": "a failed run's evidence outlives routine cleanup"
+    },
+    {
+      "id": "lease/failure-evidence-protected",
+      "ok": true,
+      "detail": "failure-evidence, last-success-proof, pinned, toolchain"
+    },
+    {
+      "id": "lease/atomic-publish",
+      "ok": true,
+      "detail": "temporary directory renamed into place in one step"
+    },
+    {
+      "id": "lease/interrupted-leaves-no-published-dir",
+      "ok": true,
+      "detail": "an interrupted generation never exposes a partial published directory"
+    },
+    {
+      "id": "gc/dry-by-default",
+      "ok": true,
+      "detail": "0 candidates considered, nothing removed"
+    },
+    {
+      "id": "gc/removes-completed-ephemeral",
+      "ok": true,
+      "detail": "complete run, reclaimable"
+    },
+    {
+      "id": "gc/keeps-failure-evidence",
+      "ok": true,
+      "detail": "held: retention failure-evidence"
+    },
+    {
+      "id": "gc/keeps-active-peer-run",
+      "ok": true,
+      "detail": "held: lease active (agent peer)"
+    },
+    {
+      "id": "gc/keeps-pinned-evidence",
+      "ok": true,
+      "detail": "held: retention pinned"
+    },
+    {
+      "id": "gc/sweeps-unreferenced-blob",
+      "ok": true,
+      "detail": "1 blob(s) swept"
+    },
+    {
+      "id": "gc/keeps-referenced-blob",
+      "ok": true,
+      "detail": "marked 1 reachable"
+    },
+    {
+      "id": "gc/refuses-symlinked-cache-root",
+      "ok": true,
+      "detail": "a cache root that resolves outside the repository is refused"
+    },
+    {
+      "id": "tolerance/core-profiles-present",
+      "ok": true,
+      "detail": "analytic-strict, mechanical-standard, contact-sensitive, epsilon-degenerate, large-coordinate, micro-scale, real-world-import, cad-exact, document-text-exact, drawing-exact"
+    },
+    {
+      "id": "tolerance/scale-relative",
+      "ok": true,
+      "detail": "small=1.00e-7 (absolute floor) large=1.00e-3 (relative term)"
+    },
+    {
+      "id": "tolerance/override-capped",
+      "ok": true,
+      "detail": "asked 1000×, capped at 10×"
+    },
+    {
+      "id": "tolerance/override-flagged",
+      "ok": true,
+      "detail": "every override is reported, never silent"
+    },
+    {
+      "id": "pipeline/identical-result-passes",
+      "ok": true,
+      "detail": "11/12 assertions ok"
+    },
+    {
+      "id": "pipeline/unqualified-stages-do-not-gate",
+      "ok": true,
+      "detail": "unqualified: step-external-canonicalizer | overclaimed optional: none"
+    },
+    {
+      "id": "pipeline/mesh-stage-is-gating",
+      "ok": true,
+      "detail": "mesh stage at index 5, optional=false"
+    },
+    {
+      "id": "pipeline/mesh-identical-is-zero",
+      "ok": true,
+      "detail": "symDiff=0 hausdorff=0"
+    },
+    {
+      "id": "pipeline/lost-cavity-fails-the-mesh-gate",
+      "ok": true,
+      "detail": "hausdorff=7.00e+3 tolerances, genusEqual=false → 4 assertion(s) violated"
+    },
+    {
+      "id": "pipeline/wrong-geometry-fails",
+      "ok": true,
+      "detail": "relativeVolumeError=2.107e-1 → 6 gating assertion(s) violated"
+    },
+    {
+      "id": "pipeline/component-count-is-gated",
+      "ok": true,
+      "detail": "connectedComponentsEqual=false — one body vs two is caught"
+    },
+    {
+      "id": "pipeline/missing-report-fails",
+      "ok": true,
+      "detail": "a stage that produced no report cannot read as green"
+    },
+    {
+      "id": "pipeline/failed-probe-fails-stage",
+      "ok": true,
+      "detail": "probe status failed → stage fails"
+    },
+    {
+      "id": "pipeline/unmeasured-assertion-fails",
+      "ok": true,
+      "detail": "an assertion with no measurement behind it cannot read as green"
+    },
+    {
+      "id": "coverage/matrix-enumerated-from-manifests",
+      "ok": true,
+      "detail": "650 rows = Σ over 20 manifest(s) of Σ(mutation × outcome), not Σ(results)"
+    },
+    {
+      "id": "coverage/untested-appears-as-missing",
+      "ok": true,
+      "detail": "with no results, every coordinate reports missing rather than vanishing from the denominator"
+    },
+    {
+      "id": "coverage/row-carries-full-coordinate",
+      "ok": true,
+      "detail": "artifact/standard/subset/mutation/outcome/platform on every row"
+    },
+    {
+      "id": "coverage/all-dimensions-measured",
+      "ok": true,
+      "detail": "17/17 dimensions"
+    },
+    {
+      "id": "coverage/release-gate-blocks-today",
+      "ok": true,
+      "detail": "5 gate(s) unmet — runtimeMutationCoverage is 0.00% (0/20)"
+    },
+    {
+      "id": "coverage/wildcard-owner-blocks-release",
+      "ok": true,
+      "detail": "one wildcard owner is enough to block"
+    },
+    {
+      "id": "coverage/deferred-blocks-release",
+      "ok": true,
+      "detail": "deferred mutations block, they do not merely warn"
+    },
+    {
+      "id": "coverage/evidence-dimension-exists",
+      "ok": true,
+      "detail": "oracleEvidenceCoverage 184/403 — mutations that have BOTH a qualifying oracle and a fixture to run it against"
+    },
+    {
+      "id": "coverage/evidence-is-release-gated",
+      "ok": true,
+      "detail": "a mutation whose oracle has never been run against anything cannot pass a release gate"
+    },
+    {
+      "id": "coverage/evidence-is-not-weaker-than-oracle",
+      "ok": true,
+      "detail": "evidence can never exceed registration: every measured mutation must first have an oracle"
+    },
+    {
+      "id": "coverage/malformed-fixture-stays-in-denominator",
+      "ok": true,
+      "detail": "348 measured against 348 registered — a fixture that fails the contract is counted, not dropped"
+    },
+    {
+      "id": "coverage/matrix-survives-malformed-fixture",
+      "ok": true,
+      "detail": "a fixture with no target must not take the whole matrix down"
+    },
+    {
+      "id": "coverage/uncarried-mutation-reports-missing",
+      "ok": true,
+      "detail": "200 mutation(s) named as un-oracled rather than absorbed into a capability"
+    },
+    {
+      "id": "manifest/refined-scope-survives-regeneration",
+      "ok": true,
+      "detail": "203 requirement(s) name a specific oracle and 166 record a carrier that cannot witness them"
+    },
+    {
+      "id": "coverage/named-oracle-must-be-the-one-that-qualifies",
+      "ok": true,
+      "detail": "a requirement naming an absent oracle is undischarged even though another qualifying oracle declares the capability"
+    },
+    {
+      "id": "ownership/same-name-in-two-subsets-is-not-a-duplicate",
+      "ok": true,
+      "detail": "4 mutation name(s) legitimately span subsets, e.g. move-vertex in brep+mesh, no-mutation in cad+document"
+    },
+    {
+      "id": "ownership/no-false-duplicates-reported",
+      "ok": true,
+      "detail": "a shared mutation name across distinct subsets no longer reports as duplicate ownership"
+    },
+    {
+      "id": "oracle/reimplementation-gate-detects-the-shape",
+      "ok": true,
+      "detail": "38 owner(s) compute mutation semantics themselves while registering a third-party oracle — a recorded backlog, surfaced rather than hidden"
+    },
+    {
+      "id": "oracle/corrected-owners-stay-corrected",
+      "ok": true,
+      "detail": "gltf, png, jpg, bmp and tiff no longer claim a third-party oracle for semantics they compute"
+    },
+    {
+      "id": "oracle/every-breach-is-high-priority",
+      "ok": true,
+      "detail": "a differential test whose two halves share one specification is never a soft finding"
+    },
+    {
+      "id": "stub/detects-dsl-text-exports",
+      "ok": true,
+      "detail": "130 serializer(s) emit DSL text under a standard format's extension"
+    },
+    {
+      "id": "stub/detects-pack-transmute",
+      "ok": true,
+      "detail": "33 serializer(s) reinterpret their own pack bytes as the target artifact"
+    },
+    {
+      "id": "stub/transmute-is-high-priority",
+      "ok": true,
+      "detail": "envelope type-confusion is never a soft finding"
+    },
+    {
+      "id": "stub/text-only-serializers-not-skipped",
+      "ok": true,
+      "detail": "an owner whose exporters kept only serialize_text is still caught"
+    },
+    {
+      "id": "stub/detects-serde-coercion",
+      "ok": true,
+      "detail": "19 serializer(s) coerce through serde into an empty target — architect/program's xlsx turns 266 registers into a sheetless workbook and returns Ok"
+    },
+    {
+      "id": "stub/detects-input-ignoring",
+      "ok": true,
+      "detail": "14 serializer(s) never read their own input parameter"
+    },
+    {
+      "id": "stub/cfg-test-blocks-do-not-false-flag",
+      "ok": true,
+      "detail": "a round-trip proof inside #[cfg(test)] must not make a real carrier read as a stub"
+    },
+    {
+      "id": "replay/subject-without-dispatch-detected",
+      "ok": true,
+      "detail": "a subject that replays a committed vector → breach"
+    },
+    {
+      "id": "replay/dispatched-subject-passes",
+      "ok": true,
+      "detail": "a subject carrying dispatch proof passes"
+    },
+    {
+      "id": "replay/oracle-role-exempt",
+      "ok": true,
+      "detail": "an oracle is not expected to reach our dispatch"
+    }
+  ]
+}

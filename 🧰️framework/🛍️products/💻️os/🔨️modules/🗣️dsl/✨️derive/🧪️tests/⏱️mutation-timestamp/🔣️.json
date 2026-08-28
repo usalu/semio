@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "delegations": [
+    { "derive": "Mutations", "source": "MutationKind", "target": "Mutation", "method": "timestamp" },
+    { "derive": "CompositeMutation", "source": "CompositeMutationKind", "target": "MutationKind", "method": "timestamp" }
+  ],
+  "cases": [
+    { "name": "no-authored-timestamp", "authored": null, "expected": null },
+    { "name": "explicit-zero-clock", "authored": { "counter": "0", "physicalMs": "0" }, "expected": { "counter": "0", "physicalMs": "0" } },
+    { "name": "preserve-authored-clock", "authored": { "counter": "7", "physicalMs": "123456789" }, "expected": { "counter": "7", "physicalMs": "123456789" } }
+  ]
+}

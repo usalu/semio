@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddNodeHandle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "handle",
+    "nodeId"
+  ],
+  "properties": {
+    "nodeId": {
+      "type": "string"
+    },
+    "handle": {
+      "title": "Puzzle2dHandle",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "angle",
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "handleKind": {
+          "type": "string"
+        },
+        "angle": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number"
+        },
+        "color": {
+          "type": "string"
+        },
+        "iconKind": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "number"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "maximumPageBytes": 4096,
+  "maximumGrantBytes": 32768,
+  "fanout": 16,
+  "edgeCases": { "zeroCapacity": 0, "zeroSizedCount": 7, "tailCount": 600, "retainedPrefix": 512, "reuseValue": 900 },
+  "counter": { "preflightAddressable": true, "allocatorMultiplier": 2, "failedAllocationOwnerRetained": true },
+  "ordered": { "count": 600, "first": 0, "last": 599, "sum": 179700 },
+  "binding": { "count": 32, "elementBytes": 2072, "smallGrantBytes": 2048 },
+  "oversized": { "elementBytes": 32769, "placed": false },
+  "retirement": { "allocates": false, "releasesLivePayload": false }
+}

@@ -1,0 +1,24 @@
+{
+  "state": {
+    "valid": [{"name": "genuine camera JSON", "value": {"cameraJson": "{\"x\":1,\"y\":2,\"zoom\":3}"}}, {"name": "opaque camera string remains admitted", "value": {"cameraJson": "opaque:camera-edge"}}],
+    "invalid": [{"name": "camera required", "value": {}}, {"name": "unknown state field", "value": {"cameraJson": "{}", "selectedIds": []}}, {"name": "camera string only", "value": {"cameraJson": 2}}]
+  },
+  "payload": {
+    "valid": [{"cameraJson": "{\"x\":8,\"y\":9,\"zoom\":4}"}, {"cameraJson": "opaque:camera-edge"}],
+    "invalid": [{}, {"cameraJson": 4}, {"cameraJson": "{}", "selectedIds": []}]
+  },
+  "aggregate": {
+    "valid": [{"operation": "setCamera", "cameraJson": "{\"x\":8,\"y\":9,\"zoom\":4}"}],
+    "invalid": [{"operation": "camera", "cameraJson": "{}"}, {"operation": "setCamera"}, {"operation": "setCamera", "cameraJson": "{}", "hoverJson": "{}"}]
+  },
+  "diff": {
+    "valid": [{"steps": []}, {"steps": [{}]}, {"steps": [{"cameraJson": null}]}, {"steps": [{"cameraJson": "{\"x\":1}"}, {"cameraJson": "{\"x\":2}"}]}],
+    "invalid": [{}, {"steps": [{"cameraJson": 1}]}, {"steps": [{"cameraJson": null, "extra": true}]}, {"steps": [], "extra": true}]
+  },
+  "laws": [
+    {"name": "replacement", "before": {"cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}"}, "operation": {"operation": "setCamera", "cameraJson": "{\"x\":8,\"y\":9,\"zoom\":4}"}, "diff": {"steps": [{"cameraJson": "{\"x\":8,\"y\":9,\"zoom\":4}"}]}, "inverse": [{"operation": "setCamera", "cameraJson": "{\"x\":0,\"y\":0,\"zoom\":1}"}], "after": {"cameraJson": "{\"x\":8,\"y\":9,\"zoom\":4}"}, "outcome": {"changed": true, "warningCode": null}},
+    {"name": "identity no-op", "before": {"cameraJson": "{\"x\":0}"}, "operation": {"operation": "setCamera", "cameraJson": "{\"x\":0}"}, "diff": {"steps": []}, "inverse": [{"operation": "setCamera", "cameraJson": "{\"x\":0}"}], "after": {"cameraJson": "{\"x\":0}"}, "outcome": {"changed": false, "warningCode": "mutation.no-op"}},
+    {"name": "opaque string remains replacement", "before": {"cameraJson": "{\"x\":0}"}, "operation": {"operation": "setCamera", "cameraJson": "opaque:camera-edge"}, "diff": {"steps": [{"cameraJson": "opaque:camera-edge"}]}, "inverse": [{"operation": "setCamera", "cameraJson": "{\"x\":0}"}], "after": {"cameraJson": "opaque:camera-edge"}, "outcome": {"changed": true, "warningCode": null}},
+    {"name": "ordered absorb has last camera", "before": {"cameraJson": "{\"x\":0}"}, "operation": {"operation": "setCamera", "cameraJson": "{\"x\":2}"}, "operationDiff": {"steps": [{"cameraJson": "{\"x\":2}"}]}, "diff": {"steps": [{"cameraJson": "{\"x\":1}"}, {"cameraJson": "{\"x\":2}"}]}, "inverse": [{"operation": "setCamera", "cameraJson": "{\"x\":0}"}], "after": {"cameraJson": "{\"x\":2}"}, "outcome": {"changed": true, "warningCode": null}}
+  ]
+}

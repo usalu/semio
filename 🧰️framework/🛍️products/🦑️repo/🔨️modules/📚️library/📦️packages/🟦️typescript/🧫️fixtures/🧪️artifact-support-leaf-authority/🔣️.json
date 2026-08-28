@@ -6,8 +6,9 @@
     "nodes": 332,
     "physicalNodes": 329,
     "files": 195,
-    "sourceBytes": 383479,
-    "sourceTreeDigest": "4a4ed81731e59bb7773a9e242caab31f8c16eddc3517e6de8ee43228d85d6a42",
+    "sourceBytes": 383547,
+    "sourceTreeDigest": "76d1a1be92970205c2196217860163306d43fc4d92e3dae67779183f7713f92f",
+    "alreadyCanonicalSources": ["🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json"],
     "contextSources": [
       { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/Cargo.toml", "size": 1722, "sha256": "f5c91d8f7f3d21e55c0b95f183967f96128d904058ed0d163f20d43cdbdd11b1" },
       { "path": "✏️s/🔌️plugins/🔋️energy/📦️packages/🦀️rust/📦️glue.rs", "size": 35055, "sha256": "06eafa94edc07d29087d80781a2f6affa152cb9a7cd343b96729d09dac3b8e82" }

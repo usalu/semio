@@ -39,7 +39,14 @@ impl UiDocumentArena {
             3 => { slot.revision = UiRevision(0); UiValueRetirementStep { complete: true, progressed: true, ..Default::default() } }
             4 => { slot.layout_epoch = 0; UiValueRetirementStep { complete: true, progressed: true, ..Default::default() } }
             5 => {
-                if !slot.nodes.entries.terminal_is_empty() || slot.surface.is_some() { return Err("document terminal retains typed roots"); }
+                if !slot.nodes.entries.terminal_is_empty() || slot.surface.is_some() { return Err("document credit still retains typed roots"); }
+                let resident = slot.resident.as_mut().ok_or("document root lost its resident permit")?;
+                let result = resident.close_step(1).map_err(|error| error.reason())?;
+                if result.complete { slot.resident = None; }
+                UiValueRetirementStep { complete: result.complete, progressed: result.progressed, released_items: result.released_permits, released_bytes: 0 }
+            }
+            6 => {
+                if !slot.nodes.entries.terminal_is_empty() || slot.surface.is_some() || slot.resident.is_some() { return Err("document terminal retains typed roots or credit"); }
                 let epoch = slot.epoch;
                 *slot = UiDocumentSlot { epoch, ..Default::default() };
                 return Ok(UiValueRetirementStep { complete: true, progressed: true, released_items: 1, released_bytes: 0 });
@@ -83,6 +90,32 @@ pub(super) fn close_document_owner(handle: &mut Option<UiDocumentHandle>, releas
     let step = arena.retire_exact(exact, maximum_bytes)?;
     if step.complete { *handle = None; *claimed = false; }
     Ok(step)
+}
+
+pub(super) fn close_document_read_owner(handle: &mut Option<UiDocumentHandle>, released: &mut bool, claimed: &mut bool, maximum_items: usize, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
+    let Some(exact) = *handle else { return Ok(UiValueRetirementStep { complete: true, ..Default::default() }); };
+    if maximum_items == 0 || maximum_bytes == 0 { return Ok(Default::default()); }
+    if *released { return close_document_owner(handle, released, claimed, maximum_items, maximum_bytes); }
+    let mut arena = match UI_DOCUMENT_ARENA.try_lock() {
+        Ok(arena) => arena,
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
+        Err(std::sync::TryLockError::Poisoned(_)) => return Err("document read retirement arena is poisoned"),
+    };
+    if !arena.active(exact) { return Err("document read lost its retained root"); }
+    if DOCUMENT_HANDBACKS.has_slot_pending(exact.slot) { return arena.consume_handback(exact.slot); }
+    let slot = arena.slot(exact).unwrap();
+    if slot.retiring || slot.aliases == 0 { return Err("document read is not an exact live alias"); }
+    arena.release(exact);
+    *released = true;
+    let slot = arena.slot_mut(exact).unwrap();
+    if !slot.retiring {
+        *handle = None;
+        return Ok(UiValueRetirementStep { complete: true, progressed: true, released_items: 1, ..Default::default() });
+    }
+    if slot.retirement_claimed { return Err("final document read encountered a foreign claim"); }
+    slot.retirement_claimed = true;
+    *claimed = true;
+    Ok(UiValueRetirementStep { progressed: true, released_items: 1, ..Default::default() })
 }
 
 pub(super) fn hand_back_document_owner(handle: Option<UiDocumentHandle>, released: bool, claimed: bool) {

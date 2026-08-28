@@ -1,0 +1,18 @@
+{
+  "state": {
+    "valid": [{"name": "camera only", "value": {"cameraJson": "{\\\"x\\\":1,\\\"y\\\":2,\\\"zoom\\\":3}"}}],
+    "invalid": [
+      {"name": "camera required", "value": {}},
+      {"name": "selection no longer belongs to presence", "value": {"cameraJson": "{}", "selectedIds": []}},
+      {"name": "camera requires string", "value": {"cameraJson": 2}}
+    ]
+  },
+  "payload": {
+    "valid": [{"cameraJson": "{\\\"x\\\":8,\\\"y\\\":9,\\\"zoom\\\":4}"}, {"cameraJson": ""}],
+    "invalid": [{}, {"cameraJson": 4}, {"cameraJson": "{}", "hoverJson": "{}"}]
+  },
+  "envelope": {
+    "valid": [{"operation": "setCamera", "cameraJson": "{\\\"x\\\":8,\\\"y\\\":9,\\\"zoom\\\":4}"}],
+    "invalid": [{"operation": "snapshot", "cameraJson": "{}"}, {"operation": "setCamera"}, {"operation": "setCamera", "cameraJson": "{}", "hoverJson": "{}"}]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.poll.composition.v1",
+  "title": "Required Poll Composition Projection",
+  "description": "The composition field projected from the existing poll input, not a second poll envelope or an allocation permit. The caller retains the original private activation and admitted composition owner.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["composition"],
+  "properties": { "composition": { "$ref": "semio.value.resident.capacity.v1" } }
+}

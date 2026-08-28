@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UI Fixed Metadata Neutral Oracle",
+  "type": "object", "additionalProperties": false,
+  "required": ["logicalRecordBytes", "logicalFieldBytes", "neutralRegistration", "compositionCapacity", "catalogue", "expected"],
+  "properties": {
+    "logicalRecordBytes": { "const": 16 },
+    "logicalFieldBytes": { "const": 8 },
+    "neutralRegistration": { "const": { "bytes": 256, "slots": 3, "owners": 3 } },
+    "compositionCapacity": { "$ref": "semio.value.resident.capacity.v1" },
+    "catalogue": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "semio.ui.resident.metadata.v1" } },
+    "expected": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kind", "bytes", "slots", "owners"],
+        "properties": {
+          "kind": { "enum": ["pool", "instance", "payload", "builder", "reader", "page", "evidence"] },
+          "bytes": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+          "slots": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
+          "owners": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+        }
+      }
+    }
+  }
+}

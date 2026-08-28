@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMaterialMetallic",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMetallic"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newMetallic": {
+      "type": "number"
+    }
+  }
+}

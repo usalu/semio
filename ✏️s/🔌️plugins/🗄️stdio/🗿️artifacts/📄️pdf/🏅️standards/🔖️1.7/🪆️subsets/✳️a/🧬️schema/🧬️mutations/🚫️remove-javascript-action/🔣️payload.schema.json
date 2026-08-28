@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveJavascriptAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "script"
+  ],
+  "properties": {
+    "script": {
+      "type": "string"
+    }
+  }
+}

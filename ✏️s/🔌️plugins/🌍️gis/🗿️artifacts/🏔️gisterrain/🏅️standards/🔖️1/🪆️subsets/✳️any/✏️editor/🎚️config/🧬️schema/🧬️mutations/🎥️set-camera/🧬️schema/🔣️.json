@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/gis/gis3d/set-camera",
+  "$defs": {"payload": {"type": "object", "required": ["cameraJson"], "properties": {"cameraJson": {"type": "string"}}}},
+  "allOf": [{"$ref":"#/$defs/payload"}],
+  "unevaluatedProperties": false
+}

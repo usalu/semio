@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeStreamSync",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSyncOffsetMs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newSyncOffsetMs": {
+      "type": "number"
+    }
+  }
+}

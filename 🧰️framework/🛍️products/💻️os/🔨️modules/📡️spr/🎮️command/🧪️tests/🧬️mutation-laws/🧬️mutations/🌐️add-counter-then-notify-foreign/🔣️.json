@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify-foreign",
+  "semanticKind": "add-counter-then-notify-foreign",
+  "displayName": "Add Counter Then Notify Foreign",
+  "emoji": "🌐️",
+  "aggregateVariant": "AddCounterThenNotifyForeign",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-counter-then-notify-foreign",
+  "binaryTag": 3,
+  "invertibility": "plan",
+  "diffParticipation": "plan",
+  "outcomeClasses": [
+    "applied",
+    "fatal"
+  ],
+  "composition": "composite",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

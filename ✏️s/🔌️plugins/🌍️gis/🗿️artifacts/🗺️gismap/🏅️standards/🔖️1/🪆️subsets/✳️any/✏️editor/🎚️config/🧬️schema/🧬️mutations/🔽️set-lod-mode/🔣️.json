@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔽️set-lod-mode",
+  "semanticKind": "set-lod-mode",
+  "displayName": "Set LOD Mode",
+  "emoji": "🔽️",
+  "aggregateVariant": "SetLodMode",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-lod-mode",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

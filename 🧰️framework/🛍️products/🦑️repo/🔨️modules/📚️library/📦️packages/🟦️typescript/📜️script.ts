@@ -101,6 +101,129 @@ class TestScript extends BundleScript {
       await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
       return;
     }
+    if (segments[0] === "preflight-reference-basis") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️preflight-reference-basis/🟦️.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "typescript-path-collection") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️typescript-path-collection/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "frozen-markdown-coordinates") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️frozen-markdown-coordinates/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "historical-json-source-encoding") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️historical-json-source-encoding/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "transaction-recovery-authority") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️transaction-recovery-authority/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "testing-readme-coordinates") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️testing-readme-coordinates/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "rust-finite-target-consumption") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-finite-target-consumption/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "readme-current-source-revision") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "rust-writable-path-authority") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-writable-path-authority/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "readme-move-source-authority") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-move-source-authority/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "artifact-empty-facet-authority") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authority/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "rust-divergence-callback-source") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^(closed divergence|shared callback|candidate-only callback)", ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "rust-divergence-callback-native") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^actual rustc", ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "rust-divergence-callback-syn") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--test-name-pattern", "^independent syn callback", ...segments.slice(1)], { cwd: this.repoRoot, budgetMs: 120_000 });
+      return;
+    }
+    if (segments[0] === "readme-current-source-activation") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "artifact-empty-facet-authoring") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authoring/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "readme-reviewed-fixture-inputs") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "taxonomy-pattern-compiler-reuse") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-pattern-compiler-reuse/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "reference-coverage-selection") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coverage-selection/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "taxonomy-leading-grapheme") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-leading-grapheme/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "reference-coordinate-progress") {
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️reference-coordinate-progress/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source, ...segments.slice(1)], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "draw-destination-observation") {
+      if (segments.length !== 1) throw new Error("Draw destination observation accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️draw-destination-observation/🟦️.ts");
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "artifact-source-residue") {
+      if (segments.length !== 1) throw new Error("Artifact source residue accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rejects ignored and unplanned residual children in a projected source owner without following links"], { cwd: this.repoRoot, budgetMs: 120000 });
+      return;
+    }
+    if (segments[0] === "artifact-source-commit") {
+      if (segments.length !== 1) throw new Error("Artifact source commit accepts no extra arguments");
+      const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts");
+      await runTestBudgeted(process.execPath, ["test", source, "--timeout", "120000", "-t", "rolls back and atomically applies CAD and Draw projections to an empty second plan"], { cwd: this.repoRoot, budgetMs: 120000 });
+      return;
+    }
     if (segments[0] === "transaction-v2") {
       const invocationStartedAt = performance.now(), startedAt = new Date().toISOString();
       const runId = `${process.pid}-${crypto.randomUUID()}`;

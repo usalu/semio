@@ -1,14 +1,25 @@
 {
   "version": 1,
   "vectors": [
-    {"value": {"kind": "close", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9}, "hex": "00010709"},
-    {"value": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0101070929"},
-    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0201070929"},
-    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "18446744073709551615", "instanceId": 4294967295}, "requestSequence": 9007199254740991, "closeGeneration": "9007199254740993"}, "hex": "02ffffffffffffffffff01ffffffff0fffffffffffffff0f8180808080808010"}
+    {"value": {"kind": "open", "activationGeneration": "1", "instanceId": 7, "requestSequence": 8}, "hex": "00010708"},
+    {"value": {"kind": "captured", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 8}, "hex": "0101070d08"},
+    {"value": {"kind": "close", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9}, "hex": "0201070d09"},
+    {"value": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0301070d0929"},
+    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}, "hex": "0401070d0929"},
+    {"value": {"kind": "ack", "receipt": {"kind": "captured", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 8}}, "hex": "0501070d08"},
+    {"value": {"kind": "ack", "receipt": {"kind": "accepted", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}}, "hex": "0601070d0929"},
+    {"value": {"kind": "ack", "receipt": {"kind": "retired", "lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "13"}, "requestSequence": 9, "closeGeneration": "41"}}, "hex": "0701070d0929"},
+    {"value": {"kind": "retired", "lifetime": {"activationGeneration": "18446744073709551615", "instanceId": 4294967295, "guestLifetime": "18446744073709551615"}, "requestSequence": 9007199254740991, "closeGeneration": "18446744073709551615"}, "hex": "04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01"}
+  ],
+  "turnResults": [
+    { "vector": null, "hex": "00000000000000000000000000000000000000000000000000000000000000" },
+    { "vector": 1, "hex": "000000050101070d08000000000000000000000000000000000000000000000000000000" },
+    { "vector": 4, "hex": "000000060401070d0929000000000000000000000000000000000000000000000000000000" },
+    { "vector": 8, "hex": "0000002c04ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01000000000000000000000000000000000000000000000000000000" }
   ],
   "reopen": {
-    "prior": {"activationGeneration": "41", "instanceId": 7},
-    "current": {"activationGeneration": "42", "instanceId": 7},
+    "prior": {"activationGeneration": "41", "instanceId": 7, "guestLifetime": "13"},
+    "current": {"activationGeneration": "41", "instanceId": 7, "guestLifetime": "14"},
     "oldRequestAccepted": false,
     "oldReceiptAccepted": false
   },
@@ -21,7 +32,7 @@
   },
   "nativeCases": {"sameIdReplacementRejected": true, "overflowPreservesLiveOwner": true, "quarantineRemovalPreservesTerminalWitness": true, "repeatCloseKeepsReplacement": true, "scopeAfterSurfaceClear": true},
   "leaseFailures": ["postMessage-throw", "worker-error"],
-  "publishedClose": {"owners": ["surface", "credit", "handback"], "remaining": [["credit", "handback"], ["handback"], [], []], "complete": [false, false, false, true]},
+  "publishedClose": {"granularity":"owner-transition", "owners": ["metadata", "credit", "handback"], "remaining": [["credit", "handback"], ["handback"], [], []], "complete": [false, false, false, true]},
   "leaseReceipts": [
     {"name": "accepted-is-not-terminal", "events": ["accepted"], "settled": false},
     {"name": "terminal-needs-acceptance", "events": ["retired"], "settled": false},

@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is a cross-language pair — Pillow for the raster payload it genuinely speaks, and an independent Python implementation of the semio-native carrier and the thirteen verbs for the half no third party speaks.",
   "oracles": [
     {
       "id": "semio-image-python-pillow-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-image-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-image-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ Two independent producers, each answering the half it genuinely speaks. (1) PAYLOAD — Pillow (PIL 11.3, littleCMS) is a real third-party raster library and `SemioImageSnapshot` frames are plain RGBA8 planes, which Pillow reads natively. Every sample this case moves was decoded out of the real committed animated GIF `🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️color-animated-text.gif` by Pillow, the profile `set-icc` attaches is a real sRGB profile littleCMS emitted, and every scenario that produces planes hands them back to Pillow, which restates the mode, the geometry, the per-band extrema and the distinct-colour count. The Rust subject computes those same four facts by hand from the same planes, so agreement is between a library that has never seen this repository and this repository's own codec. The earlier `semio-image-mutation-semantics` no-oracle decision rejected the raster crates on the ground that a decoder would first have to be handed a file our own encoder produced — that objection is answered here by going the other way round: Pillow reads a real third-party-authored GIF and PRODUCES the samples, and never sees a byte our encoder wrote. (2) CARRIER AND VOCABULARY — no third party reads or writes `.dsl.semio`/`.pack.semio`, so the second producer is a second IMPLEMENTATION, `🧪️tests/mutate-semio-image/🐍️component.py`, written in Python from the committed specification documents alone (the snapshot DSL grammar, the pack protocol and its Kaitai mirror, the semio envelope in the framework carrier module, the mutation grammar, the mutation JSON schema and the committed per-kind specification vectors). It imports nothing from and transliterates nothing of the Rust, and it was pinned before use: it reproduces the committed `✳️any/📚️examples/🖼️swatch` artifact byte for byte in both encodings and reaches all twelve committed after-snapshots. Pillow is reached from the Python host's environment rather than through an `oracleHostPackages` entry, because that array is collected only from the case OWNER or an ancestor of it and this subset manifest is a descendant of the owner `🗿️artifacts/🧿️semio`; the provisioned host venv is created with `--system-site-packages`, so the import resolves, and a missing Pillow would error the scenario visibly rather than skip it."
+      "rationale": "🔮️ Two independent producers, each answering the half it genuinely speaks. (1) PAYLOAD — Pillow (PIL 11.3, littleCMS) is a real third-party raster library and `SemioImageSnapshot` frames are plain RGBA8 planes, which Pillow reads natively. Every sample this case moves was decoded out of the real committed animated GIF `🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️color-animated-text.gif` by Pillow, the profile `set-icc` attaches is a real sRGB profile littleCMS emitted, and every scenario that produces planes hands them back to Pillow, which restates the mode, the geometry, the per-band extrema and the distinct-colour count. The Rust subject computes those same four facts by hand from the same planes, so agreement is between a library that has never seen this repository and this repository's own codec. The earlier `semio-image-mutation-semantics` no-oracle decision rejected the raster crates on the ground that a decoder would first have to be handed a file our own encoder produced — that objection is answered here by going the other way round: Pillow reads a real third-party-authored GIF and PRODUCES the samples, and never sees a byte our encoder wrote. (2) CARRIER AND VOCABULARY — no third party reads or writes `.dsl.semio`/`.pack.semio`, so the second producer is a second IMPLEMENTATION, `🧪️tests/mutate-semio-image/🐍️component.py`, written in Python from the committed specification documents alone (the snapshot DSL grammar, the pack protocol and its Kaitai mirror, the semio envelope in the framework carrier module, the mutation grammar, the mutation JSON schema and the committed per-kind specification vectors). It imports nothing from and transliterates nothing of the Rust, and it was pinned before use: it reproduces the committed `✳️any/📚️examples/🖼️swatch` artifact byte for byte in both encodings and reaches all twelve committed after-snapshots. Pillow is reached from the Python host's environment rather than through an `oracleHostPackages` entry, because that array is collected only from the case OWNER or an ancestor of it and this subset manifest is a descendant of the owner `🗿️artifacts/🧿️semio`; the provisioned host venv is created with `--system-site-packages`, so the import resolves, and a missing Pillow would error the scenario visibly rather than skip it.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation`: even though Pillow genuinely decodes the real third-party GIF that supplies every sample, Pillow is reached from the host environment rather than pinned as this entry's own `package`/`version`, so the registration itself carries no qualifying third-party evidence and does not discharge `semio-v1-image-mutate`'s external-oracle requirement; a qualifying third-party reference pinned in this entry's own metadata is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -154,7 +166,21 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "set-dimensions", "set-colorspace", "set-bit-depth", "set-icc", "insert-frame", "remove-frame", "move-frame", "set-frame-delay", "set-frame-pixels", "set-metadata-entry", "remove-metadata-entry"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-dimensions",
+        "set-colorspace",
+        "set-bit-depth",
+        "set-icc",
+        "insert-frame",
+        "remove-frame",
+        "move-frame",
+        "set-frame-delay",
+        "set-frame-pixels",
+        "set-metadata-entry",
+        "remove-metadata-entry"
+      ]
     }
   ]
 }

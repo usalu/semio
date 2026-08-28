@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Independent Empty-Facet Fixture Owner Oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["root", "sourceFilename", "fileKindId", "ownerSegments", "ownerForm"],
+  "properties": {
+    "root": { "const": "✏️s/🔌️plugins" },
+    "sourceFilename": { "const": "📌️empty.md" },
+    "fileKindId": { "const": "markdown" },
+    "ownerSegments": { "type": "array" },
+    "ownerForm": { "type": "string" }
+  },
+  "definitions": {
+    "plugin": { "enum": ["🔋️energy", "🗄️stdio", "🪐️space"] },
+    "artifact": { "enum": ["🔋️model", "💾️binary"] },
+    "surface": { "enum": ["👁️viewer", "✏️editor"] },
+    "mode": { "enum": ["✏️edit", "📊️report", "👁️view", "🌐️main"] },
+    "window": { "enum": ["🪟️main", "🔄️workflow"] },
+    "surfaceFacet": { "enum": ["🎚️config", "🎮️commands", "👥️presence", "🫧️transient"] },
+    "modeFacet": { "enum": ["🎚️config", "🎮️commands", "👥️presence", "🫧️transient", "🪟️windows"] },
+    "windowFacet": { "enum": ["🎚️config", "🎚️options", "🎬️actions", "👥️presence", "🪛️utilities", "🫧️transient"] }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "ownerForm": { "const": "plugin-commands" },
+        "ownerSegments": { "type": "array", "minItems": 2, "maxItems": 2, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "🎮️commands" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "artifact-surface" },
+        "ownerSegments": { "type": "array", "minItems": 9, "maxItems": 9, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "🗿️artifacts" }, { "$ref": "#/definitions/artifact" }, { "const": "🏅️standards" }, { "const": "🔖️1" }, { "const": "🪆️subsets" }, { "const": "✳️any" }, { "$ref": "#/definitions/surface" }, { "$ref": "#/definitions/surfaceFacet" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "artifact-mode" },
+        "ownerSegments": { "type": "array", "minItems": 11, "maxItems": 11, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "🗿️artifacts" }, { "$ref": "#/definitions/artifact" }, { "const": "🏅️standards" }, { "const": "🔖️1" }, { "const": "🪆️subsets" }, { "const": "✳️any" }, { "$ref": "#/definitions/surface" }, { "const": "🎭️modes" }, { "$ref": "#/definitions/mode" }, { "$ref": "#/definitions/modeFacet" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "artifact-window" },
+        "ownerSegments": { "type": "array", "minItems": 13, "maxItems": 13, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "🗿️artifacts" }, { "$ref": "#/definitions/artifact" }, { "const": "🏅️standards" }, { "const": "🔖️1" }, { "const": "🪆️subsets" }, { "const": "✳️any" }, { "$ref": "#/definitions/surface" }, { "const": "🎭️modes" }, { "$ref": "#/definitions/mode" }, { "const": "🪟️windows" }, { "$ref": "#/definitions/window" }, { "$ref": "#/definitions/windowFacet" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "engine-mode" },
+        "ownerSegments": { "type": "array", "minItems": 6, "maxItems": 6, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "⚙️engine" }, { "const": "🪐️space" }, { "const": "🎭️modes" }, { "$ref": "#/definitions/mode" }, { "$ref": "#/definitions/modeFacet" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "engine-window" },
+        "ownerSegments": { "type": "array", "minItems": 8, "maxItems": 8, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "⚙️engine" }, { "const": "🪐️space" }, { "const": "🎭️modes" }, { "$ref": "#/definitions/mode" }, { "const": "🪟️windows" }, { "$ref": "#/definitions/window" }, { "$ref": "#/definitions/windowFacet" }] }
+      }
+    },
+    {
+      "properties": {
+        "ownerForm": { "const": "extension-window" },
+        "ownerSegments": { "type": "array", "minItems": 4, "maxItems": 4, "additionalItems": false, "items": [{ "$ref": "#/definitions/plugin" }, { "const": "🧩️extensions" }, { "const": "🪟️windows" }, { "$ref": "#/definitions/windowFacet" }] }
+      }
+    }
+  ]
+}

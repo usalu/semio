@@ -1,14 +1,10 @@
+#region 🧬️Configuration
 type Gis2dConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   layerVisibility: [Gis2dBoolEntry!]! @state(class: CONFIG)
   cameraJson: String! @state(class: CONFIG)
   renderMode: String! @state(class: CONFIG)
   vectorStyle: String! @state(class: CONFIG)
   lodMode: String! @state(class: CONFIG)
-  featureSelectionJson: String! @state(class: CONFIG)
-  hoverJson: String! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
-  selectionMode: String! @state(class: CONFIG)
   layerStrokeScale: [Gis2dNumberEntry!]! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
 }
@@ -22,3 +18,4 @@ type Gis2dNumberEntry {
   key: String!
   value: Float!
 }
+#endregion 🧬️Configuration

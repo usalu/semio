@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gis2dConfigDiff",
+  "type": "object",
+  "required": ["steps"],
+  "properties": {
+    "steps": { "type": "array", "items": { "$ref": "#/$defs/delta" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "delta": {
+      "type": "object",
+      "properties": {
+        "layerVisibility": { "type": "object", "additionalProperties": { "type": ["boolean", "null"] } },
+        "cameraJson": { "type": ["string", "null"] },
+        "renderMode": { "type": ["string", "null"] },
+        "vectorStyle": { "type": ["string", "null"] },
+        "lodMode": { "type": ["string", "null"] },
+        "layerStrokeScale": { "type": "object", "additionalProperties": { "type": ["number", "null"] } },
+        "locale": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

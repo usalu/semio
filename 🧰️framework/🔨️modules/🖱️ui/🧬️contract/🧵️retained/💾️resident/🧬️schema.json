@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Owned UI Resident Capacity",
+  "description": "Explicit host-composition capacities shared across its exact native UI lifetimes. These are retained logical resources, not work grants, maxPatchBytes or a physical heap estimate. Zero is an intentional non-admitting capacity; no default is supplied.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["maxResidentBytes", "maxPages", "maxOwners"],
+  "properties": {
+    "maxResidentBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991, "description": "Every admitted page reserves its full 256-byte array, including partial pages, before allocation. The charge survives publication and raw-input acknowledgement until final page retirement." },
+    "maxPages": { "type": "integer", "minimum": 0, "maximum": 9007199254740991, "description": "Maximum simultaneous reserved or allocated page roots, retained in the exact payload owner's strong roster." },
+    "maxOwners": { "type": "integer", "minimum": 0, "maximum": 9007199254740991, "description": "Maximum simultaneous instance scopes, payload scopes and page handles, including each captured read alias. Every increment is checked before any ownership change." }
+  }
+}

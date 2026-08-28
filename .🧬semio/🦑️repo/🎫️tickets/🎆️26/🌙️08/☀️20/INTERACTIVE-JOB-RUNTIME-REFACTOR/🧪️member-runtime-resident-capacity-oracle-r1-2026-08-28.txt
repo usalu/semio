@@ -1,0 +1,1 @@
+[DEBUG] ownership oracle checks=40

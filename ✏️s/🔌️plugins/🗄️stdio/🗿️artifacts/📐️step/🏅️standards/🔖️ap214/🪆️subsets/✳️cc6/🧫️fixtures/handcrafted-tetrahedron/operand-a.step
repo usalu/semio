@@ -1,0 +1,126 @@
+ISO-10303-21;
+HEADER;
+/* ✍️ HANDCRAFTED. The entity graph below was authored by hand, not exported by any geometry
+ * kernel, so this subset has one fixture whose content owes nothing to the same OpenCASCADE that
+ * produces its actual. It is a tetrahedron with vertices (0,0,0), (10,0,0), (0,10,0), (0,0,10):
+ * 4 VERTEX_POINT, 6 EDGE_CURVE over LINE, 4 ADVANCED_FACE over PLANE with EDGE_LOOP bounds, one
+ * CLOSED_SHELL, one MANIFOLD_SOLID_BREP -- the smallest closed advanced B-Rep there is, and every
+ * face is oriented outward by hand. Its analytic volume is exactly 10^3/6 = 166.666... mm^3 and its
+ * surface area is exactly 150 + 50*sqrt(3) mm^2, which is what makes it worth having: the expected
+ * answer is known in closed form and needs no oracle to state.
+ * The FILE_NAME timestamp is a fixed constant, not a clock reading, so unlike a kernel export this
+ * file is byte-reproducible. Its arithmetic (unit direction vectors, edge magnitudes, plane frames)
+ * was emitted by a small generator to keep it exact; the graph, the orientations and the entity
+ * choice are the handcrafted part.
+ */
+FILE_DESCRIPTION(('Handcrafted minimal AP214 advanced B-Rep tetrahedron'),'2;1');
+FILE_NAME('handcrafted-tetrahedron','2026-08-27T00:00:00',('semio'),
+  ('semio repository test platform'),'handcrafted','handcrafted','');
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }'));
+ENDSEC;
+DATA;
+#1 = CARTESIAN_POINT('',(0.,0.,0.));
+#2 = CARTESIAN_POINT('',(10.,0.,0.));
+#3 = CARTESIAN_POINT('',(0.,10.,0.));
+#4 = CARTESIAN_POINT('',(0.,0.,10.));
+#5 = VERTEX_POINT('',#1);
+#6 = VERTEX_POINT('',#2);
+#7 = VERTEX_POINT('',#3);
+#8 = VERTEX_POINT('',#4);
+#9 = CARTESIAN_POINT('',(0.,0.,0.));
+#10 = DIRECTION('',(1.,0.,0.));
+#11 = VECTOR('',#10,10.);
+#12 = LINE('',#9,#11);
+#13 = EDGE_CURVE('',#5,#6,#12,.T.);
+#14 = CARTESIAN_POINT('',(0.,0.,0.));
+#15 = DIRECTION('',(0.,1.,0.));
+#16 = VECTOR('',#15,10.);
+#17 = LINE('',#14,#16);
+#18 = EDGE_CURVE('',#5,#7,#17,.T.);
+#19 = CARTESIAN_POINT('',(0.,0.,0.));
+#20 = DIRECTION('',(0.,0.,1.));
+#21 = VECTOR('',#20,10.);
+#22 = LINE('',#19,#21);
+#23 = EDGE_CURVE('',#5,#8,#22,.T.);
+#24 = CARTESIAN_POINT('',(10.,0.,0.));
+#25 = DIRECTION('',(-0.7071067811865475,0.7071067811865475,0.));
+#26 = VECTOR('',#25,14.142135623730951);
+#27 = LINE('',#24,#26);
+#28 = EDGE_CURVE('',#6,#7,#27,.T.);
+#29 = CARTESIAN_POINT('',(10.,0.,0.));
+#30 = DIRECTION('',(-0.7071067811865475,0.,0.7071067811865475));
+#31 = VECTOR('',#30,14.142135623730951);
+#32 = LINE('',#29,#31);
+#33 = EDGE_CURVE('',#6,#8,#32,.T.);
+#34 = CARTESIAN_POINT('',(0.,10.,0.));
+#35 = DIRECTION('',(0.,-0.7071067811865475,0.7071067811865475));
+#36 = VECTOR('',#35,14.142135623730951);
+#37 = LINE('',#34,#36);
+#38 = EDGE_CURVE('',#7,#8,#37,.T.);
+#39 = ORIENTED_EDGE('',*,*,#18,.T.);
+#40 = ORIENTED_EDGE('',*,*,#28,.F.);
+#41 = ORIENTED_EDGE('',*,*,#13,.F.);
+#42 = EDGE_LOOP('',(#39,#40,#41));
+#43 = FACE_OUTER_BOUND('',#42,.T.);
+#44 = CARTESIAN_POINT('',(0.,0.,0.));
+#45 = DIRECTION('',(0.,0.,-1.));
+#46 = DIRECTION('',(1.,0.,0.));
+#47 = AXIS2_PLACEMENT_3D('',#44,#45,#46);
+#48 = PLANE('',#47);
+#49 = ADVANCED_FACE('',(#43),#48,.T.);
+#50 = ORIENTED_EDGE('',*,*,#13,.T.);
+#51 = ORIENTED_EDGE('',*,*,#33,.T.);
+#52 = ORIENTED_EDGE('',*,*,#23,.F.);
+#53 = EDGE_LOOP('',(#50,#51,#52));
+#54 = FACE_OUTER_BOUND('',#53,.T.);
+#55 = CARTESIAN_POINT('',(0.,0.,0.));
+#56 = DIRECTION('',(0.,-1.,0.));
+#57 = DIRECTION('',(0.,0.,1.));
+#58 = AXIS2_PLACEMENT_3D('',#55,#56,#57);
+#59 = PLANE('',#58);
+#60 = ADVANCED_FACE('',(#54),#59,.T.);
+#61 = ORIENTED_EDGE('',*,*,#23,.T.);
+#62 = ORIENTED_EDGE('',*,*,#38,.F.);
+#63 = ORIENTED_EDGE('',*,*,#18,.F.);
+#64 = EDGE_LOOP('',(#61,#62,#63));
+#65 = FACE_OUTER_BOUND('',#64,.T.);
+#66 = CARTESIAN_POINT('',(0.,0.,0.));
+#67 = DIRECTION('',(-1.,0.,0.));
+#68 = DIRECTION('',(0.,1.,0.));
+#69 = AXIS2_PLACEMENT_3D('',#66,#67,#68);
+#70 = PLANE('',#69);
+#71 = ADVANCED_FACE('',(#65),#70,.T.);
+#72 = ORIENTED_EDGE('',*,*,#28,.T.);
+#73 = ORIENTED_EDGE('',*,*,#38,.T.);
+#74 = ORIENTED_EDGE('',*,*,#33,.F.);
+#75 = EDGE_LOOP('',(#72,#73,#74));
+#76 = FACE_OUTER_BOUND('',#75,.T.);
+#77 = CARTESIAN_POINT('',(10.,0.,0.));
+#78 = DIRECTION('',(0.5773502691896258,0.5773502691896258,0.5773502691896258));
+#79 = DIRECTION('',(0.7071067811865475,-0.7071067811865475,0.));
+#80 = AXIS2_PLACEMENT_3D('',#77,#78,#79);
+#81 = PLANE('',#80);
+#82 = ADVANCED_FACE('',(#76),#81,.T.);
+#83 = CLOSED_SHELL('',(#49,#60,#71,#82));
+#84 = MANIFOLD_SOLID_BREP('handcrafted-tetrahedron',#83);
+#85 = CARTESIAN_POINT('',(0.,0.,0.));
+#86 = DIRECTION('',(0.,0.,1.));
+#87 = DIRECTION('',(1.,0.,0.));
+#88 = AXIS2_PLACEMENT_3D('',#85,#86,#87);
+#89 = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );
+#90 = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );
+#91 = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );
+#92 = UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-07),#89,'distance_accuracy_value','');
+#93 = ( GEOMETRIC_REPRESENTATION_CONTEXT(3) GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#92)) GLOBAL_UNIT_ASSIGNED_CONTEXT((#89,#90,#91)) REPRESENTATION_CONTEXT('','3D') );
+#94 = ADVANCED_BREP_SHAPE_REPRESENTATION('',(#88,#84),#93);
+#95 = APPLICATION_CONTEXT('core data for automotive mechanical design processes');
+#96 = APPLICATION_PROTOCOL_DEFINITION('international standard','automotive_design',2010,#95);
+#97 = PRODUCT_CONTEXT('',#95,'mechanical');
+#98 = PRODUCT('handcrafted-tetrahedron','Handcrafted Tetrahedron','',(#97));
+#99 = PRODUCT_DEFINITION_FORMATION('','',#98);
+#100 = PRODUCT_DEFINITION_CONTEXT('part definition',#95,'design');
+#101 = PRODUCT_DEFINITION('design','',#99,#100);
+#102 = PRODUCT_DEFINITION_SHAPE('','',#101);
+#103 = SHAPE_DEFINITION_REPRESENTATION(#102,#94);
+ENDSEC;
+END-ISO-10303-21;

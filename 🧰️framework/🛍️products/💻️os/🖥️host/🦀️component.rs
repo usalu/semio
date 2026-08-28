@@ -741,7 +741,7 @@ pub mod host {
             if let Some(label) = label {
                 node.label = label.into();
             }
-            self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode { node }])?;
+            self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
             space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], description: None })?;
             Ok(node_id)
         }
@@ -749,7 +749,7 @@ pub mod host {
         pub fn add_parameter(&mut self, parameter_type: &workflow::WorkflowParameterType, name: &str) -> Result<String, VcsError> {
             let parameter = workflow::create_default_workflow_parameter(parameter_type, name, None);
             let parameter_id_value = workflow::workflow_parameter_id(&parameter).to_string();
-            self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter { parameter }])?;
+            self.dispatch_apply(vec![workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(parameter) })])?;
             Ok(parameter_id_value)
         }
 
@@ -757,7 +757,7 @@ pub mod host {
             let document = self.snapshot()?;
             let current = document.parameters.iter().find(|parameter| workflow::workflow_parameter_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
             let next = workflow::patch_workflow_parameter(&current, patch);
-            self.dispatch_apply(vec![workflow::WorkflowMutation::PatchParameter { parameter_id: target_parameter_id.into(), parameter: next }])
+            self.dispatch_apply(vec![workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter { parameter_id: target_parameter_id.into(), parameter: Box::new(next) })])
         }
 
         /// @emoji 📡️ Pumps any queued inbound backbone messages into the edit timeline.
@@ -1756,11 +1756,11 @@ pub mod host {
 
             // 🏃️ Actor A deletes node B; actor B (unaware of the delete) concurrently wires a new edge
             // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
-            store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode { node_id: node_b_id.clone() }]).expect("remove node b");
+            store_a.dispatch_apply(vec![workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: node_b_id.clone() })]).expect("remove node b");
             store_b
-                .dispatch_apply(vec![workflow::WorkflowMutation::ConnectPorts {
+                .dispatch_apply(vec![workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {
                     edge: WorkflowEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
-                }])
+                })])
                 .expect("wire edge to node b");
             store_a.tick().expect("pump a");
             store_b.tick().expect("pump b");
@@ -1878,7 +1878,7 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_add_workflow_node() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddNode {
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddNode(workflow::AddNode {
                 node: workflow::WorkflowNode {
                     id: "node-1".into(),
                     plugin_id: "puzzle".into(),
@@ -1894,17 +1894,17 @@ pub mod host {
                     inputs: Vec::new(),
                     outputs: Vec::new(),
                 },
-            });
+            }));
         }
 
         #[test]
         fn op_text_round_trips_remove_workflow_node() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::RemoveNode { node_id: "app-1".into() });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::RemoveNode(workflow::RemoveNode { node_id: "app-1".into() }));
         }
 
         #[test]
         fn op_text_round_trips_connect_media_ports() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::ConnectPorts {
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::ConnectPorts(workflow::ConnectPorts {
                 edge: workflow::WorkflowEdge {
                     id: "edge-1".into(),
                     source_node_id: "node-1".into(),
@@ -1918,69 +1918,65 @@ pub mod host {
                         conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
                     },
                 },
-            });
+            }));
         }
 
         #[test]
         fn op_text_round_trips_disconnect_media_edge() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::DisconnectEdge { edge_id: "edge-1".into() });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::DisconnectEdge(workflow::DisconnectEdge { edge_id: "edge-1".into() }));
         }
 
         #[test]
         fn op_text_round_trips_move_media_node() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::MoveNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::MoveNode(workflow::MoveNode { node_id: "node-1".into(), x: 5.5, y: -6.25 }));
         }
 
         #[test]
         fn op_text_round_trips_patch_workflow_node() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::PatchNode { node_id: "app-1".into(), label: "Renamed \"Board\"".into() });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::RenameNode(workflow::RenameNode { node_id: "app-1".into(), label: "Renamed \"Board\"".into() }));
         }
 
         #[test]
         fn op_text_round_trips_add_parameter() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter {
-                parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
-            });
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter {
-                parameter: workflow::WorkflowParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
-            });
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false } });
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter { parameter: workflow::WorkflowParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() } });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) }) }));
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(workflow::WorkflowParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] }) }));
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(workflow::WorkflowParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false }) }));
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::AddParameter(workflow::AddParameter { parameter: Box::new(workflow::WorkflowParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() }) }));
         }
 
         #[test]
         fn op_text_round_trips_remove_parameter() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::RemoveParameter(workflow::RemoveParameter { parameter_id: "p1".into() }));
         }
 
         #[test]
         fn op_text_round_trips_patch_parameter() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::PatchParameter {
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::ChangeParameter(workflow::ChangeParameter {
                 parameter_id: "p1".into(),
-                parameter: workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None },
-            });
+                parameter: Box::new(workflow::WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None }),
+            }));
         }
 
         #[test]
         fn op_text_round_trips_bind_parameter_field() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::BindParameterField { binding: workflow::WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "app-1".into(), field_path: "/zoom".into() } });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::BindParameterField(workflow::BindParameterField { binding: workflow::WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "app-1".into(), field_path: "/zoom".into() } }));
         }
 
         #[test]
         fn op_text_round_trips_unbind_parameter_field() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::UnbindParameterField { node_id: "app-1".into(), field_path: "/zoom".into() });
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::UnbindParameterField(workflow::UnbindParameterField { node_id: "app-1".into(), field_path: "/zoom".into() }));
         }
 
         #[test]
         fn op_text_round_trips_sync_node_ports() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::SyncNodePorts);
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts));
         }
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
             let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
             let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::SyncNodePorts], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts)], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
         }
@@ -3362,7 +3358,9 @@ pub mod workflow {
         apply_workflow_operation, create_default_workflow_parameter, empty_workflow, empty_workflow_snapshot, media_port_spec_id, patch_workflow_parameter, placeholder_media_contract, plan_workflow, sync_workflow_parameter_ports,
         validate_workflow as kernel_validate_workflow, validate_workflow_parameter_config_binding, validate_workflow_snapshot, workflow_node_for_app, workflow_parameter_id, workflow_parameter_id_from_port_id, workflow_parameter_name,
         workflow_parameter_types_compatible, workflow_parameter_value, MediaContract, Workflow, WorkflowDelivery, WorkflowEdge, WorkflowFixture, WorkflowInput, WorkflowInputBinding, WorkflowMediaPort, WorkflowMutation, WorkflowNode,
-        WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
+        WorkflowOutputBinding, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterPatch, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot, WorkflowValidation, AddInput, AddNode, AddParameter, BindInput,
+        BindOutput, BindParameterField, ChangeParameter, ConnectPorts, DisconnectEdge, MoveNode, RemoveInput, RemoveNode, RemoveParameter, RenameNode, UnbindInput, UnbindOutput, UnbindParameterField, UpdateNodePorts,
+        S_WORKFLOW_SCHEMA, WORKFLOW_SCHEMA,
     };
 
     #[cfg(feature = "os-host-full")]
@@ -3574,7 +3572,7 @@ pub mod workflow {
                 let x = center_x - node.width / 2.0;
                 let y = center_y - node.height / 2.0;
                 if (x - node.x).abs() > 1e-6 || (y - node.y).abs() > 1e-6 {
-                    operations.push(WorkflowMutation::MoveNode { node_id: node.id.clone(), x, y });
+                    operations.push(WorkflowMutation::MoveNode(MoveNode { node_id: node.id.clone(), x, y }));
                 }
             }
         }
@@ -3584,7 +3582,7 @@ pub mod workflow {
             for node in &graph.nodes {
                 if !widget_ids.contains(node.id.as_str()) {
                     removed_node_ids.insert(node.id.clone());
-                    operations.push(WorkflowMutation::RemoveNode { node_id: node.id.clone() });
+                    operations.push(WorkflowMutation::RemoveNode(RemoveNode { node_id: node.id.clone() }));
                 }
             }
         }
@@ -3609,7 +3607,7 @@ pub mod workflow {
             let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
             let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
             let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string).unwrap_or_else(|| create_os_id("edge"));
-            operations.push(WorkflowMutation::ConnectPorts { edge: WorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
+            operations.push(WorkflowMutation::ConnectPorts(ConnectPorts { edge: WorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } }));
         }
         if fixture.get("synapses").and_then(Value::as_array).is_some() {
             for edge in &graph.edges {
@@ -3619,7 +3617,7 @@ pub mod workflow {
                 if removed_node_ids.contains(&edge.source_node_id) || removed_node_ids.contains(&edge.target_node_id) {
                     continue;
                 }
-                operations.push(WorkflowMutation::DisconnectEdge { edge_id: edge.id.clone() });
+                operations.push(WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: edge.id.clone() }));
             }
         }
         operations
@@ -4309,7 +4307,7 @@ pub mod workflow {
             let mut moved = fixture.clone();
             moved["layout"]["node-1"] = json!({ "x": 220.0, "y": 156.0 });
             let operations = apply_flow_fixture_to_os_workflow(&graph, &moved.to_string());
-            assert_eq!(operations, vec![WorkflowMutation::MoveNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
+            assert_eq!(operations, vec![WorkflowMutation::MoveNode(MoveNode { node_id: "node-1".into(), x: 140.0, y: 120.0 })]);
         }
 
         #[test]
@@ -4332,15 +4330,15 @@ pub mod workflow {
             let operations = apply_flow_fixture_to_os_workflow(&graph, &fixture.to_string());
             assert!(matches!(
                 &operations[0],
-                WorkflowMutation::ConnectPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "node-1:in" && !edge.id.is_empty()
+                WorkflowMutation::ConnectPorts(ConnectPorts { edge }) if edge.source_node_id == "node-2" && edge.target_port_id == "node-1:in" && !edge.id.is_empty()
             ));
-            assert!(operations.contains(&WorkflowMutation::DisconnectEdge { edge_id: "edge-1".into() }));
+            assert!(operations.contains(&WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: "edge-1".into() })));
             let mut removal = os_workflow_to_flow_fixture(&graph, &OsWorkflowCamera::default());
             removal["widgets"] = json!([{ "id": "node-1" }]);
             removal["synapses"] = json!([]);
             let removal_operations = apply_flow_fixture_to_os_workflow(&graph, &removal.to_string());
-            assert!(removal_operations.contains(&WorkflowMutation::RemoveNode { node_id: "node-2".into() }));
-            assert!(!removal_operations.iter().any(|operation| matches!(operation, WorkflowMutation::DisconnectEdge { .. })));
+            assert!(removal_operations.contains(&WorkflowMutation::RemoveNode(RemoveNode { node_id: "node-2".into() })));
+            assert!(!removal_operations.iter().any(|operation| matches!(operation, WorkflowMutation::DisconnectEdge(DisconnectEdge { .. }))));
         }
 
         //#region 🔖️WorkflowPlanner

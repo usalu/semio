@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateMemberProperties",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAMm2",
+    "newANetMm2",
+    "newAVMm2",
+    "newChi",
+    "newFUMpa",
+    "newFYMpa",
+    "newMEdKnm",
+    "newNEdKn",
+    "newTensionNEdKn",
+    "newVEdKn",
+    "newWPlMm3"
+  ],
+  "properties": {
+    "newNEdKn": {
+      "type": "number"
+    },
+    "newMEdKnm": {
+      "type": "number"
+    },
+    "newVEdKn": {
+      "type": "number"
+    },
+    "newAMm2": {
+      "type": "number"
+    },
+    "newAVMm2": {
+      "type": "number"
+    },
+    "newWPlMm3": {
+      "type": "number"
+    },
+    "newFYMpa": {
+      "type": "number"
+    },
+    "newFUMpa": {
+      "type": "number"
+    },
+    "newChi": {
+      "type": "number"
+    },
+    "newANetMm2": {
+      "type": "number"
+    },
+    "newTensionNEdKn": {
+      "type": "number"
+    }
+  }
+}

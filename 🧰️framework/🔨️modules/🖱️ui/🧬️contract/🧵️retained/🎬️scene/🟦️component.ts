@@ -24,14 +24,16 @@ type Root = { references: number; index: NumericIndex<Entry> | null; source: Own
 type Retirement = { advance(grant: NumericIndexGrant): { readonly kind: string; readonly items: number; readonly bytes: number }; terminalIsEmpty(): boolean };
 type RetireLink = { owner: Retirement | null; next: RetireLink | null };
 type Program<T> = Generator<number, T, void>;
+type ReadMode = "value" | "text" | "bytes" | "text-bytes";
 const GRANT = Object.freeze({ maxItems: 1, maxBytes: 4096 });
 const MINT = Object.freeze({});
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 let ownDocument: (root: Root) => OwnedUiSceneDocument;
-let ownReader: (root: Root, reader: NumericIndexReader<Entry>, mode: "value" | "text" | "bytes") => OwnedUiSceneReader;
+let ownReader: (root: Root, reader: NumericIndexReader<Entry>, mode: ReadMode, offset: number, length: number | null) => OwnedUiSceneReader;
 let ownRetirement: (root: Root | null, reader?: Retirement | null) => OwnedUiSceneRetirement;
-function sourceBytes(root: Root): UiSurfaceByteView { const value = root.source?.value; if (value?.type !== "surface") throw new Error("Scene source owner is closed"); return value.doc.bytes; }
+function sourceComponent(root: Root) { const value = root.source?.value; if (value?.type !== "surface") throw new Error("Scene source owner is closed"); return value; }
+function sourceBytes(root: Root): UiSurfaceByteView { return sourceComponent(root).doc.bytes; }
 function captureRoot(root: Root): Root { if (root.references === Number.MAX_SAFE_INTEGER || !root.source || !root.index) throw new Error("Scene root cannot be captured"); root.references++; return root; }
 //#endregion 🧬️SceneContract
 
@@ -66,16 +68,20 @@ export class OwnedUiSceneDocument {
   static { ownDocument = root => new OwnedUiSceneDocument(MINT, root); }
   #live(): Root { if (!this.#root) throw new Error("Scene document is closed"); return this.#root; }
   get size(): number { return this.#live().index!.size; }
+  get kind(): string { return sourceComponent(this.#live()).kind; }
+  get schema(): string { return sourceComponent(this.#live()).docSchema; }
   capture(): OwnedUiSceneDocument { return ownDocument(captureRoot(this.#live())); }
-  #read(id: number, mode: "value" | "text" | "bytes"): OwnedUiSceneReader {
+  #read(id: number, mode: ReadMode, offset = 0, length: number | null = null): OwnedUiSceneReader {
     const root = this.#live();
     if (!Number.isSafeInteger(id) || id < 0 || root.references === Number.MAX_SAFE_INTEGER) throw new Error("Scene read cannot be admitted");
+    if (!Number.isSafeInteger(offset) || offset < 0 || (length !== null && (!Number.isSafeInteger(length) || length < 0))) throw new Error("Invalid scene text byte range");
     const reader = root.index!.beginLookup(id);
-    return ownReader(captureRoot(root), reader, mode);
+    return ownReader(captureRoot(root), reader, mode, offset, length);
   }
   beginRead(id = 0): OwnedUiSceneReader { return this.#read(id, "value"); }
   beginText(id: number): OwnedUiSceneReader { return this.#read(id, "text"); }
   beginBytes(id: number): OwnedUiSceneReader { return this.#read(id, "bytes"); }
+  beginTextBytes(id: number, offset = 0, length?: number): OwnedUiSceneReader { return this.#read(id, "text-bytes", offset, length ?? null); }
   beginClose(): OwnedUiSceneRetirement { const root = this.#live(); this.#root = null; return ownRetirement(root); }
   terminalIsEmpty(): boolean { return this.#root === null; }
 }
@@ -88,10 +94,12 @@ export class OwnedUiSceneReader {
   #offset = 0;
   #done = false;
   #failure: string | null = null;
-  readonly #mode: "value" | "text" | "bytes";
+  readonly #mode: ReadMode;
+  readonly #start: number;
+  readonly #length: number | null;
   readonly #utf8 = new Utf8Scalar();
-  private constructor(mint: object, root: Root, reader: NumericIndexReader<Entry>, mode: "value" | "text" | "bytes") { if (mint !== MINT) throw new Error("Scene reader requires exact mint authority"); this.#root = root; this.#reader = reader; this.#mode = mode; Object.freeze(this); }
-  static { ownReader = (root, reader, mode) => new OwnedUiSceneReader(MINT, root, reader, mode); }
+  private constructor(mint: object, root: Root, reader: NumericIndexReader<Entry>, mode: ReadMode, offset: number, length: number | null) { if (mint !== MINT) throw new Error("Scene reader requires exact mint authority"); this.#root = root; this.#reader = reader; this.#mode = mode; this.#start = offset; this.#length = length; Object.freeze(this); }
+  static { ownReader = (root, reader, mode, offset, length) => new OwnedUiSceneReader(MINT, root, reader, mode, offset, length); }
   get failure(): string | null { return this.#failure; }
   advance(grant: NumericIndexGrant): OwnedUiSceneReadStep {
     if (!admitted(grant)) return step("blocked", "scene-read");
@@ -107,12 +115,14 @@ export class OwnedUiSceneReader {
     const value = this.#value;
     if (!value) { this.#done = true; return step("complete", "scene-read"); }
     if (this.#mode === "value") { this.#done = true; return { kind: "value", value, items: 1, bytes: 80 }; }
-    if (value.kind !== this.#mode) { this.#failure = "Scene read kind mismatch"; return step("rejected", "scene-read-kind", 16); }
-    if (this.#offset === value.length) { this.#done = true; return step("complete", "scene-read"); }
+    if ((value.kind !== "text" && value.kind !== "bytes") || (this.#mode === "text-bytes" ? value.kind !== "text" : value.kind !== this.#mode)) { this.#failure = "Scene read kind mismatch"; return step("rejected", "scene-read-kind", 16); }
+    const length = this.#length ?? value.length - this.#start;
+    if (this.#start > value.length || length > value.length - this.#start) { this.#failure = "Scene text byte range exceeds its exact field"; return step("rejected", "scene-read-range", 32); }
+    if (this.#offset === length) { this.#done = true; return step("complete", "scene-read"); }
     const source = sourceBytes(this.#root);
-    if (value.kind === "bytes") {
-      const count = Math.min(256, value.length - this.#offset); const bytes = new Uint8Array(count);
-      for (let index = 0; index < count; index++) bytes[index] = source.byteAt(value.offset + this.#offset++);
+    if (value.kind === "bytes" || this.#mode === "text-bytes") {
+      const count = Math.min(256, length - this.#offset); const bytes = new Uint8Array(count);
+      for (let index = 0; index < count; index++) bytes[index] = source.byteAt(value.offset + this.#start + this.#offset++);
       return { kind: "bytes", value: bytes, items: 1, bytes: count * 2 + 32 };
     }
     let text = ""; let read = 0;

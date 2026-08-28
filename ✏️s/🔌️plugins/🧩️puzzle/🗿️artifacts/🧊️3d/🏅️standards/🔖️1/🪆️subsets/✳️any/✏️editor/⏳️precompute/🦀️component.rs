@@ -1614,15 +1614,21 @@ impl Puzzle3dPrecomputeSession {
     /// valid page while a newer generation is still being censused or encoded.
     pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String> {
         const GRANTS_PER_FRAME: usize = 256;
-        let deadline = default_now_us()?.checked_add(2_000)?;
+        let mut previous_us = default_now_us()?;
+        let deadline = previous_us.checked_add(2_000)?;
         let cancelled = self.engine.fill_cancel.is_cancelled_now();
         self.write_fill(|fill| {
             if fill.preview.stage == "complete" {
                 return None;
             }
             for _ in 0..GRANTS_PER_FRAME {
+                let now_us = default_now_us()?;
+                if now_us < previous_us {
+                    return fill.preview_json_ready().map(ToOwned::to_owned);
+                }
+                previous_us = now_us;
                 let mut fuel = 1;
-                let step = fill.preview_json_step(color, status_label, &mut fuel, cancelled, default_now_us().is_none_or(|now_us| now_us >= deadline));
+                let step = fill.preview_json_step(color, status_label, &mut fuel, cancelled, now_us >= deadline);
                 if matches!(step, FillPreviewJsonStep::Ready | FillPreviewJsonStep::Rejected | FillPreviewJsonStep::Cancelled | FillPreviewJsonStep::Terminal) {
                     break;
                 }

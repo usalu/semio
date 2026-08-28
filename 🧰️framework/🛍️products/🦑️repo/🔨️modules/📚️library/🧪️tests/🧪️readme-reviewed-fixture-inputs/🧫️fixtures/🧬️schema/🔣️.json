@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reviewed README Fixture Byte Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "catalog",
+    "revision",
+    "provenance",
+    "inputs"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "reviewed-readme-fixture-inputs-v1"
+    },
+    "catalog": {
+      "const": {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️readme-license-owner-authority/🔣️.json",
+        "sha256": "051394741822e92d51f3bda15ce64d84c236582c6927335c9c5e0ac3c18a1da4",
+        "caseIndex": 31
+      }
+    },
+    "revision": {
+      "const": {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🔣️.json",
+        "id": "testing-readme-protocol-v2-reviewed"
+      }
+    },
+    "provenance": {
+      "const": {
+        "kind": "newly-authored-copy-of-current-reviewed-bytes",
+        "baselineCommit": "9f449b10659b95148c8bcb3f91ce583bf7446973",
+        "baselineBlob": "97c9cd961ac67eb875f714da1a17a8d2121446dc",
+        "baselinePreimage": {
+          "sha256": "f35bd37e2fb97b232b310eec053d0d93b23b9561eab17f583dd4e35c8756c804",
+          "size": 7205,
+          "mode": 420
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": [
+        {
+          "const": {
+            "role": "source",
+            "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures/🧫️reviewed-source/📝️.md",
+            "origin": {
+              "authority": "catalog",
+              "pointer": "/cases/31/sourcePath"
+            },
+            "preimage": {
+              "sha256": "da38967020fbe0c9a41372ea9b59dfda71343630758fc4828d47545af72b5460",
+              "size": 12527,
+              "mode": 420
+            }
+          }
+        },
+        {
+          "const": {
+            "role": "expectation",
+            "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures/🧫️reviewed-expectations/🔣️.json",
+            "origin": {
+              "authority": "revision",
+              "pointer": "/revisions/testing-readme-protocol-v2-reviewed/expectationsPath"
+            },
+            "preimage": {
+              "sha256": "83a1c6b098f7fc5ad26d1f7d5b47e08447ec50a8016796f0eaa0b1db3ed575a6",
+              "size": 12409,
+              "mode": 420
+            }
+          }
+        }
+      ],
+      "additionalItems": false
+    }
+  }
+}

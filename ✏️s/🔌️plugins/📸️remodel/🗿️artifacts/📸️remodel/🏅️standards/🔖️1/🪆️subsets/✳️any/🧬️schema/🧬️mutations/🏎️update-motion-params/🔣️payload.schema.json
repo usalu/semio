@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateMotionParams",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "params"
+  ],
+  "properties": {
+    "params": {
+      "title": "MotionParams",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "maxTracks",
+        "minTrackLengthFrames",
+        "minTrackQuality",
+        "trackWindowPx"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxTracks": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trackWindowPx": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minTrackQuality": {
+          "type": "number"
+        },
+        "minTrackLengthFrames": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

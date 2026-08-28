@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { join, posix, resolve } from "node:path";
 import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
+import Ajv from "ajv";
+import * as discovery from "../../🔍️discovery/🟦️component.ts";
 import { registryCatalogInputPaths, registryStaticImports, scanRegistryCompilerImports, type RegistryCatalogInputView, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
@@ -13,6 +15,88 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "u
   invalid: { id: string; path: string; source: string }[]; liveRegression: string;
   execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number };
 };
+
+const dataRoot = join(import.meta.dir, "🧪️imported-data");
+const dataVector = JSON.parse(readFileSync(join(dataRoot, "🔣️.json"), "utf8")) as {
+  cases: { id: string; path: string; role: "implementation-entry" | "static-import"; source: string; expected?: { kind: "module" | "json-data"; imports: string[] }; error?: string }[];
+  graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] };
+};
+
+/** 🌳️ Supplies exact authored content and positive directory membership without filesystem access. */
+function dataGraphView(content: ReadonlyMap<string, string>, reads: string[]): RegistryCatalogInputView {
+  const directories = new Set([""]);
+  for (const path of content.keys()) for (let parent = posix.dirname(path); parent !== "."; parent = posix.dirname(parent)) directories.add(parent);
+  return {
+    kind: (path) => content.has(path) ? "file" : directories.has(path) ? "directory" : null,
+    entries: (path) => [...directories, ...content.keys()].filter((child) => child !== path && posix.dirname(child).replace(/^\.$/u, "") === path).map((child) => ({ name: posix.basename(child), nodeKind: directories.has(child) ? "directory" as const : "file" as const })),
+    readText: (path) => { reads.push(path); const source = content.get(path); if (source === undefined) throw new Error("Missing authored compiler input: " + path); return source; },
+  };
+}
+
+test("registry imported data follows the schema-first role and strict JSON grammar", () => {
+  const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(dataRoot, "🧬️schema/🔣️.json"), "utf8")));
+  expect(validate(dataVector), JSON.stringify(validate.errors)).toBe(true);
+  expect(validate({ ...dataVector, fallback: "jsonc" })).toBe(false);
+  const dependencies = Reflect.get(discovery, "registryCompilerInputDependencies");
+  expect(typeof dependencies).toBe("function");
+  for (const row of dataVector.cases) {
+    for (const path of [row.path, row.path.replaceAll("/", "\\")]) {
+      if (row.error) expect(() => dependencies(row.source, path, row.role), row.id).toThrow(row.error);
+      else expect(dependencies(row.source, path, row.role), row.id).toEqual(row.expected);
+    }
+    if (row.path.endsWith(".json") && row.role === "static-import") {
+      const errors: import("jsonc-parser").ParseError[] = [];
+      const parsed = parseJsonc(row.source, errors, { disallowComments: true, allowTrailingComma: false });
+      if (row.error) expect(errors.length, row.id).toBeGreaterThan(0);
+      else { expect(errors, row.id).toEqual([]); expect(parsed, row.id).toEqual(JSON.parse(row.source)); }
+    }
+  }
+  expect(() => dependencies("{}", "value.json", "unknown")).toThrow("role");
+  expect(() => registryStaticImports("{}", "value.json")).toThrow("language is not supported");
+});
+
+test("registry imported data is retained in the production compiler closure with strict entry roles", () => {
+  const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8")) as Taxonomy;
+  const authority = taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!;
+  Object.assign(authority, { implementationEntryPaths: dataVector.graph.entries, workspaceImports: {} });
+  const content = new Map(dataVector.graph.files.map(({ path, content }) => [path, content])), reads: string[] = [];
+  expect(registryCatalogInputPaths(repoRoot, taxonomy, dataGraphView(content, reads))).toEqual([...content.keys(), "🧩️module"].sort((a, b) => Buffer.from(a).compare(Buffer.from(b))));
+  expect(reads.sort()).toEqual([...content.keys()].sort());
+  for (const replacement of [undefined, "{", "{/* comment */}"]) {
+    const changed = new Map(content);
+    if (replacement === undefined) changed.delete(dataVector.graph.dataPath); else changed.set(dataVector.graph.dataPath, replacement);
+    expect(() => registryCatalogInputPaths(repoRoot, taxonomy, dataGraphView(changed, []))).toThrow();
+  }
+  Object.assign(authority, { implementationEntryPaths: [...dataVector.graph.entries, dataVector.graph.dataPath] });
+  expect(() => registryCatalogInputPaths(repoRoot, taxonomy, dataGraphView(content, []))).toThrow("language is not supported");
+  Object.assign(authority, { implementationEntryPaths: dataVector.graph.entries, workspaceImports: { "@fixture/data": { manifestPath: "package.json", entryPath: dataVector.graph.dataPath } } });
+  const workspace = new Map(content);
+  workspace.set("package.json", JSON.stringify({ name: "@fixture/data", exports: { ".": "./" + dataVector.graph.dataPath } }));
+  workspace.set("📜️script.ts", content.get("📜️script.ts") + "\nimport named from '@fixture/data'; export { named };");
+  expect(() => registryCatalogInputPaths(repoRoot, taxonomy, dataGraphView(workspace, []))).toThrow("language is not supported");
+});
+
+test("registry imported data closure matches Bun's independent in-memory compiler inputs", async () => {
+  const files = new Map(dataVector.graph.files.map(({ path, content }) => ["/" + path, content])), loaded: string[] = [];
+  const result = await Bun.build({
+    entrypoints: dataVector.graph.entries.map((path) => "/" + path), target: "bun", write: false,
+    plugins: [{ name: "authored-registry-data-oracle", setup(build) {
+      build.onResolve({ filter: /.*/u }, (args) => ({ path: args.kind === "entry-point" ? args.path : posix.resolve(posix.dirname(args.importer), args.path), namespace: "authored-registry-data" }));
+      build.onLoad({ filter: /.*/u, namespace: "authored-registry-data" }, (args) => {
+        loaded.push(args.path);
+        const contents = files.get(args.path);
+        if (contents === undefined) throw new Error("Compiler requested undeclared authored input: " + args.path);
+        return { contents, loader: args.path.endsWith(".json") ? "json" : "ts" };
+      });
+    } }],
+  });
+  expect(result.success, JSON.stringify(result.logs)).toBe(true);
+  expect(loaded.sort()).toEqual([...files.keys()].sort());
+  expect(new Set(loaded).size).toBe(loaded.length);
+  expect(result.outputs.length).toBeGreaterThan(0);
+  const data = dataVector.graph.files.find(({ path }) => path === dataVector.graph.dataPath)!;
+  expect(parseJsonc(data.content)).toEqual(JSON.parse(data.content));
+});
 
 /** 🔬️ Uses TypeScript's independently parsed source tree to collect static module identities. */
 function oracle(source: string, path: string): string[] {

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/🧪️tests/🔗️dependency-contribution/🧬️mutations/➕️add-value",
+  "semanticKind": "add-value",
+  "displayName": "Add Value",
+  "emoji": "➕️",
+  "aggregateVariant": "AddValue",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-value",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

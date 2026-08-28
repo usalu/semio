@@ -1,5 +1,183 @@
 # Demonstrator Current-Source Browser Proof
 
+## 21:08 Content Framing And Fixed WIT Mapping
+
+Full Kernel TypeScript passed 46/46 after the executed framing RED; full OS-dev passed 67/67 after mapping RED/GREEN and the scoped strict mapping-module check. Renderer strict reports exactly the seven known tutorial diagnostics. See 📓️kernel-return-content-framing-2026-08-27.md and 📓️plugin-return-wit-mapping-2026-08-27.md for exact logs/hashes and exclusions.
+
+These tests do not establish a live native return producer, input-page ownership, semantic UI publication or actual app content. The generator and poll signature remain unchanged at this checkpoint. Original-owner input retirement and the atomic renderer cutover remain required before fresh all-six-app verification. No native build, browser access, publication or cleanup occurred.
+
+## 20:41 Protocol Fault Format Checkpoint
+
+Full actor actually passed 106/106 after the protocol-fault refinement's executed two-failure RED. Strict reports tutorial seven plus one UI-owned private-constructor fixture error, routed for repair. Exact logs and source hashes are in 📓️actor-return-result-codec-2026-08-27.md. These are format/controlled transport tests, not browser, native preadmission, retained paging or all-app success. No native build, publication, browser-policy bypass or cleanup occurred.
+
+## 20:35 Canonical Fixed Return Codecs
+
+The canonical drive and fixed-result codecs now pass the actual complete actor suite **105/105**, eight files, 7.49 s after their public Shard re-export. The strict renderer run reports exactly the seven known tutorial diagnostics. These are codec/controlled transport results, not a browser proof. Exact schema hashes, RED/GREEN logs, independent LEB128/Buffer checks and all 224 control combinations are recorded in `📓️actor-return-control-codec-2026-08-27.md` and `📓️actor-return-result-codec-2026-08-27.md`.
+
+The single canonical content declaration includes render-plane presence and all eleven UI operations. The owned fragment-to-UI handoff, native source-before-WIT paging, atomic live renderer cutover and fresh all-six-app interaction/close checks remain open. No native build, generated artifact publication, browser-policy bypass or cleanup was performed for these codec checkpoints.
+
+## 20:05 Neutral Page Storage And Input Cutover
+
+The coordinated neutral `ActorBytePage` storage is implemented in TypeScript from the actual shared schema/fixtures. Its three missing-helper tests ran RED before full actor GREEN **98/98**, seven files, 1.77s. The separate command-input shape cutover ran RED2, then full actor **98/98**, 2.28s. Command input now uses exactly `{cursor, page}`; command-only storage aliases were removed.
+
+The generated bridge's new coverage test actually forwards the nine nonempty shared vectors unchanged into a controlled component poll: **1 passed / 61 skipped**, 2.17s. Node Buffer checks bytes and zero padding. The renderer typecheck reports exactly the seven known tutorial diagnostics; it is not globally green. Details, logs and exact source hashes are in `📓️actor-byte-page-storage-2026-08-27.md`.
+
+Runtime independently reports the isolated page gate **3 passed / 95 skipped**, 716ms, with four stable inputs. The neutral helper reads only selected fields and does not enumerate or retire unknown wrappers; it is not private producer provenance, return authority or an 8ms certificate. The runtime coordinator approved one replacement canonical return-paging protocol and explicitly ruled out an interim whole-copy live mount. That native owner/schema and exact input-page ACK join remain necessary before live UI mounting.
+
+No native compiler, fresh Wasm, generated publication, browser access, cache cleanup or evidence deletion was performed for this checkpoint. App content and end-to-end close remain unverified.
+
+## 19:47 Issued Patch Receipt And Retained Settlement Checkpoint
+
+The runtime coordinator subsequently reported independently executed full React R21 **626/626**, five files, 45.92s, start 19:44:06, and strictR30 exactly tutorial7 with six stable captured hashes. Its generated issued-receipt selection also passed **1/60 skipped**, 2.52s. These are delegated results in master reports `📓️coordinator-renderer-react-full-r21-2026-08-27.md` and `📓️coordinator-strict-r30-2026-08-27.md`; the newer private pending-settlement95 change postdates that React source capture. No fresh browser/guest result is implied.
+
+Canonical issued patch identity now carries positive bigint activation/guest/patch sequence and u32 instance in at most 35 bytes. Shared language-neutral vectors, strict Ajv and independent webassemblyjs bytes were used before host/generator implementation. Full generated producer passed **61/61**, 34.30s. Source and exact RED/GREEN evidence are in `📓️native-ui-patch-receipt-2026-08-27.md`; no generated assets or fresh Wasm were published.
+
+Full actor now passes **95/95**, six files, 1.25s, after actual pending-dispatch RED2. The new retained cell preserves original response envelopes before pending removal/error graft, separately from normalized outcomes. That optional private transport join is tested but not mounted publicly; raw descendant retirement and the earlier worker normalization owner remain open. See `📓️native-returned-output-retirement-2026-08-27.md`.
+
+Captured channel close RED2 became focused adapter/scheduler **7/7**, 8.74s. Close refusal preserves the original subscription and old completion cannot remove a replacement channel. Strict rerun2 is exactly the seven runtime-owned tutorial diagnostics. See `📓️captured-channel-close-2026-08-27.md`.
+
+Runtime independently reports released owned-instance9, owned-intake5 and actor93 checkpoints; those are separate from this newer actor95 local result. UI's producer receipt token/helper is source-mounted and read. Atomic live content ownership, Shell/Interpreter cutover, native retained return handoff, general return paging, and all-app rebuild/runtime verification remain incomplete.
+
+Mutation's latest specific readiness: no-state3/publication2 source mounted but Plugin native unrun; Infinite Dag14 mounted/reviewed but native unrun; Flow VCS10 planned/unimplemented; GIS config pending. Its sole derive-only compiler gate passed12 and released the target. No compiler, cleanup, evidence deletion, source restoration or browser-policy bypass was performed by this lane.
+
+## 19:11 Generated Producer Full Release
+
+The fresh OS-dev long gate passed **60/60**, one file, 37.35s, exit 0, start 19:09:06 (`🧪️guest-lifecycle-producer-full-2.log`). Pre/post source hashes match: materializer `19e3d16c1a96045710aa80a62369baf9ad0ac0faa0adf8d831827f1890af9a8f`; OS-dev test router `6255c9aa148acdb1bcd87275553979c4d375e4f4457fff1af144b39526ed29c6`. Taxonomy received this generated-JS source boundary; no generated output, WGPU pin or fresh Wasm acceptance is claimed.
+
+The ordinary-turn ownership repair passed full actor **86/86**, 2.07s. Strict renderer2 now has exactly the seven separately owned tutorial joins. The coordinator reports its independent OwnedInstance **9/607 skipped**, 8.61s and strict7 on stable selected hashes, and has begun an independent full React run. Actor/renderer source is held briefly for that gate while output-reservation design proceeds separately.
+
+Read-only disk check reports 314 GiB available. This task performed no cleanup, deletion or relocation and makes no inference about the change in free space. Full plugin publication remains held: mutation explicitly reports no-state source staged but not Plugin-compiled, Infinite still in integration, Flow VCS/GIS pending; runtime native lifecycle joining remains separate.
+
+## 19:06 Scheduler Admission And Accepted Input
+
+The real captured-owner scheduler test ran RED because `submitPluginLifecycleTurn` was absent, then passed **1/614 skipped**, 13.72s. Its neutral schema-validated fixture drives Open/Captured ACK/Poll/Close/Accepted/Retired, exact raw-result identity, a faulted final ACK retry and forbidden-work rejection. The dedicated branch dispatches only captured owner methods. It does not turn arbitrary event lists into retirement authority.
+
+Queue saturation then ran RED: an extra Interactive operation was accepted by evicting the queued lower-priority lifecycle turn. A narrow synchronous preadmission guard now protects lifecycle work and refuses new work at the unchanged 32-entry capacity. The actual complete `submitPluginTurn` cohort passed **19/597 skipped**, 12.44s (`🧪️guest-lifecycle-scheduler-queue-{red,green}-1.log`); ordinary-only priority, coalescing, teardown and serialization cases remain included. No generic mailbox implementation changed.
+
+Private accepted-input installation also ran missing-method RED before implementation. Actor full GREEN is **85/85**, 3.69s (`🧪️guest-lifecycle-input-acceptance-green-1.log`). A source read is only a reservation; the UI privately mints acceptance only after actual wire admission, and release requires both accepted input and exact retirement token. The local UI release checkpoint passed **8/604 skipped**, 8.84s. Its later acceptance run is **8 passed/1 failed**, 17.72s: the new test expected `/whole|view/` but production correctly reports an `entire non-shared admitted buffer` refusal; this test-wording repair belongs to UI and was relayed, not silently counted as passing.
+
+Strict renderer1 reports seven tutorial errors, two intentional live `acceptInput` join errors now implemented, and three UI-owned fixture type errors. No scheduler type error was reported. The current-source strict rerun is pending. Strong raw returned-output retention and actual UI read-facade mounting remain necessary; the provenance WeakMap and frozen metadata do not establish root retention or immutable contents.
+
+## 19:00 Lifecycle Transport And Input Release Checkpoint
+
+The private host-retirement witness replaced the structural placeholder after an executed missing-witness RED. The actual full actor gate passed **85/85**, four files, 1.42s, exit 0 (`🧪️guest-lifecycle-host-witness-green-1.log`). It binds the real UI aggregate, exact activation object and three-field guest lifetime, and preserves a failed final ACK for retry. This remains mock-worker transport proof.
+
+The generated bridge now maps canonical Open/Close/receipt-ACK through the existing poll protocol and encodes WIT lifecycle receipts with the shared 44-byte codec. A real Node VM test first failed on the prior raw WIT receipt object, then passed **1/59 skipped**, 2.15s. The generated producer/asset cohort passed **11/49 skipped**, 6.80s (`🧪️guest-lifecycle-mapping-red-1.log`, `🧪️guest-lifecycle-mapping-green-1.log`, `🧪️guest-lifecycle-producer-green-1.log`). It consumes all nine shared vectors; the removed side-message close API is not retained. No generated artifacts or fresh guest Wasm were published.
+
+The next input-release test failed because `source.releaseInput` was absent: **1 failed/84 skipped**, 1.52s. The implementation then passed the full actor gate **85/85**, four files, 4.37s, exit 0 (`🧪️guest-lifecycle-input-release-{red,green}-1.log`). Exact private UI token, ordinal and original-operation identity are required; forged/replayed release cannot advance. Operation access is sequential. This discharges transferred UI-input accounting only: original raw operation slots, patch and turn roots deliberately remain retained so unknown/untransferred fields are not silently dropped. Private successful-input acceptance and the raw-output retirement cursor are still open.
+
+The runtime coordinator approved this task's narrow typed lifecycle branch in the existing renderer turn scheduler. Open/Poll/Close/ReceiptAck/IssuedUiAck dispatch must use only the captured owner methods; ordinary command/coalescing/tutorial behavior remains separately owned. PluginRuntime create/close and live renderer mounting are not yet verified. A provenance WeakMap is not a strong raw-output owner; successful uncaptured/fault/ACK turn retention remains an explicit implementation obligation. Native guest aggregate joining and mutation adoptions still block fresh all-app publication. No cleanup or heavyweight compile occurred.
+
+## 18:15 Coherent Producer Release And Next Close Contract
+
+The latest full OS-dev long gate passed **59/59**, one file, 30.03s, exit 0 (`🧪️generated-close-os-dev-full-1.log`). The released materializer SHA256 is `06640ad071fdf9caef0b439b14c4bdd9c25ae0115e76016ae3672e66e2686154`; its in-source test router is `17bdbed692d880be2a98c07e8ab19d464b5a1f4b572023d46dc3dd128f887415`. The final selected-source snapshot is retained in `🧪️inbound-activation-sources-final-1.log`. Taxonomy received the source boundary; no generated output was accepted or repinned here.
+
+The runtime coordinator independently reports actor R8 **78/78** in 1.29s and the now-ten-case producer filter **10 passed / 49 skipped** in 3.23s. These independent results remain separate from the local full 59-test gate.
+
+The approved close design report was read completely. It uses the existing poll/event protocol: pre-admitted guest lifecycle/outbox slots, a guest-issued lifetime serial captured immediately after app creation, Captured before host handle exposure, exact Accepted/Retired plus ACK, and a join of all native/reactor/UI descendant witnesses. Same-activation numeric-ID reuse must receive a new guest serial. Dag owns canonical domain/schema/Rust/Kernel/WIT and native mounting. This task owns generated JS mapping, TS actor codec/ShardClient and PluginRuntime create/destroy/close adoption. Concrete field/API contract remains pending; no speculative schema edit or terminal-success claim is made.
+
+## 18:13 Full Build-Tool Regression And Explicit Close Refusal
+
+The actual full OS-dev long target passed **58/58**, one file, 80.07s (`🧪️host-activation-os-dev-full-2.log`). Its fundamental attempt exceeded the existing 15-second harness budget and is not a pass; the existing long target was used without altering runtime or test-limit configuration. OS client independently reran here and passed **216/216**, three files, 1.61s (`🧪️inbound-activation-os-client-1.log`). The strict renderer rerun still reports exactly seven tutorial joins, with no new actor diagnostic (`🧪️inbound-activation-typecheck-1.log`).
+
+The runtime owner confirmed no canonical guest receipt exposure currently exists and reserved native captured-lease/schema integration. The new generated-close runtime RED failed once on the old unknown-message path (`🧪️generated-close-admission-red-1.log`). The generated worker now decodes the shared canonical 34-byte request, rejects stale activation/trailing input, and explicitly returns `actor-close.guest-receipts-unavailable`. Its actual focused GREEN is **4/4**, 2.59s (`🧪️generated-close-admission-green-1.log`), including prior generated isolation/reply cases. It retains the actor, performs no poll and emits zero fabricated receipts. This verifies refusal only, not successful native close or all-app behavior.
+
+General Request/Completed ingress and the exact close-authority integration map are retained in `📓️actor-request-ingress-boundary-2026-08-27.md`. Mutation has again borrowed the preserved target for its bounded framework gate; Plugin/Infinite adoptions and full publication remain unverified. No cleanup, source restore, generated publication or WGPU bridge change occurred.
+
+## 18:04 Inbound And Generated Host Isolation Red/Green
+
+The corrected inbound RED executed **four failures** (`🧪️inbound-activation-red-2.log`, 0.720s). It reproduced unowned frame/trap admission, a late old handler consuming a replacement request with the same ID, missing host-effect cancellation on close, and old-worker trap publication. RED 1 additionally contained a test setup error (rebuild without prior termination); that setup was corrected before implementation. The full actor GREEN then passed **78/78**, four files, 1.57s (`🧪️inbound-activation-actor-green-1.log`).
+
+Inbound frames now require the current exact slot, activation generation, live operation authority, and matching envelope origin/target. Host effects retain their exact activation/controller entry; settlement cannot remove a replacement entry. Closing or reassigning the activation aborts its host effects without fabricating native close retirement. Worker-wide traps require a current slot and explicit worker scope; instance-close receipts retain their independent exact ownership checks.
+
+Generated-source runtime RED independently ran **two failures**, 2.98s (`🧪️host-activation-producer-red-1.log`). Node's actual ESM module identity reproduced all three same-package activations emitting under the newest sibling actor; the generated worker also delivered stale/missing-generation/foreign-origin/foreign-target replies to the replacement. The shared materializer now carries actor/generation/version into the actual host-shim import URL, removes mutable rebinding, tags requests/emissions and checks reply identity. The focused generated bridge/asset GREEN passed **9/9**, 3.52s (`🧪️host-activation-producer-green-2.log`). GREEN attempt 1 was a command quoting failure and ran no usable gate.
+
+These tests execute generated JavaScript with controlled component APIs, not fresh guest Wasm or browser execution. The materializer source is reserved during the next close-transport test work; taxonomy was informed before edits. Its WGPU bridge source remains unchanged and no shared generated output was published.
+
+The generated worker also lacks the `closeInstance` dispatch branch. The runtime coordinator delegated that narrow transport branch here. Source inspection additionally finds no guest-visible captured close lease/receipt authority in the current WIT: an instance-only close event and generic idle status cannot certify native accepted/retired receipts. The native owner was asked for the canonical guest seam; no close generation, receipt or second ABI is synthesized here.
+
+## 17:56 Dependency Gate And Independent Renderer Release
+
+Scoped Flow gate 2 actually stopped before tests: Nx exit 1 / Cargo 101, four Plugin E0046 errors (`NoConfigMutation`, `NoPresenceMutation`, `NoTransientMutation`, `InteractionConfigMutation`) and one Infinite `DagMutation` E0046, all missing required mutation descriptors. The complete log is retained in `🧪️flow-registry-retirement-green-2.log`. No Flow registry test or fresh component pass is claimed. The compiler/source hold was explicitly returned to the mutation owner after a read-only process check found no Cargo/rustc client; that owner has the exact five dependency findings. Earlier VCS/GIS findings remain source-only. Selected source captures are retained in `🧪️publication-sources-1751.log` and `🧪️flow-gate-2-sources-end.log`; selected files are not the entire build graph.
+
+The coordinator's actual R19 report was read: **595/595 React tests**, five files, 77.10s, exit 0. Strict R25 has only the seven tutorial joins; the earlier ReadCommit failure/type error is superseded at that source checkpoint. Its separate actor R7 is **74/74**, and OS client R4 is **216/216**, three files, 1.21s. These are independent executed regression results, not this task's new local runs or guest evaluation proof. The coordinator continues scoped UI TDD after that checkpoint.
+
+Read-only publication inventory 4 still accepts **3/22** descriptor/core closures (Procedural, GIS, Process), not fresh-current-source app behavior. Nineteen entries remain rejected, including all thirteen missing extension descriptors. `🧪️publication-inventory-4.log` contains the exact per-entry reasons.
+
+The next narrow requester-transport regression concerns unsolicited worker `trap`/`frame` messages: those branches currently run before pending-result slot checks and carry no activation generation. Exact pending-reply capture does not establish inbound frame lifetime safety. This task owns stale old-worker and same-worker old-activation regressions, producer identity and exact effect settlement, preserving old instance-close receipts. Canonical retained Request/Completed evaluation and byte paging remain separately open.
+
+## 17:44 Current Full Renderer Boundary
+
+Final focused requester/capture GREEN passed **31/31** in 15.09s (`🧪️activation-capture-admission-green-1.log`). The actual full React long target then ran **595 tests: 594 passed / one failed**, five files, 57.57s (`🧪️activation-current-react-full-1.log`). The sole failure is the other lane's live `UiDocumentStore::TypedWire` read-publication admission test at line 895 (expected false, received true). Strict gate 3 still has its private-constructor TS2344 at line 893 plus the seven tutorial joins. Both exact findings were routed to the runtime coordinator; no UI-read source or test was changed here and **no full-suite pass is claimed**.
+
+The actor/extension capture region is coherent and released for the coordinator's independent regression. Read-only Flow readiness inspection found `FlowMutation`'s existing direct `Mutation<FlowFixture>` implementation without required descriptors; that exact potential next compiler boundary was sent to the mutation owner, preserving the separate Flow snapshot-retirement region. This is source inspection, not a compiler result. The loaned target remains held until explicit release.
+
+## 17:43 Final Capture Admission And Preservation
+
+Malformed capture ran **3 failed / 28 passed** in 10.25s (`🧪️activation-capture-admission-red-1.log`): missing lease, completion method and guard did not consistently fail before evaluation. Explicit admission now rejects each before dispatch; foreign request/instance checks already passed. Focused GREEN, full React long and strict gates are running. The scoped `git diff --check` passed.
+
+Read-only storage checks show 203 GiB free and this ticket's retained Cargo target still present at **83 GiB**. No cleanup, deletion or relocation was performed here; the unrelated free-space change has no identified cause. Mutation reports the repaired actual framework library compile passed in 44.83s but still holds the target for final bounded clients. Full publication remains held, and none of these TypeScript gates establish fresh app/component or browser success.
+
+## 17:41 Capture Before Evaluation
+
+The actual earlier-capture GREEN is **26/26**, 11.78s (`🧪️activation-evaluation-green-1.log`). Strict gate 2 contains the seven tutorial joins plus the peer-owned `UiDocumentStore` private-constructor test-type error; the latter was routed to its owner. The final malformed-completion admission fixture/gate is now running, covering absent lease/method/guard and foreign request/instance identity.
+
+The guarded completion/scheduler GREEN passed **20/20** in 8.34s (`🧪️activation-completion-green-1.log`); its strict check still has only the seven transport-owned tutorial diagnostics. Earlier-capture regressions then reproduced the remaining gap: run 1 **4 failed / 20 passed**, run 2 **6 failed / 20 passed** (`🧪️activation-evaluation-red-1.log`, `🧪️activation-evaluation-red-2.log`).
+
+The host now obtains `captureExtensionCompletion(instanceId, req)` before either its serialization queue or extension evaluation. That frozen per-request completion owns the original activation lease, validates through queue/turn/continuation/publication, and admits at most one submission. The previous late-bound completion method is removed, not retained as a compatibility path. The current GREEN and strict checks are running. This verifies requester ownership only: extension-side activation/admitted bounded evaluation and Request/Completed paging still require their own implementation and proof.
+
+Direct read of `🔌️plugin/🖥️host/⚡️effects/🦀️component.rs::run_router_effect_job` shows a stricter limitation than the call-site inventory: it currently checks cancellation, then returns `router effect retained-session pump is not mounted`. It does not yet execute a retained router job. `⚛️reactor/🦀️component.rs` still ignores `Event::Request`. These existing boundaries are not usable as a proven extension execution implementation.
+
+## 17:33 Activation Lease Red/Green
+
+All eight new transport tests failed before implementation (`🧪️activation-lease-red-1.log`). The focused GREEN passed **8/8** in 0.793s, and the full actor target then passed **74/74** in 6.07s (`🧪️activation-lease-green-1.log`, `🧪️activation-lease-actor-full-1.log`). The frozen `captureActorActivation` lease captures the activation object, its generation, slot and worker object. Its canonical turn transport checks before dispatch and after settlement. Route reassignment/release permanently revokes operations without invalidating the old exact-close owner; close, loss and disposal revoke admission. Replies now also require the pending request's actual source slot, not a reused index. Tests cover same-name/reactivation, same-slot replacement, foreign replies, route ABA, refused close and late result without false close acknowledgement.
+
+The renderer adapter's new queued/in-flight/continuation tests executed **3 failed / 17 passed** (`🧪️activation-completion-red-1.log`, 9.63s). They reproduced publication after activation replacement. The guarded scheduler/settlement integration is now under its GREEN run. This capture currently begins at completion entry; the earlier evaluation/request capture and bounded Request/Completed payload ownership remain open. The lease does not establish guest evaluation, bounded byte retirement or browser success.
+
+The runtime coordinator reports Process patch-storage 4/4 and UI contract 120/120, while live resident/work-meter adoption remains in progress. Its read-only extension-router report was read: the existing host-router job is not an ExtensionBundle evaluation factory and still has whole-payload String conversion. Mutation's actual Workflow/Run compile failed in its new leaves with 75 errors; that owner retains the repair/recheck slot. No competing Cargo build or cleanup was started here.
+
+## 17:28 Independent Regression And Activation Ownership
+
+The runtime coordinator's actual full React R18 report was read: **577/577 passed**, five files, 35.29s, exit 0, using the existing `test-long` target. Its strict R23 still reports exactly seven tutorial joins owned by the transport lane. Evidence: `INTERACTIVE-JOB-RUNTIME-REFACTOR/📓️coordinator-renderer-react-full-r18-2026-08-27.md`. This supersedes the earlier fundamental-harness timeouts, not the missing fresh component/browser proof.
+
+The next reserved test-first seam is a dedicated actor activation lease: exact activation object/generation and worker incarnation, permanent operation revocation on route changes, predispatch and postsettlement validation, and no listener fan-out or replacement of the original close root. A language-neutral schema/fixture and eight transport regressions have been added; the RED run is pending. No retained payload paging or genuine extension-owned guest evaluation is inferred from this lease work.
+
+Mutation reports Workflow18/Run5 source cutovers complete but compiler-unverified; the scoped compile still holds this ticket's target. Its kernel, 11 derive and nine registry tests are reported passed, while separate Run undo/schema review remains open. Its new controller reportedly disappeared while completed logs survived. This task performed no cleanup, deletion or relocation and keeps all surviving evidence and the target intact.
+
+## 17:16 Descriptor Admission Red/Green
+
+The descriptor tests now executed a real RED: **9 failed / 7 passed** (`🧪️descriptor-admission-red-2.log`, existing quick harness, 18.79s), independently also observed by the runtime coordinator. The shared kernel loader now rejects unavailable HTTP responses, HTML, malformed/null/missing manifests, foreign plugin identity and absent app rosters before starting actors. Network and abort failures propagate. A genuinely published extension with zero apps remains valid. React and WGPU-web consume that one loader. The actual focused GREEN passed **16/16** (`🧪️descriptor-admission-green-1.log`, 7.65s). This verifies minimal descriptor envelope/identity admission, not full manifest semantics or fresh Wasm.
+
+Read-only native inspection finds an analogous empty-manifest fallback still in `ProgramBridge/🧊️component.rs::read_descriptor_manifest`, including a single-page I/O assumption. That native path has not been changed or claimed verified; its owned byte retirement must be respected. Current typecheck and the coordinator's independent full React rerun remain pending. Workflow/Run compile readiness has not been released.
+
+The subsequent typecheck completed with **only the seven transport-owned tutorial errors** (`🧪️descriptor-current-typecheck-1.log`); no current descriptor/extension/discovery type error is reported. The scoped `git diff --check` completed successfully. The taxonomy owner was informed of the WGPU-web bridge change before its next current-source rehearsal. Post-test SHA256 review inputs: bridge `3a86f1735905126d20b40bf21b8c5a16d84e47667d41aebec7813e9bf50344a9`; shared `🎠️kernel/🟦️component.ts` loader file `ce94140822a03ef02838c17e5a55d9c225ae0dfd821ceb35e9e6d4d262f41c9b`. Both file mtimes are 17:15:16 CEST, before the 17:15:21 focused gate. These hashes were collected after the run, not as a transactional pre/post proof, and the shared-loader test is not WGPU runtime acceptance. The bridge region is now held stable for taxonomy's read-only impact review.
+
+## 17:15 Host Dispatch And Current Gate Boundaries
+
+The generic dispatch regression reproduced silent rejection of `evaluate` without `nodeHash`, a domain-neutral `manifest` request, a missing requester and publication refusal. Run 2 was **13 passed / 4 failed**; the corrected handler/dispatcher gate passed **17/17** (`🧪️extension-dispatch-green-1.log`, 7.04s). Host publication now reaches the still-owned primary/spawned session rather than discarding the returned response. This does not establish guest execution or exact activation cancellation.
+
+Typecheck 1 exposed an invalid test-fixture Invocation sequence (`null` instead of numeric `0`); after correction, typecheck 2 reports only the seven transport-owned tutorial joins and four mutation-owned discovery strictness errors. Neither is changed by this task. Full React attempts 1 and 2 were killed by the existing 15-second fundamental harness budget; **no full-suite pass is claimed**. The descriptor admission RED attempt also hit that harness limit, and its regex alternation was incorrectly forwarded by the runner; attempt 2 uses the existing `test-quick` target and a simple `descriptor` filter. No production/runtime cap is changed.
+
+The mutation owner confirms an active upstream-kernel compile in the loaned target; Run is source-ready but uncompiled, while Workflow remains in progress. The target is still reserved for that lane. Available storage was 23 GiB at the last read-only check. No active evidence, target or shared source has been deleted or relocated here.
+
+## 17:05 Completion Publication Red/Green
+
+Four new regressions failed against the real renderer adapter/handler (`🧪️extension-completion-red-1.log`, **9 passed / 4 failed**): the completion did not run its continuation or acknowledge the retained surface, discarded frames/effects, swallowed a framed typed fault, and resolved a late completion after its originating instance was destroyed. The correction passed **13/13** (`🧪️extension-completion-green-1.log`, 5.55s). Completion now settles through the existing scheduler, retains and acknowledges patches, returns decoded invocation output/history/UI scope/host effects, and refuses publication after local instance destruction. The common invocation decoder was extracted with the transport owner's coordination.
+
+These are actual adapter tests using the real pack/frame codecs and schema-checked neutral fixtures, not a live guest evaluation. Exact activation-generation capture, cancellation of extension execution and the guest's bounded Request/Respond join remain open; local instance checks are not promoted to that proof. The host's generic dispatch filter and response application are the next test-first repair. The compiler loan remains with the Workflow/Run owner.
+
+## 17:00 Extension Wire Identity Gate
+
+The next fixture-backed gate reproduced the actual WIT mismatch: `invoke-extension` carries nested `params` with UTF-8 JSON bytes, not flat fields containing a packed value. Its positive `u64` request ID must remain `bigint`, including values above JavaScript's exact-number range. The corrected shared/renderer decoder rejects invalid identities and preserves the exact payload and request ID. An intermediate run exposed a cross-realm `Uint8Array` byte guard failure; the final actual gate passed **9/9** (`🧪️extension-wire-green-2.log`, 5.99s total). This includes the seven earlier handler regressions and two wire laws, not fresh component evaluation or end-to-end app proof.
+
+Source inspection still finds a domain-specific ShellHost filter that silently drops generic requests, a completion adapter that discards its reactor turn output, and an unimplemented guest Request/Respond execution join. These remain open. The existing request ABI will be used; synchronous extension evaluation is not being treated as bounded reactor work. The Workflow/Run owner still holds the scoped compiler loan. All active evidence remains preserved by this task.
+
+## 16:51 Extension Failure Delivery Regression
+
+The renderer's real `runInvokeExtensionEffect` regression executed **1 passed / 6 failed** before repair (`🧪️extension-invocation-red-1.log`): missing extension/invoke became success with `{}`, missing completion capability resolved silently, structured faults lost their fields, failed completion was attempted again and swallowed, and extracted invocation lost its method receiver. After correction the focused gate passed **7/7** (`🧪️extension-invocation-green-1.log`, 7.19s total). Its language-neutral request/fault fixture is checked by Ajv, and outcomes are decoded through the actual pack/fault codec. This is handler-level proof, **not fresh extension Wasm evaluation**. The canonical `Event::Request`/`Effect::Respond`/`Event::Completed` transport still requires integration; no second ABI was introduced.
+
+The demonstrator's own build/layout contract suite passed **5/5** (`🧪️demonstrator-current-contract-1.log`, 3.64s). Workflow/Run metadata remains explicitly owned by the mutation task. Because that task reported its target disappearing, it was offered the existing surviving demonstrator target for one scoped compile with two jobs; this task has no active Cargo compile during that loan. Other tasks report fresh evidence disappearing as well. This task ran no cleanup, deletion or relocation and knows no recovery location. A read-only disk check now shows 24 GiB available; the increase is not attributed to any identified process.
+
 ## 16:43 Store Cleared, Workflow Compile Boundary Exposed
 
 The mutation owner verified Store-specific current-contract readiness, so the held Flow native gate resumed. It now passes that boundary but stops at two further E0046 errors in `semio-framework`: `WorkflowMutation` and `RunMutation` still lack required `DESCRIPTORS`/`descriptor` implementations (`🧪️flow-registry-retirement-green-1.log`, lines 2030–2050). **No Flow tests executed.** Both exact sites were routed to the mutation owner; no compatibility defaults or competing declarations were added. Full publication remains unverified.
@@ -236,3 +414,26 @@ The host currently stops refresh continuations when all requested surfaces alrea
 The Generator native geometry test is also queued (`🧪️generator-mushroom-native-1.log`). Code inspection found older eager FlowHost paths still assigning/releasing neural dictionaries and temporary trees without the newly explicit retirement API (examples: `apply_eval_outputs_json`, `set_neuron_params`, `evaluate_step`). Treat these as unverified runtime candidates, not confirmed observed failures; use the native test/backtrace and fresh browser before widening changes. The existing `neural::ColdOwner` is explicitly batch-only and must not substitute for retained cursor work.
 
 A new shared-snapshot regression is queued in session 35423 (`🧪️flow-shared-snapshot-red.log`), reusing the ordered-layout fixture. `FlowSnapshotRetirement` currently retains its `Arc` when `try_unwrap` fails, so two retirement readers can hold each other indefinitely. The regression is added but the production correction is deliberately not applied yet; obtain the failing test, then replace the shared-reference handoff with an atomic consuming final-owner operation and rerun.
+# 18:27 Canonical Guest Lifecycle Codec
+
+The shared actor lifecycle schema and nine language-neutral vectors are now mounted by the runtime owner. The first executed old-code gate failed two tests: the wire reader assumed every message had a lifetime, and lifetime equality accepted a reused numeric ID within the same activation despite a different guest-issued serial. Updated tests reproduced two failures before implementation (missing new codec and old equality).
+
+The TypeScript codec now implements Open/Captured/Close/Accepted/Retired and exact nested ACK, canonical unsigned LEB128, positive u64 generations/guest lifetime, safe-number request sequence, and the 44-byte maximum. It rejects noncanonical/truncated/trailing/overflow/zero authority. Old codec aliases were removed from authored TS consumers. The worker-activation regression now independently changes activation generation; it no longer misuses the guest-ID-reuse fixture.
+
+Actual focused GREEN: **3 passed, 75 skipped, 0.990s, exit 0**, including all nine shared vectors against the independent `@webassemblyjs/leb128` encoder and strict Ajv schema, receipt identity/reuse checks, and generated-worker activation isolation. Logs: `🧪️guest-lifecycle-codec-red-1.log`, `🧪️guest-lifecycle-codec-red-2.log`, `🧪️guest-lifecycle-codec-green-1.log`.
+
+This is codec proof only. ShardClient open/capture/ACK ownership and PluginRuntime create/destroy remain in cutover; the old close-only lease cannot synthesize guestLifetime. No native/Wasm all-app success is claimed. Mutation released the retained compiler target after build35; no compiler or publication started here.
+# 18:35 Pre-Open Owner First Runtime Gate
+
+New neutral host fixture and three executed mock-worker tests first failed because `captureInstanceLifecycle` was absent. The dedicated owner now passes **3 tests / 78 skipped, 0.288s, exit 0**: Captured-before-lifetime, exact receipt ACK sequence, retained native state before host retirement, original worker after route revocation, wrong guest serial rejection, transport refusal/retry and worker loss. Logs: `🧪️guest-lifecycle-owner-red-1.log` and `🧪️guest-lifecycle-owner-green-1.log`.
+
+This is not a full actor suite release. Old authored close-only tests still need conversion to scheduled lifecycle turns, the generated worker still has the historical refusal branch, and PluginRuntime mounting is pending. The temporary structural host-retirement test participant is not a private-branded host witness; the UI owner is coordinating its exact token. The retained owner map is not yet a fixed-capacity admission certificate. No native, Wasm or all-app success follows from these focused tests.
+# 18:44 ACK And Cancellation Regression Boundary
+
+The full actor suite passed **81/81** in 1.51s after converting every authored close-only fixture to scheduled Open/Captured/Close/receipt-ACK turns. The next native-patch authority gate passed **4/78 skipped** in 1.16s; it verifies exact returned-turn identity/private mint/forgery refusal, not genuine paired UI ACK execution.
+
+Three further tests reproduced real defects before repair: a missing/faulted ACK status released a receipt, close synchronously aborted both effects, and an old open owner could abort the new activation's ledger. The repaired full actor run passed **85/85, 4 files, 1.15s, exit 0**. Exact owner detaches a linked cancellation ledger and advances one effect per lifecycle turn; lost old workers cannot begin a new close against current actor-name state. ACK advancement now requires a non-faulted canonical status; failed/malformed responses retain the receipt and result. Other shutdown paths still synchronously drain their effect ledger; this is not a global cancellation timing certificate.
+
+Logs: `🧪️guest-lifecycle-actor-green-1.log`, `🧪️guest-lifecycle-ui-authority-red-1.log`, `🧪️guest-lifecycle-ui-authority-green-1.log`, `🧪️guest-lifecycle-ack-cancel-red-1.log`, `🧪️guest-lifecycle-ack-cancel-green-1.log`.
+
+Still open: replace the provisional structural host participant with the UI owner's private terminal witness, exact input-release/bounded retirement of original turn/patch/operation roots, real UI/native submission pairing, generated WIT mapping, and PluginRuntime mounting. The current typed authority retains raw roots and is not a bounded release certificate. Mutation released build36's compiler slot; no heavy build started here.

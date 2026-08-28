@@ -1,0 +1,311 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.return-response.metadata.v1",
+  "title": "Captured Return Response Metadata Inventory",
+  "description": "Schema-first source-bound inventory and typed misuse laws. Current source minima are not final live admission prices: the typed close/record/transport cutover must extend this inventory before allocation. Neutral intrinsic record costs and raw backing are additional.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "model",
+    "layouts",
+    "projectionMaximum",
+    "minimumEnvelopes",
+    "rawMaximumBytes",
+    "order",
+    "retirementOrder",
+    "misuseCases",
+    "recoveryCases",
+    "boundaries",
+    "stillRequiresExplicitAdmission"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordBytes",
+        "fieldBytes",
+        "slotsPerRecord",
+        "ownersPerRecord",
+        "meaning"
+      ],
+      "properties": {
+        "recordBytes": {
+          "const": 64
+        },
+        "fieldBytes": {
+          "const": 16
+        },
+        "slotsPerRecord": {
+          "const": 1
+        },
+        "ownersPerRecord": {
+          "const": 1
+        },
+        "meaning": {
+          "const": "fixed logical metadata, not measured runtime heap"
+        }
+      }
+    },
+    "layouts": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "$ref": "#/definitions/layout"
+      }
+    },
+    "projectionMaximum": {
+      "const": {
+        "records": 7,
+        "fields": 21
+      }
+    },
+    "minimumEnvelopes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roster",
+        "pending",
+        "framing"
+      ],
+      "properties": {
+        "roster": {
+          "allOf": [
+            {
+              "$ref": "semio.value.resident.capacity.v1#/definitions/resources"
+            },
+            {
+              "const": {
+                "bytes": 176,
+                "slots": 1,
+                "owners": 1
+              }
+            }
+          ]
+        },
+        "pending": {
+          "allOf": [
+            {
+              "$ref": "semio.value.resident.capacity.v1#/definitions/resources"
+            },
+            {
+              "const": {
+                "bytes": 560,
+                "slots": 4,
+                "owners": 4
+              }
+            }
+          ]
+        },
+        "framing": {
+          "allOf": [
+            {
+              "$ref": "semio.value.resident.capacity.v1#/definitions/resources"
+            },
+            {
+              "const": {
+                "bytes": 1424,
+                "slots": 9,
+                "owners": 9
+              }
+            }
+          ]
+        }
+      }
+    },
+    "rawMaximumBytes": {
+      "const": 4161
+    },
+    "order": {
+      "const": [
+        "reserve-fixed-envelope",
+        "retain-typed-construction-slot",
+        "install-minimal-shell",
+        "initialize-fields",
+        "expose-facade"
+      ]
+    },
+    "retirementOrder": {
+      "const": [
+        "prove-exact-domain-terminal",
+        "begin-record-close",
+        "detach-original-shell",
+        "observe-exact-detachment",
+        "unlink-and-refund-in-separate-turn"
+      ]
+    },
+    "misuseCases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "reason",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "enum": [
+              "structural",
+              "premature",
+              "foreign",
+              "replay",
+              "raw-input",
+              "reader"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "detachCalls",
+              "refundCalls",
+              "shellRetained",
+              "witnessAccepted"
+            ],
+            "properties": {
+              "detachCalls": {
+                "const": 0
+              },
+              "refundCalls": {
+                "const": 0
+              },
+              "shellRetained": {
+                "type": "boolean"
+              },
+              "witnessAccepted": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "recoveryCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "shellRetained",
+          "originalWitnessRetained",
+          "repeatMutation",
+          "observationRequired"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "installed",
+              "detached"
+            ]
+          },
+          "shellRetained": {
+            "type": "boolean"
+          },
+          "originalWitnessRetained": {
+            "type": "boolean"
+          },
+          "repeatMutation": {
+            "type": "boolean"
+          },
+          "observationRequired": {
+            "enum": [
+              "matchesShell",
+              "exactDetachObservation"
+            ]
+          }
+        }
+      }
+    },
+    "boundaries": {
+      "const": {
+        "sourceCensusOnly": true,
+        "finalMountEnvelope": false,
+        "neutralIntrinsicRecordsIncluded": false,
+        "rawBytesIncluded": false,
+        "publicRecordCapability": false,
+        "publicWitnessFactory": false,
+        "structuralTerminalAccepted": false,
+        "noResponseRefund": false,
+        "inputAckFromMetadata": false
+      }
+    },
+    "stillRequiresExplicitAdmission": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "definitions": {
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "group",
+        "source",
+        "kind",
+        "declaration",
+        "fields"
+      ],
+      "properties": {
+        "group": {
+          "enum": [
+            "roster",
+            "pending",
+            "framing"
+          ]
+        },
+        "source": {
+          "enum": [
+            "output",
+            "shard",
+            "response",
+            "result"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "class",
+            "type"
+          ]
+        },
+        "declaration": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

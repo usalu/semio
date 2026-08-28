@@ -1,6 +1,5 @@
 //! 👥️ Gis2d presence — shareable live ephemeral state + mutations.
 
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
@@ -9,7 +8,7 @@ use store::ArtifactPack;
 /// automatically via the framework's typed `PresenceInteraction` (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — no longer mirrored here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "gis2d.presence")]
 #[dsl(layout = "lines")]
 pub struct Gis2dPresence {
@@ -19,15 +18,6 @@ pub struct Gis2dPresence {
 impl Default for Gis2dPresence {
     fn default() -> Self {
         Self { camera_json: r#"{"x":0,"y":0,"zoom":1}"#.into() }
-    }
-}
-
-impl protocol::MutationDiff<Gis2dPresence> for Gis2dPresence {
-    fn apply(&self, _base: &Gis2dPresence) -> protocol::MutationApplyResult<Gis2dPresence> {
-        Ok({ self.clone() })
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
     }
 }
 
@@ -77,44 +67,23 @@ impl ArtifactPack for Gis2dPresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
-pub enum Gis2dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: Gis2dPresence,
-    },
-}
+//#region 🔖️PresenceMutations
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod presence_diff;
+pub use presence_diff::{Gis2dPresenceDelta, Gis2dPresenceDiff};
 
-impl Mutation<Gis2dPresence> for Gis2dPresenceMutation {
-    type Diff = Gis2dPresence;
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
-    fn diff(&self, base: &Gis2dPresence) -> protocol::MutationOutcome<Gis2dPresence> {
-        match self {
-            Self::Snapshot { presence } => {
-                if base == presence {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Presence snapshot is already identical to the requested replacement.");
-                }
-                protocol::MutationOutcome::new(presence.clone())
-            }
-        }
-    }
-
-    fn inverse(&self, base: &Gis2dPresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
+//#region 🔖️OpCodec
 impl protocol::OpText for Gis2dPresenceMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{keyword} ");
             if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
                 return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
             }
         }
@@ -124,12 +93,7 @@ impl protocol::OpText for Gis2dPresenceMutation {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
-        }
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
@@ -141,4 +105,9 @@ impl protocol::OpBinary for Gis2dPresenceMutation {
         dsl::variants_binary::decode_op(bytes)
     }
 }
-//#endregion 🔖️PresenceMutation
+//#endregion 🔖️OpCodec
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️mutations/🦀️.rs"]
+mod direct_mutation_tests;
+//#endregion 🔖️PresenceMutations

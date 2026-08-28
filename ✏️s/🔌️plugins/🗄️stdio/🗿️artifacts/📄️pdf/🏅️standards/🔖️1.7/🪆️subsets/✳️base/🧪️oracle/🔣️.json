@@ -1,0 +1,626 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest: that file registers `lopdf` under the `pdf-edit`/`pdf-parse` capabilities its own cases exercise; this file registers the SAME package under a distinct id and the `pdf-1-7-mutate` capability this subset's exhaustive mutation case (`mutate-pdf-1-7`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "oracles": [
+    {
+      "id": "lopdf-pdf-1-7-mutate",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-1-7-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "The same PDF document-manipulation library the shared pdf-edit/pdf-parse entries already approve, registered under its own id and capability so this subset's exhaustive PdfMutation catalog (16 direct kinds, including page reorder/replace/rotate) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf Rust PDF object-graph library",
+        "version": "0.44"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "pdf-1-7-base",
+      "capability": "pdf-1-7-mutate",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️base",
+      "vectors": [],
+      "kinds": [
+        "insert-page",
+        "remove-page",
+        "set-page-media-box",
+        "set-page-crop-box",
+        "append-page-content",
+        "set-info",
+        "insert-object",
+        "remove-object",
+        "set-object-value",
+        "set-dict-entry",
+        "remove-dict-entry",
+        "set-trailer-entry",
+        "remove-trailer-entry",
+        "move-page",
+        "set-page-content",
+        "set-page-rotation"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "base",
+      "standardDirectoryName": "🔖️1.7",
+      "subsetDirectoryName": "✳️base",
+      "mutations": [
+        {
+          "id": "insert-page",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📥️insert-page/🦀️component.rs#InsertPage",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-page",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::InsertPage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-count-and-inserted-page-media-box-rotate-text-agree"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-page",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️remove-page/🦀️component.rs#RemovePage",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-page",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::RemovePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-count-and-remaining-page-order-agree-content-operators-exempt"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-page-media-box",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📐️set-page-media-box/🦀️component.rs#SetPageMediaBox",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-media-box",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetPageMediaBox"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-media-box-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-page-crop-box",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✂️set-page-crop-box/🦀️component.rs#SetPageCropBox",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-crop-box",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetPageCropBox"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-crop-box-agrees-or-is-absent-together"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "append-page-content",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➕️append-page-content/🦀️component.rs#AppendPageContent",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "append-page-content",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::AppendPageContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "appended-text-is-present-in-page-text-content-operators-exempt-on-inverse"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-info",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/ℹ️set-info/🦀️component.rs#SetInfo",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-info",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetInfo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "document-title-and-author-agree"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "insert-object",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📦️insert-object/🦀️component.rs#InsertObject",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-object",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::InsertObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "object-graph-unchanged-per-iso-32000-1-7-5-4-unreferenced-object-is-unreachable",
+              "no-projection-may-be-asserted-to-move-the-mutation-is-real-but-unobservable"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-object",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧹️remove-object/🦀️component.rs#RemoveObject",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-object",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::RemoveObject"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "object-graph-no-longer-resolves-the-removed-object"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-object-value",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔧️set-object-value/🦀️component.rs#SetObjectValue",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-object-value",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetObjectValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "object-value-at-id-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-dict-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔑️set-dict-entry/🦀️component.rs#SetDictEntry",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-dict-entry",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetDictEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "dictionary-entry-at-path-key-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-dict-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🚫️remove-dict-entry/🦀️component.rs#RemoveDictEntry",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-dict-entry",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::RemoveDictEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "dictionary-no-longer-carries-the-entry-at-path-key"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-trailer-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧳️set-trailer-entry/🦀️component.rs#SetTrailerEntry",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-trailer-entry",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetTrailerEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "trailer-entry-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "remove-trailer-entry",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧽️remove-trailer-entry/🦀️component.rs#RemoveTrailerEntry",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-trailer-entry",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::RemoveTrailerEntry"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "trailer-no-longer-carries-the-entry"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "move-page",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔀️move-page/🦀️component.rs#MovePage",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-page",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::MovePage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-order-after-move-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-page-content",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/✏️set-page-content/🦀️component.rs#SetPageContent",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-content",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetPageContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-text-content-operators-exempt-on-inverse"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        },
+        {
+          "id": "set-page-rotation",
+          "capability": "pdf-1-7-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔄️set-page-rotation/🦀️component.rs#SetPageRotation",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-rotation",
+            "bridgeVersion": 1,
+            "variant": "PdfMutation::SetPageRotation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "pdf-1-7-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-pdf-1-7-mutate"
+            }
+          ],
+          "carriers": [
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "page-rotate-agrees"
+            ],
+            "enclosing": [
+              "pdf-reencode-round-trip-agrees-with-reference-object-graph-reader"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "fixtureManifests": [
+    {
+      "schema": "semio.repository-test.fixture/v2",
+      "id": "report-strip",
+      "class": "third-party-generated",
+      "target": {
+        "artifact": "s.stdio.pdf",
+        "standard": "1.7",
+        "subset": "base"
+      },
+      "units": {
+        "length": "unitless",
+        "angle": "degree"
+      },
+      "files": [
+        {
+          "role": "primary-pdf",
+          "path": "../🧫️fixtures/report-strip/report-strip.pdf",
+          "mediaType": "application/pdf",
+          "sha256": "sha256:af796e999a6c9690d057b99ed96a972a495af61cc0086219390eb27a3c34485b",
+          "bytes": 1219
+        }
+      ],
+      "generator": {
+        "oracle": "lopdf-pdf-1-7-mutate",
+        "packageVersion": "0.44",
+        "engineFamily": "lopdf",
+        "engineVersion": "0.44",
+        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🏭️generator/📜️script.ts generate",
+        "platform": "darwin-arm64"
+      },
+      "provenance": {
+        "source": "generated",
+        "license": "public-domain (synthetic, no third-party content embedded)"
+      },
+      "comparisonProfile": "semantic-pdf-v1",
+      "reproducible": true,
+      "family": "mechanical",
+      "notes": "A single base 3-page document exercising 15 of the 16 declared pdf@1.7 mutation kinds (distinct MediaBox/CropBox/Rotate per page, real Tj text content, non-empty Info Title/Author, a referenced Outlines dict for set-dict-entry/remove-dict-entry, a non-structural SemioFixtureMarker trailer entry). insert-object is documented as unobservable on ANY PDF per ISO 32000-1 7.5.4 (ticket 📓️gif-las-pdf17-findings.md), not a gap in this fixture. PDF user-space units are not a physical length in the CAD sense; 751 units, 62 prefixes is schema-required,  and  are placeholders, not claims. Verified end to end against this subset's own oracle (project_pdf_1_7 + set-page-rotation) on the real committed bytes."
+    }
+  ]
+}

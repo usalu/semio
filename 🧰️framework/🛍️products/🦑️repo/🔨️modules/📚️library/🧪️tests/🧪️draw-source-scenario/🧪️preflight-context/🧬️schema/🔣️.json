@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "ticketDir", "transactionDirectory", "planPath", "sourcePath", "foreignPath", "unrelatedPath", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-preflight-evidence-context-v1" },
+    "ticketDir": { "const": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/DRAW-SOURCE-SCENARIOS" },
+    "transactionDirectory": { "const": "🧾️taxonomy-transaction" },
+    "planPath": { "const": "📊️taxonomy-plan/🔣️.json" },
+    "sourcePath": { "const": "🧪️tests/🧪️fixture/🦀️.rs" },
+    "foreignPath": { "const": "🧪️link-target/📝️.md" },
+    "unrelatedPath": { "const": "📓️unrelated/📝️.md" },
+    "cases": {
+      "const": [
+        { "id": "absent-transaction-and-plan", "transactionExists": false, "planExists": false, "sourceDigestUnchanged": true },
+        { "id": "existing-transaction-only", "transactionExists": true, "planExists": false, "sourceDigestUnchanged": false },
+        { "id": "existing-exact-plan-only", "transactionExists": false, "planExists": true, "sourceDigestUnchanged": true },
+        { "id": "existing-transaction-and-exact-plan", "transactionExists": true, "planExists": true, "sourceDigestUnchanged": false }
+      ]
+    }
+  }
+}

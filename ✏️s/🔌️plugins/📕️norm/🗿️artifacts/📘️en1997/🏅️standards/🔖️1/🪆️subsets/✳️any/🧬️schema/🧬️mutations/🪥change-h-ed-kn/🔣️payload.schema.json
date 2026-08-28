@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHEdKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newHEdKn"
+  ],
+  "properties": {
+    "newHEdKn": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+# 🧭️ Own workspace root. The repository's root Cargo.toml is a shared, leased manifest that concurrent
+# sessions edit, and `semio-s-plugin-stdio` is mid-refactor and does not currently build; an oracle
+# that had to be a member of that workspace would be blocked by both. This crate links NOTHING from
+# this repository on purpose — an oracle that could reach the subject would stop being a reference.
+# Same pattern and same stated reason as `…📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/🏭️bridge/Cargo.toml`.
+[workspace]
+
+[package]
+name = "semio-cad-oracle-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔬️ Third-party readers for s.stdio.semio@v1/✳️cad — ruststep reads STEP, the dxf crate reads and writes DXF. Reads artifacts; never predicts them."
+
+[[bin]]
+name = "semio-cad-oracle-probe"
+path = "src/main.rs"
+
+# 🔒️ Both already approved as `test-oracle` in 🔒️dependencies.json. Neither is production-reachable.
+[dependencies]
+ruststep = "0.4"
+dxf = "0.6"

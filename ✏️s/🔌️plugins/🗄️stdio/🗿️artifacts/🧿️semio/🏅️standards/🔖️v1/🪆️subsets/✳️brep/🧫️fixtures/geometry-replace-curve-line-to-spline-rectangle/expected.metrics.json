@@ -1,0 +1,28 @@
+{
+  "declaredOutcome": "applied",
+  "kind": "replace-curve",
+  "hasExpected": true,
+  "solids": 0,
+  "shells": 1,
+  "faces": 1,
+  "edges": 4,
+  "vertices": 4,
+  "boundingBox": {
+    "xMin": -1.426181100212,
+    "xMax": 21.584420352373,
+    "yMin": -4.597810681148,
+    "yMax": 9.482678065432,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 26.976803786814198,
+  "volume": 0,
+  "area": 167.573102596178,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.0008093041136044259,
+  "meshVertexCount": 165,
+  "meshTriangleCount": 166
+}

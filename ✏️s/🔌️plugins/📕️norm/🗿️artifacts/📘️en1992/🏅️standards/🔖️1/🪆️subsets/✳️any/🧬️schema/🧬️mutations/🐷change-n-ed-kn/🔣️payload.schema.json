@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeNEdKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newNEdKn"
+  ],
+  "properties": {
+    "newNEdKn": {
+      "type": "number"
+    }
+  }
+}

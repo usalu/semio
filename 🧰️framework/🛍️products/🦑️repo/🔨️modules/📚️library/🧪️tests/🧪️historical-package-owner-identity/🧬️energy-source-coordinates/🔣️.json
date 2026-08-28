@@ -1,0 +1,619 @@
+{
+  "schemaVersion": 1,
+  "contract": "frozenCoordinateEvidenceContracts",
+  "scope": "exact-energy-historical-source-selectors",
+  "counts": {
+    "documents": 8,
+    "existingDraw": 23,
+    "addedEnergy": 10,
+    "total": 33
+  },
+  "documents": [
+    {
+      "id": "draw-evidence-sol-fleet-s1",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/sol-fleet-s1.json",
+        "sha256": "38d8baecb28c9b9c98d8c59224eb9d5ab231bf9d0a06fc07ebd82fef0eaf23b2",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/edits/853/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/854/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/855/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/856/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/857/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/858/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/859/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/860/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          {
+            "pointer": "/edits/861/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          }
+        ]
+      },
+      "size": 249363,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/edits/889/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          "coordinate": {
+            "pointer": "/edits/889/file",
+            "kind": "source",
+            "start": 205654,
+            "end": 205789,
+            "valueSha256": "80dfbc86a67eab7fbbe75118eb30411eb4f9c4d9d74037dda2ec926ce396f04b",
+            "valueUtf8Bytes": 179
+          }
+        },
+        {
+          "declaration": {
+            "pointer": "/edits/890/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          "coordinate": {
+            "pointer": "/edits/890/file",
+            "kind": "source",
+            "start": 205870,
+            "end": 206017,
+            "valueSha256": "b1f4465b79337ac3effd8a90b4abba5d33c9bb32a3a434921f5dfd2c80c4a75f",
+            "valueUtf8Bytes": 195
+          }
+        },
+        {
+          "declaration": {
+            "pointer": "/edits/891/file",
+            "kind": "source",
+            "representation": "recorded-repository-absolute",
+            "recordedRepositoryRoot": "/Users/ueli/Documents/semio"
+          },
+          "coordinate": {
+            "pointer": "/edits/891/file",
+            "kind": "source",
+            "start": 206098,
+            "end": 206247,
+            "valueSha256": "99c2fcb2159ffdbfa3c585b9a7e4e13c31db300f3456ef18bf3791042b4da664",
+            "valueUtf8Bytes": 197
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-writer-official-tool-jobs-2026-08-26",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📊️writer-official-tool-jobs-2026-08-26.json",
+        "sha256": "3b593f1620bf73d353e6fa88583c9d88a0f8c2e64c9d7c16b676a87b336775e0",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/40/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/41/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 378428,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/37/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/37/file",
+            "kind": "source",
+            "start": 19565,
+            "end": 19684,
+            "valueSha256": "53b4a523f597621e5b2d301e81f86b3b53f779b1bd438da5429ff9689d48e571",
+            "valueUtf8Bytes": 163
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-puzzle-tool-jobs-after-mounted-fill",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/🧪️puzzle-tool-jobs-after-mounted-fill.json",
+        "sha256": "372ca8d2577478a4b6dfafebdf1d7b2924d9c0030b74caa171dd845942febb3e",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/40/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/41/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 361073,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/37/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/37/file",
+            "kind": "source",
+            "start": 19581,
+            "end": 19700,
+            "valueSha256": "53b4a523f597621e5b2d301e81f86b3b53f779b1bd438da5429ff9689d48e571",
+            "valueUtf8Bytes": 163
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-p2d-tool-jobs-a",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-2-RESUMABLE-JOB-AND-PROGRESS-PROTOCOL/p2d-tool-jobs-a.json",
+        "sha256": "8ab08296364d5faf82aa4d238dd589e445af5966b88bcc00e20fa74e34f2306a",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/29/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/30/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 312560,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/26/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/26/file",
+            "kind": "source",
+            "start": 16793,
+            "end": 16855,
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c",
+            "valueUtf8Bytes": 86
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-p2d-tool-jobs-b",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-2-RESUMABLE-JOB-AND-PROGRESS-PROTOCOL/p2d-tool-jobs-b.json",
+        "sha256": "8ab08296364d5faf82aa4d238dd589e445af5966b88bcc00e20fa74e34f2306a",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/29/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/30/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 312560,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/26/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/26/file",
+            "kind": "source",
+            "start": 16793,
+            "end": 16855,
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c",
+            "valueUtf8Bytes": 86
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-p6g-tool-jobs-repair",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/p6g-tool-jobs-repair.json",
+        "sha256": "dded19f967241c92d610da1ad55c44164ddc7b8a791b59b6ad545e2d1925c845",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/30/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/31/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 313044,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source",
+            "start": 16985,
+            "end": 17047,
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c",
+            "valueUtf8Bytes": 86
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-p6g-tool-jobs-a",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/📊️p6g-tool-jobs-a.json",
+        "sha256": "e755ebcb3ab6e3004b563017f7a573bdafc59b36b2c95ea9cd4c1a7ab7ab3afc",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/30/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/31/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 313044,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source",
+            "start": 16985,
+            "end": 17047,
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c",
+            "valueUtf8Bytes": 86
+          }
+        }
+      ]
+    },
+    {
+      "id": "draw-evidence-p6g-tool-jobs-b",
+      "registration": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-FEM-JOB-GRAPH/📊️p6g-tool-jobs-b.json",
+        "sha256": "e755ebcb3ab6e3004b563017f7a573bdafc59b36b2c95ea9cd4c1a7ab7ab3afc",
+        "schemaVersion": null,
+        "coordinates": [
+          {
+            "pointer": "/globalPayloadStores/30/file",
+            "kind": "source"
+          },
+          {
+            "pointer": "/globalPayloadStores/31/file",
+            "kind": "source"
+          }
+        ]
+      },
+      "size": 313044,
+      "mode": 420,
+      "energy": [
+        {
+          "declaration": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source"
+          },
+          "coordinate": {
+            "pointer": "/globalPayloadStores/27/file",
+            "kind": "source",
+            "start": 16985,
+            "end": 17047,
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c",
+            "valueUtf8Bytes": 86
+          }
+        }
+      ]
+    }
+  ],
+  "undeclaredNeighbors": [
+    {
+      "contractId": "draw-evidence-sol-fleet-s1",
+      "pointer": "/edits/874/file",
+      "start": 202771,
+      "end": 202882,
+      "valueSha256": "7ce5741cf7428e630e74faf67585c0cdd494717df93ef49eb58ce423e714ab38",
+      "valueUtf8Bytes": 143
+    }
+  ],
+  "duplicateValueCase": {
+    "valueFrom": {
+      "contractId": "draw-evidence-p2d-tool-jobs-a",
+      "pointer": "/globalPayloadStores/26/file"
+    },
+    "coordinates": [
+      {
+        "pointer": "/selected",
+        "kind": "source"
+      }
+    ],
+    "selectedPointer": "/selected",
+    "unownedPointer": "/neighbor"
+  },
+  "negativeCases": [
+    {
+      "id": "changed-document-hash",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}\n",
+      "registeredDocument": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "document digest does not match"
+    },
+    {
+      "id": "explicit-null-schema-presence",
+      "document": "{\"schemaVersion\":null,\"selected\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "document schemaVersion differs"
+    },
+    {
+      "id": "unexpected-number-schema-presence",
+      "document": "{\"schemaVersion\":1,\"selected\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "document schemaVersion differs"
+    },
+    {
+      "id": "missing-declared-schema",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}",
+      "schemaVersion": 1,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "document schemaVersion differs"
+    },
+    {
+      "id": "missing-exact-pointer",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/missing",
+          "kind": "source"
+        }
+      ],
+      "error": "is missing"
+    },
+    {
+      "id": "object-wildcard-not-array",
+      "document": "{\"records\":{\"first\":{\"file\":\"fixtures/source.rs\"}}}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/records/*/file",
+          "kind": "source"
+        }
+      ],
+      "error": "must select an array"
+    },
+    {
+      "id": "empty-array-wildcard",
+      "document": "{\"records\":[]}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/records/*/file",
+          "kind": "source"
+        }
+      ],
+      "error": "matched no value"
+    },
+    {
+      "id": "overlapping-array-wildcard",
+      "document": "{\"records\":[{\"file\":\"fixtures/source.rs\"},{\"file\":\"fixtures/source.rs\"}]}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/records/0/file",
+          "kind": "source"
+        },
+        {
+          "pointer": "/records/*/file",
+          "kind": "source"
+        }
+      ],
+      "error": "selectors overlap"
+    },
+    {
+      "id": "wrong-recorded-root",
+      "document": "{\"selected\":\"/recorded/workspace/fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source",
+          "representation": "recorded-repository-absolute",
+          "recordedRepositoryRoot": "/recorded/other"
+        }
+      ],
+      "error": "does not match its exact recorded prefix"
+    },
+    {
+      "id": "recorded-root-prefix-collision",
+      "document": "{\"selected\":\"/recorded/workspace-other/fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source",
+          "representation": "recorded-repository-absolute",
+          "recordedRepositoryRoot": "/recorded/workspace"
+        }
+      ],
+      "error": "does not match its exact recorded prefix"
+    },
+    {
+      "id": "missing-recorded-root-representation",
+      "document": "{\"selected\":\"/recorded/workspace/fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "is not repository-relative"
+    },
+    {
+      "id": "duplicate-selector",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        },
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "duplicates another declaration"
+    },
+    {
+      "id": "duplicate-document-owner",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"neighbor\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "duplicateOwner": true,
+      "error": "duplicates another evidence owner"
+    },
+    {
+      "id": "duplicate-json-key",
+      "document": "{\"selected\":\"fixtures/source.rs\",\"selected\":\"fixtures/source.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "has no exact unescaped JSON value span"
+    },
+    {
+      "id": "nonstring-coordinate",
+      "document": "{\"selected\":42}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "must be a physical repository-relative path string"
+    },
+    {
+      "id": "escaped-value-span",
+      "document": "{\"selected\":\"fixtures/\\u0073ource.rs\"}",
+      "schemaVersion": null,
+      "coordinates": [
+        {
+          "pointer": "/selected",
+          "kind": "source"
+        }
+      ],
+      "error": "has no exact unescaped JSON value span"
+    }
+  ],
+  "coordinateValueEncoding": {
+    "algorithm": "sha256",
+    "lengthUnit": "utf8-byte",
+    "spanUnit": "utf16-code-unit",
+    "endExclusive": true
+  }
+}

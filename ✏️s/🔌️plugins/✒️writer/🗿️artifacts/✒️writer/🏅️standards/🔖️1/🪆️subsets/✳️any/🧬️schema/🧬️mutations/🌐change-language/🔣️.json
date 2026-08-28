@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language",
+  "semanticKind": "change-language",
+  "displayName": "Change Language",
+  "emoji": "🌐",
+  "aggregateVariant": "ChangeLanguage",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-language",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text"
+  ]
+}

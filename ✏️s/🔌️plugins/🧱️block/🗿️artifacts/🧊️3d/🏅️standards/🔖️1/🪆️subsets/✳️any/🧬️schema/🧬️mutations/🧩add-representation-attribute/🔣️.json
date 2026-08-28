@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute",
+  "semanticKind": "add-representation-attribute",
+  "displayName": "Add Representation Attribute",
+  "emoji": "🧩",
+  "aggregateVariant": "AddRepresentationAttribute",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "add-representation-attribute",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

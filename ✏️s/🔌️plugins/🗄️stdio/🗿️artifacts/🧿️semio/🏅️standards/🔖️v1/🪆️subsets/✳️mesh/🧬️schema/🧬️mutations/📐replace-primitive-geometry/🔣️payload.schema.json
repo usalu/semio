@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplacePrimitiveGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "colors",
+    "indices",
+    "meshId",
+    "normals",
+    "positions",
+    "primitiveId",
+    "uvs"
+  ],
+  "properties": {
+    "meshId": {
+      "type": "string"
+    },
+    "primitiveId": {
+      "type": "string"
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "title": "SemioPoint3",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "normals": {
+      "type": "array",
+      "items": {
+        "title": "SemioPoint3",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "z": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "uvs": {
+      "type": "array",
+      "items": {
+        "title": "SemioUv",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "u",
+          "v"
+        ],
+        "properties": {
+          "u": {
+            "type": "number"
+          },
+          "v": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "colors": {
+      "type": "array",
+      "items": {
+        "title": "SemioRgba",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "a",
+          "b",
+          "g",
+          "r"
+        ],
+        "properties": {
+          "r": {
+            "type": "number"
+          },
+          "g": {
+            "type": "number"
+          },
+          "b": {
+            "type": "number"
+          },
+          "a": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

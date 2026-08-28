@@ -1,0 +1,12 @@
+{
+  "layers": ["operation-decode", "payload-retirement", "decoder-close", "operation-retirement", "stream-decode", "stream-input-close", "stream-operation-retirement"],
+  "refusals": ["blocked", "rejected"],
+  "childBytes": 4096,
+  "overGrantBytes": 4097,
+  "releaseBytes": 64,
+  "transferBytes": 128,
+  "terminalLayers": ["decoder-close", "stream-input-close"],
+  "throwReason": "Native child close fault",
+  "failureKeepsOwner": true,
+  "zeroGrantChangesState": false
+}

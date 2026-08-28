@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. The mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so the (non-)oracle registration and the catalog live here. `s.note.note` is a semio-NATIVE artifact persisted as `.dsl.semio` text and `.pack.semio` binary through this subset's own codecs; no third party reads or writes either, so no oracle is registered — see noOracleDecisions below.",
   "oracles": [
     {
@@ -16,7 +16,146 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `s.note.note` document and all thirty-three typed mutations, in Python, at `../../../../../🧪️tests/mutate-note-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document's members and the six block kinds), rules 1, 2, 3, 5 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — including rule 5's `move-to-<container>` for re-parenting and rule 7's absolute `move`/`resize` against relative `drag` — and the thirty-three committed `(before, mutation, after, outcome)` vectors, which are the only statement of five things: that `drag-blocks` translates a named block AND ITS WHOLE SUBTREE; that `delete-asset` removes the `assets` MEMBER outright when it empties the table; that `insert-table-column` names the appended column by its spreadsheet letter; that the two `insert-table-*` verbs append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors; and how `duplicate-blocks` places its copies. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `note-document-mutation-semantics` no-oracle decision, whose argument was refuted in this same wave by `mutate-semio-drawing`, `mutate-semio-mesh` and the fifteen `📕️norm` references, all of which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: no canvas or whiteboard format models a z-ORDERED tree whose leaves are six differently-shaped typed blocks reached by different verbs, and none of them reads this carrier. TWO FINDINGS THE REFERENCE MADE WHILE BEING WRITTEN. First, `duplicate-blocks` computes each copy's insertion index against the PRE-MUTATION list and does not re-base it as earlier copies land: its committed vector duplicates `blk-ink` (root index 1) and `blk-table` (root index 2) in one mutation, and the committed after-snapshot orders the root `blk-text, blk-ink, blk-ink-copy, blk-table-COPY, blk-table, …` — the second copy lands BEFORE its own source, where the singular `duplicate-block` places its copy after. The reference reproduces the committed order and names the behaviour rather than quietly re-basing it. Second, the committed grammar and the committed artifact disagree, which is why `identity-round-trip` is refused below. THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and says so in role. `edit-block-text` in both roles: a text block does not hold its paragraphs, it holds a composed child handle into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving to a content address of the child AFTER the new paragraphs are written — a function no document in this repository states. Every OTHER verb over that same block is implemented. And `identity-round-trip`: unlike its `✒️writer`, `🌿️vcs` and `🔌️wires` siblings this subset commits a REAL grammar rather than the repository-wide `payload = OCTET+` placeholder, and grammar and artifact disagree on three points — `block = text-block | image-block | shape-block` covers three of the SIX declared block kinds, leaving stroke, table, math and group with no production at all; `block-field` names `paragraphs` and `asset-id` while the artifact writes neither and writes `content=child_id=… target=\"…\"`, a flattened nested record nothing bounds; and `artifact-mark = \"note.note\"` is contradicted by the artifact's own first line `semio note.note.dsl v1`. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
+      "rationale": "A second implementation of the `s.note.note` document and all thirty-three typed mutations, in Python, at `../../../../../🧪️tests/mutate-note-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document's members and the six block kinds), rules 1, 2, 3, 5 and 7 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md` — including rule 5's `move-to-<container>` for re-parenting and rule 7's absolute `move`/`resize` against relative `drag` — and the thirty-three committed `(before, mutation, after, outcome)` vectors, which are the only statement of five things: that `drag-blocks` translates a named block AND ITS WHOLE SUBTREE; that `delete-asset` removes the `assets` MEMBER outright when it empties the table; that `insert-table-column` names the appended column by its spreadsheet letter; that the two `insert-table-*` verbs append BLANK cells, which is what makes their inverses exact against the committed trailing-blank vectors; and how `duplicate-blocks` places its copies. It imports nothing from this repository and transliterates none of its Rust. This registration SUPERSEDES the `note-document-mutation-semantics` no-oracle decision, whose argument was refuted in this same wave by `mutate-semio-drawing`, `mutate-semio-mesh` and the fifteen `📕️norm` references, all of which took Python second implementations over this same carrier. A THIRD-PARTY library was declined, not merely absent: no canvas or whiteboard format models a z-ORDERED tree whose leaves are six differently-shaped typed blocks reached by different verbs, and none of them reads this carrier. TWO FINDINGS THE REFERENCE MADE WHILE BEING WRITTEN. First, `duplicate-blocks` computes each copy's insertion index against the PRE-MUTATION list and does not re-base it as earlier copies land: its committed vector duplicates `blk-ink` (root index 1) and `blk-table` (root index 2) in one mutation, and the committed after-snapshot orders the root `blk-text, blk-ink, blk-ink-copy, blk-table-COPY, blk-table, …` — the second copy lands BEFORE its own source, where the singular `duplicate-block` places its copy after. The reference reproduces the committed order and names the behaviour rather than quietly re-basing it. Second, the committed grammar and the committed artifact disagree, which is why `identity-round-trip` is refused below. THREE SCENARIOS THE REFERENCE REFUSES BY CLAUSE, and says so in role. `edit-block-text` in both roles: a text block does not hold its paragraphs, it holds a composed child handle into an `s.stdio.semio@v1/text` document, and the committed vector's whole observable effect is that handle's `childId` moving to a content address of the child AFTER the new paragraphs are written — a function no document in this repository states. Every OTHER verb over that same block is implemented. And `identity-round-trip`: unlike its `✒️writer`, `🌿️vcs` and `🔌️wires` siblings this subset commits a REAL grammar rather than the repository-wide `payload = OCTET+` placeholder, and grammar and artifact disagree on three points — `block = text-block | image-block | shape-block` covers three of the SIX declared block kinds, leaving stroke, table, math and group with no production at all; `block-field` names `paragraphs` and `asset-id` while the artifact writes neither and writes `content=child_id=… target=\"…\"`, a flattened nested record nothing bounds; and `artifact-mark = \"note.note\"` is contradicted by the artifact's own first line `semio note.note.dsl v1`. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `note-1-mutate`'s external-oracle requirement for its 33-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "dxf-crate-note-ink-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6",
+      "source": {
+        "repository": "https://github.com/IxMilia/dxf-rs",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "dxf-rs",
+        "implementation": "dxf crate ASCII group-code reader",
+        "version": "0.6"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.dxf",
+        "note.block.ink.geometry"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-dxf-ink-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/IxMilia/dxf-rs",
+      "rationale": "🖊️ THE CARRIER READER for note's DXF export, and already the qualifying reference `s.stdio.dxf@r12/✳️any` registers under `dxf-crate-r12-mutate` (this repository's `🔒️dependencies.json`) — reused here for the SAME crate reading the SAME `print_dxf_document` text this subset's own `NoteIntoDxf` serializer calls (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🖊️dxf/🔖️r12/✳️any/🦀️component.rs`), so nothing new is being asked of `dxf` — only a second registration of an already-qualified crate against a second subset's vocabulary.\n\nWHAT IT CAN AND CANNOT WITNESS, read from the serializer's own body rather than assumed. `NoteIntoDxf::serialize` walks `flatten_blocks(&from.blocks)` and emits a `DxfEntity::Line` for every consecutive pair of an `Ink` block's OWN `points` array — nothing else: `if let NoteBlockNode::Ink { points, .. } = block { for pair in points.windows(2) { entities.push(DxfEntity::Line { start: [pair[0][0], pair[0][1], 0.0], end: [pair[1][0], pair[1][1], 0.0], layer: \"0\".into(), unknown_group_codes: Vec::new() }); } }`. Three consequences, each MEASURED against the serializer body rather than guessed: (1) `points` are written RAW, with no `block.x`/`block.y`/`rotation` transform applied anywhere in this function — so `move-block`, `drag-blocks`, `resize-block` and `move-block-to-container` produce byte-IDENTICAL DXF output regardless of the mutation; only `edit-block-ink-stroke` (which rewrites `points` itself) and existence changes (`create-block`/`delete-block`/`delete-blocks`/`duplicate-block`/`duplicate-blocks` when they add or remove an Ink block) are witnessable. (2) `flatten_blocks` is never filtered by `block_visible` here — unlike the SVG bridge below — so `change-block-visible`/`change-block-locked` leave the DXF output unchanged even though the block visually disappears in SVG; this is a genuine cross-carrier inconsistency in the subject, not a limitation of the oracle, and is reported rather than worked around. (3) the `Line` entity carries no width/color field, so `change-block-ink-width` is invisible here (it IS visible via the SVG carrier's stroke-width style). Every other block kind (Text/Image/Table/Math/Group) and every document-root setting (grid/snap/pencil/eraser/rename-note) never reaches this serializer at all.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — dxf is test-only everywhere it is linked"
+      }
+    },
+    {
+      "id": "quick-xml-note-drawing-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "source": {
+        "repository": "https://github.com/tafia/quick-xml",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull-parser over the SVG 1.1 XML this subset exports",
+        "version": "0.42"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.svg",
+        "note.block.transform",
+        "note.block.text.content",
+        "note.block.visibility",
+        "note.block.ink.stroke-width",
+        "note.block.image.payload"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-svg-drawing-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "🎨️ THE RICHEST CARRIER for this subset. `NoteIntoSvg::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs`) delegates to `note_document_to_svg`, a REAL bridge (never a hand-rolled string): `note_document_to_drawing_snapshot` (`../🚪️io/🦀️component.rs`) walks `flatten_blocks(&document.blocks).filter(|b| block_visible(b))` — visibility IS honoured here, unlike the DXF path above — and wraps every surviving block's shape in `DrawNode::Group { transform: note_block_transform(block), .. }`, where `note_block_transform` reads the block's OWN `x`/`y`/`rotation` into a real translate+rotate transform. `write_svg_xml` then prints that transform as the `<g transform=\"…\">` this probe reads back with quick-xml.\n\nPER-BLOCK-KIND WITNESSABILITY, read from `draw_node_from_note_block`. `Ink` → a real `<path>` (stroke geometry AND `stroke-width`, so `edit-block-ink-stroke` and `change-block-ink-width` are BOTH witnessable here, the second only here). `Text` → a real `<text>` element holding the joined paragraph text (`edit-block-text` witnessable) BUT `font_size` is wired to the glyph's `y` COORDINATE (`at: SemioPoint2 { x: 0.0, y: *font_size }`), never to a font-size style property — `change-block-font-size` therefore moves the baseline rather than changing any rendered size, a genuine subject bug this oracle exposes rather than one it can quietly confirm, so it is registered as unsupported/excluded from this mutation despite being numerically visible. `Image` → a real `<image>` with the asset's own bytes when the referenced asset exists (`create-asset`/`replace-asset-payload`/`delete-asset` witnessable ONLY when a visible Image block references that asset key), else a generic outline rectangle. `Table`/`Math`/`Group` → ALWAYS a generic gray outline rectangle keyed only to `width`/`height` — cell/formula CONTENT is invisible by construction (`edit-block-math` and the four table row/column verbs are un-witnessable here because their diffs mutate `rows`/`columns`/`cells`, never `width`/`height` — confirmed by reading `insert-table-row`'s own diff). `change-block-locked`, `rename-block` and `rename-note` have no rendered representation anywhere in this bridge.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — quick-xml is test-only everywhere it is linked"
+      }
+    },
+    {
+      "id": "lopdf-note-text-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf content-stream text extraction",
+        "version": "0.44"
+      },
+      "capabilities": [
+        "note-1-mutate",
+        "note.carrier.pdf",
+        "note.document.title",
+        "note.block.text.content"
+      ],
+      "comparisonProfiles": [
+        "semantic-note-pdf-text-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "📄️ `lopdf` is ALREADY an approved test-oracle in this repository (`🔒️dependencies.json` — capabilities `pdf-edit`/`pdf-parse`, linked into the very crate `../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml` this registration reuses); this entry is a second registration of that crate against `note-1-mutate` rather than a new dependency.\n\n`NoteIntoPdf::serialize` (`../🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs`) flattens the document's `title` (if any) followed by EVERY `Text` block's paragraph runs, space-joined, onto ONE `PdfPage.text` field of a single-page `PdfSnapshot` — real page geometry (`PageDoc`/`w`/`h`) and a real `encode_pdf`, never a stub. Two consequences read directly from that body: (1) `rename-note` IS witnessable here — the title is the first thing concatenated — even though it is invisible to both DXF and SVG. (2) exactly like the DXF path, `flatten_blocks` here is never filtered by `block_visible`, so `change-block-visible` on a Text block leaves the PDF text unchanged (the same cross-carrier inconsistency the DXF entry reports, independently confirmed on a second serializer). Position, block existence order beyond concatenation order, and every non-Text block kind (Ink/Image/Table/Math/Group) are invisible: the serializer never reads their fields at all.",
+      "productionDebt": {
+        "reachableFrom": [],
+        "owner": "✏️s/🔌️plugins/🗒️note",
+        "plan": "n/a — lopdf is test-only everywhere it is linked"
+      }
     }
   ],
   "noOracleDecisions": [],
@@ -425,6 +564,705 @@
         "remove-table-row",
         "insert-table-column",
         "remove-table-column"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-note-dxf-ink-v1",
+      "description": "note→DXF compared by the SET of Line entities' (start,end) coordinate pairs the Ink blocks produce. Layer name, group codes and entity order are writer freedom. Position/rotation/visibility/lock/width are NOT carried by this serializer and are out of this profile's scope by construction.",
+      "tolerance": 1e-9,
+      "arrays": "set",
+      "ignoreKeys": [
+        "layer",
+        "unknownGroupCodes"
+      ]
+    },
+    {
+      "id": "semantic-note-svg-drawing-v1",
+      "description": "note→SVG compared by each surviving (visible) block's kind, its <g transform=\"…\"> translate+rotate, and kind-specific content: Ink path d + stroke-width, Text joined value, Image mime+bytes when a referenced asset exists, Table/Math/Group outline width/height. Style ids, path command formatting and XML attribute order are writer freedom.",
+      "tolerance": 1e-9,
+      "ignoreKeys": [
+        "styleId",
+        "id"
+      ]
+    },
+    {
+      "id": "semantic-note-pdf-text-v1",
+      "description": "note→PDF compared by the single page's extracted text stream (title + space-joined Text block runs, in document order) and page width/height. Object numbers, xref layout, compression and PDF producer metadata are writer freedom.",
+      "ignoreKeys": [
+        "objectNumber",
+        "xrefOffset",
+        "producer",
+        "creationDate",
+        "modificationDate",
+        "documentId",
+        "fileSize",
+        "byteLength",
+        "generation",
+        "streamFilter",
+        "streamLength"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.note.note",
+      "standard": "1",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-block-font-size",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-block-font-size",
+            "bridgeVersion": 1,
+            "variant": "ChangeBlockFontSize"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-block-ink-width",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-block-ink-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeBlockInkWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-block-locked",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-block-locked",
+            "bridgeVersion": 1,
+            "variant": "ChangeBlockLocked"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-block-visible",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-block-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangeBlockVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-eraser-radius",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-eraser-radius",
+            "bridgeVersion": 1,
+            "variant": "ChangeEraserRadius"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grid-opacity",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grid-opacity",
+            "bridgeVersion": 1,
+            "variant": "ChangeGridOpacity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grid-spacing",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grid-spacing",
+            "bridgeVersion": 1,
+            "variant": "ChangeGridSpacing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grid-subdivisions",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grid-subdivisions",
+            "bridgeVersion": 1,
+            "variant": "ChangeGridSubdivisions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-grid-visible",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-grid-visible",
+            "bridgeVersion": 1,
+            "variant": "ChangeGridVisible"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-pencil-width",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-pencil-width",
+            "bridgeVersion": 1,
+            "variant": "ChangePencilWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-snap-enabled",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-snap-enabled",
+            "bridgeVersion": 1,
+            "variant": "ChangeSnapEnabled"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-snap-grid-spacing",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-snap-grid-spacing",
+            "bridgeVersion": 1,
+            "variant": "ChangeSnapGridSpacing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-asset",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-asset",
+            "bridgeVersion": 1,
+            "variant": "CreateAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "create-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "create-block",
+            "bridgeVersion": 1,
+            "variant": "CreateBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-asset",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-asset",
+            "bridgeVersion": 1,
+            "variant": "DeleteAsset"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-block",
+            "bridgeVersion": 1,
+            "variant": "DeleteBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "delete-blocks",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "delete-blocks",
+            "bridgeVersion": 1,
+            "variant": "DeleteBlocks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "drag-blocks",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "drag-blocks",
+            "bridgeVersion": 1,
+            "variant": "DragBlocks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "duplicate-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "duplicate-block",
+            "bridgeVersion": 1,
+            "variant": "DuplicateBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "duplicate-blocks",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "duplicate-blocks",
+            "bridgeVersion": 1,
+            "variant": "DuplicateBlocks"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-block-ink-stroke",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-block-ink-stroke",
+            "bridgeVersion": 1,
+            "variant": "EditBlockInkStroke"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-block-math",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-block-math",
+            "bridgeVersion": 1,
+            "variant": "EditBlockMath"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "edit-block-text",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "edit-block-text",
+            "bridgeVersion": 1,
+            "variant": "EditBlockText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-table-column",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-table-column",
+            "bridgeVersion": 1,
+            "variant": "InsertTableColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-table-row",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-table-row",
+            "bridgeVersion": 1,
+            "variant": "InsertTableRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-block",
+            "bridgeVersion": 1,
+            "variant": "MoveBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "move-block-to-container",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "move-block-to-container",
+            "bridgeVersion": 1,
+            "variant": "MoveBlockToContainer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-table-column",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-table-column",
+            "bridgeVersion": 1,
+            "variant": "RemoveTableColumn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-table-row",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-table-row",
+            "bridgeVersion": 1,
+            "variant": "RemoveTableRow"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-block",
+            "bridgeVersion": 1,
+            "variant": "RenameBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "rename-note",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "rename-note",
+            "bridgeVersion": 1,
+            "variant": "RenameNote"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-asset-payload",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-asset-payload",
+            "bridgeVersion": 1,
+            "variant": "ReplaceAssetPayload"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "resize-block",
+          "capability": "note-1-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "rejected",
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "resize-block",
+            "bridgeVersion": 1,
+            "variant": "ResizeBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "note-1-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

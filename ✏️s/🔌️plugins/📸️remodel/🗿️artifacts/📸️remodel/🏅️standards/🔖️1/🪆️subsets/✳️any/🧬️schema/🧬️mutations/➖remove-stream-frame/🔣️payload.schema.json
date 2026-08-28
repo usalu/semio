@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveStreamFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frameIndex",
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "frameIndex": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSheetTMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSheetTMm"
+  ],
+  "properties": {
+    "newSheetTMm": {
+      "type": "number"
+    }
+  }
+}

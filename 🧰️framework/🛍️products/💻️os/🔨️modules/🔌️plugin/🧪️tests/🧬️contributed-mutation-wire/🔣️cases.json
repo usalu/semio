@@ -1,0 +1,23 @@
+{
+  "payloads": [
+    { "operation": "addValue", "delta": 5 },
+    { "operation": "addValue", "delta": -2147483648 },
+    { "operation": "addValue", "delta": 0 }
+  ],
+  "invalidPayloads": [
+    {},
+    { "operation": "addValue" },
+    { "delta": 5 },
+    { "operation": "add", "delta": 5 },
+    { "operation": "addValue", "delta": 0.5 },
+    { "operation": "addValue", "delta": 2147483648 },
+    { "operation": "addValue", "delta": -2147483649 },
+    { "operation": "addValue", "delta": 5, "unknown": true }
+  ],
+  "diffs": [
+    { "base": 7, "deltas": [5], "result": 12, "inverse": [-5] },
+    { "base": 0, "deltas": [-2147483648], "result": -2147483648, "inverse": [1, 2147483647] },
+    { "base": 1, "deltas": [2147483647, -2147483647], "error": "overflow" },
+    { "base": 0, "deltas": [2147483647, -2147483647], "result": 0, "inverse": [-2147483647, 2147483647] }
+  ]
+}

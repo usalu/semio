@@ -5,17 +5,11 @@
   "additionalProperties": false,
   "required": [
     "cameraJson",
-    "selectedIds",
     "locale"
   ],
   "properties": {
     "cameraJson": {
       "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectedIds": {
-      "type": "array",
-      "items": { "type": "string" },
       "x-semio-state": "config"
     },
     "locale": {

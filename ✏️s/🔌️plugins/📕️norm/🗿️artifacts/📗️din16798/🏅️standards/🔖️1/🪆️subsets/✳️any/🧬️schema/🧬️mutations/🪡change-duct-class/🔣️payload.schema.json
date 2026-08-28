@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDuctClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDuctClass"
+  ],
+  "properties": {
+    "newDuctClass": {
+      "type": "string"
+    }
+  }
+}

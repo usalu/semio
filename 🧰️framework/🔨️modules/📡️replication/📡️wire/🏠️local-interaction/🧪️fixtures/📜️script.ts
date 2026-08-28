@@ -53,6 +53,72 @@ for (const mutate of [
 console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} hostileRejections=9 oracle=immer semanticKeyBytes=${Buffer.byteLength(Object.keys(large.expected.selection)[0])} nativeRuntimeClaims=0`);
 //#endregion 🧬️Contract
 
+//#region 🌳️RetainedRootContract
+const rootFixture = await Bun.file(new URL("../🌳️root/🧪️fixture.json", import.meta.url)).json();
+const rootSchema = await Bun.file(new URL("../🌳️root/🧪️schema.json", import.meta.url)).json();
+const validateRoot = ajv.compile(rootSchema);
+assert(validateRoot(rootFixture), JSON.stringify(validateRoot.errors));
+for (const invalid of [
+  { ...rootFixture, privateDomainIsCaptured: false },
+  { ...rootFixture, anchorIsCaptured: false },
+  { ...rootFixture, commaIdIsSplit: true },
+  { ...rootFixture, zeroGrantChangesOwner: true },
+  { ...rootFixture, coldDecodeEarnsInteractiveCredit: true },
+]) assert(!validateRoot(invalid));
+function rootStringBytes(state: typeof fixture.cases[number]["before"]): number {
+  const selectionBytes = sumBy(Object.entries(state.selection), ([domain, value]: [string, any]) => Buffer.byteLength(domain) + Buffer.byteLength(value.granularity) + sumBy(value.ids, (id: string) => Buffer.byteLength(id)) + (value.anchorId === undefined ? 0 : Buffer.byteLength(value.anchorId)));
+  return selectionBytes + sumBy(Object.keys(state.activeMode), (domain: string) => Buffer.byteLength(domain)) + sumBy(Object.entries(state.activeGranularity), ([domain, value]: [string, any]) => Buffer.byteLength(domain) + Buffer.byteLength(value));
+}
+const rootSource = fixture.cases.find((row: any) => row.id === rootFixture.sourceCase).before;
+const largeRootSource = fixture.cases.find((row: any) => row.id === rootFixture.largeSourceCase).expected;
+assert.equal(rootStringBytes(rootSource), rootFixture.finalOwnerRetiredBytes);
+assert.equal(rootStringBytes(largeRootSource), rootFixture.largeFinalOwnerRetiredBytes);
+assert(rootFixture.largeFinalOwnerRetiredBytes > 4096);
+assert.deepEqual(produce(rootSource, () => {}), rootSource);
+assert(rootSource.selection.private && rootSource.selection.graph.anchorId === "b" && rootSource.selection.graph.ids[0] === "a,comma");
+console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=${rootFixture.finalOwnerRetiredBytes}/${rootFixture.largeFinalOwnerRetiredBytes} hostileRejections=5 nativeRuntimeClaims=0`);
+//#endregion 🌳️RetainedRootContract
+
+//#region 🩹️RetainedUpdateContract
+const updateFixture = await Bun.file(new URL("../🌳️root/🩹️update/🧪️fixture.json", import.meta.url)).json();
+const updateSchema = await Bun.file(new URL("../🌳️root/🩹️update/🧪️schema.json", import.meta.url)).json();
+const validateUpdate = ajv.compile(updateSchema);
+assert(validateUpdate(updateFixture), JSON.stringify(validateUpdate.errors));
+for (const field of ["partialCandidateReadable", "cancelPublishesCandidate", "comparisonBytesAreRetiredBytes", "zeroGrantMutates"]) assert(!validateUpdate({ ...updateFixture, [field]: true }));
+assert(!validateUpdate({ ...updateFixture, domainKeyCopies: 1 }));
+const cancelSource = fixture.cases.find((row: any) => row.id === updateFixture.cancelSourceCase);
+const [cancelDomain, cancelPatch] = Object.entries<any>(cancelSource.restore.domains)[0];
+const patchBytes = Buffer.byteLength(cancelDomain) + Buffer.byteLength(cancelPatch.activeGranularity) + Buffer.byteLength(cancelPatch.selection.granularity) + sumBy(cancelPatch.selection.ids, (id: string) => Buffer.byteLength(id)) + Buffer.byteLength(cancelPatch.selection.anchorId);
+assert.equal(rootStringBytes(cancelSource.before) + patchBytes, updateFixture.cancelOwnedStringBytes);
+for (const name of updateFixture.cases) {
+  const row = fixture.cases.find((row: any) => row.id === name);
+  const oracle = produce(row.before, (draft: any) => {
+    for (const [domain, patch] of Object.entries<any>(row.restore.domains)) for (const field of ["selection", "activeMode", "activeGranularity"]) {
+      if (patch[field] === null) delete draft[field][domain];
+      else draft[field][domain] = patch[field];
+    }
+  });
+  assert.deepEqual(oracle, row.expected);
+}
+console.log(`[DEBUG] Local-interaction retained-update cases=${updateFixture.cases.length} cancelBytes=${updateFixture.cancelOwnedStringBytes} hostileRejections=5 oracle=immer+lodash nativeRuntimeClaims=0`);
+//#endregion 🩹️RetainedUpdateContract
+
+//#region 🔁️InteractionMutationLeaf
+const mutationLeaf = new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/", import.meta.url);
+const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
+const mutationSchema = await Bun.file(new URL("🧬️schema/🔣️.json", mutationLeaf)).json();
+const mutationFixture = await Bun.file(new URL("🧪️fixture.json", mutationLeaf)).json();
+const validateMutation = ajv.compile(mutationSchema);
+assert(validateMutation(mutationFixture), JSON.stringify(validateMutation.errors));
+assert.equal(Object.keys(mutationDescriptor).length, 14);
+assert.equal(mutationDescriptor.textOpcode, "set-interaction-state");
+assert.equal(mutationDescriptor.binaryTag, null);
+assert(mutationDescriptor.owner.endsWith("/🕹️interaction/🧬️mutations/🔁️set-state"));
+assert.deepEqual(JSON.parse(Buffer.from(JSON.stringify(mutationFixture), "utf8").toString("utf8")), produce(mutationFixture, () => {}));
+for (const invalid of [{ ...mutationFixture, localInteraction: {} }, { ...mutationFixture, activeMode: { graph: "invalid" } }, { ...mutationFixture, selection: { graph: { granularity: "node", ids: [1] } } }]) assert(!validateMutation(invalid));
+console.log("[DEBUG] Interaction mutation leaf schema=actual-four-field-stored-state descriptorFields=14 hostileRejections=3 oracle=ajv+immer nativeCodecClaims=0");
+//#endregion 🔁️InteractionMutationLeaf
+
 //#region ♻️RetirementContract
 const retirement = await Bun.file(new URL("./♻️retirement.json", import.meta.url)).json();
 const retirementSchema = await Bun.file(new URL("./♻️retirement.schema.json", import.meta.url)).json();

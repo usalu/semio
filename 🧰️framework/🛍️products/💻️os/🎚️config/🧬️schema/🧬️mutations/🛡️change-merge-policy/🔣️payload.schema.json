@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MergePolicySetting",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy"
+  ],
+  "properties": {
+    "policy": {
+      "title": "MergePolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxRunsBeforeMerge"
+      ],
+      "properties": {
+        "maxRunsBeforeMerge": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

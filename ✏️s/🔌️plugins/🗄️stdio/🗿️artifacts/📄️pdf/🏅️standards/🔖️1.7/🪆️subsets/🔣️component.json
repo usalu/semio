@@ -2,12 +2,14 @@
   "artifact": "s.stdio.pdf",
   "standard": "1.7",
   "subsets": {
-    "*": {
-      "name": "Unconstrained pdf 1.7"
-    },
     "a": {
       "name": "PDF/A -- ISO 19005-2:2011 (PDF/A-2) / ISO 19005-3:2012 (PDF/A-3); conformance level is analyzer-detected data (stdio.pdf.a.level), not part of the subset id",
-      "levels": ["2b", "2u", "3b", "3u"]
+      "levels": [
+        "2b",
+        "2u",
+        "3b",
+        "3u"
+      ]
     },
     "x": {
       "name": "PDF/X-4 -- ISO 15930-7:2010, based on PDF 1.6/1.7"
@@ -23,6 +25,9 @@
     },
     "h": {
       "name": "PDF/H -- AIIM/ASTM PDF Healthcare Best Practices Guide (2008); industry best-practice, never ISO; all-soft profile, no hard checks"
+    },
+    "base": {
+      "name": "ISO 32000-1 base surface (PDF 1.7), the scope every conformance profile builds on"
     }
   }
 }

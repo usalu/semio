@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "allocationGrant": 32768,
+  "workGrant": 32768,
+  "runtimeWorkGrant": 4096,
+  "separateAllocationAndRootTransfers": true,
+  "byteCancelFrontiers": [0, 1, 2, 3, 4, 5, 8, 12, 16, 32],
+  "allocatorMultiplier": 2,
+  "componentCount": 18,
+  "listItems": 32,
+  "text": "é",
+  "textRepeats": 256,
+  "closeGrants": [1, 64, 4096],
+  "cancelFrontiers": [0, 1, 2, 5, 16, 64, 128, 256],
+  "partialCandidateReadable": false,
+  "sourceUnchanged": true
+}

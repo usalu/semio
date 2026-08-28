@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveCamera3d",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newPosition",
+    "newTarget"
+  ],
+  "properties": {
+    "newPosition": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "newTarget": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

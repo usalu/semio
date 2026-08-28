@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.plugin.close-construction.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "events", "states", "atWorkerShellExactLiveAllocation", "constructionFailure", "allocationGrantProven", "descendantCloseProven"],
+  "properties": {
+    "version": {"const": 1},
+    "events": {"const": ["live", "workerShell", "quarantine"]},
+    "states": {"const": [
+      {"liveOwner": true, "workerShell": false, "quarantineOwner": false},
+      {"liveOwner": true, "workerShell": true, "quarantineOwner": false},
+      {"liveOwner": false, "workerShell": true, "quarantineOwner": true}
+    ]},
+    "atWorkerShellExactLiveAllocation": {"const": true},
+    "constructionFailure": {"const": {"phase": "before-worker-allocation", "liveOwner": true, "generationUnchanged": true, "sameAllocation": true, "actualAllocatorFailureProven": false}},
+    "allocationGrantProven": {"const": false},
+    "descendantCloseProven": {"const": false}
+  }
+}

@@ -4,25 +4,15 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "layerVisibility",
     "cameraJson",
     "renderMode",
     "vectorStyle",
     "lodMode",
-    "featureSelectionJson",
-    "hoverJson",
-    "selectionMethod",
-    "selectionMode",
     "layerStrokeScale",
     "locale"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "config"
-    },
     "layerVisibility": {
       "type": "object",
       "additionalProperties": { "type": "boolean" },
@@ -41,22 +31,6 @@
       "x-semio-state": "config"
     },
     "lodMode": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "featureSelectionJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "hoverJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "selectionMode": {
       "type": "string",
       "x-semio-state": "config"
     },

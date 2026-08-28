@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBedJointThicknessMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBedJointThicknessMm"
+  ],
+  "properties": {
+    "newBedJointThicknessMm": {
+      "type": "number"
+    }
+  }
+}

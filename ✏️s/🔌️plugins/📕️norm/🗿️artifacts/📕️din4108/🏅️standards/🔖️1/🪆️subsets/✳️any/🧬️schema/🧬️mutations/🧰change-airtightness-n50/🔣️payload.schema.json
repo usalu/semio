@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAirtightnessN50",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAirtightnessN50"
+  ],
+  "properties": {
+    "newAirtightnessN50": {
+      "type": "number"
+    }
+  }
+}

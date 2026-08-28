@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ TSV IANA/✳️any's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required. Reuses the already-linked `csv` crate (the shared stdio manifest's `csv` entry covers RFC 4180 creation only, capability `tabular-csv`; this subset registers its own id for `tsv-iana-mutate` instead of reusing that entry, which would fail the contract's oracle-capability-mismatch check), reconfigured for IANA TSV: tab delimiter, no quoting at all (`QuoteStyle::Never` on write, `quoting(false)` on read) — TSV has no escaping mechanism, unlike RFC 4180 CSV.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "csv",
       "version": "1",
-      "capabilities": ["tsv-iana-mutate"],
-      "comparisonProfiles": ["semantic-tabular-mutate-v1"],
+      "capabilities": [
+        "tsv-iana-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-tabular-mutate-v1"
+      ],
       "license": "MIT OR Unlicense",
       "testOnly": true,
       "homepage": "https://github.com/BurntSushi/rust-csv",
       "rationale": "The same reference reader/writer of the Rust ecosystem the shared `csv` entry already uses for RFC 4180, reconfigured here for IANA text/tab-separated-values: tab delimiter, quoting disabled entirely on both read and write. IANA TSV (https://www.iana.org/assignments/media-types/text/tab-separated-values) draws no header/data distinction and has no quoting/escaping mechanism, so a field can never legally carry a literal tab or newline byte; this subset's real fixture was checked for both at derivation time and carries neither. Drives every declared `TsvMutation` kind independently of this repository's own byte-exact split/rejoin codec, including the two real serialization concerns this subset's vocabulary makes substantive: `set-trailing-newline` and `set-line-ending` genuinely add/remove/rewrite bytes, so `semantic-tabular-mutate-v1` keeps both fields live in the comparison instead of ignoring them the way the base `semantic-tabular-v1` profile does for RFC 4180's writer-freedom equivalents.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "csv",
+        "implementation": "csv Rust RFC 4180 reader/writer",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -36,7 +48,15 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-trailing-newline",
+        "set-line-ending",
+        "insert-row",
+        "remove-row",
+        "set-cell"
+      ]
     }
   ],
   "noOracleDecisions": [],
@@ -44,7 +64,9 @@
     {
       "id": "semantic-tabular-mutate-v1",
       "description": "TSV tables compared by the full record grid PLUS the trailing-newline and line-ending choices as normative fields. Differs from the base `semantic-tabular-v1` profile only in that `trailingNewline` and `lineTerminator` are NOT ignored: this subset's vocabulary declares `set-trailing-newline` and `set-line-ending` as real mutation kinds that genuinely rewrite bytes (IANA TSV has no header/data distinction to make substantive the way RFC 4180's `has_header` convention does, so its own real serialization concerns fill that role instead), and they have to actually participate in the comparison or those scenarios are no-ops.",
-      "ignoreKeys": ["byteLength"]
+      "ignoreKeys": [
+        "byteLength"
+      ]
     }
   ]
 }

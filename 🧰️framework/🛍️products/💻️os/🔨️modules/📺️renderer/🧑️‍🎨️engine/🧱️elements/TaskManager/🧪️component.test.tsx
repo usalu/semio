@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaskManagerTableScene, createTaskManagerDispatcher, taskManagerColumns, taskManagerRowAction, taskManagerRows, TaskManagerPanel, type TaskManagerLabels, type TaskManagerRow } from "./🟦️component.tsx";
 import { ActivationRegistry, type ShardBudget } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
 import { ShardClient, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Fixtures
@@ -123,6 +124,7 @@ const BUDGET: ShardBudget = { fuel: 1000, wallMs: 4, memoryBytes: 1 << 20, uiNod
 
 function autoReplyingShardClient(): ShardClient {
   return new ShardClient({
+    residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }),
     shardCount: 1,
     createWorker: () => {
       const worker: ShardWorkerLike = {

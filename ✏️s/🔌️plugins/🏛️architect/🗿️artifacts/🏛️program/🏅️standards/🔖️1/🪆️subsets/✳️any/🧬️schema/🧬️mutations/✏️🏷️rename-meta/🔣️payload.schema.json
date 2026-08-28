@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenameMeta",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTitle"
+  ],
+  "properties": {
+    "newTitle": {
+      "type": "string"
+    }
+  }
+}

@@ -1,14 +1,19 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution. The ✳️any sibling registers `image` 0.25 for the DOCUMENT vocabulary, composed with its own hand-rolled IFD-chain reader; this conformance-class vocabulary registers no oracle of its own — see noOracleDecisions for why a class verdict is not a thing any package can adjudicate, and why four of its six kinds could not be measured at the byte level regardless.",
   "oracles": [],
   "noOracleDecisions": [
     {
       "id": "tiff-6-0-baseline-conformance-class-semantics",
-      "capabilities": ["tiff-6-0-baseline-mutate"],
+      "capabilities": [
+        "tiff-6-0-baseline-mutate"
+      ],
       "rationale": "Two independent reasons. (1) THE QUESTION IS NOT ONE A PACKAGE ANSWERS. This vocabulary asks whether a decoded document is inside Adobe TIFF 6.0 Part 1's Baseline class, read on five specific fields of IFD 0 — `Compression` (259) restricted to {1, 2, 32773}, `PhotometricInterpretation` (262) to 0..=3, `BitsPerSample` (258) to {1, 4, 8}, `TileWidth`/`TileLength` (322/323) absent because Baseline is strip-organized, and `StripOffsets` (273) present when it is not tiled. `image` 0.25's TIFF surface is a single-IFD raster codec: it decodes pixels and re-encodes them under its own choice of those very tags, and exposes no API to set an arbitrary compression, an out-of-range photometric or a tile-organized IFD. It could not perform any row of this vocabulary, and it holds no opinion about class membership to be compared against. (2) FOUR OF SIX KINDS ARE NOT BYTE-OBSERVABLE THROUGH THIS REPOSITORY'S OWN ENCODER EITHER: `encode_tiff` regenerates every one of `CORE_STRIP_TAGS` from the raster it is about to write, so `set-compression`, `set-photometric-interpretation`, `set-bits-per-sample` and `set-strip-offsets` are normalized away on re-serialization — a documented property of the codec, stated in the vocabulary's own module docstring, and the same constraint PNG's IHDR is under. Only the two tile kinds survive, because `TileWidth`/`TileLength` sit outside `CORE_STRIP_TAGS` and are carried verbatim. The substitutes are therefore TIFF 6.0's own tag-value tables read against `check_tiff_baseline_conformance`, which is where the class verdict lives, plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-tiff-6-0-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim for those four kinds; its `identity-round-trip` does re-encode, and reads both sides through the independent IFD reader the ✳️any subset registers.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -18,7 +23,17 @@
       "standardDirectoryName": "🔖️6.0",
       "subsetDirectoryName": "✳️baseline",
       "vectors": [],
-      "kinds": ["no-mutation", "set-snapshot", "set-compression", "set-photometric-interpretation", "set-bits-per-sample", "insert-tile-tags", "remove-tile-tags", "set-strip-offsets", "remove-strip-offsets"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-compression",
+        "set-photometric-interpretation",
+        "set-bits-per-sample",
+        "insert-tile-tags",
+        "remove-tile-tags",
+        "set-strip-offsets",
+        "remove-strip-offsets"
+      ]
     }
   ]
 }

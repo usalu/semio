@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cases", "fault"],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["leaf", "owners", "grants"],
+        "properties": {
+          "leaf": { "enum": ["AddWidget", "RemoveWidget", "MoveWidget", "ChangeWidget", "AddSynapse", "RemoveSynapse", "MoveSynapse", "ChangeSynapse", "ChangeLayout", "ReplaceFlowFixture"] },
+          "owners": { "type": "array", "minItems": 1, "items": { "enum": ["Widget", "Bytes", "Specs", "Layout", "Fixture"] } },
+          "grants": {
+            "type": "array",
+            "minItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["items", "bytes", "result"],
+              "properties": {
+                "items": { "type": "integer", "minimum": 0 },
+                "bytes": { "type": "integer", "minimum": 0 },
+                "result": { "enum": ["blocked", "handoff", "nested", "complete"] }
+              }
+            }
+          }
+        }
+      }
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["injected", "productionObserved", "ownershipRetained"],
+      "properties": {
+        "injected": { "const": true },
+        "productionObserved": { "const": false },
+        "ownershipRetained": { "const": true }
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceQc",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "qc": {
+      "title": "QcReportSnapshot",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "denseCoverageRatio",
+        "meanTrackLength",
+        "registeredFrameRatio",
+        "reprojectionRmsPx",
+        "warnings"
+      ],
+      "properties": {
+        "reprojectionRmsPx": {
+          "type": "number"
+        },
+        "gcpCheckpointRmse": {
+          "type": "number"
+        },
+        "watertight": {
+          "title": "WatertightReportSnapshot",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "boundaryEdgeCount",
+            "boundaryLoopCount",
+            "closedFallbackUsed",
+            "connectedComponents",
+            "consistentlyOriented",
+            "eulerCharacteristic",
+            "isClosed",
+            "isTwoManifold",
+            "isWatertight",
+            "nonManifoldEdgeCount",
+            "nonManifoldVertexCount",
+            "signedVolume",
+            "triangleCount",
+            "vertexCount"
+          ],
+          "properties": {
+            "vertexCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "triangleCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "boundaryEdgeCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "boundaryLoopCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nonManifoldEdgeCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "nonManifoldVertexCount": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "connectedComponents": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "consistentlyOriented": {
+              "type": "boolean"
+            },
+            "eulerCharacteristic": {
+              "type": "integer"
+            },
+            "genus": {
+              "type": "integer"
+            },
+            "signedVolume": {
+              "type": "number"
+            },
+            "selfIntersectionPairs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "closedFallbackUsed": {
+              "type": "boolean"
+            },
+            "isClosed": {
+              "type": "boolean"
+            },
+            "isTwoManifold": {
+              "type": "boolean"
+            },
+            "isWatertight": {
+              "type": "boolean"
+            }
+          }
+        },
+        "meanTrackLength": {
+          "type": "number"
+        },
+        "registeredFrameRatio": {
+          "type": "number"
+        },
+        "denseCoverageRatio": {
+          "type": "number"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

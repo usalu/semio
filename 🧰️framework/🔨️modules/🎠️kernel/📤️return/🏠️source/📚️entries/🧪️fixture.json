@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "fifo": [3, 1, 4, 1, 5, 9],
+  "maximumEntries": 6,
+  "cancelAfterFreezeItems": 2,
+  "unwindPayloadBytes": 8193,
+  "grants": ["zero", "requiredMinusOne", "required"],
+  "laws": {
+    "allocationBeforePlacement": true,
+    "sourceMovedOnBlockedPlacement": false,
+    "repeatedReservationAllocates": false,
+    "payloadCloned": false,
+    "freezeVisitsOneNode": true,
+    "occupiedHandoffTargetMutatesSource": false,
+    "emptyReservedBackingLostOnCancel": false,
+    "entryReleaseDropsLivePayload": false,
+    "entryTransferClaimsPayloadRetirement": false,
+    "maximumIsCallerBudget": true,
+    "overAdmissionErrorRetainsActualBacking": true,
+    "placementOccursInsideUnwindingCallback": true
+  }
+}

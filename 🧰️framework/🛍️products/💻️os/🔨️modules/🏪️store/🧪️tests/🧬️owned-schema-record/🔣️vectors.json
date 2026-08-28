@@ -1,0 +1,47 @@
+{
+  "outer": {
+    "fields": {
+      "required": ["schema", "id"],
+      "optional": ["quote\"", "slash\\", "control\u0001", "asciiA", "escaped/\b\f\n\r\t"]
+    },
+    "valid": [
+      {"name": "literal required keys", "source": "{\"schema\":\"v1\",\"id\":\"document\"}"},
+      {"name": "escaped equivalent ASCII keys", "source": "{\"sch\\u0065ma\":\"v1\",\"i\\u0064\":\"document\"}"},
+      {"name": "escaped quote backslash control and ASCII keys", "source": "{\"schema\":\"v1\",\"id\":\"document\",\"quote\\u0022\":\"quote\",\"slash\\u005c\":\"slash\",\"control\\u0001\":\"control\",\"ascii\\u0041\":\"ascii\"}"},
+      {"name": "short escapes and uppercase unicode hex", "source": "{\"schema\":\"v1\",\"id\":\"document\",\"quote\\\"\":\"quote\",\"slash\\u005C\":\"slash\",\"escaped\\/\\b\\f\\n\\r\\t\":\"controls\"}"},
+      {"name": "short backslash escape", "source": "{\"schema\":\"v1\",\"id\":\"document\",\"slash\\\\\":\"slash\"}"},
+      {"name": "escaped values", "source": "{\"schema\":\"quote \\\" slash \\\\ control \\u0001 ascii \\u0041\",\"id\":\"document\"}"},
+      {"name": "leading and trailing whitespace", "source": " \n\t{\"schema\":\"v1\",\"id\":\"document\"}\r\n "}
+    ],
+    "invalid": [
+      {"name": "duplicate literal key", "source": "{\"schema\":\"v1\",\"schema\":\"v2\",\"id\":\"document\"}", "referenceCode": "schema-json.duplicate-field", "nativeCode": "schema-json.duplicate-field"},
+      {"name": "duplicate escaped equivalent key", "source": "{\"schema\":\"v1\",\"sch\\u0065ma\":\"v2\",\"id\":\"document\"}", "referenceCode": "schema-json.duplicate-field", "nativeCode": "schema-json.duplicate-field"},
+      {"name": "required key omitted", "source": "{\"schema\":\"v1\"}", "referenceCode": "schema-json.missing-required-field", "nativeCode": "schema-json.missing-required-field"},
+      {"name": "unknown key", "source": "{\"schema\":\"v1\",\"unknown\":0,\"id\":\"document\"}", "referenceCode": "schema-json.unknown-field", "nativeCode": "schema-json.unknown-field"},
+      {"name": "unicode must not truncate to an ASCII key", "source": "{\"sch\\u0165ma\":\"v1\",\"id\":\"document\"}", "referenceCode": "schema-json.unknown-field", "nativeCode": "schema-json.unknown-field"},
+      {"name": "invalid key escape", "source": "{\"sch\\qma\":\"v1\",\"id\":\"document\"}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.invalid-escape"},
+      {"name": "leading comma", "source": "{,\"schema\":\"v1\",\"id\":\"document\"}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.expected-field"},
+      {"name": "trailing comma", "source": "{\"schema\":\"v1\",\"id\":\"document\",}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.trailing-comma"},
+      {"name": "EOF after value", "source": "{\"schema\":\"v1\",\"id\":\"document\"", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.truncated-record"},
+      {"name": "trailing token", "source": "{\"schema\":\"v1\",\"id\":\"document\"} null", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.trailing-token"},
+      {"name": "mismatched delimiter", "source": "{\"schema\":[\"v1\"},\"id\":\"document\"}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.mismatched-delimiter"}
+    ],
+    "pages": [
+      {"name": "split escaped schema key", "pageBytes": 4096, "chunks": ["{\"sch\\u00", "65ma\":\"v1\",\"i\\u0064\":\"document\"}"]},
+      {"name": "split escaped value", "pageBytes": 4096, "chunks": ["{\"schema\":\"line\\u", "0001\",\"id\":\"document\"}"]}
+    ],
+    "cancellation": [
+      {"name": "cancelled split record", "pageBytes": 4096, "chunks": ["{\"schema\":\"v1\",", "\"id\":\"document\"}"]}
+    ]
+  },
+  "nested": {
+    "valid": [
+      {"name": "nested escaped required and declared keys", "source": "{\"schema\":{\"sch\\u0065ma\":\"v1\",\"i\\u0064\":\"nested\",\"quote\\u0022\":\"quote\",\"slash\\u005c\":\"slash\",\"control\\u0001\":\"control\",\"ascii\\u0041\":\"ascii\"},\"id\":\"outer\"}"}
+    ],
+    "invalid": [
+      {"name": "nested trailing comma", "source": "{\"schema\":{\"schema\":\"v1\",\"id\":\"nested\",},\"id\":\"outer\"}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.trailing-comma"},
+      {"name": "nested escaped duplicate", "source": "{\"schema\":{\"schema\":\"v1\",\"sch\\u0065ma\":\"v2\",\"id\":\"nested\"},\"id\":\"outer\"}", "referenceCode": "schema-json.duplicate-field", "nativeCode": "schema-json.duplicate-field"},
+      {"name": "nested delimiter mismatch", "source": "{\"schema\":{\"schema\":[\"v1\"},\"id\":\"nested\"},\"id\":\"outer\"}", "referenceCode": "schema-json.invalid-json", "nativeCode": "schema-json.mismatched-delimiter"}
+    ]
+  }
+}

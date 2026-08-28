@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,"required":["version","config","mutations","payloads","diff","leaves"],
+  "$defs":{
+    "cases":{"type":"object","additionalProperties":false,"required":["valid","invalid"],"properties":{"valid":{"type":"array","minItems":1},"invalid":{"type":"array","minItems":1}}},
+    "state":{"type":"object","additionalProperties":false,"required":["cameraJson","locale"],"properties":{"cameraJson":{"type":"string"},"locale":{"type":"string"}}},
+    "sparse":{"type":"object","additionalProperties":false,"required":["steps"],"properties":{"steps":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"cameraJson":{"type":["string","null"]},"locale":{"type":["string","null"]}}}}}},
+    "law":{"type":"object","additionalProperties":false,"required":["id","before","diff","after"],"properties":{"id":{"type":"string"},"before":{"$ref":"#/$defs/state"},"diff":{"$ref":"#/$defs/sparse"},"after":{"$ref":"#/$defs/state"}}},
+    "leafCase":{"type":"object","additionalProperties":false,"required":["id","before","payload","after","diff","inverse","warning"],"properties":{"id":{"type":"string"},"before":{"$ref":"#/$defs/state"},"payload":{"type":"object"},"after":{"$ref":"#/$defs/state"},"diff":{"$ref":"#/$defs/sparse"},"inverse":{"type":"array","minItems":1,"items":{"type":"object"}},"warning":{"enum":[null,"mutation.no-op"]}}}
+  },
+  "properties":{
+    "version":{"const":1},
+    "config":{"$ref":"#/$defs/cases"},
+    "mutations":{"$ref":"#/$defs/cases"},
+    "payloads":{"type":"object","additionalProperties":false,"required":["camera","locale"],"properties":{"camera":{"$ref":"#/$defs/cases"},"locale":{"$ref":"#/$defs/cases"}}},
+    "diff":{"type":"object","additionalProperties":false,"required":["valid","invalid","laws","absorption"],"properties":{
+      "valid":{"type":"array","minItems":1},"invalid":{"type":"array","minItems":1},
+      "laws":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/law"}},
+      "absorption":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","before","left","right","expected","after"],"properties":{"id":{"type":"string"},"before":{"$ref":"#/$defs/state"},"left":{"$ref":"#/$defs/sparse"},"right":{"$ref":"#/$defs/sparse"},"expected":{"$ref":"#/$defs/sparse"},"after":{"$ref":"#/$defs/state"}}}}
+    }},
+    "leaves":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["key","folder","variant","kind","tag","field","target","cases"],"properties":{
+      "key":{"enum":["camera","locale"]},"folder":{"type":"string"},"variant":{"type":"string"},"kind":{"type":"string"},"tag":{"type":"integer","minimum":0,"maximum":1},"field":{"type":"string"},"target":{"type":"string"},"cases":{"type":"array","minItems":2,"items":{"$ref":"#/$defs/leafCase"}}
+    }}}
+  }
+}

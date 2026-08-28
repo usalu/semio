@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "maximumPageBytes": 4096,
+  "maximumOriginBytes": 18,
+  "maximumIdentityBytes": 28,
+  "maximumPageReceiptBytes": 41,
+  "maximumControlBytes": 42,
+  "maximumDriveBytes": 43,
+  "maximumResultBytes": 4138,
+  "controlTags": {"poll": 0, "inputAck": 1, "cancel": 2, "retiredAck": 3},
+  "driveTags": {"execute": 0, "control": 1},
+  "resultTags": {"refused": 0, "pending": 1, "page": 2, "retired": 3, "control": 4, "protocolFault": 5},
+  "resultEnums": {"reason": ["working", "blocked", "awaitingInput", "closing"], "completion": ["complete", "cancelled", "faulted"], "outcome": ["accepted", "duplicate", "blocked", "refused"], "fault": ["none", "capacity", "sequenceExhausted", "staleOrigin", "staleIdentity", "wrongPage", "inputNotRetired", "notRetired", "clockUnavailable", "clockBackward", "deadline", "ownerFault", "malformedControl", "mixedControl"]},
+  "origin": {"activationGeneration": "7", "requestSequence": 9},
+  "originBinding": {"semanticOpenSequence": 9, "initialTransportRequest": 13, "retryTransportRequest": 17, "frozenOriginRequest": 13},
+  "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"},
+  "receipt": {"identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "pageSequence": "1", "length": 3, "final": true},
+  "wireVectors": [
+    {"value": {"kind": "execute", "origin": {"activationGeneration": "7", "requestSequence": 9}}, "hex": "000709"},
+    {"value": {"kind": "control", "control": {"kind": "poll", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}}, "hex": "010007090b"},
+    {"value": {"kind": "control", "control": {"kind": "inputAck", "receipt": {"identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "pageSequence": "1", "length": 3, "final": true}}}, "hex": "010107090b010301"},
+    {"value": {"kind": "control", "control": {"kind": "cancel", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}}, "hex": "010207090b"},
+    {"value": {"kind": "control", "control": {"kind": "retiredAck", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}}, "hex": "010307090b"},
+    {"value": {"kind": "control", "control": {"kind": "inputAck", "receipt": {"identity": {"origin": {"activationGeneration": "18446744073709551615", "requestSequence": 9007199254740991}, "returnSequence": "18446744073709551615"}, "pageSequence": "18446744073709551615", "length": 4096, "final": false}}}, "hex": "0101ffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01ffffffffffffffffff01802000"}
+  ],
+  "malformedWire": ["", "02", "000009", "000700", "00078000", "010407090b", "010107090b000301", "010107090b01812001", "010107090b010302", "010107090b010000", "010007090b00"],
+  "resultVectors": [
+    {"value": {"kind": "refused", "origin": {"activationGeneration": "7", "requestSequence": 9}, "fault": "capacity"}, "hex": "00070901"},
+    {"value": {"kind": "pending", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "reason": "working"}, "hex": "0107090b00"},
+    {"value": {"kind": "pending", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "reason": "awaitingInput"}, "hex": "0107090b02"},
+    {"value": {"kind": "retired", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "completion": "complete"}, "hex": "0307090b00"},
+    {"value": {"kind": "retired", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "completion": "cancelled"}, "hex": "0307090b01"},
+    {"value": {"kind": "retired", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "completion": "faulted"}, "hex": "0307090b02"},
+    {"value": {"kind": "control", "control": {"kind": "inputAck", "receipt": {"identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "pageSequence": "1", "length": 3, "final": true}}, "outcome": "accepted", "fault": "none"}, "hex": "040107090b0103010000"},
+    {"value": {"kind": "control", "control": {"kind": "inputAck", "receipt": {"identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "pageSequence": "1", "length": 3, "final": true}}, "outcome": "duplicate", "fault": "none"}, "hex": "040107090b0103010100"},
+    {"value": {"kind": "control", "control": {"kind": "cancel", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "blocked", "fault": "clockUnavailable"}, "hex": "040207090b0208"},
+    {"value": {"kind": "control", "control": {"kind": "poll", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "refused", "fault": "staleIdentity"}, "hex": "040007090b0304"},
+    {"value": {"kind": "control", "control": {"kind": "retiredAck", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "accepted", "fault": "none"}, "hex": "040307090b0000"},
+    {"value": {"kind": "protocolFault", "fault": "malformedControl"}, "hex": "050c"},
+    {"value": {"kind": "protocolFault", "fault": "mixedControl"}, "hex": "050d"}
+  ],
+  "pageResultVectors": [
+    {"receipt": {"identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "pageSequence": "1", "length": 0, "final": true}, "pageLength": 0, "pattern": "zero", "prefixHex": "0207090b010001", "wireBytes": 4103},
+    {"receipt": {"identity": {"origin": {"activationGeneration": "18446744073709551615", "requestSequence": 9007199254740991}, "returnSequence": "18446744073709551615"}, "pageSequence": "18446744073709551615", "length": 4096, "final": false}, "pageLength": 4096, "pattern": "mod37plus11", "prefixHex": "02ffffffffffffffffff01ffffffffffffff0fffffffffffffffffff01ffffffffffffffffff01802000", "wireBytes": 4138}
+  ],
+  "resultContradictions": [
+    {"kind": "refused", "origin": {"activationGeneration": "7", "requestSequence": 9}, "fault": "none"},
+    {"kind": "control", "control": {"kind": "poll", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "accepted", "fault": "none"},
+    {"kind": "control", "control": {"kind": "poll", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "duplicate", "fault": "none"},
+    {"kind": "control", "control": {"kind": "cancel", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "accepted", "fault": "deadline"},
+    {"kind": "control", "control": {"kind": "cancel", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}}, "outcome": "blocked", "fault": "none"},
+    {"kind": "pending", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "reason": "ready"},
+    {"kind": "retired", "identity": {"origin": {"activationGeneration": "7", "requestSequence": 9}, "returnSequence": "11"}, "completion": "idle"},
+    {"kind": "protocolFault", "fault": "capacity"}
+  ],
+  "preAdmissionFaults": [
+    {"invalidDriveHex": "000009", "resultHex": "050c", "semanticExecutions": 0, "existingOwnersRetained": true},
+    {"invalidDriveHex": "000700", "resultHex": "050c", "semanticExecutions": 0, "existingOwnersRetained": true},
+    {"invalidDriveHex": "0100070900", "resultHex": "050c", "semanticExecutions": 0, "existingOwnersRetained": true}
+  ],
+  "limits": {"activeOwnersPerActivation": 1, "sourcePagesPerOwner": 1, "lastReleasedTombstonesPerActivation": 1, "lastAdmittedOriginsPerActivation": 1, "counterWraps": false, "controlExecutesSemanticWork": false, "controlCreatesPagedReturn": false, "pageAckIsUiAck": false, "pageAckIsLifecycleAck": false},
+  "replayFrontier": [
+    {"action": "execute", "originRequest": 13, "expected": "admitted", "semanticExecutions": 1, "lastAdmitted": 13},
+    {"action": "execute", "originRequest": 13, "expected": "replay", "semanticExecutions": 1, "lastAdmitted": 13},
+    {"action": "retireAndAck", "originRequest": 13, "expected": "accepted", "semanticExecutions": 1, "lastAdmitted": 13},
+    {"action": "execute", "originRequest": 13, "expected": "replayRetired", "semanticExecutions": 1, "lastAdmitted": 13},
+    {"action": "execute", "originRequest": 19, "expected": "admitted", "semanticExecutions": 2, "lastAdmitted": 19},
+    {"action": "execute", "originRequest": 13, "expected": "staleOrigin", "semanticExecutions": 2, "lastAdmitted": 19},
+    {"action": "retireAndAck", "originRequest": 19, "expected": "accepted", "semanticExecutions": 2, "lastAdmitted": 19},
+    {"action": "execute", "originRequest": 13, "expected": "staleOrigin", "semanticExecutions": 2, "lastAdmitted": 19}
+  ],
+  "laws": [
+    {"name": "admission-before-execution", "requirement": "Reserve native typed owner, source page and host response before semantic work; capacity refusal performs zero semantic work."},
+    {"name": "duplicate-execute", "requirement": "Same origin replays the existing result without executing twice or replacing retained content; another origin is refused while the owner remains active. The activation retains the monotonic last-admitted origin after final ACK and newer admissions, so an older delayed execute never executes again."},
+    {"name": "exact-original-activation", "requirement": "Public numbers are validated through the original captured activation and native runtime, never a current name, instance or worker lookup."},
+    {"name": "repeated-page", "requirement": "Repeated delivery has identical identity, sequence, length, final flag and bytes; source stays retained until exact input ACK succeeds."},
+    {"name": "exact-input-ack", "requirement": "Wrong activation, origin, return sequence, page sequence, length or final flag refuses without changing any owner."},
+    {"name": "input-close-before-ack", "requirement": "Host page decoding or cancellation and all borrowed input descendants become terminal before it sends the exact ACK; raw delivery and semantic UI ACK are insufficient."},
+    {"name": "ack-only-control", "requirement": "Input ACK, cancel and retired ACK return a fixed correlated control result, never a new page; mixed semantic events or command pages refuse before work."},
+    {"name": "cancel-outstanding-page", "requirement": "Cancel keeps an already issued page available for exact input retirement; typed source retirement cannot report terminal while that page remains owned."},
+    {"name": "final-root-retirement", "requirement": "Final page ACK begins bounded source retirement; Retired is published only after exact typed descendants and final root release pass the final strict clock verdict."},
+    {"name": "lost-final-ack-reply", "requirement": "The exact last retired ACK remains an idempotent fixed tombstone until the next admitted execute; repeated ACK returns duplicate without allocating or releasing twice."},
+    {"name": "checked-exhaustion", "requirement": "Origin, native return and page sequences never wrap; exhaustion occurs before new ownership or semantic work and retains any previous owner."},
+    {"name": "clock-and-caller-fault", "requirement": "Missing/backward clock, elapsed at least 8000us, synchronous consumer throw, malformed decode and transport failure retain the exact source, receipt and pending control for retry or bounded close."},
+    {"name": "zero-grant", "requirement": "Zero item or byte grants do not encode, copy, release or mutate a page or source cursor."},
+    {"name": "same-id-reopen", "requirement": "Delayed pages and control receipts target the captured old activation owner; reopening the same numeric instance does not authorize replacement lookup."}
+  ]
+}

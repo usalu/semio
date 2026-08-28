@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddGcpObservation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "observation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "observation": {
+      "title": "GcpObservation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameIndex",
+        "pixel",
+        "streamId"
+      ],
+      "properties": {
+        "streamId": {
+          "type": "string"
+        },
+        "frameIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pixel": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      }
+    }
+  }
+}

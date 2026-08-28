@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RotateObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rotation"
+  ],
+  "properties": {
+    "rotation": {
+      "title": "SemioQuaternion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "w",
+        "x",
+        "y",
+        "z"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "z": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

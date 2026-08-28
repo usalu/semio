@@ -74,12 +74,20 @@ import {
   publishFixtureManifest,
   readRuntimeInventory,
   subsetCoordinate,
+  subsetCoordinatesOfOwner,
+  leafDescriptorCoverage,
+  manifestFromLeafDescriptors,
+  scaffoldOwnerDescriptors,
+  derivePayloadSchemas,
+  testFilenameForKind,
+  isQualifyingOracleKind,
   verifyFixture,
   writeRuntimeInventory,
   markRunComplete,
   planExecution,
   pythonRuntimeImports,
   ratchetDependencies,
+  scanDeclaredDependencies,
   readResults,
   renderDiff,
   renderJUnit,
@@ -901,7 +909,18 @@ class DependencyScript extends Script {
       return;
     }
 
-    const verdict = ratchetDependencies(sorted, sorted, registry);
+    // 🔎️The ratchet is fed the COMMITTED baseline against a FRESH SCAN of the live tree. It used to be
+    // handed the same array twice, which made `newProduction` and `unregisteredTestDeps` provably
+    // always empty however many production dependencies a change added — a shrink-only gate that
+    // could not see growth. `--scan` prints what the scan found, for when the two disagree.
+    const scanned = scanDeclaredDependencies(this.repoRoot, registry);
+    const verdict = ratchetDependencies(sorted, scanned, registry);
+    if (segments.includes("--scan")) {
+      console.log(`[dependency] live scan: ${scanned.length} declared external dependenc(ies), ${scanned.filter((entry) => entry.productionReachable).length} production-reachable`);
+      for (const entry of scanned.filter((candidate) => !sorted.some((baseline) => baseline.ecosystem === candidate.ecosystem && baseline.name === candidate.name))) {
+        console.log(`[dependency] scan-only ${entry.ecosystem}:${entry.name}@${entry.version} kinds=${entry.kinds.join(",")} users=${entry.users.slice(0, 2).join(",")}`);
+      }
+    }
     const production = sorted.filter((entry) => entry.productionReachable);
     const oracleDeps = sorted.filter((entry) => entry.kinds.includes("test-oracle"));
     console.log(`[dependency] ecosystems=${new Set(sorted.map((entry) => entry.ecosystem)).size} entries=${sorted.length} production-reachable=${production.length} test-oracle=${oracleDeps.length}`);
@@ -912,6 +931,8 @@ class DependencyScript extends Script {
     for (const [, entry] of recorded) console.log(`[dependency] production-debt ${entry.package} (oracle ${entry.id}) reachable from ${entry.productionDebt!.reachableFrom.join(", ")} — owner ${entry.productionDebt!.owner}`);
     const leaked = oracleDeps.filter((entry) => entry.productionReachable && !recorded.has(entry.name));
     for (const entry of leaked) console.error(`[dependency] oracle package ${entry.name} is production-reachable and is NOT recorded as debt — oracles must be test-only`);
+    for (const name of verdict.newProduction) console.error(`[dependency] NEW production-reachable dependency ${name} is declared in the tree and absent from the committed baseline — the ratchet is shrink-only`);
+    for (const name of verdict.unregisteredTestDeps) console.error(`[dependency] ${name} is declared as a test dependency but no oracle or probe registers it`);
     if (!verdict.ok || leaked.length > 0) process.exit(1);
   }
 }
@@ -1091,7 +1112,12 @@ class FixtureScript extends Script {
             continue;
           }
           for (const file of fixture.files) {
-            const produced = join(outDir, basename(file.path));
+            // 📎️`SEMIO_FIXTURE_OUT` is a FIXTURES ROOT, not a per-fixture directory — every generator in
+            // the repository writes `<root>/<recipe>/<file>`. Looking for `<root>/<file>` by basename
+            // therefore missed every file ever produced, and the command reported "generator produced no
+            // <file>" for all of them: 560 problems on a corpus that is in fact byte-reproducible. The
+            // manifest path already carries the recipe segment, so resolve with it rather than flatten it.
+            const produced = join(outDir, file.path.replace(/^(?:\.\.\/)*🧫️fixtures\//, ""));
             if (!existsSync(produced)) {
               console.error(`[fixture reproduce] ${fixture.id}/${file.role}: generator produced no ${basename(file.path)}`);
               failed += 1;
@@ -1207,6 +1233,268 @@ class GcScript extends Script {
     console.log(formatGcReport(report));
   }
 }
+
+/**
+ * 🕳️ What each owner still owes before its mutations are externally oracled at subset level.
+ *
+ * The target is that EVERY mutation of every artifact is predicted by a third-party library, scoped to
+ * the smallest semantic subset. `matrix` measures what is covered; this answers the complementary and
+ * more actionable question — what is missing, per owner, and which of four things it is. Without it the
+ * shortfall is a single percentage, and a percentage tells nobody what to do on Monday.
+ */
+/**
+ * 🧬️ Derives each mutation leaf's payload schema from the Rust payload struct it declares.
+ *
+ * The payload schema is the DEEPEST blocker in the chain to subset-scoped external-oracle coverage:
+ * you cannot author a fixture for a mutation whose payload has no contract, so every leaf without one
+ * is unreachable by any amount of testing effort. The struct IS the contract — it is what serde puts
+ * on the wire — so this is a projection of it, not a second declaration to keep in sync.
+ */
+function payloadSchemaCommand(script: Script, registry: OracleRegistry, selectors: ReturnType<typeof readSelectors>, write: boolean): void {
+  const owners = [...new Set(registry.contributions.map((entry) => entry.owner))].filter((owner) => selectors.subset === null || subsetCoordinatesOfOwner(owner)?.subset === selectors.subset);
+  let leaves = 0;
+  let derived = 0;
+  let written = 0;
+  let present = 0;
+  const refusals = new Map<string, number>();
+  for (const owner of owners) {
+    for (const row of derivePayloadSchemas(script.repoRoot, owner)) {
+      leaves += 1;
+      if (row.schema === null) {
+        for (const why of row.refused) {
+          const type = why.replace(/^field [a-z_]+: /, "").replace(/ is not a shape.*/, "");
+          refusals.set(type, (refusals.get(type) ?? 0) + 1);
+        }
+        continue;
+      }
+      derived += 1;
+      const path = join(script.repoRoot, row.leaf, "🔣️payload.schema.json");
+      if (existsSync(path)) {
+        present += 1;
+        continue;
+      }
+      if (!write) continue;
+      writeFileSync(path, `${JSON.stringify(row.schema, null, 2)}\n`);
+      written += 1;
+    }
+  }
+  console.log(`[manifest payload-schema] ${derived}/${leaves} leaves derivable from their Rust payload struct (${((derived / Math.max(leaves, 1)) * 100).toFixed(1)}%)`);
+  console.log(`[manifest payload-schema] ${present} already carry a schema; ${derived - present} would be new`);
+  console.log(`[manifest payload-schema] ${leaves - derived} refused, by the Rust type that defeated them:`);
+  for (const [type, count] of [...refusals].sort((a, b) => b[1] - a[1]).slice(0, 15)) console.log(`[manifest payload-schema]   ${String(count).padStart(4)} × ${type.slice(0, 72)}`);
+  console.log(write ? `[manifest payload-schema] ${written} schema(s) written` : "[manifest payload-schema] dry run — pass --write to emit them");
+}
+
+/** 🏗️ Derives leaf descriptors from the leaves themselves, refusing every field it cannot cite. */
+function scaffoldCommand(script: Script, registry: OracleRegistry, selectors: ReturnType<typeof readSelectors>, write: boolean): void {
+  const owners = [...new Set(registry.contributions.map((entry) => entry.owner))].filter((owner) => selectors.subset === null || subsetCoordinatesOfOwner(owner)?.subset === selectors.subset);
+  let leaves = 0;
+  let derived = 0;
+  let written = 0;
+  const refusals = new Map<string, number>();
+  const ready: string[] = [];
+  const taxonomy = testTaxonomy(script.repoRoot);
+  const filename = testFilenameForKind(taxonomy, taxonomy.testContributionFileKindId);
+  for (const owner of owners) {
+    const rows = scaffoldOwnerDescriptors(script.repoRoot, owner);
+    if (rows.length === 0) continue;
+    leaves += rows.length;
+    derived += rows.filter((row) => row.descriptor !== null).length;
+    for (const row of rows) for (const why of row.refused) refusals.set(why.split(":")[0]!, (refusals.get(why.split(":")[0]!) ?? 0) + 1);
+    // 🏗️An owner is written ALL-OR-NOTHING. A partial descriptor set would let a manifest be generated
+    // over a denominator that silently omits the undescribed leaves, which reads as coverage of a
+    // smaller vocabulary rather than as the gap it is.
+    if (rows.some((row) => row.descriptor === null)) continue;
+    ready.push(`${owner} (${rows.length} leaves)`);
+    if (!write) continue;
+    for (const row of rows) {
+      const path = join(script.repoRoot, row.leaf, filename);
+      if (existsSync(path)) continue;
+      writeFileSync(path, `${JSON.stringify(row.descriptor, null, 2)}\n`);
+      written += 1;
+    }
+  }
+  console.log(`[manifest scaffold] ${derived}/${leaves} leaves derivable with full evidence (${((derived / Math.max(leaves, 1)) * 100).toFixed(1)}%)`);
+  for (const [field, count] of [...refusals].sort((a, b) => b[1] - a[1])) console.log(`[manifest scaffold] refused ${String(count).padStart(5)} × ${field}`);
+  console.log(`[manifest scaffold] ${ready.length} owner(s) fully derivable:`);
+  for (const owner of ready) console.log(`[manifest scaffold]   ${owner}`);
+  console.log(write ? `[manifest scaffold] ${written} descriptor(s) written` : "[manifest scaffold] dry run — pass --write to emit descriptors for the fully derivable owners");
+}
+
+class GapScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const manifested = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.map((mutation) => mutation.capability)));
+    // 🧫️A capability is only genuinely covered once fixtures exist for it too. Counting a manifest as
+    // sufficient would repeat the error this whole protocol exists to remove.
+    const fixtured = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests.map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`)));
+    const fixtureCountFor = (artifact: string, standard: string, subset: string): number =>
+      registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture.target.artifact === artifact && fixture.target.standard === standard && fixture.target.subset === subset).length;
+
+    type Row = { owner: string; catalog: string; capability: string; kinds: number; subset: string; state: string; oracles: string; owed: string; fixtures: number };
+    const rows: Row[] = [];
+    for (const contribution of registry.contributions) {
+      for (const catalog of contribution.mutationCatalogs) {
+        const coordinates = subsetCoordinatesOfOwner(contribution.owner);
+        const subset = coordinates?.subset ?? "";
+        if (selectors.subset !== null && subset !== selectors.subset) continue;
+        const supplying = registry.oracles.filter((oracle) => oracle.capabilities.includes(catalog.capability));
+        const qualifying = supplying.filter((oracle) => isQualifyingOracleKind(oracle.kind));
+        const state = qualifying.length > 0 ? (manifested.has(catalog.capability) ? "covered" : "manifestable") : supplying.length > 0 ? "supplemental-only" : "un-oracled";
+        if (selectors.status !== null && state !== selectors.status) continue;
+        // 🕳️What is OWED, stated in full. An earlier version said "only a manifest" for the qualifying
+        // group, and that was an understatement of exactly the kind this protocol exists to remove: a
+        // manifest also needs the OUTCOME CLASSES each mutation can reach, which nothing can state
+        // honestly until the production bridge has been run, and every mutation needs a fixture whose
+        // expected result that oracle actually produced. A qualifying oracle is the PREREQUISITE, not
+        // the remaining work.
+        const owed =
+          state === "covered"
+            ? "—"
+            : state === "manifestable"
+              ? "a manifest (needs each mutation's OUTCOME CLASSES, which only the production bridge can state), a runtime inventory, and a fixture per mutation × outcome — the oracle is in place"
+              : state === "supplemental-only"
+                ? `a QUALIFYING third-party oracle before anything else; today only ${supplying.map((oracle) => `${oracle.id}(${oracle.kind ?? "unclassified"})`).join(", ")}`
+                : "a qualifying third-party oracle, and nothing supplies this capability at all";
+        const fixtures = coordinates === null ? 0 : fixtureCountFor(catalog.capability.startsWith("step-") ? "s.stdio.step" : "", coordinates.standard, coordinates.subset);
+        rows.push({ owner: contribution.owner, catalog: catalog.id, capability: catalog.capability, kinds: catalog.kinds.length, subset, state, oracles: qualifying.map((oracle) => oracle.id).join(",") || "—", owed, fixtures });
+      }
+    }
+
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify(rows, null, 2));
+      return;
+    }
+
+    const byState = new Map<string, Row[]>();
+    for (const row of rows) byState.set(row.state, [...(byState.get(row.state) ?? []), row]);
+    const mutationsIn = (state: string): number => (byState.get(state) ?? []).reduce((total, row) => total + row.kinds, 0);
+    for (const state of ["covered", "manifestable", "supplemental-only", "un-oracled"]) {
+      const group = byState.get(state) ?? [];
+      console.log(`\n[gap] ${state.toUpperCase()} — ${group.length} catalog(s), ${mutationsIn(state)} mutation kind(s)`);
+      for (const row of group.slice(0, segments.includes("--all") ? group.length : 12)) {
+        console.log(`[gap]   ${row.capability.padEnd(34)} ${String(row.kinds).padStart(4)} kinds  ${String(row.fixtures).padStart(4)} fixtures  ${row.subset.padEnd(10)} ${row.owed}`);
+      }
+      if (!segments.includes("--all") && group.length > 12) console.log(`[gap]   … and ${group.length - 12} more (--all to list, --json for the full record)`);
+    }
+
+    const total = rows.reduce((sum, row) => sum + row.kinds, 0);
+    const covered = mutationsIn("covered");
+    console.log(`\n[gap] ${covered}/${total} mutation kind(s) are externally oracled and manifested — ${((covered / Math.max(total, 1)) * 100).toFixed(1)}%`);
+    console.log(`[gap] ${mutationsIn("manifestable")} kind(s) have a qualifying oracle and still need a manifest, a runtime inventory and fixtures`);
+    console.log(`[gap] ${mutationsIn("supplemental-only") + mutationsIn("un-oracled")} kind(s) need a qualifying third-party oracle BEFORE any of that`);
+    // 🏭️Nothing above can be completed while the production bridge cannot run: a manifest must declare
+    // the outcome classes each mutation reaches, and only dispatch can state them.
+    const inventories = registry.mutationManifests.filter((manifest) => readRuntimeInventory(this.repoRoot, manifest) !== null).length;
+    console.log(`[gap] ${inventories}/${registry.mutationManifests.length} manifest(s) have a runtime inventory — a manifest's outcome classes cannot be stated honestly without one`);
+    // 🕳️A cross-semio implementation is the single largest category, and naming it as such is the point:
+    // it reads as an oracle in the registry and discharges nothing.
+    const semioDerived = registry.oracles.filter((oracle) => oracle.kind === "cross-semio-implementation").length;
+    console.log(`[gap] ${semioDerived} of ${registry.oracles.length} registered oracles are second implementations written inside this repository, and none of them discharges a mutation's requirement`);
+  }
+}
+
+/**
+ * 🧬️ Generates each owner's v2 mutation manifest FROM ITS LEAF DESCRIPTORS, and reports who cannot yet
+ * have one.
+ *
+ * A manifest must state the OUTCOME CLASSES each mutation can reach, and that is the one field nobody
+ * can honestly invent from outside the implementation. The `dsl::Mutations` derive already reads it
+ * from a declarative per-leaf JSON descriptor at expansion time — so a manifest built from the same
+ * file is generated from production's own record rather than restated beside it, and it needs no
+ * compiler, no running bridge and no guess.
+ *
+ *   bun 📜️script.ts manifest --dry            # who is ready, who is blocked, and on what
+ *   bun 📜️script.ts manifest --write          # write manifests for every ready owner
+ */
+class ManifestScript extends Script {
+  run(segments: string[]): void {
+    const registry = loadOracleRegistry(this.repoRoot);
+    const selectors = readSelectors(segments);
+    const write = segments.includes("--write");
+    if (segments.includes("scaffold")) return scaffoldCommand(this, registry, selectors, write);
+    if (segments.includes("payload-schema")) return payloadSchemaCommand(this, registry, selectors, write);
+
+    type Row = { owner: string; capability: string; leaves: number; described: number; ready: boolean; reason: string; manifest: MutationManifest | null };
+    const rows: Row[] = [];
+    for (const contribution of registry.contributions) {
+      for (const catalog of contribution.mutationCatalogs) {
+        if (selectors.subset !== null && subsetCoordinatesOfOwner(contribution.owner)?.subset !== selectors.subset) continue;
+        const coverage = leafDescriptorCoverage(this.repoRoot, contribution.owner);
+        const manifest = manifestFromLeafDescriptors(this.repoRoot, contribution.owner, catalog.capability);
+        const qualifying = registry.oracles.filter((oracle) => oracle.capabilities.includes(catalog.capability) && isQualifyingOracleKind(oracle.kind));
+        const reason =
+          coverage.leaves === 0
+            ? "no mutation leaves on disk"
+            : coverage.missing.length > 0
+              ? `${coverage.missing.length}/${coverage.leaves} leaves carry no descriptor — a manifest whose outcome classes were guessed for even one mutation is worse than none`
+              : manifest === null
+                ? "leaves are described but the owner path or artifact id could not be resolved"
+                : qualifying.length === 0
+                  ? "described, but no QUALIFYING third-party oracle supplies this capability — the manifest would declare a requirement nothing can discharge"
+                  : "ready";
+        rows.push({ owner: contribution.owner, capability: catalog.capability, leaves: coverage.leaves, described: coverage.described, ready: reason === "ready", reason, manifest });
+      }
+    }
+
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify(rows.map(({ manifest, ...rest }) => ({ ...rest, mutations: manifest?.mutations.length ?? 0 })), null, 2));
+      return;
+    }
+
+    const ready = rows.filter((row) => row.ready);
+    const described = rows.filter((row) => row.leaves > 0 && row.described === row.leaves);
+    const totalLeaves = rows.reduce((sum, row) => sum + row.leaves, 0);
+    const totalDescribed = rows.reduce((sum, row) => sum + row.described, 0);
+
+    console.log(`[manifest] ${totalDescribed}/${totalLeaves} mutation leaves carry a descriptor across ${rows.length} catalog(s)`);
+    console.log(`[manifest] ${described.length} owner(s) fully described; ${ready.length} of those also have a qualifying oracle and are READY`);
+    for (const row of ready) console.log(`[manifest] READY   ${row.capability.padEnd(32)} ${String(row.manifest?.mutations.length).padStart(4)} mutations  ${row.owner}`);
+    const blocked = new Map<string, number>();
+    for (const row of rows.filter((candidate) => !candidate.ready)) blocked.set(row.reason.split("—")[0]!.trim(), (blocked.get(row.reason.split("—")[0]!.trim()) ?? 0) + 1);
+    for (const [reason, count] of [...blocked].sort((a, b) => b[1] - a[1])) console.log(`[manifest] BLOCKED ${String(count).padStart(4)} catalog(s): ${reason}`);
+
+    if (!write) {
+      console.log(`[manifest] dry run — pass --write to emit manifests for the ${ready.length} ready owner(s)`);
+      return;
+    }
+    let written = 0;
+    for (const row of ready) {
+      const contribution = registry.contributions.find((entry) => entry.owner === row.owner);
+      if (contribution === undefined || row.manifest === null) continue;
+      const path = join(this.repoRoot, contribution.manifestPath);
+      const parsed = JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
+      const all = (parsed.mutationManifests as MutationManifest[] | undefined) ?? [];
+      const prior = all.find((entry) => entry.artifact === row.manifest!.artifact && entry.standard === row.manifest!.standard && entry.subset === row.manifest!.subset);
+      const existing = all.filter((entry) => entry !== prior);
+      // 🤝️MERGE, NEVER REPLACE. The generator derives STRUCTURE from the leaf descriptors — payload
+      // schema, outcome classes, dispatch variant — but it knows nothing about SCOPE: which specific
+      // oracle discharges a mutation, and which mutations the carrier provably cannot witness. That is
+      // registration work, and a wholesale replace silently undid it: re-running this command flattened
+      // `sequence`'s hand-scoped 4-carried/4-uncarried split back to eight undifferentiated mutations,
+      // turning an honest partial into a claim of blanket coverage. Refined fields win over derived ones.
+      const carried = new Map((prior?.mutations ?? []).map((mutation) => [mutation.id, mutation] as const));
+      const merged = { ...row.manifest, mutations: row.manifest.mutations.map((mutation) => {
+        const before = carried.get(mutation.id);
+        if (before === undefined) return mutation;
+        return {
+          ...mutation,
+          ...(before.oracleRequirements !== undefined ? { oracleRequirements: before.oracleRequirements } : {}),
+          ...((before as { invariants?: unknown }).invariants !== undefined ? { invariants: (before as { invariants?: unknown }).invariants } : {}),
+          ...((before as { carriers?: unknown }).carriers !== undefined ? { carriers: (before as { carriers?: unknown }).carriers } : {}),
+          ...((before as { comparisonPipeline?: unknown }).comparisonPipeline !== undefined ? { comparisonPipeline: (before as { comparisonPipeline?: unknown }).comparisonPipeline } : {}),
+        };
+      }) };
+      parsed.mutationManifests = [...existing, merged];
+      parsed.schemaVersion = 2;
+      writeFileSync(path, `${JSON.stringify(parsed, null, 2)}\n`);
+      written += 1;
+      console.log(`[manifest] wrote ${row.manifest.mutations.length} mutation(s) into ${contribution.manifestPath}`);
+    }
+    console.log(`[manifest] ${written} manifest(s) written`);
+  }
+}
 //#endregion 🧭️Commands
 
 //#region 🧹️Policy
@@ -1246,7 +1534,9 @@ const router = new ScriptRouter(import.meta.dir)
   .register("fixture", FixtureScript)
   .register("probe", ProbeScript)
   .register("matrix", MatrixScript)
-  .register("gc", GcScript);
+  .register("gc", GcScript)
+  .register("gap", GapScript)
+  .register("manifest", ManifestScript);
 
 await runBundleScriptMain(router, import.meta.url);
 //#endregion 🚪️Entry

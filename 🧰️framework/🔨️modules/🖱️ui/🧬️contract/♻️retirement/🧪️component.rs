@@ -108,7 +108,17 @@ fn instance_lifetime_ui_value_retirement_nested_shared_alias_keeps_external_payl
     assert_eq!(close(&mut parent, 1), (3, 0));
     assert_eq!(with_ui_value_arena(|arena| arena.collection(handle).is_some_and(|value| value.aliases == 1 && !value.retiring)), fixture["ownership"]["nestedSharedAliasRetainsExternalPayload"].as_bool().unwrap());
     assert_eq!(serde_json::to_value(&external).unwrap(), row["value"]);
-    assert_eq!(close(&mut UiValueRetirement::new(external), 1), (2, row["textBytes"].as_u64().unwrap() as usize));
+    let oracle = &fixture["queuedOracleReader"];
+    assert_eq!(with_ui_value_arena(|arena| arena.collection(handle).unwrap().aliases), oracle["aliasesBefore"].as_u64().unwrap());
+    assert!(UI_VALUE_HANDBACKS.has_slot_pending(handle.slot));
+    let mut owner = UiValueRetirement::new(external);
+    let reader_release = owner.close_step(1, 1).unwrap();
+    assert!(!reader_release.complete && reader_release.progressed);
+    assert_eq!(reader_release.released_items, oracle["readerReleasedItems"].as_u64().unwrap() as usize);
+    assert_eq!(reader_release.released_bytes, oracle["readerReleasedBytes"].as_u64().unwrap() as usize);
+    assert_eq!(with_ui_value_arena(|arena| arena.collection(handle).unwrap().aliases), oracle["aliasesAfter"].as_u64().unwrap());
+    assert!(!UI_VALUE_HANDBACKS.has_slot_pending(handle.slot));
+    assert_eq!(close(&mut owner, 1), (oracle["descendantReleasedItems"].as_u64().unwrap() as usize, oracle["descendantReleasedBytes"].as_u64().unwrap() as usize));
 }
 
 #[test]

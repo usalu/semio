@@ -212,30 +212,40 @@ impl<P, M> Drop for PresenceStore<P, M> {
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️fixtures/🧬️mutations/🦀️.rs"]
+mod fixture_mutations;
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use super::fixture_mutations::{SetValue, ValueMutation};
 
-    #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
-    struct Value(i32);
+    pub(super) fn assert_fixture_descriptor<T: crate::os_spr::MutationLeaf>(descriptor: &str) {
+        assert_eq!(serde_json::to_value(T::DESCRIPTOR).unwrap(), serde_json::from_str::<serde_json::Value>(descriptor).unwrap());
+        assert!(T::DESCRIPTOR.validate().is_ok());
+    }
+
+    #[test]
+    fn direct_presence_fixture_value_inverse() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🔣️mutations.json")).unwrap();
+        let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["family"] == "presence").unwrap();
+        let before = Value(serde_json::from_value(row["before"].clone()).unwrap());
+        let mut wire = row["payload"].clone();
+        wire["operation"] = row["operation"].clone();
+        let op = serde_json::from_value::<ValueMutation>(wire).unwrap();
+        let after = op.diff(&before).diff().apply(&before).unwrap();
+        assert_eq!(after.0, serde_json::from_value::<i32>(row["after"].clone()).unwrap());
+        assert_eq!(op.inverse(&before)[0].diff(&after).diff().apply(&after).unwrap().0, before.0);
+        assert_eq!(serde_json::from_value::<ValueMutation>(serde_json::to_value(&op).unwrap()).unwrap(), op);
+        for json in ["{\"operation\":\"setValue\"}", "{\"operation\":\"setValue\",\"n\":null}", "{\"operation\":\"setValue\",\"n\":2147483648}", "{\"operation\":\"setValue\",\"n\":0.5}", "{\"operation\":\"setValue\",\"n\":7,\"unknown\":true}"] { assert!(serde_json::from_str::<ValueMutation>(json).is_err()); }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    pub(crate) struct Value(pub(super) i32);
 
     impl MutationDiff<Value> for Value {
         fn apply(&self, _base: &Value) -> crate::os_spr::MutationApplyResult<Value> { Ok(self.clone()) }
         fn absorb(&mut self, other: Self) { *self = other; }
-    }
-
-    impl Mutation<Value> for Value {
-        type Diff = Value;
-        fn diff(&self, _base: &Value) -> crate::os_spr::MutationOutcome<Value> { crate::os_spr::MutationOutcome::new(self.clone()) }
-        fn inverse(&self, base: &Value) -> Vec<Self> { vec![base.clone()] }
-    }
-
-    #[derive(Clone, serde::Serialize, serde::Deserialize)]
-    struct Noop;
-
-    impl Mutation<Value> for Noop {
-        type Diff = Value;
-        fn diff(&self, base: &Value) -> crate::os_spr::MutationOutcome<Value> { crate::os_spr::MutationOutcome::new(base.clone()) }
-        fn inverse(&self, _base: &Value) -> Vec<Self> { vec![Noop] }
     }
 
     struct Factory(Arc<std::sync::atomic::AtomicUsize>);
@@ -291,7 +301,7 @@ mod tests {
         let law = &fixture["localCapture"];
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
-        let mut owner = PresenceStore::<Value, Noop>::new(Value(law["value"].as_i64().unwrap() as i32));
+        let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["value"].as_i64().unwrap() as i32));
         assert!(owner.local_read().is_err());
         owner.install_local_retirement_factory(factory.clone()).unwrap();
         let job = CapturedLocalJob { read: Some(owner.local_read().unwrap()), returned: None, closing: false };
@@ -333,12 +343,12 @@ mod tests {
         let law = &fixture["localReplacements"];
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
-        let mut owner = PresenceStore::<Value, Value>::new(Value(23));
+        let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(23));
         owner.install_local_retirement_factory(factory.clone()).unwrap();
         let first = owner.local_read().unwrap();
-        owner.apply_one(0, Value(31)).ok().unwrap();
+        owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 31 })).ok().unwrap();
         let second = owner.local_read().unwrap();
-        owner.apply_one(1, Value(47)).ok().unwrap();
+        owner.apply_one(1, ValueMutation::SetValue(SetValue { n: 47 })).ok().unwrap();
         assert_eq!(serde_json::json!([first.get().0, second.get().0]), law["capturedValues"]);
         let barrier = Arc::new(std::sync::Barrier::new(2));
         let other = barrier.clone();
@@ -373,7 +383,7 @@ mod tests {
         panic!("exact peer root failed bounded terminal progress")
     }
 
-    fn peer_commit(owner: &PresenceStore<Value, Noop>, peer: &serde_json::Value) -> PresencePeersCommit<Value> {
+    fn peer_commit(owner: &PresenceStore<Value, ValueMutation>, peer: &serde_json::Value) -> PresencePeersCommit<Value> {
         let mut publication = owner.begin_peer_publication().unwrap();
         while publication.prune_one(|_| true).unwrap() {}
         publication.adopt(peer["actor"].as_str().unwrap().into(), Value(peer["value"].as_i64().unwrap() as i32), 0).ok().unwrap();
@@ -390,10 +400,10 @@ mod tests {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let factory: Arc<dyn SnapshotRetirementFactory<Value>> = Arc::new(Factory(count.clone()));
             let other_factory: Arc<dyn SnapshotRetirementFactory<Value>> = if law["sameFactory"] == true { factory.clone() } else { Arc::new(Factory(count.clone())) };
-            let mut first = PresenceStore::<Value, Noop>::new(Value(17));
+            let mut first = PresenceStore::<Value, ValueMutation>::new(Value(17));
             first.install_local_retirement_factory(factory.clone()).unwrap();
             first.install_peer_retirement_factory(factory.clone()).unwrap();
-            let mut other = PresenceStore::<Value, Noop>::new(Value(23));
+            let mut other = PresenceStore::<Value, ValueMutation>::new(Value(23));
             other.install_local_retirement_factory(other_factory.clone()).unwrap();
             other.install_peer_retirement_factory(other_factory).unwrap();
             let candidate = peer_commit(&first, &fixture["candidate"]);
@@ -436,7 +446,7 @@ mod tests {
         let local = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let peer = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let foreign = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut owner = PresenceStore::<Value, Noop>::new(Value(law["local"].as_i64().unwrap() as i32));
+        let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["local"].as_i64().unwrap() as i32));
         owner.install_local_retirement_factory(Arc::new(Factory(local.clone()))).unwrap();
         owner.install_peer_retirement_factory(Arc::new(Factory(peer.clone()))).unwrap();
         let read = owner.local_read().unwrap();
@@ -463,7 +473,7 @@ mod tests {
         for race in [false, true] {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let factory = Arc::new(Factory(count.clone()));
-            let mut owner = PresenceStore::<Value, Noop>::new(Value(23));
+            let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(23));
             owner.install_local_retirement_factory(factory.clone()).unwrap();
             owner.install_peer_retirement_factory(factory.clone()).unwrap();
             let mut publication = owner.begin_peer_publication().unwrap();
@@ -622,7 +632,7 @@ mod tests {
         for case in fixture["cases"].as_array().unwrap() {
             let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
             let factory = Arc::new(Factory(count.clone()));
-            let mut owner = PresenceStore::<Value, Noop>::new(Value(case["local"].as_i64().unwrap() as i32));
+            let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(case["local"].as_i64().unwrap() as i32));
             owner.install_local_retirement_factory(factory.clone()).unwrap();
             owner.install_peer_retirement_factory(factory.clone()).unwrap();
             let mut publication = owner.begin_peer_publication().unwrap();
@@ -641,7 +651,7 @@ mod tests {
             assert!(owner.retirement_started());
             assert_eq!(owner.local().0, 0);
             assert!(owner.peers_root().is_empty());
-            assert!(owner.apply_one(0, Noop).is_err());
+            assert!(owner.apply_one(0, ValueMutation::SetValue(SetValue { n: 1 })).is_err());
             assert!(owner.begin_peer_publication().is_err());
             assert_eq!(close.close_step(0, 4096).unwrap(), SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
             let mut bytes = 0;
@@ -676,7 +686,7 @@ mod tests {
     fn retained_presence_store_close_rejects_nonempty_terminal_and_late_commit_without_drop() {
         let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let factory = Arc::new(Factory(count.clone()));
-        let mut owner = PresenceStore::<Value, Noop>::new(Value(7));
+        let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(7));
         let empty = Arc::new(Value(0));
         let missing = owner.begin_retirement(empty.clone(), |value| value.0 == 0).err().unwrap();
         assert_eq!(missing.0, "presence close requires its installed local-root retirement factory");

@@ -1,0 +1,17 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.actor.return-response.fixture.v1",
+  "type":"object","additionalProperties":false,"required":["version","magicHex","maximumBytes","tags","faultTags","vectors","maximumPage","headerCases","invalidHex","backings","transfer","authority"],
+  "properties":{
+    "version":{"const":1},"magicHex":{"const":"73727201"},"maximumBytes":{"const":4161},
+    "tags":{"const":{"result":0,"fault":1}},"faultTags":{"const":{"requestRefused":0,"executionFault":1,"resultFault":2}},
+    "vectors":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"object","additionalProperties":false,"required":["value","resultHex","hex"],"properties":{"value":{"$ref":"semio.actor.return-response.v1"},"resultHex":{"$ref":"#/definitions/hex"},"hex":{"$ref":"#/definitions/hex"}}}},
+    "maximumPage":{"const":{"sharedPageVector":1,"headerHex":"7372720100ffffffffffffffffff01ffffffffffffff0f","wireBytes":4161}},
+    "headerCases":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["hex","header","bodyValid"],"properties":{"hex":{"$ref":"#/definitions/hex"},"header":{"$ref":"semio.actor.return-response.v1#/definitions/header"},"bodyValid":{"const":false}}}},
+    "invalidHex":{"type":"array","minItems":12,"maxItems":12,"items":{"$ref":"#/definitions/hex"}},
+    "backings":{"const":{"wholeFixed":true,"offsetView":false,"wholeView":false,"shared":false,"resizable":false,"detached":false,"proxy":false,"oversized":false}},
+    "transfer":{"const":{"senderDetached":true,"receiverResizable":false,"receiverWholeBacking":true,"customPropertyTransferred":false,"bytesEqual":true}},
+    "authority":{"const":{"formatMintsPage":false,"transportDiffersFromReturnOrigin":true,"protocolFaultNeedsTransportCorrelation":true,"unknownRootsRetained":true,"workerSlotRequired":true,"noVariableErrors":true}}
+  },
+  "definitions":{"hex":{"type":"string","pattern":"^(?:[0-9a-f]{2})*$"}}
+}

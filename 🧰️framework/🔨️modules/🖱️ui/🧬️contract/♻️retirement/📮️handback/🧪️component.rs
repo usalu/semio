@@ -3,6 +3,25 @@ use super::*;
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixture.json")).unwrap() }
 
 #[test]
+fn instance_lifetime_ui_handback_alias_counter_preserves_full_u64_domain() {
+    let fixture = fixture();
+    let counter = &fixture["aliasCounter"];
+    let owners = UiArenaHandbacks::<8, 1>::new();
+    let pending: &AtomicU64 = &owners.releases[3];
+    let before: u64 = counter["before"].as_str().unwrap().parse().unwrap();
+    pending.store(before, Ordering::Release);
+    owners.record(3, UiArenaHandback::ReleaseAlias);
+    assert_eq!(pending.load(Ordering::Acquire).to_string(), counter["afterReturn"]);
+    assert_eq!(owners.take_one(3), Some(UiArenaHandback::ReleaseAlias));
+    assert_eq!(pending.load(Ordering::Acquire).to_string(), counter["afterConsume"]);
+    pending.store(u64::MAX - 1, Ordering::Release);
+    owners.record(3, UiArenaHandback::ReleaseAlias);
+    assert_eq!(pending.load(Ordering::Acquire).to_string(), counter["maximum"]);
+    assert_eq!(owners.take_one(3), Some(UiArenaHandback::ReleaseAlias));
+    assert_eq!(pending.load(Ordering::Acquire), u64::MAX - 1);
+}
+
+#[test]
 fn instance_lifetime_ui_handback_word_boundaries_preserve_fair_exact_obligations() {
     let fixture = fixture();
     let owners = UiArenaHandbacks::<256, 4>::new();

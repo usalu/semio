@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-node-kind-unit",
+  "semanticKind": "change-node-kind-unit",
+  "displayName": "Change Node Kind Unit",
+  "emoji": "📐️",
+  "aggregateVariant": "ChangeNodeKindUnit",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-node-kind-unit",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -659,7 +659,7 @@ pub enum DagNodeKind {
     Select {
         options: Vec<String>,
         #[serde(default)]
-        selected: usize,
+        selected: u64,
         output: IoPortSpec,
     },
     Screen {
@@ -703,7 +703,7 @@ pub enum DagNodeKind {
         plugin_id: String,
         #[serde(rename = "appId")]
         app_id: String,
-        #[serde(default)]
+        #[serde(rename = "appIcon", default)]
         icon: String,
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
@@ -932,8 +932,9 @@ fn advance_select_option(node: &mut DagNodeSpec) -> Option<String> {
     if options.is_empty() {
         return None;
     }
-    *selected = (*selected + 1) % options.len();
-    Some(options[*selected].clone())
+    let count = dag_index_to_wire(options.len());
+    *selected = ((*selected % count).checked_add(1)?) % count;
+    options.get(usize::try_from(*selected).ok()?).cloned()
 }
 
 /// 📐️ Places input handles on the left and output handles on the right of a rectangle node.
@@ -5845,7 +5846,7 @@ impl DagHost {
                         let control = Rect::new(cx0, cy0, cx1, cy1);
                         scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &control);
                         if lod.shows_detail_text() {
-                            let option = options.get(*selected).map(String::as_str).unwrap_or("—");
+                            let option = usize::try_from(*selected).ok().and_then(|index| options.get(index)).map(String::as_str).unwrap_or("—");
                             let option_pos = world_to_screen(cam, viewport, Point::new((cx0 + cx1) * 0.5, (cy0 + cy1) * 0.5));
                             append_label(scene, option, option_pos, paint_px * 0.95, label_fill, label_halo);
                             let chevron = world_to_screen(cam, viewport, Point::new(cx1 - 6.0 / cam.zoom.max(0.05), (cy0 + cy1) * 0.5));
@@ -8399,7 +8400,7 @@ mod tests {
 // #region 🔖️ArtifactVcs
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
-use crate::os_spr::{Identified, Mutation, MutationDiff, MutationOutcome, Patchable};
+use crate::os_spr::{Identified, Mutation, MutationDiff, Patchable};
 #[cfg(any(test, target_arch = "wasm32"))]
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
@@ -8547,12 +8548,16 @@ impl Patchable<DagEdgePatch> for DagFixtureEdge {
 //#endregion 🔖️ExternalPatchSupport
 
 //#region 🔖️DiffDeltas
-// 🧬️ Diff-internal sparse deltas — one small concrete struct per mutation verb rather than a shared
-// generic option-bag `Patch` type (the taxonomy bans a `Patch` payload on the MUTATION itself; a
-// per-verb delta avoids even the diff-internal option-bag entirely, keeping `DagDiff::absorb`'s
-// per-field LWW-overwrite semantics unambiguous — no risk of two unrelated field-changes for the same
-// node colliding inside one shared bag). Every field the ORIGINAL generic `DagNodePatch`/`DagEdgePatch`
-// carried now has its own dedicated `DagMutation` verb and matching delta type below.
+const _: () = assert!(usize::BITS <= u64::BITS);
+
+fn dag_index_from_wire(index: u64) -> protocol::MutationApplyResult<usize> {
+    usize::try_from(index).map_err(|_| protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("DAG wire index {index} is not representable on this target")))
+}
+
+fn dag_index_to_wire(index: usize) -> u64 {
+    u64::try_from(index).expect("usize::BITS <= u64::BITS")
+}
+
 /// 🏷️ `id` → `new_id` — `rename-node`'s delta. `id` is the node's identity field (its display `name`
 /// has its own `ChangedNodeName`), so this also drives every `"<id>@<port>"` edge endpoint rewrite.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -8633,50 +8638,22 @@ pub struct RewrittenEdgeEndpoint {
 }
 //#endregion 🔖️DiffDeltas
 
-/// 📦️ Semantic DAG document mutation vocabulary — id-keyed node create/delete/rename/move/resize/
-/// change-<field>/replace-<payload>/reorder, plus relationship connect/disconnect between node ports
-/// (derivation rule 4: an edge is endpoints-plus-payload with no independent identity). Mirrors the
-/// already-SMO-reviewed vocabulary `✏️s/🔌️plugins/🕸️dag`'s own `🧬️mutations` facet settled on
-/// independently for the identical domain shape — same 14 verbs, same field names, so the framework
-/// port and the plugin facet read as one vocabulary. The old generic id-keyed-collection wrapper
-/// (`Nodes`/`Edges(CollectionMutation<..>)`) and the old whole-collection/whole-document replacement
-/// variants (`SetNodes`/`SetEdges`/`SetSnapshot`) are gone with no direct replacement — whole-
-/// collection/whole-document replace is not an in-history mutation; a real whole-document load goes
-/// through `crate::os_store::ArtifactStore::reset`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-#[allow(
-    clippy::large_enum_variant,
-    reason = "CreateNode/ReplaceNodeKind carry a full DagNodeSpec/DagNodeKind payload per taxonomy's create/replace canonical args; boxing would ripple across this file's own dsl-mirror/inverse/test call sites for marginal stack-size benefit since DagMutation values are short-lived per-dispatch operations, not stored in bulk"
-)]
-pub enum DagMutation {
-    CreateNode { node: DagNodeSpec, index: usize },
-    DeleteNode { id: String },
-    RenameNode { id: String, new_id: String },
-    ChangeNodeName { id: String, new_name: String },
-    MoveNode { id: String, x: f64, y: f64 },
-    ResizeNode { id: String, width: f64, height: f64 },
-    ChangeNodeIcon { id: String, new_icon: String },
-    ChangeNodeAbbreviation { id: String, new_abbreviation: String },
-    ChangeNodeOperatorKind { id: String, new_operator_kind: Option<String> },
-    ReplaceNodeKind { id: String, new_kind: DagNodeKind },
-    ReplaceNodeProperties { id: String, new_properties: PropertyBag },
-    ReorderNodes { order: Vec<String> },
-    ConnectNodes { id: String, source: String, target: String, route_style: EdgeRouteStyle, properties: PropertyBag },
-    DisconnectNodes { id: String },
-}
+/// 🧬️ Direct leaf-owned mutation vocabulary and mechanical aggregate.
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
 /// 🔺️ Sparse field delta — every field records WHAT CHANGED (an id, a new value, a captured payload),
 /// never a whole post-mutation record or a whole-collection/whole-document snapshot.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DagDiff {
+pub struct DagDelta {
     pub created_node: Option<DagNodeSpec>,
     /// 🔢️ Companion to `created_node` — the FINAL-state insertion index (this board's node order is
     /// its z-stack: `DagHost`'s hit-testing walks `nodes.iter().rev()`, later index = frontmost).
     /// Kept as a sibling field rather than nested inside `created_node`, matching `🪐️space`'s
     /// `created_folder_at` convention (the derive engine has no first-class "record + position" shape).
-    pub created_node_at: Option<usize>,
+    pub created_node_at: Option<u64>,
     pub deleted_node_ids: Option<Vec<String>>,
     pub renamed_node: Option<RenamedNode>,
     pub moved_node: Option<MovedNode>,
@@ -8689,19 +8666,20 @@ pub struct DagDiff {
     pub replaced_node_properties: Option<ReplacedNodeProperties>,
     pub reordered_nodes: Option<Vec<String>>,
     pub connected_edge: Option<DagFixtureEdge>,
+    pub connected_edge_at: Option<u64>,
     pub disconnected_edge_ids: Option<Vec<String>>,
     /// 🩹️ `rename-node`'s edge cascade only — no direct edge field-change verb exists; any other
     /// endpoint/route/property change on an existing edge is `disconnect-nodes` + `connect-nodes`.
     pub rewritten_edge_endpoints: Option<Vec<RewrittenEdgeEndpoint>>,
 }
 
-impl MutationDiff<DagSnapshot> for DagDiff {
-    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
-        let mut next = snapshot.clone();
+impl DagDelta {
+    fn apply_into(&self, next: &mut DagSnapshot) -> protocol::MutationApplyResult<()> {
         if self.created_node.is_some() != self.created_node_at.is_some() {
             return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created node and its final index must be present together").at(["createdNode"]));
         }
-        if let (Some(node), Some(at)) = (&self.created_node, self.created_node_at) {
+        if let (Some(node), Some(wire_at)) = (&self.created_node, self.created_node_at) {
+            let at = dag_index_from_wire(wire_at)?;
             if next.nodes.iter().any(|entry| entry.id == node.id) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "created node identity already exists").at(["nodes", node.id.as_str()]));
             }
@@ -8783,7 +8761,11 @@ impl MutationDiff<DagSnapshot> for DagDiff {
             }
             next.nodes = reordered;
         }
-        if let Some(edge) = &self.connected_edge {
+        if self.connected_edge.is_some() != self.connected_edge_at.is_some() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "connected edge and its final index must be present together").at(["connectedEdge"]));
+        }
+        if let (Some(edge), Some(wire_at)) = (&self.connected_edge, self.connected_edge_at) {
+            let at = dag_index_from_wire(wire_at)?;
             if next.edges.iter().any(|entry| entry.id == edge.id) {
                 return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "connected edge identity already exists").at(["edges", edge.id.as_str()]));
             }
@@ -8793,7 +8775,10 @@ impl MutationDiff<DagSnapshot> for DagDiff {
                     return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "connected edge endpoint node does not exist").at(["edges", edge.id.as_str(), node_id.as_str()]));
                 }
             }
-            next.edges.push(edge.clone());
+            if at > next.edges.len() {
+                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("connected edge final index {at} is out of range for length {}", next.edges.len())).at(["connectedEdgeAt"]));
+            }
+            next.edges.insert(at, edge.clone());
         }
         if let Some(ids) = &self.disconnected_edge_ids {
             let mut seen = HashSet::new();
@@ -8831,196 +8816,31 @@ impl MutationDiff<DagSnapshot> for DagDiff {
                 }
             }
         }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.created_node.is_some() {
-            self.created_node = other.created_node;
-            self.created_node_at = other.created_node_at;
-        }
-        if let Some(ids) = other.deleted_node_ids {
-            self.deleted_node_ids.get_or_insert_with(Vec::new).extend(ids);
-        }
-        if other.renamed_node.is_some() {
-            self.renamed_node = other.renamed_node;
-        }
-        if other.moved_node.is_some() {
-            self.moved_node = other.moved_node;
-        }
-        if other.resized_node.is_some() {
-            self.resized_node = other.resized_node;
-        }
-        if other.changed_node_name.is_some() {
-            self.changed_node_name = other.changed_node_name;
-        }
-        if other.changed_node_icon.is_some() {
-            self.changed_node_icon = other.changed_node_icon;
-        }
-        if other.changed_node_abbreviation.is_some() {
-            self.changed_node_abbreviation = other.changed_node_abbreviation;
-        }
-        if other.changed_node_operator_kind.is_some() {
-            self.changed_node_operator_kind = other.changed_node_operator_kind;
-        }
-        if other.replaced_node_kind.is_some() {
-            self.replaced_node_kind = other.replaced_node_kind;
-        }
-        if other.replaced_node_properties.is_some() {
-            self.replaced_node_properties = other.replaced_node_properties;
-        }
-        if other.reordered_nodes.is_some() {
-            self.reordered_nodes = other.reordered_nodes;
-        }
-        if other.connected_edge.is_some() {
-            self.connected_edge = other.connected_edge;
-        }
-        if let Some(ids) = other.disconnected_edge_ids {
-            self.disconnected_edge_ids.get_or_insert_with(Vec::new).extend(ids);
-        }
-        if let Some(rewrites) = other.rewritten_edge_endpoints {
-            self.rewritten_edge_endpoints.get_or_insert_with(Vec::new).extend(rewrites);
-        }
+        Ok(())
     }
 }
 
-impl Mutation<DagSnapshot> for DagMutation {
-    type Diff = DagDiff;
+/// 🎞️ Ordered structural deltas; composition preserves every preceding effect and rejection.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DagDiff {
+    pub steps: Vec<DagDelta>,
+}
 
-    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
-    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
-    fn diff(&self, snapshot: &DagSnapshot) -> MutationOutcome<DagDiff> {
-        let mut diff = DagDiff::default();
-        match self {
-            DagMutation::CreateNode { node, index } => {
-                diff.created_node = Some(node.clone());
-                diff.created_node_at = Some(*index);
-            }
-            DagMutation::DeleteNode { id } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.deleted_node_ids = Some(vec![id.clone()]);
-                    let severed: Vec<String> = snapshot.edges.iter().filter(|edge| &split_dag_endpoint(&edge.source).0 == id || &split_dag_endpoint(&edge.target).0 == id).map(|edge| edge.id.clone()).collect();
-                    if !severed.is_empty() {
-                        diff.disconnected_edge_ids = Some(severed);
-                    }
-                }
-            }
-            DagMutation::RenameNode { id, new_id } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.renamed_node = Some(RenamedNode { id: id.clone(), new_id: new_id.clone() });
-                    let rewrites: Vec<RewrittenEdgeEndpoint> = snapshot
-                        .edges
-                        .iter()
-                        .filter_map(|edge| {
-                            let (source_node, source_port) = split_dag_endpoint(&edge.source);
-                            let (target_node, target_port) = split_dag_endpoint(&edge.target);
-                            let touches_source = &source_node == id;
-                            let touches_target = &target_node == id;
-                            if !touches_source && !touches_target {
-                                return None;
-                            }
-                            Some(RewrittenEdgeEndpoint { id: edge.id.clone(), new_source: touches_source.then(|| format!("{new_id}@{source_port}")), new_target: touches_target.then(|| format!("{new_id}@{target_port}")) })
-                        })
-                        .collect();
-                    if !rewrites.is_empty() {
-                        diff.rewritten_edge_endpoints = Some(rewrites);
-                    }
-                }
-            }
-            DagMutation::ChangeNodeName { id, new_name } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.changed_node_name = Some(ChangedNodeName { id: id.clone(), new_name: new_name.clone() });
-                }
-            }
-            DagMutation::MoveNode { id, x, y } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.moved_node = Some(MovedNode { id: id.clone(), x: *x, y: *y });
-                }
-            }
-            DagMutation::ResizeNode { id, width, height } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.resized_node = Some(ResizedNode { id: id.clone(), width: *width, height: *height });
-                }
-            }
-            DagMutation::ChangeNodeIcon { id, new_icon } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.changed_node_icon = Some(ChangedNodeIcon { id: id.clone(), new_icon: new_icon.clone() });
-                }
-            }
-            DagMutation::ChangeNodeAbbreviation { id, new_abbreviation } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.changed_node_abbreviation = Some(ChangedNodeAbbreviation { id: id.clone(), new_abbreviation: new_abbreviation.clone() });
-                }
-            }
-            DagMutation::ChangeNodeOperatorKind { id, new_operator_kind } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.changed_node_operator_kind = Some(ChangedNodeOperatorKind { id: id.clone(), new_operator_kind: new_operator_kind.clone() });
-                }
-            }
-            DagMutation::ReplaceNodeKind { id, new_kind } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.replaced_node_kind = Some(ReplacedNodeKind { id: id.clone(), new_kind: new_kind.clone() });
-                }
-            }
-            DagMutation::ReplaceNodeProperties { id, new_properties } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    diff.replaced_node_properties = Some(ReplacedNodeProperties { id: id.clone(), new_properties: new_properties.clone() });
-                }
-            }
-            DagMutation::ReorderNodes { order } => diff.reordered_nodes = Some(order.clone()),
-            DagMutation::ConnectNodes { id, source, target, route_style, properties } => {
-                diff.connected_edge = Some(DagFixtureEdge { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() });
-            }
-            DagMutation::DisconnectNodes { id } => {
-                if snapshot.edges.iter().any(|edge| &edge.id == id) {
-                    diff.disconnected_edge_ids = Some(vec![id.clone()]);
-                }
-            }
-        }
-        MutationOutcome::new(diff)
+impl From<DagDelta> for DagDiff {
+    fn from(delta: DagDelta) -> Self {
+        if delta == DagDelta::default() { Self::default() } else { Self { steps: vec![delta] } }
+    }
+}
+
+impl MutationDiff<DagSnapshot> for DagDiff {
+    fn apply(&self, snapshot: &DagSnapshot) -> protocol::MutationApplyResult<DagSnapshot> {
+        let mut next = snapshot.clone();
+        for step in &self.steps { step.apply_into(&mut next)?; }
+        Ok(next)
     }
 
-    fn inverse(&self, snapshot: &DagSnapshot) -> Vec<Self> {
-        match self {
-            DagMutation::CreateNode { node, .. } => vec![DagMutation::DeleteNode { id: node.id.clone() }],
-            DagMutation::DeleteNode { id } => {
-                let Some(at) = snapshot.nodes.iter().position(|node| &node.id == id) else {
-                    return Vec::new();
-                };
-                let node = &snapshot.nodes[at];
-                let mut mutations = vec![DagMutation::CreateNode { node: node.clone(), index: at }];
-                for edge in snapshot.edges.iter().filter(|edge| &split_dag_endpoint(&edge.source).0 == id || &split_dag_endpoint(&edge.target).0 == id) {
-                    mutations.push(DagMutation::ConnectNodes { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), route_style: edge.route_style, properties: edge.properties.clone() });
-                }
-                mutations
-            }
-            DagMutation::RenameNode { id, new_id } => {
-                if snapshot.nodes.iter().any(|node| &node.id == id) {
-                    vec![DagMutation::RenameNode { id: new_id.clone(), new_id: id.clone() }]
-                } else {
-                    Vec::new()
-                }
-            }
-            DagMutation::MoveNode { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::MoveNode { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
-            DagMutation::ResizeNode { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ResizeNode { id: id.clone(), width: node.width, height: node.height }]).unwrap_or_default(),
-            DagMutation::ChangeNodeName { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeName { id: id.clone(), new_name: node.name.clone() }]).unwrap_or_default(),
-            DagMutation::ChangeNodeIcon { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeIcon { id: id.clone(), new_icon: node.icon.clone() }]).unwrap_or_default(),
-            DagMutation::ChangeNodeAbbreviation { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: node.abbreviation.clone() }]).unwrap_or_default(),
-            DagMutation::ChangeNodeOperatorKind { id, .. } => {
-                snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ChangeNodeOperatorKind { id: id.clone(), new_operator_kind: node.operator_kind.clone() }]).unwrap_or_default()
-            }
-            DagMutation::ReplaceNodeKind { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeKind { id: id.clone(), new_kind: node.kind.clone() }]).unwrap_or_default(),
-            DagMutation::ReplaceNodeProperties { id, .. } => snapshot.nodes.iter().find(|node| &node.id == id).map(|node| vec![DagMutation::ReplaceNodeProperties { id: id.clone(), new_properties: node.properties.clone() }]).unwrap_or_default(),
-            DagMutation::ReorderNodes { .. } => vec![DagMutation::ReorderNodes { order: snapshot.nodes.iter().map(|node| node.id.clone()).collect() }],
-            DagMutation::ConnectNodes { id, .. } => vec![DagMutation::DisconnectNodes { id: id.clone() }],
-            DagMutation::DisconnectNodes { id } => snapshot
-                .edges
-                .iter()
-                .find(|edge| &edge.id == id)
-                .map(|edge| vec![DagMutation::ConnectNodes { id: id.clone(), source: edge.source.clone(), target: edge.target.clone(), route_style: edge.route_style, properties: edge.properties.clone() }])
-                .unwrap_or_default(),
-        }
-    }
+    fn absorb(&mut self, other: Self) { self.steps.extend(other.steps); }
 }
 
 pub type DagEnvelope = ArtifactEnvelope<DagSnapshot, DagMutation>;
@@ -9045,11 +8865,11 @@ pub type DagStore = ArtifactStore<DagSnapshot, DagMutation>;
 // (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
 // outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeMutationDsl`
-// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagSnapshotDsl`/`DagMutationDsl` are
+// mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagSnapshotDsl` are
 // LOCAL structural twins that box only where the derive requires it; the real domain types keep their
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
-enum DagNodeKindDsl {
+pub enum DagNodeKindDsl {
     Computation {
         #[dsl(table)]
         inputs: Vec<IoPortSpec>,
@@ -9067,7 +8887,7 @@ enum DagNodeKindDsl {
     },
     Select {
         options: Vec<String>,
-        selected: usize,
+        selected: u64,
         output: IoPortSpec,
     },
     Screen {
@@ -9152,7 +8972,7 @@ fn dag_node_kind_from_dsl(kind: DagNodeKindDsl) -> DagNodeKind {
 /// 🧬️ Mirror of {@link DagNodeSpec} — every field identical except `kind`, boxed only here (see the
 /// region's opening doc comment).
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
-struct DagNodeSpecDsl {
+pub struct DagNodeSpecDsl {
     id: String,
     name: String,
     abbreviation: String,
@@ -9199,8 +9019,24 @@ fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
     }
 }
 
-/// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
-/// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
+impl dsl::DslField for DagNodeKind {
+    fn shape() -> dsl::Shape { dsl::Shape::Statements(<DagNodeKindDsl as dsl::DslVariants>::variants()) }
+    fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Statements(vec![<DagNodeKindDsl as dsl::DslVariants>::to_named_record(&dag_node_kind_to_dsl(self))]) }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Statements(items) if items.len() == 1 => <DagNodeKindDsl as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map(dag_node_kind_from_dsl).map_err(|error| error.to_string()),
+            other => Err(format!("expected exactly one DagNodeKind statement, found {other:?}")),
+        }
+    }
+}
+
+impl dsl::DslField for DagNodeSpec {
+    fn shape() -> dsl::Shape { <DagNodeSpecDsl as dsl::DslField>::shape() }
+    fn to_value(&self) -> dsl::FieldValue { <DagNodeSpecDsl as dsl::DslField>::to_value(&dag_node_spec_to_dsl(self)) }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> { <DagNodeSpecDsl as dsl::DslField>::from_value(value).map(dag_node_spec_from_dsl) }
+}
+
+/// 🧬️ Document lowering shares the intrinsic node record representation with mutation payloads.
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
 #[dsl(id = "dag.dag")]
 #[dsl(layout = "lines")]
@@ -9289,116 +9125,7 @@ impl crate::os_store::ArtifactPack for DagSnapshot {
 //#endregion 🔖️Dsl
 
 //#region 🔖️OpText
-
-//#region 🔖️OpTextMirror
-/// 🧬️ Mirror of {@link DagMutation} — see `🔖️DslMirror`'s doc comment for why `DagNodeSpec`/`DagNodeKind`
-/// need their own Dsl twins here too (`kind`'s boxed-tagged-enum requirement). Every other field —
-/// ids, coordinates, extents, names, icons, `EdgeRouteStyle`, `PropertyBag`, `Vec<String>`,
-/// `Option<String>` — is DSL-representable directly, per this file's own `DagNodeSpecDsl`/
-/// `DagNodeKindDsl::Preview` precedent; no JSON-escape-hatch fields were needed.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
-enum DagMutationDsl {
-    CreateNode {
-        node: DagNodeSpecDsl,
-        index: usize,
-    },
-    DeleteNode {
-        id: String,
-    },
-    RenameNode {
-        id: String,
-        new_id: String,
-    },
-    ChangeNodeName {
-        id: String,
-        new_name: String,
-    },
-    MoveNode {
-        id: String,
-        x: f64,
-        y: f64,
-    },
-    ResizeNode {
-        id: String,
-        width: f64,
-        height: f64,
-    },
-    ChangeNodeIcon {
-        id: String,
-        new_icon: String,
-    },
-    ChangeNodeAbbreviation {
-        id: String,
-        new_abbreviation: String,
-    },
-    ChangeNodeOperatorKind {
-        id: String,
-        new_operator_kind: Option<String>,
-    },
-    ReplaceNodeKind {
-        id: String,
-        #[dsl(statements)]
-        new_kind: Box<DagNodeKindDsl>,
-    },
-    ReplaceNodeProperties {
-        id: String,
-        new_properties: PropertyBag,
-    },
-    ReorderNodes {
-        order: Vec<String>,
-    },
-    ConnectNodes {
-        id: String,
-        source: String,
-        target: String,
-        route_style: EdgeRouteStyle,
-        properties: PropertyBag,
-    },
-    DisconnectNodes {
-        id: String,
-    },
-}
-
-fn dag_mutation_to_dsl(operation: &DagMutation) -> DagMutationDsl {
-    match operation {
-        DagMutation::CreateNode { node, index } => DagMutationDsl::CreateNode { node: dag_node_spec_to_dsl(node), index: *index },
-        DagMutation::DeleteNode { id } => DagMutationDsl::DeleteNode { id: id.clone() },
-        DagMutation::RenameNode { id, new_id } => DagMutationDsl::RenameNode { id: id.clone(), new_id: new_id.clone() },
-        DagMutation::ChangeNodeName { id, new_name } => DagMutationDsl::ChangeNodeName { id: id.clone(), new_name: new_name.clone() },
-        DagMutation::MoveNode { id, x, y } => DagMutationDsl::MoveNode { id: id.clone(), x: *x, y: *y },
-        DagMutation::ResizeNode { id, width, height } => DagMutationDsl::ResizeNode { id: id.clone(), width: *width, height: *height },
-        DagMutation::ChangeNodeIcon { id, new_icon } => DagMutationDsl::ChangeNodeIcon { id: id.clone(), new_icon: new_icon.clone() },
-        DagMutation::ChangeNodeAbbreviation { id, new_abbreviation } => DagMutationDsl::ChangeNodeAbbreviation { id: id.clone(), new_abbreviation: new_abbreviation.clone() },
-        DagMutation::ChangeNodeOperatorKind { id, new_operator_kind } => DagMutationDsl::ChangeNodeOperatorKind { id: id.clone(), new_operator_kind: new_operator_kind.clone() },
-        DagMutation::ReplaceNodeKind { id, new_kind } => DagMutationDsl::ReplaceNodeKind { id: id.clone(), new_kind: Box::new(dag_node_kind_to_dsl(new_kind)) },
-        DagMutation::ReplaceNodeProperties { id, new_properties } => DagMutationDsl::ReplaceNodeProperties { id: id.clone(), new_properties: new_properties.clone() },
-        DagMutation::ReorderNodes { order } => DagMutationDsl::ReorderNodes { order: order.clone() },
-        DagMutation::ConnectNodes { id, source, target, route_style, properties } => DagMutationDsl::ConnectNodes { id: id.clone(), source: source.clone(), target: target.clone(), route_style: *route_style, properties: properties.clone() },
-        DagMutation::DisconnectNodes { id } => DagMutationDsl::DisconnectNodes { id: id.clone() },
-    }
-}
-
-fn dag_mutation_from_dsl(mirror: DagMutationDsl) -> DagMutation {
-    match mirror {
-        DagMutationDsl::CreateNode { node, index } => DagMutation::CreateNode { node: dag_node_spec_from_dsl(node), index },
-        DagMutationDsl::DeleteNode { id } => DagMutation::DeleteNode { id },
-        DagMutationDsl::RenameNode { id, new_id } => DagMutation::RenameNode { id, new_id },
-        DagMutationDsl::ChangeNodeName { id, new_name } => DagMutation::ChangeNodeName { id, new_name },
-        DagMutationDsl::MoveNode { id, x, y } => DagMutation::MoveNode { id, x, y },
-        DagMutationDsl::ResizeNode { id, width, height } => DagMutation::ResizeNode { id, width, height },
-        DagMutationDsl::ChangeNodeIcon { id, new_icon } => DagMutation::ChangeNodeIcon { id, new_icon },
-        DagMutationDsl::ChangeNodeAbbreviation { id, new_abbreviation } => DagMutation::ChangeNodeAbbreviation { id, new_abbreviation },
-        DagMutationDsl::ChangeNodeOperatorKind { id, new_operator_kind } => DagMutation::ChangeNodeOperatorKind { id, new_operator_kind },
-        DagMutationDsl::ReplaceNodeKind { id, new_kind } => DagMutation::ReplaceNodeKind { id, new_kind: dag_node_kind_from_dsl(*new_kind) },
-        DagMutationDsl::ReplaceNodeProperties { id, new_properties } => DagMutation::ReplaceNodeProperties { id, new_properties },
-        DagMutationDsl::ReorderNodes { order } => DagMutation::ReorderNodes { order },
-        DagMutationDsl::ConnectNodes { id, source, target, route_style, properties } => DagMutation::ConnectNodes { id, source, target, route_style, properties },
-        DagMutationDsl::DisconnectNodes { id } => DagMutation::DisconnectNodes { id },
-    }
-}
-
-/// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
-impl crate::os_spr::OpText for DagMutationDsl {
+impl crate::os_spr::OpText for DagMutation {
     fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
@@ -9410,45 +9137,19 @@ impl crate::os_spr::OpText for DagMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
+
     fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        let spec_fn = variants.iter().find(|(name, _)| name == &keyword).map(|(_, spec)| *spec).expect("variant spec must exist for its own keyword");
         dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
-impl crate::os_spr::OpBinary for DagMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-
-impl crate::os_spr::OpText for DagMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        Ok(dag_mutation_from_dsl(<DagMutationDsl as crate::os_spr::OpText>::parse_op(line)?))
-    }
-
-    fn print_op(&self) -> String {
-        <DagMutationDsl as crate::os_spr::OpText>::print_op(&dag_mutation_to_dsl(self))
-    }
-}
-
-/// ⚡️ Binary mirror of the `OpText` bridge above — `DagMutationDsl` already derives `OpBinary`
-/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
 impl crate::os_spr::OpBinary for DagMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        dag_mutation_to_dsl(self).encode_op()
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        Ok(dag_mutation_from_dsl(DagMutationDsl::decode_op(bytes)?))
-    }
+    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> { dsl::variants_binary::encode_op(self) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
-//#endregion 🔖️OpTextMirror
 //#endregion 🔖️OpText
 
 //#region 🔖️WasmBridge
@@ -9516,7 +9217,7 @@ mod dag_vcs_tests {
     fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
         let forward = operation.diff(document).diff().apply(document).expect("valid DAG diff");
         let mut restored = forward.clone();
-        for back in operation.inverse(document) {
+        for back in operation.inverse(document).into_iter().rev() {
             restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse DAG diff");
         }
         assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
@@ -9526,48 +9227,48 @@ mod dag_vcs_tests {
     #[semio_framework_async_macros::async_test]
     async fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.expect("store");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("n1"), index: 0 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 })], description: None }).await.expect("apply");
         assert_eq!(store.snapshot().await.expect("projection").nodes.len(), 1);
     }
 
     #[test]
     fn node_create_move_resize_delete_round_trip() {
         let document = empty_dag_document();
-        let added = round_trip(&document, &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let added = round_trip(&document, &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
         assert_eq!(added.nodes.len(), 1);
-        let moved = round_trip(&added, &DagMutation::MoveNode { id: "n1".into(), x: 42.0, y: 7.0 });
+        let moved = round_trip(&added, &DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 42.0, y: 7.0 }));
         assert_eq!(moved.nodes[0].x, 42.0);
         assert_eq!(moved.nodes[0].y, 7.0);
-        let resized = round_trip(&moved, &DagMutation::ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 });
+        let resized = round_trip(&moved, &DagMutation::ResizeNode(ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 }));
         assert_eq!(resized.nodes[0].width, 200.0);
         assert_eq!(resized.nodes[0].height, 90.0);
-        let removed = round_trip(&resized, &DagMutation::DeleteNode { id: "n1".into() });
+        let removed = round_trip(&resized, &DagMutation::DeleteNode(DeleteNode { id: "n1".into() }));
         assert!(removed.nodes.is_empty());
     }
 
     #[test]
     fn node_scalar_field_changes_round_trip() {
-        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
-        let renamed_label = round_trip(&document, &DagMutation::ChangeNodeName { id: "n1".into(), new_name: "Renamed label".into() });
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
+        let renamed_label = round_trip(&document, &DagMutation::ChangeNodeName(ChangeNodeName { id: "n1".into(), new_name: "Renamed label".into() }));
         assert_eq!(renamed_label.nodes[0].name, "Renamed label");
-        let iconed = round_trip(&renamed_label, &DagMutation::ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() });
+        let iconed = round_trip(&renamed_label, &DagMutation::ChangeNodeIcon(ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() }));
         assert_eq!(iconed.nodes[0].icon, "emoji:🧪️");
-        let abbreviated = round_trip(&iconed, &DagMutation::ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() });
+        let abbreviated = round_trip(&iconed, &DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() }));
         assert_eq!(abbreviated.nodes[0].abbreviation, "N1");
-        let with_operator = round_trip(&abbreviated, &DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) });
+        let with_operator = round_trip(&abbreviated, &DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) }));
         assert_eq!(with_operator.nodes[0].operator_kind.as_deref(), Some("math.add"));
-        let without_operator = round_trip(&with_operator, &DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None });
+        let without_operator = round_trip(&with_operator, &DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None }));
         assert_eq!(without_operator.nodes[0].operator_kind, None);
     }
 
     #[test]
     fn replace_node_kind_and_properties_round_trip() {
-        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
         let new_kind = DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") };
-        let replaced_kind = round_trip(&document, &DagMutation::ReplaceNodeKind { id: "n1".into(), new_kind: new_kind.clone() });
+        let replaced_kind = round_trip(&document, &DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "n1".into(), new_kind: new_kind.clone() }));
         assert_eq!(replaced_kind.nodes[0].kind, new_kind);
         let new_properties = PropertyBag::from([("weight".to_string(), PropertyValue::Number(3.0))]);
-        let replaced_properties = round_trip(&replaced_kind, &DagMutation::ReplaceNodeProperties { id: "n1".into(), new_properties: new_properties.clone() });
+        let replaced_properties = round_trip(&replaced_kind, &DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "n1".into(), new_properties: new_properties.clone() }));
         assert_eq!(replaced_properties.nodes[0].properties, new_properties);
     }
 
@@ -9576,7 +9277,7 @@ mod dag_vcs_tests {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
         document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }];
-        let renamed = round_trip(&document, &DagMutation::RenameNode { id: "a".into(), new_id: "aa".into() });
+        let renamed = round_trip(&document, &DagMutation::RenameNode(RenameNode { id: "a".into(), new_id: "aa".into() }));
         assert!(renamed.nodes.iter().any(|node| node.id == "aa"));
         assert_eq!(renamed.edges[0].source, "aa@out");
         assert_eq!(renamed.edges[0].target, "b@in");
@@ -9587,7 +9288,7 @@ mod dag_vcs_tests {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
         document.edges = vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }];
-        let deleted = round_trip(&document, &DagMutation::DeleteNode { id: "a".into() });
+        let deleted = round_trip(&document, &DagMutation::DeleteNode(DeleteNode { id: "a".into() }));
         assert!(deleted.nodes.iter().all(|node| node.id != "a"));
         assert!(deleted.edges.is_empty(), "the severed edge must be removed by the same delete-node diff, not left dangling");
     }
@@ -9596,7 +9297,7 @@ mod dag_vcs_tests {
     fn reorder_nodes_round_trips() {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b"), sample_node("c")];
-        let reordered = round_trip(&document, &DagMutation::ReorderNodes { order: vec!["c".into(), "a".into(), "b".into()] });
+        let reordered = round_trip(&document, &DagMutation::ReorderNodes(ReorderNodes { order: vec!["c".into(), "a".into(), "b".into()] }));
         let ids: Vec<&str> = reordered.nodes.iter().map(|node| node.id.as_str()).collect();
         assert_eq!(ids, vec!["c", "a", "b"]);
         document.nodes = reordered.nodes;
@@ -9606,25 +9307,25 @@ mod dag_vcs_tests {
     fn connect_disconnect_nodes_round_trip() {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
-        let connected = round_trip(&document, &DagMutation::ConnectNodes { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::default() });
+        let connected = round_trip(&document, &DagMutation::ConnectNodes(ConnectNodes { index: 0, id: "e1".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::default() }));
         assert_eq!(connected.edges.len(), 1);
-        let disconnected = round_trip(&connected, &DagMutation::DisconnectNodes { id: "e1".into() });
+        let disconnected = round_trip(&connected, &DagMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }));
         assert!(disconnected.edges.is_empty());
     }
 
     //#region 🔖️MutationLaws
     #[test]
     fn diff_and_inverse_are_deterministic() {
-        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
-        let mutation = DagMutation::MoveNode { id: "n1".into(), x: 12.0, y: 34.0 };
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
+        let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 12.0, y: 34.0 });
         assert_eq!(Mutation::diff(&mutation, &document), Mutation::diff(&mutation, &document), "diff(payload, base) must be a pure function of its inputs");
         assert_eq!(mutation.inverse(&document), mutation.inverse(&document), "inverse(payload, base) must be a pure function of its inputs");
     }
 
     #[test]
     fn move_node_diff_is_consistent_with_direct_field_mutation() {
-        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
-        let mutation = DagMutation::MoveNode { id: "n1".into(), x: 5.0, y: 6.0 };
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
+        let mutation = DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 5.0, y: 6.0 });
         let via_diff = Mutation::diff(&mutation, &document).diff().apply(&document).expect("valid DAG diff");
         let mut via_direct = document.clone();
         via_direct.nodes[0].x = 5.0;
@@ -9634,10 +9335,10 @@ mod dag_vcs_tests {
 
     #[test]
     fn move_node_diff_absorb_law_holds() {
-        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
-        let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }, &document).into_parts();
+        let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
+        let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }), &document).into_parts();
         let mid = d1.apply(&document).expect("valid first DAG diff");
-        let (d2, _) = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }, &mid).into_parts();
+        let (d2, _) = Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }), &mid).into_parts();
         d1.absorb(d2);
         let absorbed = d1.apply(&document).expect("valid absorbed DAG diff");
         assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
@@ -9647,10 +9348,10 @@ mod dag_vcs_tests {
     #[test]
     fn missing_target_inverse_and_diff_are_no_ops() {
         let document = empty_dag_document();
-        assert_eq!(Mutation::diff(&DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }, &document).diff(), &DagDiff::default());
-        assert!(DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }.inverse(&document).is_empty());
-        assert!(DagMutation::DeleteNode { id: "ghost".into() }.inverse(&document).is_empty());
-        assert!(DagMutation::DisconnectNodes { id: "ghost".into() }.inverse(&document).is_empty());
+        assert_eq!(Mutation::diff(&DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }), &document).diff(), &DagDiff::default());
+        assert!(DagMutation::MoveNode(MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }).inverse(&document).is_empty());
+        assert!(DagMutation::DeleteNode(DeleteNode { id: "ghost".into() }).inverse(&document).is_empty());
+        assert!(DagMutation::DisconnectNodes(DisconnectNodes { id: "ghost".into() }).inverse(&document).is_empty());
     }
     //#endregion 🔖️MutationLaws
 
@@ -9750,97 +9451,94 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_create_node() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::CreateNode(CreateNode { node: sample_node("n1"), index: 0 }));
     }
 
     #[test]
     fn op_text_round_trips_delete_node() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DeleteNode { id: "n1".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DeleteNode(DeleteNode { id: "n1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_rename_node() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::RenameNode { id: "n1".into(), new_id: "n1-renamed".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::RenameNode(RenameNode { id: "n1".into(), new_id: "n1-renamed".into() }));
     }
 
     #[test]
     fn op_text_round_trips_change_node_name() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeName { id: "n1".into(), new_name: "Renamed".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeName(ChangeNodeName { id: "n1".into(), new_name: "Renamed".into() }));
     }
 
     #[test]
     fn op_text_round_trips_move_node() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::MoveNode { id: "n1".into(), x: 42.0, y: 7.0 });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::MoveNode(MoveNode { id: "n1".into(), x: 42.0, y: 7.0 }));
     }
 
     #[test]
     fn op_text_round_trips_resize_node() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ResizeNode(ResizeNode { id: "n1".into(), width: 200.0, height: 90.0 }));
     }
 
     #[test]
     fn op_text_round_trips_change_node_icon() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeIcon(ChangeNodeIcon { id: "n1".into(), new_icon: "emoji:🧪️".into() }));
     }
 
     #[test]
     fn op_text_round_trips_change_node_abbreviation() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeAbbreviation(ChangeNodeAbbreviation { id: "n1".into(), new_abbreviation: "N1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_change_node_operator_kind_some_and_none() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) });
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: Some("math.add".into()) }));
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ChangeNodeOperatorKind(ChangeNodeOperatorKind { id: "n1".into(), new_operator_kind: None }));
     }
 
     #[test]
     fn op_text_round_trips_replace_node_kind() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind { id: "n1".into(), new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") } });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "n1".into(), new_kind: DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") } }));
     }
 
     #[test]
     fn op_text_round_trips_replace_node_properties() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeProperties { id: "n1".into(), new_properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReplaceNodeProperties(ReplaceNodeProperties { id: "n1".into(), new_properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) }));
     }
 
     #[test]
     fn op_text_round_trips_reorder_nodes() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes { order: vec!["a".into(), "b".into(), "c".into()] });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ReorderNodes(ReorderNodes { order: vec!["a".into(), "b".into(), "c".into()] }));
     }
 
     #[test]
     fn op_text_round_trips_connect_nodes() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ConnectNodes {
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::ConnectNodes(ConnectNodes { index: 0,
             id: "e1".into(),
             source: "a@out".into(),
             target: "b@in".into(),
             route_style: EdgeRouteStyle::SharpSz,
             properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]),
-        });
+        }));
     }
 
     #[test]
     fn op_text_round_trips_disconnect_nodes() {
-        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes { id: "e1".into() });
+        crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes(DisconnectNodes { id: "e1".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None)).await.expect("store");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None }).await.expect("apply");
         crate::os_store::test_support::assert_document_text_round_trip(&store).await;
         crate::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
-    /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `DagMutation`
-    /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `DagMutationDsl`
-    /// mirror, see `🔖️OpTextMirror` above), so this closes the missing coverage rather than adding
-    /// any new codec.
+    /// 🎫️ Command envelopes preserve the aggregate's direct leaf-owned operation codecs.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None)).await.expect("store");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode(CreateNode { node: sample_node("extra"), index: 0 })], description: None }).await.expect("apply");
         let envelope = store.envelope().await;
         let edit: &Edit<DagMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
         crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
@@ -9848,3 +9546,221 @@ mod dag_vcs_tests {
     //#endregion 🔖️DslTests
 }
 // #endregion 🔖️ArtifactVcs
+
+#[cfg(test)]
+mod dag_direct_tests {
+    use super::*;
+    use protocol::{MutationLeaf, OpBinary, OpText, SemanticMutation};
+
+    fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("🧪️fixtures/🔣️mutations.json")).expect("neutral Dag mutation fixture") }
+
+    fn node(id: &str) -> DagNodeSpec { DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() } }
+
+    fn base() -> DagSnapshot {
+        DagSnapshot {
+            schema: DAG_DOCUMENT_SCHEMA.into(), nodes: vec![node("a"), node("b"), node("c")],
+            edges: vec![
+                DagFixtureEdge { id: "e".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() },
+                DagFixtureEdge { id: "keep".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() },
+                DagFixtureEdge { id: "last".into(), source: "c@out".into(), target: "a@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".into(), PropertyValue::Number(2.0))]) },
+            ],
+        }
+    }
+
+    fn apply(base: &DagSnapshot, mutation: &DagMutation) -> DagSnapshot { mutation.diff(base).diff().apply(base).expect("valid direct Dag mutation") }
+
+    fn assert_codecs(mutation: &DagMutation) {
+        let json = serde_json::to_string(mutation).expect("serialize direct mutation");
+        assert_eq!(serde_json::from_str::<DagMutation>(&json).expect("deserialize direct mutation"), *mutation);
+        let text = mutation.print_op();
+        assert!(text.starts_with(mutation.descriptor().text_opcode.expect("text opcode")));
+        assert_eq!(DagMutation::parse_op(&text).expect("direct text decode"), *mutation);
+        let bytes = mutation.encode_op().expect("direct binary encode");
+        assert_eq!(bytes[0], dsl::variants_binary::OP_BINARY_FORMAT);
+        assert_eq!(u32::from(bytes[1]), mutation.descriptor().binary_tag.expect("binary tag"));
+        assert_eq!(DagMutation::decode_op(&bytes).expect("direct binary decode"), *mutation);
+    }
+
+    pub(crate) fn assert_leaf_contract<T>(index: usize, wrap: fn(T) -> DagMutation, descriptor: &str)
+    where T: MutationLeaf + serde::Serialize + serde::de::DeserializeOwned {
+        let fixture = fixture();
+        let row = &fixture["valid"][index];
+        let payload = serde_json::from_value::<T>(row["payload"].clone()).expect("neutral direct payload");
+        let mutation = wrap(payload);
+        assert_eq!(serde_json::to_value(T::DESCRIPTOR).expect("descriptor JSON"), serde_json::from_str::<serde_json::Value>(descriptor).expect("owned descriptor"));
+        assert_eq!(mutation.descriptor(), &T::DESCRIPTOR);
+        assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small roster index")));
+        assert_eq!(serde_json::to_value(&mutation).expect("mutation JSON")["operation"], row["operation"]);
+        let mut unknown_payload = row["payload"].clone();
+        unknown_payload["unknown"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<T>(unknown_payload).is_err());
+        let mut unknown_operation = serde_json::to_value(&mutation).expect("mutation JSON");
+        unknown_operation["unknown"] = serde_json::json!(true);
+        assert!(serde_json::from_value::<DagMutation>(unknown_operation).is_err());
+        for key in row["payload"].as_object().expect("payload object").keys().filter(|key| key.as_str() != "newOperatorKind") {
+            let mut missing = row["payload"].clone();
+            missing.as_object_mut().expect("payload object").remove(key);
+            assert!(serde_json::from_value::<T>(missing.clone()).is_err(), "missing {key}");
+            missing["operation"] = row["operation"].clone();
+            assert!(serde_json::from_value::<DagMutation>(missing).is_err(), "missing aggregate {key}");
+        }
+        assert_codecs(&mutation);
+        let before = base();
+        let mut restored = apply(&before, &mutation);
+        let inverse = mutation.inverse(&before);
+        assert!(!inverse.is_empty());
+        for inverse in inverse.into_iter().rev() { restored = apply(&restored, &inverse); }
+        assert_eq!(restored, before);
+    }
+
+    #[test]
+    fn direct_leaf_roster_and_codec_contracts() {
+        let fixture = fixture();
+        assert_eq!(DagMutation::kinds().len(), 14);
+        assert_eq!(<DagMutation as Mutation<DagSnapshot>>::DESCRIPTORS.len(), 14);
+        for (index, row) in fixture["valid"].as_array().expect("valid vectors").iter().enumerate() {
+            let mut json = row["payload"].clone();
+            json["operation"] = row["operation"].clone();
+            let mutation = serde_json::from_value::<DagMutation>(json).expect("neutral aggregate");
+            assert_eq!(mutation.descriptor().binary_tag, Some(u32::try_from(index).expect("small index")));
+            assert_eq!(mutation.descriptor().diff_participation, protocol::MutationDiffParticipation::ApplyOnly);
+            assert_codecs(&mutation);
+        }
+        for row in fixture["invalid"].as_array().expect("invalid vectors") {
+            let mut json = row["payload"].clone();
+            json["operation"] = row["operation"].clone();
+            assert!(serde_json::from_value::<DagMutation>(json).is_err(), "{}", row["name"]);
+        }
+        for row in fixture["additionalValid"].as_array().expect("additional input vectors") {
+            let mut json = row["payload"].clone();
+            json["operation"] = row["operation"].clone();
+            assert_codecs(&serde_json::from_value::<DagMutation>(json).expect("additional serde input"));
+        }
+    }
+
+    #[test]
+    fn direct_delete_inverse_declares_descending_edges_before_node() {
+        let mut before = base();
+        before.edges.push(DagFixtureEdge { id: "loop".into(), source: "a@out".into(), target: "a@in".into(), ..Default::default() });
+        let mutation = DagMutation::DeleteNode(DeleteNode { id: "a".into() });
+        let inverse = mutation.inverse(&before);
+        assert_eq!(inverse.len(), 4);
+        assert!(matches!(&inverse[0], DagMutation::ConnectNodes(value) if value.id == "loop" && value.index == 3));
+        assert!(matches!(&inverse[1], DagMutation::ConnectNodes(value) if value.id == "last" && value.index == 2));
+        assert!(matches!(&inverse[2], DagMutation::ConnectNodes(value) if value.id == "e" && value.index == 0));
+        assert!(matches!(&inverse[3], DagMutation::CreateNode(value) if value.node.id == "a" && value.index == 0));
+        let mut restored = apply(&before, &mutation);
+        for inverse in inverse.into_iter().rev() { restored = apply(&restored, &inverse); }
+        assert_eq!(restored, before);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn direct_store_undo_restores_incident_edge_order() {
+        let before = base();
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", before.clone(), None)).await.expect("store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::DeleteNode(DeleteNode { id: "a".into() })], description: None }).await.expect("delete");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
+        assert_eq!(store.snapshot().await.expect("restored projection"), before);
+        store.dispatch(ArtifactCommand::Redo).await.expect("redo");
+        assert_eq!(store.snapshot().await.expect("deleted projection"), apply(&before, &DagMutation::DeleteNode(DeleteNode { id: "a".into() })));
+    }
+
+    #[test]
+    fn direct_disconnect_inverse_preserves_nonfinal_position() {
+        let before = base();
+        let mutation = DagMutation::DisconnectNodes(DisconnectNodes { id: "keep".into() });
+        let inverse = mutation.inverse(&before);
+        assert!(matches!(&inverse[0], DagMutation::ConnectNodes(value) if value.id == "keep" && value.index == 1));
+        assert_eq!(apply(&apply(&before, &mutation), &inverse[0]), before);
+    }
+
+    #[test]
+    fn direct_rename_preserves_exact_endpoint_suffix() {
+        let fixture = fixture();
+        for row in fixture["endpointRenames"].as_array().expect("endpoint vectors") {
+            let id = row["id"].as_str().expect("id");
+            let new_id = row["newId"].as_str().expect("new ID");
+            let source = row["source"].as_str().expect("source");
+            let expected = row["expected"].as_str().expect("expected endpoint");
+            let before = DagSnapshot { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: vec![node(id), node("b")], edges: vec![DagFixtureEdge { id: "edge".into(), source: source.into(), target: "b@in".into(), ..Default::default() }] };
+            let mutation = DagMutation::RenameNode(RenameNode { id: id.into(), new_id: new_id.into() });
+            let after = apply(&before, &mutation);
+            assert_eq!(after.edges[0].source, expected);
+            assert_eq!(apply(&after, &mutation.inverse(&before)[0]), before);
+        }
+    }
+
+    #[test]
+    fn direct_structural_absorb_is_associative_and_preserves_rejection() {
+        let fixture = fixture();
+        for row in fixture["algebra"].as_array().expect("algebra vectors") {
+            let before = base();
+            let mut after = before.clone();
+            let mut diffs = Vec::new();
+            for value in row["mutations"].as_array().expect("mutation sequence") {
+                let mutation = serde_json::from_value::<DagMutation>(value.clone()).expect("sequence mutation");
+                let (diff, _) = mutation.diff(&after).into_parts();
+                after = diff.apply(&after).expect("sequential diff");
+                diffs.push(diff);
+            }
+            let mut left = DagDiff::default();
+            for diff in &diffs { left.absorb(diff.clone()); }
+            let mut right = DagDiff::default();
+            for mut diff in diffs.into_iter().rev() { diff.absorb(right); right = diff; }
+            assert_eq!(left, right, "{}", row["name"]);
+            assert_eq!(left.apply(&before).expect("absorbed diff"), after, "{}", row["name"]);
+            assert_eq!(serde_json::to_value(after.nodes.iter().map(|node| &node.id).collect::<Vec<_>>()).expect("node order"), row["nodeOrder"]);
+            assert_eq!(serde_json::to_value(after.edges.iter().map(|edge| &edge.id).collect::<Vec<_>>()).expect("edge order"), row["edgeOrder"]);
+            for (id, x) in row["x"].as_object().expect("expected positions") { assert_eq!(after.nodes.iter().find(|node| &node.id == id).expect("position target").x, x.as_f64().expect("x")); }
+            assert_eq!(serde_json::from_str::<DagDiff>(&serde_json::to_string(&left).expect("diff JSON")).expect("diff decode"), left);
+        }
+        let before = base();
+        let mut rejected = DagDiff::from(DagDelta { created_node: Some(node("x")), created_node_at: Some(u64::MAX), ..Default::default() });
+        rejected.absorb(DagMutation::MoveNode(MoveNode { id: "a".into(), x: 3.0, y: 4.0 }).diff(&before).into_parts().0);
+        assert_eq!(rejected.apply(&before).expect_err("rejection survives composition").code, "mutation.apply.invalid-index");
+        assert_eq!(before, base());
+        assert_eq!(DagDiff::from(DagDelta { connected_edge: Some(before.edges[0].clone()), ..Default::default() }).apply(&before).expect_err("unpaired edge index").code, "mutation.apply.incomplete-diff");
+    }
+
+    #[test]
+    fn direct_wire_indices_are_exact_and_apply_rejects_out_of_range() {
+        let before = base();
+        assert_eq!(dag_index_to_wire(usize::MAX), u64::try_from(usize::MAX).expect("guarded native width"));
+        if usize::BITS < u64::BITS { assert_eq!(dag_index_from_wire(u64::MAX).expect_err("narrow native width").code, "mutation.apply.invalid-index"); }
+        for mutation in [DagMutation::CreateNode(CreateNode { node: node("x"), index: u64::MAX }), DagMutation::ConnectNodes(ConnectNodes { id: "x".into(), source: "a@out".into(), target: "b@in".into(), route_style: EdgeRouteStyle::Bezier, properties: PropertyBag::new(), index: u64::MAX })] {
+            assert_codecs(&mutation);
+            assert!(serde_json::to_string(&mutation).expect("JSON").contains("18446744073709551615"));
+            assert!(mutation.print_op().contains("18446744073709551615"));
+            assert_eq!(mutation.diff(&before).diff().apply(&before).expect_err("out of range").code, "mutation.apply.invalid-index");
+            let json = serde_json::to_string(&mutation).expect("JSON");
+            for invalid in ["18446744073709551616", "-1", "0.5", "1e21", "null", "\"1\""] { assert!(serde_json::from_str::<DagMutation>(&json.replace("18446744073709551615", invalid)).is_err(), "{invalid}"); }
+        }
+    }
+
+    #[test]
+    fn direct_intrinsic_serde_and_selection_are_lossless() {
+        let fixture = fixture();
+        for row in fixture["nodeKinds"].as_array().expect("node kind vectors") {
+            let value = row["value"].clone();
+            assert_eq!(serde_json::from_value::<DagNodeKind>(value.clone()).is_ok(), row["valid"].as_bool().expect("expected validity"), "{}", row["name"]);
+            if row["valid"] == true {
+                let kind = serde_json::from_value::<DagNodeKind>(value).expect("kind");
+                assert_codecs(&DagMutation::ReplaceNodeKind(ReplaceNodeKind { id: "a".into(), new_kind: kind }));
+            }
+        }
+        let mut selected = node("select");
+        selected.kind = DagNodeKind::Select { options: vec!["a".into(), "b".into()], selected: u64::MAX, output: IoPortSpec::simple("out", "Output") };
+        assert_codecs(&DagMutation::CreateNode(CreateNode { node: selected.clone(), index: 0 }));
+        assert_eq!(advance_select_option(&mut selected).as_deref(), Some("a"));
+        selected.kind = DagNodeKind::Select { options: vec![], selected: u64::MAX, output: IoPortSpec::simple("out", "Output") };
+        assert_eq!(advance_select_option(&mut selected), None);
+        let mut app = node("app");
+        app.icon = "node-icon".into();
+        app.kind = DagNodeKind::AppInstance { instance_id: "instance".into(), plugin_id: "plugin".into(), app_id: "app".into(), icon: "app-icon".into(), inputs: vec![], outputs: vec![] };
+        let encoded = serde_json::to_string(&app).expect("app JSON");
+        assert_eq!(encoded.matches("\"icon\":").count(), 1);
+        assert_eq!(encoded.matches("\"appIcon\":").count(), 1);
+        assert_eq!(serde_json::from_str::<DagNodeSpec>(&encoded).expect("app round trip"), app);
+        assert_codecs(&DagMutation::CreateNode(CreateNode { node: app, index: 0 }));
+    }
+}

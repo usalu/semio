@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "count": 32,
+  "grantBytes": 4096,
+  "smallGrantBytes": 2048,
+  "elementBytes": 2072,
+  "scope": "fixture",
+  "names": ["action-0", "action-1", "action-2"],
+  "cancelFrontiers": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "closeGrants": [1, 64, 4096],
+  "returnOrders": [["source", "candidate"], ["candidate", "source"]],
+  "heldReaderSurvives": true,
+  "contendedCopyProgresses": false
+}

@@ -1938,7 +1938,7 @@ impl FlowHost {
     }
 
     /// 🧾️ Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowMutation::SetFixture` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
+    /// invertible `FlowMutation::ReplaceFlowFixture` edit — the standard `crate::os_store::ArtifactStore`/`Mutation`/
     /// `MutationDiff` mechanism (see `🔖️Mutations`) driving undo/redo here instead of the old
     /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
     /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
@@ -1949,7 +1949,7 @@ impl FlowHost {
             let baseline = self.pending_history_baseline.take().unwrap_or_else(|| self.fixture.clone());
             let fixture = self.fixture.clone();
             if let Some(store) = self.history_store_from_baseline(baseline) {
-                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture }], description: None }));
+                let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
             }
         }
     }
@@ -1979,7 +1979,7 @@ impl FlowHost {
             if Self::content_changed(&baseline, &self.fixture) {
                 let fixture = self.fixture.clone();
                 if let Some(store) = self.history_store_from_baseline(baseline) {
-                    let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture }], description: None }));
+                    let _ = resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture })], description: None }));
                 }
             }
         }
@@ -3473,7 +3473,7 @@ mod tests {
         let id = host.add_widget(r#"{"kind":"inputNote","text":"undo me"}"#, 42.0, 42.0).unwrap();
         assert_eq!(host.fixture.widgets.len(), count_before + 1);
 
-        let operations = flow_fixture_operations(&fixture_before, &host.fixture);
+        let operations = flow_fixture_operations(&fixture_before, &host.fixture).expect("wire-representable flow fixture");
         assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
         let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);

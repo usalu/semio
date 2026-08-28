@@ -1,0 +1,41 @@
+{
+  "empty": false,
+  "measuredFrom": "expected.stl, re-imported and welded",
+  "vertexCount": 16,
+  "triangleCount": 32,
+  "volume": 1.7499964367637243e-9,
+  "surfaceArea": 0.00001799997609855733,
+  "boundingBox": {
+    "min": [
+      0,
+      0,
+      0.0020000000949949026
+    ],
+    "max": [
+      0.0040000006556510925,
+      0.001999996602535248,
+      0.0022499999031424522
+    ]
+  },
+  "boundingBoxDiagonal": 0.004479117274579392,
+  "solids": 1,
+  "genus": 1,
+  "componentGenus": null,
+  "expectedGenus": 1,
+  "expectedBaseZ": 0.002,
+  "weld": {
+    "grid": 1e-9,
+    "soupVertices": 96,
+    "weldedVertices": 16,
+    "droppedDegenerateTriangles": 0
+  },
+  "crossFormatTriangleCounts": {
+    "stl": 32,
+    "obj": 32
+  },
+  "crossFormatTriangleCountsAgree": true,
+  "analyticVolume": 1.7499999999999997e-9,
+  "analyticVolumeRelativeError": 0.000002036135014529164,
+  "analyticMinZ": 0.002,
+  "minZRelativeError": 2.120839816101173e-8
+}

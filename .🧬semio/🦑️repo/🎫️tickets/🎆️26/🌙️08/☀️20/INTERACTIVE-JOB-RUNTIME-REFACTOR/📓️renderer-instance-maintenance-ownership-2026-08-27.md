@@ -1,0 +1,11 @@
+# Instance Maintenance Ownership
+
+Fresh inspection found `OwnedUiInstance.advanceMaintenance` removes the queue head before calling the actual surface child and unconditionally changes its result to `pending`. Thus blocked/rejected results lose meaning, and a thrown child can leave its surface absent from the work queue. This is a private foundation path, not evidence of a mounted renderer failure.
+
+The neutral maintenance fixture has blocked, rejected, over-grant and throwing-child cases. A controlled one-call spy on the real private surface owner injects each result, then the normal child resumes and must deliver the previously queued notification exactly once. Ajv validates the schema; Immer supplies the neutral expected retry count. Another case gives a terminal child the full 4096-byte grant, requiring a separate 64-byte queue-transition step rather than hidden post-child bookkeeping.
+
+The implemented repair keeps the exact head installed while calling the child. Refusal, fault and throw retain it. Only a valid successful child result marks a pending rotation; the next admitted step performs the fixed queue unlink/requeue transition. Cancellation resets that transition and retains existing exact surface close ownership. The read-only `maintenanceFailure` retains a thrown diagnostic or child rejection phase; a successful retry clears it.
+
+The unchanged failing behavior was reproduced: blocked child returned `pending`, one failed test, 632 skipped, 633 discovered, 14.24 seconds. After repair, the same test passed, 632 skipped, 633 discovered, 5.88 seconds (70 ms execution), covering all four fault cases and the full-grant terminal child. Full logs are `🧪️renderer-owned-instance-maintenance-red-r1-2026-08-27.txt` and `🧪️renderer-owned-instance-maintenance-r2-2026-08-27.txt`. Canonical selector: `bun x nx run @semio-tech/framework-renderer-react:test-long --skip-nx-cache --args='--run -t OwnedInstanceMaintenance'`.
+
+The broader `OwnedInstance` regression also passed all ten selected tests, 623 skipped, 633 discovered, 5.30 seconds (215 ms execution); full output is `🧪️renderer-owned-instance-maintenance-regression-r3-2026-08-27.txt`. Strict checking after this repair remains pending.

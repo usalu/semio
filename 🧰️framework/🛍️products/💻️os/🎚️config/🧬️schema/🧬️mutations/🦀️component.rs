@@ -53,9 +53,9 @@ pub enum IdentityConfigMutation {
 
 //#region 🔖️Registry
 /// 🪪️ Registers every OS config mutation descriptor through the derive-generated registries.
-pub fn register_os_config_mutation_descriptors() {
-    register_opening_config_mutation_descriptors();
-    register_merge_policy_config_mutation_descriptors();
-    register_identity_config_mutation_descriptors();
+pub fn register_os_config_mutation_descriptors() -> Result<(), semio_framework_os_kernel::MutationDescriptorError> {
+    register_opening_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
+    register_merge_policy_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)?;
+    register_identity_config_mutation_descriptors(semio_framework_os_kernel::StateClass::Config)
 }
 //#endregion 🔖️Registry

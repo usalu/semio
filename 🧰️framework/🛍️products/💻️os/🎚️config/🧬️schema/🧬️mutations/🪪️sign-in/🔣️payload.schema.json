@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Identity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "displayName",
+    "email",
+    "hubBaseUrl",
+    "issuedAtMs",
+    "sessionToken",
+    "userId"
+  ],
+  "properties": {
+    "userId": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "hubBaseUrl": {
+      "type": "string"
+    },
+    "sessionToken": {
+      "type": "string"
+    },
+    "issuedAtMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

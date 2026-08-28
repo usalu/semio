@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📏️set-layer-stroke-scale",
+  "semanticKind": "set-layer-stroke-scale",
+  "displayName": "Set Layer Stroke Scale",
+  "emoji": "📏️",
+  "aggregateVariant": "SetLayerStrokeScale",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-layer-stroke-scale",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning", "fatal"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "events": ["live", "workerShell", "quarantine"],
+  "states": [
+    {"liveOwner": true, "workerShell": false, "quarantineOwner": false},
+    {"liveOwner": true, "workerShell": true, "quarantineOwner": false},
+    {"liveOwner": false, "workerShell": true, "quarantineOwner": true}
+  ],
+  "atWorkerShellExactLiveAllocation": true,
+  "constructionFailure": {"phase": "before-worker-allocation", "liveOwner": true, "generationUnchanged": true, "sameAllocation": true, "actualAllocatorFailureProven": false},
+  "allocationGrantProven": false,
+  "descendantCloseProven": false
+}

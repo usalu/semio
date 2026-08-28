@@ -1,0 +1,185 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "semantics",
+    "cases",
+    "correlated",
+    "writable",
+    "retention",
+    "registration"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "rust-finite-target-consumption-v1"
+    },
+    "semantics": {
+      "const": {
+        "authority": "candidate-only-never-editable",
+        "required": [
+          "complete-finite-expansion",
+          "exact-utf16-source-span",
+          "unique-cargo-owner",
+          "exact-hashed-source-chain",
+          "physically-present-admitted-targets",
+          "no-follow",
+          "non-opaque",
+          "coordinate-root-local",
+          "unshadowed-inherited-environment"
+        ],
+        "failure": "retain-conservative-unsupported-interpretation",
+        "suppression": "same-start-end-value-only",
+        "writablePrecedence": "existing-immutable-join-authority",
+        "bound": 256
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 28,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "targets",
+          "expected",
+          "affected",
+          "condition"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "targets": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "enum": [
+              "finite",
+              "fallback"
+            ]
+          },
+          "affected": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "condition": {
+            "enum": [
+              "regular",
+              "unadmitted",
+              "two-owners",
+              "no-owner",
+              "symlink-leaf",
+              "symlink-ancestor",
+              "opaque",
+              "nested-coordinate",
+              "foreign-coordinate",
+              "changed-consumer",
+              "changed-chain",
+              "changed-manifest",
+              "missing-chain",
+              "cancelled-symlink",
+              "cancelled-file",
+              "cancelled-module-edge",
+              "cancelled-manifest-edge",
+              "parent-env-macro"
+            ]
+          }
+        }
+      }
+    },
+    "correlated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "targets"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "targets": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "target"
+            ],
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "writable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "target"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "registration": {
+      "const": {
+        "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+        "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "target": "test-rust-finite-target-consumption",
+        "command": "bun ./📜️script.ts test rust-finite-target-consumption",
+        "route": "rust-finite-target-consumption",
+        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-finite-target-consumption/🟦️.ts",
+        "launchName": "🧹clean🧩️taxonomy🧪️rust-finite-target-consumption",
+        "launchOrder": 410.193,
+        "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-finite-target-consumption --skip-nx-cache"
+      }
+    },
+    "retention": {
+      "const": {
+        "parentSegments": [
+          "📓️energy-rust-reference-diagnostics",
+          "🧭️finite-target-consumption",
+          "🧾️runs"
+        ],
+        "runPrefix": "🔖️"
+      }
+    }
+  }
+}

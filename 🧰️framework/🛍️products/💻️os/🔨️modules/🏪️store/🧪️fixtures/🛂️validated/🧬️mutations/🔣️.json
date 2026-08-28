@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "🔢️set-n/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "setN"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "↩️restore-n/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "restoreN"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  ]
+}

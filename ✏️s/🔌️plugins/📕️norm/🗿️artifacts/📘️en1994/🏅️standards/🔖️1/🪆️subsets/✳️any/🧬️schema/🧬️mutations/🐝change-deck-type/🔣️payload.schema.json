@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDeckType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDeckType"
+  ],
+  "properties": {
+    "newDeckType": {
+      "type": "string"
+    }
+  }
+}

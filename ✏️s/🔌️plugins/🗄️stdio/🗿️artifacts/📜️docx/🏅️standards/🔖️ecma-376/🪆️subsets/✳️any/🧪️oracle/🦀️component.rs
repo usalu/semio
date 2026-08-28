@@ -1204,7 +1204,7 @@ mod tests {
     const FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📜️example-readme.docx");
 
     /// 🧾️ The case's own `Examples` rows, read rather than restated — see [`crate::law::feature_rows`].
-    const FEATURE: &str = include_str!("../../../../../🧪️tests/mutate-docx-ecma-376/component.feature");
+    const FEATURE: &str = include_str!("../../../../../🧪️tests/mutate-docx-ecma-376/🥒️.feature");
 
     fn spec(kind: &str, params: &Json) -> Json {
         Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params.clone())])
@@ -1266,7 +1266,7 @@ mod tests {
     /// 📇️ [`KINDS`] against the catalog that declares it.
     #[test]
     fn kinds_matches_the_catalog() {
-        let manifest = include_str!("🔣️component.json");
+        let manifest = include_str!("🔣️.json");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the docx-ecma-376-any catalog is missing {kind:?}");
         }

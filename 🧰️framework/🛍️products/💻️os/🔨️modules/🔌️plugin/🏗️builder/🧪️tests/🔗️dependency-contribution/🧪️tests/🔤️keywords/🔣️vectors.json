@@ -1,0 +1,7 @@
+[
+  { "delta": -2147483648, "text": "add-value delta=-2147483648" },
+  { "delta": -5, "text": "add-value delta=-5" },
+  { "delta": 0, "text": "add-value delta=0" },
+  { "delta": 5, "text": "add-value delta=5" },
+  { "delta": 2147483647, "text": "add-value delta=2147483647" }
+]

@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeEraserRadius",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newRadius": {
+      "type": "number"
+    }
+  }
+}

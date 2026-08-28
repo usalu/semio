@@ -1,0 +1,28 @@
+{
+  "declaredOutcome": "applied",
+  "kind": "move-vertex",
+  "hasExpected": true,
+  "solids": 0,
+  "shells": 1,
+  "faces": 1,
+  "edges": 4,
+  "vertices": 4,
+  "boundingBox": {
+    "xMin": -1e-7,
+    "xMax": 1400.0000001,
+    "yMin": -1e-7,
+    "yMax": 1000.0000001,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 1720.4650536875197,
+  "volume": 0,
+  "area": 1200000,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.05161395161062559,
+  "meshVertexCount": 4,
+  "meshTriangleCount": 2
+}

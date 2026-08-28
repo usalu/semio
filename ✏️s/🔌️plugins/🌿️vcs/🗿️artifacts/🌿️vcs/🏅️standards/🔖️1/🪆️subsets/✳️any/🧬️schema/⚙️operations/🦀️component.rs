@@ -144,7 +144,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     fn dispatch_registers_semantic_descriptors() {
-        register_vcs_demo_mutation_descriptors();
+        register_vcs_demo_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
         for kind in VcsDemoMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         }

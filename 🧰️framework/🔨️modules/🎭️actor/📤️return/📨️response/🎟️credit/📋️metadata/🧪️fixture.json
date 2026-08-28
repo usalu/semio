@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "model": {
+    "recordBytes": 64,
+    "fieldBytes": 16,
+    "slotsPerRecord": 1,
+    "ownersPerRecord": 1,
+    "meaning": "fixed logical metadata, not measured runtime heap"
+  },
+  "layouts": [
+    {
+      "group": "roster",
+      "source": "output",
+      "kind": "class",
+      "declaration": "OwnedActorTurnOutputs",
+      "fields": [
+        "owner",
+        "capacity",
+        "sequence",
+        "head",
+        "tail",
+        "pending",
+        "closed"
+      ]
+    },
+    {
+      "group": "pending",
+      "source": "shard",
+      "kind": "type",
+      "declaration": "PendingEntry",
+      "fields": [
+        "resolve",
+        "reject",
+        "slot",
+        "startedAtMs",
+        "actorId",
+        "output"
+      ]
+    },
+    {
+      "group": "pending",
+      "source": "output",
+      "kind": "type",
+      "declaration": "Slot",
+      "fields": [
+        "owner",
+        "capacity",
+        "sequence",
+        "queue",
+        "handle",
+        "phase",
+        "response",
+        "outcome",
+        "previous",
+        "next"
+      ]
+    },
+    {
+      "group": "pending",
+      "source": "output",
+      "kind": "class",
+      "declaration": "OwnedActorTurnOutput",
+      "fields": [
+        "slot"
+      ]
+    },
+    {
+      "group": "pending",
+      "source": "output",
+      "kind": "type",
+      "declaration": "OwnedActorTurnOutputOutcome",
+      "fields": [
+        "kind",
+        "value"
+      ]
+    },
+    {
+      "group": "framing",
+      "source": "response",
+      "kind": "class",
+      "declaration": "ActorReturnResponseFraming",
+      "fields": [
+        "stage",
+        "offset",
+        "bodyOffset",
+        "tag",
+        "accumulator",
+        "digits",
+        "activation",
+        "header",
+        "result",
+        "faultValue",
+        "failed",
+        "value"
+      ]
+    },
+    {
+      "group": "framing",
+      "source": "result",
+      "kind": "class",
+      "declaration": "ActorReturnResultFraming",
+      "fields": [
+        "stage",
+        "tag",
+        "controlTag",
+        "offset",
+        "payloadOffset",
+        "payloadRead",
+        "accumulator",
+        "digits",
+        "activation",
+        "request",
+        "returnSequence",
+        "pageSequence",
+        "length",
+        "final",
+        "reason",
+        "completion",
+        "outcome",
+        "faultValue",
+        "failed",
+        "value"
+      ]
+    }
+  ],
+  "projectionMaximum": {
+    "records": 7,
+    "fields": 21
+  },
+  "minimumEnvelopes": {
+    "roster": {
+      "bytes": 176,
+      "slots": 1,
+      "owners": 1
+    },
+    "pending": {
+      "bytes": 560,
+      "slots": 4,
+      "owners": 4
+    },
+    "framing": {
+      "bytes": 1424,
+      "slots": 9,
+      "owners": 9
+    }
+  },
+  "rawMaximumBytes": 4161,
+  "order": [
+    "reserve-fixed-envelope",
+    "retain-typed-construction-slot",
+    "install-minimal-shell",
+    "initialize-fields",
+    "expose-facade"
+  ],
+  "retirementOrder": [
+    "prove-exact-domain-terminal",
+    "begin-record-close",
+    "detach-original-shell",
+    "observe-exact-detachment",
+    "unlink-and-refund-in-separate-turn"
+  ],
+  "misuseCases": [
+    {
+      "name": "structural witness",
+      "reason": "structural",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": true,
+        "witnessAccepted": false
+      }
+    },
+    {
+      "name": "premature private-owner close",
+      "reason": "premature",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": true,
+        "witnessAccepted": false
+      }
+    },
+    {
+      "name": "foreign genuine witness",
+      "reason": "foreign",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": true,
+        "witnessAccepted": false
+      }
+    },
+    {
+      "name": "replayed consumed witness",
+      "reason": "replay",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": false,
+        "witnessAccepted": false
+      }
+    },
+    {
+      "name": "returned raw input still owned",
+      "reason": "raw-input",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": true,
+        "witnessAccepted": false
+      }
+    },
+    {
+      "name": "issued semantic reader still owned",
+      "reason": "reader",
+      "expected": {
+        "detachCalls": 0,
+        "refundCalls": 0,
+        "shellRetained": true,
+        "witnessAccepted": false
+      }
+    }
+  ],
+  "recoveryCases": [
+    {
+      "name": "install then wrapper throws",
+      "phase": "installed",
+      "shellRetained": true,
+      "originalWitnessRetained": false,
+      "repeatMutation": false,
+      "observationRequired": "matchesShell"
+    },
+    {
+      "name": "detach before mutation throws",
+      "phase": "installed",
+      "shellRetained": true,
+      "originalWitnessRetained": true,
+      "repeatMutation": true,
+      "observationRequired": "exactDetachObservation"
+    },
+    {
+      "name": "detach after mutation throws",
+      "phase": "detached",
+      "shellRetained": false,
+      "originalWitnessRetained": true,
+      "repeatMutation": false,
+      "observationRequired": "exactDetachObservation"
+    }
+  ],
+  "boundaries": {
+    "sourceCensusOnly": true,
+    "finalMountEnvelope": false,
+    "neutralIntrinsicRecordsIncluded": false,
+    "rawBytesIncluded": false,
+    "publicRecordCapability": false,
+    "publicWitnessFactory": false,
+    "structuralTerminalAccepted": false,
+    "noResponseRefund": false,
+    "inputAckFromMetadata": false
+  },
+  "stillRequiresExplicitAdmission": [
+    "typed close witness and its captured parent",
+    "neutral record capability and typed construction state",
+    "fixed transport fault and first emergency-root record",
+    "dispatch message and retained original input roots",
+    "public diagnostic snapshots if used by the mounted path",
+    "every new field or record introduced by the cutover"
+  ]
+}

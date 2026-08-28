@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "block"
+  ],
+  "properties": {
+    "block": {
+      "$ref": "#/$defs/NoteBlockNode"
+    },
+    "parentId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "NoteBlockNode": {
+      "title": "NoteBlockNode",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

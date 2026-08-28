@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLayerLambda",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newLambdaWMk"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newLambdaWMk": {
+      "type": "number"
+    }
+  }
+}

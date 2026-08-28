@@ -1,6 +1,7 @@
 {
   "version": 1,
   "grants": [1, 64, 4096],
+  "queuedOracleReader": { "aliasesBefore": 2, "aliasesAfter": 1, "readerReleasedItems": 1, "readerReleasedBytes": 0, "descendantReleasedItems": 2, "descendantReleasedBytes": 10 },
   "cases": [
     { "name": "nested-list-map-unicode", "value": [{ "a": ["Grüße", "🌊"], "z": "終" }, "tail"], "textBytes": 20, "pages": 6, "collections": 3 },
     { "name": "scalar-unicode", "value": "Grüße🌊", "textBytes": 11, "pages": 0, "collections": 0 },

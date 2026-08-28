@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "admissionGrant": 32768,
+  "smallGrant": 4096,
+  "frames": 256,
+  "componentCount": 18,
+  "grants": [1, 64, 4096],
+  "cancelFrontiers": [0, 1, 2, 5, 16, 64, 128],
+  "finalReadModes": ["sole", "concurrent-pair", "queued-alias"],
+  "documentGeneration": 93,
+  "revision": 7,
+  "nodeIds": [41, 9],
+  "wireOrder": [41, 9],
+  "text": "é",
+  "textRepeats": 256,
+  "copiesOldComponent": false,
+  "waitsForLiveDocumentOnCancel": false,
+  "contendedProgress": false,
+  "rejectedOwnerReturned": true
+}

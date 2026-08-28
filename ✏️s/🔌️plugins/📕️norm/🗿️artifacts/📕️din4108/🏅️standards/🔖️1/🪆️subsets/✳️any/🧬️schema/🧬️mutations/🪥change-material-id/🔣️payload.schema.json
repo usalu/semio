@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeMaterialId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMaterialId"
+  ],
+  "properties": {
+    "newMaterialId": {
+      "type": "string"
+    }
+  }
+}

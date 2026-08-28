@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "mutations": [
+    {"operation":"addCounter","payload":{"delta":5},"text":"add-counter 5","base":10,"next":15,"outcome":"applied","inverseCount":1},
+    {"operation":"addMissingCounter","payload":{},"text":"add-missing-counter","base":10,"next":10,"outcome":"error","inverseCount":0},
+    {"operation":"addUncheckedCounter","payload":{},"text":"add-unchecked-counter","base":10,"next":11,"outcome":"applied","inverseCount":1},
+    {"operation":"addObservedCounter","payload":{},"text":"add-observed-counter","base":10,"next":10,"outcome":"applied","inverseCount":0},
+    {"operation":"addRejectedCounter","payload":{},"text":"add-rejected-counter","base":10,"next":10,"outcome":"fatal","inverseCount":0}
+  ],
+  "addition": [
+    {"base":"10","deltas":["3","4"],"expected":"17"},
+    {"base":"-9223372036854775808","deltas":["9223372036854775807","1"],"expected":"0"},
+    {"base":"9223372036854775807","deltas":["-9223372036854775808"],"expected":"-1"},
+    {"base":"0","deltas":["9223372036854775807","1","-1"],"expected":null},
+    {"base":"-9223372036854775808","deltas":["-1","1"],"expected":null}
+  ],
+  "between": [
+    {"base":"-9223372036854775808","other":"9223372036854775807"},
+    {"base":"9223372036854775807","other":"-9223372036854775808"},
+    {"base":"17","other":"10"},
+    {"base":"10","other":"10"}
+  ]
+}

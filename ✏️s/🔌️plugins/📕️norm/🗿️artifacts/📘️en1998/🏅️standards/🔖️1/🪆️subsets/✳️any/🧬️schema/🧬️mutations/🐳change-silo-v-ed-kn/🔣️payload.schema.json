@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSiloVEdKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSiloVEdKn"
+  ],
+  "properties": {
+    "newSiloVEdKn": {
+      "type": "number"
+    }
+  }
+}

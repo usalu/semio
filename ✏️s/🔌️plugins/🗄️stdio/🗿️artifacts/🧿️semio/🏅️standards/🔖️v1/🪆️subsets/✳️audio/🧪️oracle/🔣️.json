@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.audio`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.audio` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars rather than a third-party package.",
   "oracles": [
     {
       "id": "semio-audio-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-audio-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-audio-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-audio/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line sample-rate-line format-line channels-line tags-line` grammar in both directions, and all ten verbs of this subset's vocabulary together with their inverses — written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from the committed artifact and are pinned by byte-exact re-emission: `hex` is the framework macro, so scalars are the lowercase hex of their UTF-8 bytes (`7469746c65` is `title`), and a sample is eight hex digits of IEEE-754 binary32 bits most-significant byte first (`3f000000` is `0.5`, `bf800000` is `-1.0`). `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The WAV route was surveyed again and still rejected on the merits rather than for absence — `hound`, `soundfile` and `node-wav` model no `LIST INFO` chunk, so `insert-tag`, `remove-tag` and `set-tag-value` would have had nothing to compare against, and `SemioAudioFormat` records the ORIGINAL encoding the always-`f32` samples were decoded FROM, which a WAV writer cannot represent independently of its own storage. A from-specification second implementation covers all ten kinds instead of four."
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-audio/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line sample-rate-line format-line channels-line tags-line` grammar in both directions, and all ten verbs of this subset's vocabulary together with their inverses — written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from the committed artifact and are pinned by byte-exact re-emission: `hex` is the framework macro, so scalars are the lowercase hex of their UTF-8 bytes (`7469746c65` is `title`), and a sample is eight hex digits of IEEE-754 binary32 bits most-significant byte first (`3f000000` is `0.5`, `bf800000` is `-1.0`). `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The WAV route was surveyed again and still rejected on the merits rather than for absence — `hound`, `soundfile` and `node-wav` model no `LIST INFO` chunk, so `insert-tag`, `remove-tag` and `set-tag-value` would have had nothing to compare against, and `SemioAudioFormat` records the ORIGINAL encoding the always-`f32` samples were decoded FROM, which a WAV writer cannot represent independently of its own storage. A from-specification second implementation covers all ten kinds instead of four.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-audio-mutate`'s external-oracle requirement for its 10-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -33,7 +45,18 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-sample-rate",
+        "set-format",
+        "insert-channel",
+        "remove-channel",
+        "set-channel-samples",
+        "insert-tag",
+        "remove-tag",
+        "set-tag-value"
+      ]
     }
   ]
 }

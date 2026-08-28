@@ -1,7 +1,0 @@
-[package]
-name = 'semio-framework-os-kernel-dsl-derive'
-
-[lib]
-name = 'dsl_derive'
-path = '📦️glue.rs'
-proc-macro = true

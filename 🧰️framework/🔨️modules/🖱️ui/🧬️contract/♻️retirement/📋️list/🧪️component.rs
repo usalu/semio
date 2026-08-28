@@ -9,7 +9,7 @@ fn instance_lifetime_ui_fixed_list_initializes_only_owned_payloads() {
     for row in fixture["cases"].as_array().unwrap() {
         let mut values: UiFixedList<serde_json::Value, 4> = serde_json::from_value(row["values"].clone()).unwrap();
         assert_eq!(serde_json::to_value(&values).unwrap(), row["values"]);
-        let exact = values.items.as_ref().map_or(0, |items| items.len()) == values.len();
+        let exact = values.storage.initialized_len() == values.len();
         let mut popped = Vec::new();
         while let Some(value) = values.pop() { popped.push(value); }
         assert_eq!(popped, *row["popped"].as_array().unwrap());
@@ -52,9 +52,9 @@ fn instance_lifetime_ui_fixed_list_reservation_preserves_fixed_envelope() {
     assert_eq!(values.try_push_reserved(99).is_ok(), fixture["ownership"]["unreservedPushAccepted"].as_bool().unwrap());
     assert!(values.terminal_is_empty());
     assert!(values.try_reserve().unwrap());
-    let identity = values.items.as_ref().unwrap().as_ptr();
+    let identity = values.storage.backing_ptr(0).unwrap();
     for value in 0..4 { values.try_push_reserved(value).unwrap(); }
-    assert_eq!(identity != values.items.as_ref().unwrap().as_ptr(), fixture["ownership"]["reservedPushChangesBacking"].as_bool().unwrap());
+    assert_eq!(identity != values.storage.backing_ptr(0).unwrap(), fixture["ownership"]["reservedPushChangesBacking"].as_bool().unwrap());
     assert_eq!(values.try_push_reserved(99) == Err(99), fixture["ownership"]["overflowPreservesRejectedOwner"].as_bool().unwrap());
     assert_eq!(values.capacity(), fixture["capacity"].as_u64().unwrap() as usize);
     assert_eq!(values.swap_remove(1), Some(1));

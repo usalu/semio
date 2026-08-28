@@ -738,8 +738,26 @@ mod tests {
     struct CausalAddOp {
         delta: i64,
     }
+    const CAUSAL_ADD_DESCRIPTOR: crate::mutation::MutationLeafDescriptor = crate::mutation::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧪️fixtures/🧬️mutations/➕️causal-add",
+        semantic_kind: "causal-add",
+        display_name: "Causal Add",
+        emoji: "➕️",
+        aggregate_variant: "CausalAddOp",
+        payload_schema: "🛂️schema.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: crate::mutation::MutationInvertibility::ExplicitMutation,
+        diff_participation: crate::mutation::MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[crate::mutation::MutationOutcomeClass::Applied],
+        composition: crate::mutation::MutationComposition::Atomic,
+        required_language_surfaces: &[crate::mutation::MutationLanguageSurface::Rust, crate::mutation::MutationLanguageSurface::Binary, crate::mutation::MutationLanguageSurface::JsonSchema],
+    };
     impl crate::mutation::Mutation<i64> for CausalAddOp {
         type Diff = CausalAddDiff;
+        const DESCRIPTORS: &'static [crate::mutation::MutationLeafDescriptor] = &[CAUSAL_ADD_DESCRIPTOR];
+        fn descriptor(&self) -> &'static crate::mutation::MutationLeafDescriptor { &CAUSAL_ADD_DESCRIPTOR }
         fn diff(&self, _base: &i64) -> crate::mutation::MutationOutcome<CausalAddDiff> {
             crate::mutation::MutationOutcome::new(CausalAddDiff { delta: self.delta })
         }
@@ -804,6 +822,15 @@ mod tests {
         assert!(dag.terminal_is_empty());
     }
     //#endregion 🧸️Fixtures
+
+    #[test]
+    fn causal_add_fixture_has_exact_required_descriptor() {
+        use crate::mutation::Mutation;
+        let expected: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🧬️mutations/➕️causal-add/🧪️descriptor.json")).unwrap();
+        assert_eq!(CAUSAL_ADD_DESCRIPTOR.validate(), Ok(()));
+        assert_eq!(CausalAddOp::DESCRIPTORS.len(), 1);
+        assert_eq!(serde_json::to_value(CausalAddOp { delta: -7 }.descriptor()).unwrap(), expected);
+    }
 
     //#region 🔖️Envelope
     #[test]

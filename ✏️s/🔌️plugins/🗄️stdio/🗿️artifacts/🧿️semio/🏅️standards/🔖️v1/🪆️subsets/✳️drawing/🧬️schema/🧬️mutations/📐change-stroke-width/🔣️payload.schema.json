@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeStrokeWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "styleName"
+  ],
+  "properties": {
+    "styleName": {
+      "type": "string"
+    },
+    "newWidth": {
+      "type": "number"
+    }
+  }
+}

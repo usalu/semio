@@ -1,0 +1,81 @@
+{
+  "id": "semio.kernel.return-content.v1",
+  "version": 1,
+  "magicHex": "73727401",
+  "recordFrame": ["tag:u8", "bodyLength:canonical-uleb64", "body:exact-bodyLength-bytes"],
+  "lengthIsAllocationPermission": false,
+  "recordMayCrossPages": true,
+  "finalPageEndsAtEndRecord": true,
+  "declarationSource": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit",
+  "primitiveEncoding": {
+    "u8": "one-byte",
+    "u16": "canonical-unsigned-leb128",
+    "u32": "canonical-unsigned-leb128",
+    "u64": "canonical-unsigned-leb128",
+    "s32": "canonical-signed-leb128",
+    "s64": "canonical-signed-leb128",
+    "f32": "finite-ieee754-little-endian-4-bytes",
+    "f64": "finite-ieee754-little-endian-8-bytes",
+    "bool": "exactly-one-byte-0-or-1",
+    "string": "utf8-byte-length-uleb64-then-exact-valid-utf8",
+    "list": "item-count-uleb64-then-items-in-order",
+    "option": "one-byte-0-none-or-1-then-value",
+    "record": "fields-in-declaration-order",
+    "tuple": "values-in-declaration-order",
+    "variant": "zero-based-declaration-tag-uleb32-then-payload",
+    "enum": "zero-based-declaration-tag-uleb32",
+    "pack": "byte-length-uleb64-then-opaque-exact-bytes-with-field-owned-semantic-dialect"
+  },
+  "records": [
+    {"tag": 0, "name": "metadata", "cardinality": "exactly-one-first", "fields": ["status:u8", "nextWake:option<u64>", "fuelUsed:u64", "effectCount:u64", "presenceCount:u64"], "statusTags": {"idle": 0, "moreWork": 1, "checkpointReady": 2, "faulted": 3}},
+    {"tag": 1, "name": "lifecycle", "cardinality": "zero-or-one-after-metadata", "fields": ["receipt:ActorInstanceLifecycleReceipt-canonical-body"]},
+    {"tag": 2, "name": "uiBegin", "cardinality": "zero-or-one-after-lifecycle", "fields": ["receipt:ActorUiPatchReceipt-canonical-body", "surface:string", "baseRevision:u64", "revision:u64", "operationCount:u32"], "maximumOperationCount": 1153},
+    {"tag": 3, "name": "uiOp", "cardinality": "exactly-operationCount-after-uiBegin", "fields": ["opcode:u8", "fields:ui-operation-declaration"]},
+    {"tag": 4, "name": "uiEnd", "cardinality": "exactly-one-after-uiOp-if-uiBegin", "fields": []},
+    {"tag": 5, "name": "effect", "cardinality": "exactly-effectCount-after-uiEnd", "fields": ["effect:effects.effect"], "encoding": "primitiveEncoding-applied-to-exact-WIT-declaration"},
+    {"tag": 6, "name": "presence", "cardinality": "exactly-presenceCount-after-effects", "fields": ["update:pack<ui-contract.PresenceUpdate>"]},
+    {"tag": 7, "name": "commandIngress", "cardinality": "exactly-one-after-presence", "fields": ["status:reactor.command-ingress-status"], "encoding": "primitiveEncoding-applied-to-exact-WIT-declaration"},
+    {"tag": 8, "name": "statusPayload", "cardinality": "exactly-one-for-checkpointReady-or-faulted-after-commandIngress", "fieldsByStatus": {"checkpointReady": ["checkpoint:reactor.job-checkpoint"], "faulted": ["detail:list<u8>"]}},
+    {"tag": 9, "name": "end", "cardinality": "exactly-one-last", "fields": []}
+  ],
+  "uiOperations": [
+    {"opcode": 0, "name": "upsert", "fields": ["node:pack<ui-contract.UiNodeRecord>"], "profile": "node"},
+    {"opcode": 1, "name": "setComponent", "fields": ["node:u64", "component:pack<ui-contract.Component>"], "profile": "component"},
+    {"opcode": 2, "name": "setLayout", "fields": ["node:u64", "layout:pack<ui-contract.LayoutSpec>"]},
+    {"opcode": 3, "name": "setActivity", "fields": ["node:u64", "activity:pack<{activity:ui-contract.Activity,disabled:bool}>"]},
+    {"opcode": 4, "name": "setChildren", "fields": ["node:u64", "children:list<u64>"]},
+    {"opcode": 5, "name": "setStyle", "fields": ["node:u64", "style:pack<ui-contract.StyleSpec>"]},
+    {"opcode": 6, "name": "setAccessibility", "fields": ["node:u64", "accessibility:pack<ui-contract.AccessibilitySpec>"]},
+    {"opcode": 7, "name": "setBindings", "fields": ["node:u64", "bindings:pack<list<ui-contract.ActionBinding>>"]},
+    {"opcode": 8, "name": "setMenu", "fields": ["node:u64", "menu:pack<option<ui-contract.MenuRef>>"]},
+    {"opcode": 9, "name": "remove", "fields": ["node:u64"]},
+    {"opcode": 10, "name": "setRoot", "fields": ["node:u64"]}
+  ],
+  "packedValue": {
+    "scope": "explicit-ui-operation-fields-and-presence-update-only",
+    "nativeOracle": "store::pack_rt::encode_wire_value",
+    "recordField": 1,
+    "recordFieldType": "Any",
+    "symbolTable": "independent-for-each-packed-field",
+    "wholeTypedToDslConversionAllowed": false,
+    "wholePackedFieldAllocationAllowed": false,
+    "measureAndEncode": "retained-borrowed-typed-cursors-under-separate-item-byte-grants",
+    "existingSceneDocumentBytesDialect": "unchanged-opaque-child-of-Surface"
+  },
+  "fieldDialects": {
+    "effects.send-message-effect.payload": "exact-original-payload-AppFrame-when-routed-from-app-exchange",
+    "effects.publish-event-effect.payload": "producer-declared-event-payload-not-inferred-from-pack-alias",
+    "ui-operation.packed-fields": "independent-store-wire-value-document-per-field",
+    "presence.update": "independent-store-wire-value-document-of-PresenceUpdate",
+    "other-pack-fields": "existing-field-owned-dialect-no-global-pack-dispatch"
+  },
+  "inputOwnership": {
+    "pageBufferMayOutliveInputAck": false,
+    "borrowMayWaitForNextPage": false,
+    "semanticStorage": "independently-owned-bounded-pages-before-inputAck",
+    "semanticStorageAdmissionBeforeCopy": true,
+    "pageAckPublishesUi": false,
+    "uiEndPublishesWithoutValidation": false,
+    "cancelAfterUiBegin": "retire-current-raw-page-and-owned-incomplete-semantic-storage-without-ui-publication"
+  }
+}

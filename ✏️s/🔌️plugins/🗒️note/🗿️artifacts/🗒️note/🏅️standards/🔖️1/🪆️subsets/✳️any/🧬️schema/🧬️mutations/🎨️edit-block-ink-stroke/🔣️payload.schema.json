@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EditBlockInkStroke",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeight",
+    "newPoints",
+    "newWidth",
+    "newX",
+    "newY"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newPoints": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    },
+    "newWidth": {
+      "type": "number"
+    },
+    "newHeight": {
+      "type": "number"
+    }
+  }
+}

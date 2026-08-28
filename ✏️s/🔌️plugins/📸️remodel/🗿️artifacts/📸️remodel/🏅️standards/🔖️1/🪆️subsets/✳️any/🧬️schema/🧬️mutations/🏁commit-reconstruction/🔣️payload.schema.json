@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReconstructionAssetCommit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "asset",
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "asset": {
+      "title": "ImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "height",
+        "mime",
+        "width"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "surface", "payload", "byteGrants", "itemGrant", "zeroGrantMutates", "dropWaitsForArena", "normalStepWaitsForArena", "transportProducerDropWaitsForArena", "transportLeaseDropWaitsForArena", "transportNormalStepWaitsForArena", "transportBlocksExternalReuse", "transportPoisonIsFault", "retirementSlotReuseBeforeTerminal", "maximumPatchOwners", "maximumRetirementSlots"],
+  "properties": {
+    "version": { "const": 1 },
+    "surface": { "const": "7:保留,🙂" },
+    "payload": { "const": "αβ,🙂/保留" },
+    "byteGrants": { "const": [1, 64, 4096] },
+    "itemGrant": { "const": 1 },
+    "zeroGrantMutates": { "const": false },
+    "dropWaitsForArena": { "const": false },
+    "normalStepWaitsForArena": { "const": false },
+    "transportProducerDropWaitsForArena": { "const": false },
+    "transportLeaseDropWaitsForArena": { "const": false },
+    "transportNormalStepWaitsForArena": { "const": false },
+    "transportBlocksExternalReuse": { "const": true },
+    "transportPoisonIsFault": { "const": true },
+    "retirementSlotReuseBeforeTerminal": { "const": false },
+    "maximumPatchOwners": { "const": 1 },
+    "maximumRetirementSlots": { "const": 64 }
+  }
+}

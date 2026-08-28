@@ -7,5 +7,6 @@
   "producers": 4,
   "returnsPerProducer": 64,
   "emptyReadyBitConsumesNewOwner": false,
-  "rejectedObligationRetained": true
+  "rejectedObligationRetained": true,
+  "aliasCounter": {"before": "4294967295", "afterReturn": "4294967296", "afterConsume": "4294967295", "maximum": "18446744073709551615"}
 }

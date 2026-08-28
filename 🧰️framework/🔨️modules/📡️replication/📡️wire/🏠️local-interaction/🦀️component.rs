@@ -8,6 +8,10 @@ use crate::{DomainSelection, SelectionMode};
 pub mod transport;
 pub use transport::*;
 
+#[path = "🌳️root/🦀️component.rs"]
+mod retained_root;
+pub use retained_root::{LocalInteractionRoot, LocalInteractionRootPatch, LocalInteractionRootRetirement, LocalInteractionRootStep, LocalInteractionRootUpdate, LocalInteractionUpdateStep};
+
 //#region 🧬️Contract
 /// 🗺️ The complete local selection/mode/granularity state, excluding current hover and peer filtering.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -158,3 +162,11 @@ mod revision_hex {
 #[cfg(test)]
 #[path = "🧪️component.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🌳️root/🧪️component.rs"]
+mod retained_root_tests;
+
+#[cfg(test)]
+#[path = "🌳️root/🩹️update/🧪️component.rs"]
+mod retained_update_tests;

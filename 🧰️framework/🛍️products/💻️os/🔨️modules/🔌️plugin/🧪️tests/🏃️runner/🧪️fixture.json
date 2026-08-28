@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "args": [
+        "mounted_output_admission_",
+        "--",
+        "--nocapture"
+      ],
+      "mode": "budgeted",
+      "forwarded": [
+        "--lib",
+        "mounted_output_admission_",
+        "--",
+        "--nocapture"
+      ]
+    },
+    {
+      "args": [
+        "exhaustive",
+        "--no-fail-fast",
+        "-E",
+        "test(component::reactor::patches::tests::)",
+        "--",
+        "--nocapture"
+      ],
+      "mode": "budgeted",
+      "forwarded": [
+        "--lib",
+        "--no-fail-fast",
+        "-E",
+        "test(component::reactor::patches::tests::)",
+        "--",
+        "--nocapture"
+      ]
+    },
+    {
+      "args": [
+        "--no-run"
+      ],
+      "mode": "inventory",
+      "forwarded": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--no-run"
+      ]
+    },
+    {
+      "args": [
+        "long",
+        "--no-run",
+        "--features",
+        "fixture"
+      ],
+      "mode": "inventory",
+      "forwarded": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--no-run",
+        "--features",
+        "fixture"
+      ]
+    },
+    {
+      "args": [
+        "--",
+        "--no-run"
+      ],
+      "mode": "budgeted",
+      "forwarded": [
+        "--lib",
+        "--",
+        "--no-run"
+      ]
+    },
+    {
+      "args": [
+        "--no-run",
+        "--",
+        "--exact"
+      ],
+      "mode": "inventory",
+      "forwarded": [
+        "test",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--no-run",
+        "--",
+        "--exact"
+      ]
+    }
+  ]
+}

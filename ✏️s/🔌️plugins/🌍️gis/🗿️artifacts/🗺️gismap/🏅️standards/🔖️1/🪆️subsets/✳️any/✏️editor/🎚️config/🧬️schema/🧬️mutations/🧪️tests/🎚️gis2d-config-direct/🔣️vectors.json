@@ -1,0 +1,83 @@
+{
+  "schema": "../../🔣️.json",
+  "valid": [
+    {"name": "visibility has an explicit false override", "payload": {"operation": "setLayerVisibility", "layerId": "roads", "visible": false}},
+    {"name": "visibility null removes an override", "payload": {"operation": "setLayerVisibility", "layerId": "roads", "visible": null}},
+    {"name": "camera", "payload": {"operation": "setCamera", "cameraJson": "{\"x\":1,\"y\":2,\"zoom\":3}"}},
+    {"name": "render mode", "payload": {"operation": "setRenderMode", "value": "vector"}},
+    {"name": "vector style", "payload": {"operation": "setVectorStyle", "value": "figureGround"}},
+    {"name": "lod mode", "payload": {"operation": "setLodMode", "value": "detail"}},
+    {"name": "scale has an explicit non-default override", "payload": {"operation": "setLayerStrokeScale", "layerId": "roads", "value": 2.5}},
+    {"name": "scale null removes an override", "payload": {"operation": "setLayerStrokeScale", "layerId": "roads", "value": null}},
+    {"name": "locale", "payload": {"operation": "setLocale", "value": "de-DE"}}
+  ],
+  "invalid": [
+    {"name": "visibility requires nullable field instead of omission", "payload": {"operation": "setLayerVisibility", "layerId": "roads"}},
+    {"name": "scale requires nullable field instead of omission", "payload": {"operation": "setLayerStrokeScale", "layerId": "roads"}},
+    {"name": "unknown envelope field", "payload": {"operation": "setCamera", "cameraJson": "{}", "unknown": true}},
+    {"name": "visibility rejects a string", "payload": {"operation": "setLayerVisibility", "layerId": "roads", "visible": "false"}},
+    {"name": "scale rejects a string", "payload": {"operation": "setLayerStrokeScale", "layerId": "roads", "value": "1"}},
+    {"name": "camera requires its string", "payload": {"operation": "setCamera"}},
+    {"name": "aggregate rejects a legacy short opcode", "payload": {"operation": "camera", "cameraJson": "{}"}}
+  ],
+  "stateCases": [
+    {
+      "name": "no-op preserves a populated config",
+      "before": {
+        "layerVisibility": {"roads": false},
+        "layerStrokeScale": {"roads": 2.5},
+        "cameraJson": "{\"x\":4,\"y\":5,\"zoom\":2}",
+        "renderMode": "combined",
+        "vectorStyle": "colored",
+        "lodMode": "automatic",
+        "locale": "en-US"
+      },
+      "operation": {"operation": "setLayerVisibility", "layerId": "roads", "visible": false},
+      "expected": {"outcome": "warning", "afterEqualsBefore": true}
+    },
+    {
+      "name": "absent map entries restore through null",
+      "before": {"layerVisibility": {}, "layerStrokeScale": {}},
+      "operations": [
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": false},
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": 2.5}
+      ],
+      "inverseStoredOrder": [
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": null},
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": null}
+      ],
+      "inverseReplayOrder": [
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": null},
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": null}
+      ],
+      "after": {"layerVisibility": {"roads": false}, "layerStrokeScale": {"roads": 2.5}},
+      "restored": {"layerVisibility": {}, "layerStrokeScale": {}}
+    },
+    {
+      "name": "explicit default overrides restore as explicit values",
+      "before": {"layerVisibility": {"roads": true}, "layerStrokeScale": {"roads": 1.0}},
+      "operations": [
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": false},
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": 2.5}
+      ],
+      "inverseStoredOrder": [
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": true},
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": 1.0}
+      ],
+      "inverseReplayOrder": [
+        {"operation": "setLayerStrokeScale", "layerId": "roads", "value": 1.0},
+        {"operation": "setLayerVisibility", "layerId": "roads", "visible": true}
+      ],
+      "restored": {"layerVisibility": {"roads": true}, "layerStrokeScale": {"roads": 1.0}}
+    },
+    {
+      "name": "two independent config fields compose sequentially",
+      "before": {"layerVisibility": {}, "layerStrokeScale": {}, "renderMode": "combined", "locale": "en-US"},
+      "operations": [
+        {"operation": "setRenderMode", "value": "vector"},
+        {"operation": "setLocale", "value": "de-DE"}
+      ],
+      "after": {"renderMode": "vector", "locale": "de-DE"}
+    }
+  ]
+}

@@ -44,7 +44,7 @@
 //! `gate_agrees_with_the_subset_conformance_checker`, so the gate and the diagnostic cannot drift.
 //!
 //! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
-//! @see ../../../../../../🧪️tests/mutate-xml-1-0-valid/component.feature — the case that exercises it.
+//! @see ../../../../../../🧪️tests/mutate-xml-1-0-valid/🥒️.feature — the case that exercises it.
 
 use crate::artifacts::xml::schema::diff::{diff_at_path, diff_set_snapshot, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode};

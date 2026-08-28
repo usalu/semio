@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-residue-durable-recovery-v1",
+  "childExitCode": 73,
+  "foreignInput": "ignored-source-directory-with-file-empty-directory-and-symlink",
+  "generatorStarts": 0,
+  "inverseState": "rolled-back",
+  "preservation": "all-owned-preimages-and-all-foreign-residue",
+  "cases": [
+    { "id": "durable-resume", "checkpoint": "durable", "phase": "transaction-wal-prepared", "canonicalState": "regenerating", "candidateState": null, "installed": "all", "cancel": false },
+    { "id": "cancelled-resume", "checkpoint": "durable", "phase": "transaction-wal-prepared", "canonicalState": "regenerating", "candidateState": null, "installed": "all", "cancel": true },
+    { "id": "next-journal-wal", "checkpoint": "candidate", "phase": "transaction-journal-candidate-written", "canonicalState": "editing", "candidateState": "regenerating", "installed": "all", "cancel": false },
+    { "id": "rename-before-journal", "checkpoint": "rename", "phase": "transaction-journal-write-mkdir", "canonicalState": "installing", "candidateState": null, "installed": "first-unrecorded", "cancel": false }
+  ]
+}

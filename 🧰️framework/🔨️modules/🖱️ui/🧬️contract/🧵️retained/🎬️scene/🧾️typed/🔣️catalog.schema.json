@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false, "required": ["version", "surfaces", "records"],
+  "properties": {
+    "version": {"const": 1},
+    "surfaces": {"type": "array", "minItems": 15, "maxItems": 15, "items": {"type": "object", "additionalProperties": false, "required": ["kind", "schema", "record"], "properties": {"kind": {"type": "string"}, "schema": {"type": "string", "pattern": "^[a-z]+(?:-[a-z0-9]+)*@1$"}, "record": {"type": "string"}}}},
+    "records": {"type": "object", "minProperties": 15, "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["fields"], "properties": {"fields": {"type": "array", "maxItems": 32, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": [{"type": "string", "pattern": "^[a-z][A-Za-z0-9]*$", "maxLength": 64}, {"type": "string", "pattern": "^\\??(?:text|bool|f64|u8|u16|u32|u64|usize|#[A-Za-z0-9]+|\\[(?:text|#[A-Za-z0-9]+)\\])$"}]}}, "defaults": {"type": "object", "additionalProperties": {"anyOf": [{"type": "string", "maxLength": 512}, {"type": "number"}, {"type": "boolean"}, {"type": "array", "maxItems": 0}]}}}}}
+  }
+}

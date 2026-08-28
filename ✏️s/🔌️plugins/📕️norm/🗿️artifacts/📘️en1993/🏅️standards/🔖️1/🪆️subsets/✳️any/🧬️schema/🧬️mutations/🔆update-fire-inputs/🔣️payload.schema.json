@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateFireInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireDesignTemperatureC",
+    "newFireMassivity",
+    "newFireMu0",
+    "newFireRating",
+    "newFireThicknessMm"
+  ],
+  "properties": {
+    "newFireThicknessMm": {
+      "type": "number"
+    },
+    "newFireRating": {
+      "type": "string"
+    },
+    "newFireMassivity": {
+      "type": "number"
+    },
+    "newFireMu0": {
+      "type": "number"
+    },
+    "newFireDesignTemperatureC": {
+      "type": "number"
+    }
+  }
+}

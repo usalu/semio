@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-vortex-vortex-kind",
+  "semanticKind": "change-vortex-vortex-kind",
+  "displayName": "Change Vortex Vortex Kind",
+  "emoji": "🧷",
+  "aggregateVariant": "ChangeVortexVortexKind",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-vortex-vortex-kind",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

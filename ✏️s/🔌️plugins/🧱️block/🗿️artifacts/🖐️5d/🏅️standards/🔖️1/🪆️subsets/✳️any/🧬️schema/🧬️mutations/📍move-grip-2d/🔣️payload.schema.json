@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveGrip2d",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAngle",
+    "newRadius2d"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newAngle": {
+      "type": "number"
+    },
+    "newRadius2d": {
+      "type": "number"
+    }
+  }
+}

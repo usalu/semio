@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeCD",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCD"
+  ],
+  "properties": {
+    "newCD": {
+      "type": "number"
+    }
+  }
+}

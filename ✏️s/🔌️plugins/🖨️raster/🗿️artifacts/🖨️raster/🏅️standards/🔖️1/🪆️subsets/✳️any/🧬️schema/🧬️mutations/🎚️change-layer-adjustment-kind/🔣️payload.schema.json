@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLayerAdjustmentKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "newAdjustmentKind"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string"
+    },
+    "newAdjustmentKind": {
+      "type": "string"
+    }
+  }
+}

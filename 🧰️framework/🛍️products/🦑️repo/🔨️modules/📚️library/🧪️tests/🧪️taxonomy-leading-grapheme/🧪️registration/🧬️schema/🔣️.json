@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "command", "target", "source", "runner", "budget", "launchName", "launchGroup", "launchOrder"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "taxonomy-leading-grapheme-registration-v1" },
+    "command": { "const": "taxonomy-leading-grapheme" },
+    "target": { "const": "test-taxonomy-leading-grapheme" },
+    "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️taxonomy-leading-grapheme/🟦️.ts" },
+    "runner": { "const": "runTestBudgeted" },
+    "budget": { "const": "default" },
+    "launchName": { "const": "🧹clean🧩️taxonomy🧪️taxonomy-leading-grapheme" },
+    "launchGroup": { "const": "4_gate" },
+    "launchOrder": { "const": 410.209 }
+  }
+}

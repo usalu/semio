@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/declarations/std2-any/mutations",
+  "title": "Std2Any direct mutations",
+  "type": "object",
+  "properties": {
+    "SetValue": {
+      "$ref": "https://semio.dev/schema/plugin/declarations/std2-any/set-value"
+    }
+  },
+  "required": [
+    "SetValue"
+  ],
+  "additionalProperties": false
+}
+

@@ -7,7 +7,7 @@
 import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 //#endregion 🔌️Adapters
@@ -332,6 +332,44 @@ export interface SemanticOwnedDocumentCorrection {
   readonly rationaleRule: "owner-script-filename-documentation-v1";
 }
 
+/** 🪪️ One reviewed current preimage with immutable catalog and baseline lineage. */
+export interface SemanticOwnedCurrentSourceRevision {
+  readonly catalogCaseIndex: 31;
+  readonly sourcePath: string;
+  readonly baselineCommit: string;
+  readonly baselineBlob: string;
+  readonly baselinePreimage: Readonly<{ sha256: string; size: number; mode: "0644" }>;
+  readonly currentPreimage: Readonly<{ sha256: string; size: number; mode: "0644" }>;
+  readonly expectationsPath: string;
+  readonly expectationsSha256: string;
+}
+
+/** 🧾️ Exact observed expectation bytes and no-follow node witnesses supplied by the caller. */
+export interface SemanticOwnedCurrentSourceExpectation {
+  readonly path: string;
+  readonly nodeKind: string;
+  readonly mode: number;
+  readonly ancestorNodeKinds: readonly string[];
+  readonly bytes: Uint8Array;
+}
+
+/** 📸️ Exact bytes and file tuple captured through one no-follow descriptor. */
+export interface SemanticOwnedInputFileSnapshot extends SemanticOwnedCurrentSourceExpectation {
+  readonly nodeKind: "file";
+  readonly contentHash: string;
+  readonly size: number;
+}
+
+/** 🔏️ A selected source tuple and its revision digest without altering historical catalog rows. */
+export interface SemanticOwnedCurrentSourcePreimageResult {
+  readonly disposition: "none" | "catalog" | "revised" | "problem";
+  readonly catalogCaseIndex: number | null;
+  readonly preimage: Readonly<{ sha256: string; size: number; mode: "0644" }> | null;
+  readonly revisionId: string | null;
+  readonly revisionDigest: string | null;
+  readonly problems: readonly string[];
+}
+
 /** 📚️ One digest-locked exact owner-file catalog with no basename-wide inference. */
 export interface SemanticExactOwnedFileProjectionContract {
   readonly contractKind: "exact-owner-path-catalog";
@@ -349,6 +387,7 @@ export interface SemanticExactOwnedFileProjectionContract {
   readonly generatorOwnerIds: readonly ["assets-build"];
   readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
   readonly authoredDocumentCorrections: Readonly<Record<string, SemanticOwnedDocumentCorrection>>;
+  readonly currentSourceRevisions?: Readonly<Record<string, SemanticOwnedCurrentSourceRevision>>;
   readonly rationaleRule: "readme-license-owner-projection-v1";
 }
 
@@ -597,12 +636,49 @@ export interface RustEntryPathRules {
 }
 
 //#region 🔒️Frozen Coordinate Evidence
+/** 📜️ Exact immutable Markdown source coordinates with bounded block and inline syntax. */
+export interface FrozenMarkdownCoordinateEvidenceContract {
+  readonly path: string;
+  readonly grammar: "frozen-markdown-source-coordinates-v1";
+  readonly sha256: string;
+  readonly coordinates: readonly Readonly<{ start: number; end: number; kind: "source"; form: "inline-code" | "path-list-item"; valueSha256: string }>[];
+}
+
+/** 🧷️ Validates exact Markdown declarations without reading or discovering evidence. */
+export function validateFrozenMarkdownCoordinateEvidenceContracts(value: unknown): string[] {
+  const problems: string[] = [], paths = new Set<string>();
+  const object = (entry: unknown): entry is Record<string, unknown> => entry !== null && typeof entry === "object" && !Array.isArray(entry);
+  if (!object(value)) return ["frozenMarkdownCoordinateEvidenceContracts must be an object."];
+  for (const [id, row] of Object.entries(value)) {
+    const label = `frozenMarkdownCoordinateEvidenceContracts.${id}`;
+    if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`${label} has an invalid contract id.`);
+    if (!object(row)) { problems.push(`${label} must be an object.`); continue; }
+    if (Object.keys(row).sort().join("\0") !== "coordinates\0grammar\0path\0sha256" || row.grammar !== "frozen-markdown-source-coordinates-v1") problems.push(`${label} requires the exact Markdown source-coordinate grammar and fields.`);
+    if (typeof row.path !== "string" || !row.path.endsWith(".md") || /[\\:*?"<>|\u0000-\u001f]/u.test(row.path) || row.path.split("/").some((part) => !part || part === "." || part === "..") || /^(?:compose|temp\/compose)(?:\/|$)/u.test(row.path)) problems.push(`${label}.path must be one exact non-opaque repository-relative Markdown document.`);
+    else { if (paths.has(row.path)) problems.push(`${label}.path duplicates another evidence owner.`); paths.add(row.path); }
+    if (typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256)) problems.push(`${label}.sha256 must bind exact document bytes.`);
+    if (!Array.isArray(row.coordinates) || row.coordinates.length === 0) { problems.push(`${label}.coordinates must be a nonempty array.`); continue; }
+    const spans: { start: number; end: number }[] = [];
+    for (const [index, coordinate] of row.coordinates.entries()) {
+      if (!object(coordinate)) { problems.push(`${label}.coordinates[${index}] must be an object.`); continue; }
+      if (Object.keys(coordinate).sort().join("\0") !== "end\0form\0kind\0start\0valueSha256" || coordinate.kind !== "source" || !["inline-code", "path-list-item"].includes(String(coordinate.form))) problems.push(`${label}.coordinates[${index}] requires one exact source-span form.`);
+      if (!Number.isSafeInteger(coordinate.start) || Number(coordinate.start) < 0 || !Number.isSafeInteger(coordinate.end) || Number(coordinate.end) <= Number(coordinate.start)) problems.push(`${label}.coordinates[${index}] requires a nonempty exact UTF-16 span.`);
+      else spans.push({ start: Number(coordinate.start), end: Number(coordinate.end) });
+      if (typeof coordinate.valueSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(coordinate.valueSha256)) problems.push(`${label}.coordinates[${index}].valueSha256 must bind exact UTF-8 path bytes.`);
+    }
+    spans.sort((left, right) => left.start - right.start || left.end - right.end);
+    if (spans.some((span, index) => index > 0 && span.start < spans[index - 1].end)) problems.push(`${label}.coordinates must not overlap or duplicate a span.`);
+  }
+  return problems;
+}
+
 /** 🔐️ Exact immutable JSON evidence with explicitly typed physical-coordinate value locations. */
 export interface FrozenCoordinateEvidenceContract {
   readonly path: string;
   readonly sha256: string;
   readonly schemaVersion: number | null;
-  readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }> | Readonly<{ pointer: string; kind: "source"; representation: "recorded-package-owner-identity"; identityPrefix: "unmarked:" }>)[];
+  readonly rootKind?: "array";
+  readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }> | Readonly<{ pointer: string; kind: "source"; representation: "recorded-package-owner-identity"; identityPrefix: "unmarked:" }> | Readonly<{ pointer: string; kind: "source"; representation: "json-escaped-source-path" }>)[];
 }
 
 /** 🧾️ Validates explicit evidence authority without discovering or reading any document. */
@@ -614,7 +690,9 @@ export function validateFrozenCoordinateEvidenceContracts(value: unknown): strin
     const label = `frozenCoordinateEvidenceContracts.${id}`;
     if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`${label} has an invalid contract id.`);
     if (!object(row)) { problems.push(`${label} must be an object.`); continue; }
-    if (Object.keys(row).sort().join("\0") !== "coordinates\0path\0schemaVersion\0sha256") problems.push(`${label} must contain only path, sha256, schemaVersion, and coordinates.`);
+    const arrayRoot = Object.hasOwn(row, "rootKind");
+    if (Object.keys(row).sort().join("\0") !== (arrayRoot ? "coordinates\0path\0rootKind\0schemaVersion\0sha256" : "coordinates\0path\0schemaVersion\0sha256")) problems.push(`${label} must contain only its exact document-root fields.`);
+    if (arrayRoot && (row.rootKind !== "array" || row.schemaVersion !== null)) problems.push(`${label}.rootKind requires explicit array authority with absent schemaVersion.`);
     const path = row.path;
     if (typeof path !== "string" || !path.endsWith(".json") || /[\\:*?"<>|\u0000-\u001f]/u.test(path) || path.split("/").some((part) => !part || part === "." || part === "..") || /^(?:compose|temp\/compose)(?:\/|$)/u.test(path)) problems.push(`${label}.path must be one exact non-opaque repository-relative JSON document.`);
     else { if (paths.has(path)) problems.push(`${label}.path duplicates another evidence owner.`); paths.add(path); }
@@ -626,8 +704,11 @@ export function validateFrozenCoordinateEvidenceContracts(value: unknown): strin
       if (!object(coordinate)) { problems.push(`${label}.coordinates[${index}] must be an object.`); continue; }
       const recorded = Object.hasOwn(coordinate, "representation");
       const ownerIdentity = coordinate.representation === "recorded-package-owner-identity";
-      if (Object.keys(coordinate).sort().join("\0") !== (ownerIdentity ? "identityPrefix\0kind\0pointer\0representation" : recorded ? "kind\0pointer\0recordedRepositoryRoot\0representation" : "kind\0pointer")) { problems.push(`${label}.coordinates[${index}] must contain only the fields of its exact coordinate representation.`); continue; }
-      if (ownerIdentity) {
+      const escapedSource = coordinate.representation === "json-escaped-source-path";
+      if (Object.keys(coordinate).sort().join("\0") !== (ownerIdentity ? "identityPrefix\0kind\0pointer\0representation" : escapedSource ? "kind\0pointer\0representation" : recorded ? "kind\0pointer\0recordedRepositoryRoot\0representation" : "kind\0pointer")) { problems.push(`${label}.coordinates[${index}] must contain only the fields of its exact coordinate representation.`); continue; }
+      if (escapedSource) {
+        if (coordinate.kind !== "source") problems.push(`${label}.coordinates[${index}] requires source-only JSON encoding authority.`);
+      } else if (ownerIdentity) {
         if (coordinate.identityPrefix !== "unmarked:" || coordinate.kind !== "source") problems.push(`${label}.coordinates[${index}] requires the exact unmarked: source-owner identity prefix.`);
       } else if (recorded) {
         const root = coordinate.recordedRepositoryRoot;
@@ -855,6 +936,7 @@ export interface Taxonomy {
     ordering: "utf8-byte";
   }>;
   readonly frozenCoordinateEvidenceContracts: Readonly<Record<string, FrozenCoordinateEvidenceContract>>;
+  readonly frozenMarkdownCoordinateEvidenceContracts: Readonly<Record<string, FrozenMarkdownCoordinateEvidenceContract>>;
   readonly storyFileKindId: string;
   readonly testFeatureFileKindId: string;
   readonly testAdapterFileKinds: Readonly<Record<string, string>>;
@@ -2130,6 +2212,28 @@ export function taxonomyPathPatternMatches(path: string, pattern: string): boole
   return taxonomyPatternExpression(pattern.normalize("NFC")).test(normalizedPath);
 }
 
+/** 🧮️ An invocation-owned matcher with private compiled patterns and no retained path results. */
+export interface TaxonomyPathMatcher {
+  readonly matches: (path: string, pattern: string) => boolean;
+}
+
+/** 🧵️ Reuses successful pure compilations only for this validation or query invocation. */
+export function createTaxonomyPathMatcher(): TaxonomyPathMatcher {
+  const expressions = new Map<string, RegExp>();
+  return Object.freeze({
+    matches(path: string, pattern: string): boolean {
+      const normalizedPath = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
+      const normalizedPattern = pattern.normalize("NFC");
+      let expression = expressions.get(normalizedPattern);
+      if (!expression) {
+        expression = taxonomyPatternExpression(normalizedPattern);
+        expressions.set(normalizedPattern, expression);
+      }
+      return expression.test(normalizedPath);
+    },
+  });
+}
+
 function fixedScopeMatches(contract: FixedFilenameContract | FixedDirectoryContract, path: string, context: FixedContractMatchContext): boolean {
   if (contract.scope.kind === "exact-path") return path === contract.scope.path;
   if (contract.scope.kind === "repository-root") return !path.includes("/");
@@ -2341,6 +2445,7 @@ export function artifactFacetPathIsDeclared(facetPath: string, taxonomy: Taxonom
  */
 export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): string[] {
   const problems: string[] = [];
+  const pathMatcher = createTaxonomyPathMatcher();
   const document = taxonomy as unknown as Record<string, unknown>;
   const removedKeys = [
     "semanticManifestFilename", "subsetsManifestFilename", "packagingFileNames", "packagingFileSuffixes", "packagingDirNames",
@@ -2355,6 +2460,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
   for (const key of removedKeys) if (key in document) problems.push(`${key} was removed by schema version 7; use kind IDs or exact contracts.`);
   if (taxonomy.schemaVersion !== 7) problems.push(`schemaVersion must be exactly 7, got ${JSON.stringify(taxonomy.schemaVersion)}.`);
   problems.push(...validateFrozenCoordinateEvidenceContracts(taxonomy.frozenCoordinateEvidenceContracts));
+  problems.push(...validateFrozenMarkdownCoordinateEvidenceContracts(taxonomy.frozenMarkdownCoordinateEvidenceContracts));
 
   const record = (value: unknown, key: string): value is Record<string, unknown> => {
     const valid = typeof value === "object" && value !== null && !Array.isArray(value);
@@ -2402,7 +2508,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       return;
     }
     try {
-      void taxonomyPatternExpression(value);
+      void pathMatcher.matches("", value);
     } catch {
       problems.push(`${key} is not a valid v7 path pattern.`);
     }
@@ -2857,7 +2963,10 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
         continue;
       }
       if (contract.contractKind === "exact-owner-path-catalog") {
-        exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule"], scope);
+        exactKeys(contract, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(contract, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], scope);
+        if (Object.hasOwn(contract, "currentSourceRevisions")) {
+          try { parseSemanticOwnedCurrentSourceRevisions(contract.currentSourceRevisions); } catch (error) { problems.push(scope + ".currentSourceRevisions: " + (error instanceof Error ? error.message : String(error))); }
+        }
         if (id !== "readme-license-owner-leaves-v1" || contract.rationaleRule !== "readme-license-owner-projection-v1") problems.push(scope + " must be the exact README/LICENSE owner projection contract.");
         if (!exactOwnerPath(contract.authorityCatalogPath)) problems.push(scope + ".authorityCatalogPath must be one repository-local non-opaque NFC path.");
         if (typeof contract.authorityCatalogSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(contract.authorityCatalogSha256)) problems.push(scope + ".authorityCatalogSha256 must be one SHA-256 digest.");
@@ -3256,7 +3365,7 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
           const key = `generatorContracts[${JSON.stringify(id)}].outputRoots[${index}]`;
           if (workspacePath(output.path, `${key}.path`) && exactTouchesOpaque(output.path)) problems.push(`${key}.path crosses an opaque boundary.`);
           if (!["tracked", "ignored"].includes(output.inclusion)) problems.push(`${key}.inclusion must be tracked or ignored.`);
-          if (runnable && contract.inputPatterns.some((input) => taxonomyPathPatternMatches(output.path, input))) problems.push(`${key}.path is also declared as an input.`);
+          if (runnable && contract.inputPatterns.some((input) => pathMatcher.matches(output.path, input))) problems.push(`${key}.path is also declared as an input.`);
           outputOwners.push({ id, path: output.path });
         }
       }
@@ -3905,6 +4014,94 @@ function exactOwnerPath(path: unknown): path is string {
   return typeof path === "string" && path.length > 0 && path === path.normalize("NFC") && !path.startsWith("/") && !path.includes("\\") && !/[\u0000-\u001f]/u.test(path) && path.split("/").every((part) => part !== "" && part !== "." && part !== "..") && !["compose", "temp/compose"].some((root) => path === root || path.startsWith(root + "/"));
 }
 
+//#region 🪪️Reviewed Current Owner Preimages
+/** 📐️ Parses the closed one-row current-source revision grammar without reading any path. */
+export function parseSemanticOwnedCurrentSourceRevisions(input: unknown): Readonly<Record<string, SemanticOwnedCurrentSourceRevision>> {
+  const fail = (message: string): never => { throw new Error("current-source-revision-invalid: " + message); };
+  const record = (value: unknown, keys: readonly string[], label: string): Record<string, unknown> => {
+    if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join("\0") !== [...keys].sort().join("\0")) return fail(label + " fields");
+    return value as Record<string, unknown>;
+  };
+  const id = "testing-readme-protocol-v2-reviewed", rows = record(input, [id], "registry");
+  const row = record(rows[id], ["catalogCaseIndex", "sourcePath", "baselineCommit", "baselineBlob", "baselinePreimage", "currentPreimage", "expectationsPath", "expectationsSha256"], id);
+  const tuple = (value: unknown, label: string): SemanticOwnedCurrentSourceRevision["currentPreimage"] => {
+    const selected = record(value, ["sha256", "size", "mode"], label);
+    if (typeof selected.sha256 !== "string" || !/^[0-9a-f]{64}$/u.test(selected.sha256) || selected.mode !== "0644" || !Number.isSafeInteger(selected.size) || (selected.size as number) < 0) return fail(label + " tuple");
+    return { sha256: selected.sha256, size: selected.size as number, mode: selected.mode };
+  };
+  if (row.catalogCaseIndex !== 31 || typeof row.baselineCommit !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineCommit) || typeof row.baselineBlob !== "string" || !/^[0-9a-f]{40}$/u.test(row.baselineBlob)) return fail(id + " index or baseline identity");
+  if (!exactOwnerPath(row.sourcePath) || /[:*?"<>|]/u.test(row.sourcePath) || !row.sourcePath.endsWith("/README.md") || Buffer.from(row.sourcePath).toString("utf8") !== row.sourcePath) return fail(id + " raw source coordinate");
+  if (!exactOwnerPath(row.expectationsPath) || /[:*?"<>|]/u.test(row.expectationsPath) || !row.expectationsPath.endsWith(".json") || Buffer.from(row.expectationsPath).toString("utf8") !== row.expectationsPath || typeof row.expectationsSha256 !== "string" || !/^[0-9a-f]{64}$/u.test(row.expectationsSha256)) return fail(id + " expectation identity");
+  const baselinePreimage = tuple(row.baselinePreimage, "baseline"), currentPreimage = tuple(row.currentPreimage, "current");
+  if (baselinePreimage.sha256 === currentPreimage.sha256) return fail(id + " requires one distinct current preimage");
+  return { [id]: { catalogCaseIndex: 31, sourcePath: row.sourcePath, baselineCommit: row.baselineCommit, baselineBlob: row.baselineBlob, baselinePreimage, currentPreimage, expectationsPath: row.expectationsPath, expectationsSha256: row.expectationsSha256 } };
+}
+
+/** 🧮️ Canonicalizes the closed revision envelope with sorted object keys and retained array order. */
+function semanticOwnedCurrentRevisionCanonical(value: unknown): string {
+  if (Array.isArray(value)) return "[" + value.map(semanticOwnedCurrentRevisionCanonical).join(",") + "]";
+  if (value !== null && typeof value === "object") return "{" + Object.keys(value).sort().map((key) => JSON.stringify(key) + ":" + semanticOwnedCurrentRevisionCanonical((value as Record<string, unknown>)[key])).join(",") + "}";
+  return JSON.stringify(value);
+}
+
+/** 🧭️ Selects a raw owner's current preimage from exact supplied evidence without filesystem or Git access. */
+export function semanticExactOwnedFileCurrentPreimageAuthority(catalog: SemanticExactOwnedFileCatalog, contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">, input: unknown, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; expectations: readonly SemanticOwnedCurrentSourceExpectation[] }>): SemanticOwnedCurrentSourcePreimageResult {
+  const empty = { catalogCaseIndex: null, preimage: null, revisionId: null, revisionDigest: null, problems: [] } as const;
+  const fail = (message: string): SemanticOwnedCurrentSourcePreimageResult => ({ ...empty, disposition: "problem", problems: ["current-source-revision-invalid: " + message] });
+  let revisions: Readonly<Record<string, SemanticOwnedCurrentSourceRevision>>;
+  try { revisions = parseSemanticOwnedCurrentSourceRevisions(input); } catch (error) { return { ...empty, disposition: "problem", problems: [error instanceof Error ? error.message : String(error)] }; }
+  if (!exactOwnerPath(contract.authorityCatalogPath) || !/^[0-9a-f]{64}$/u.test(contract.authorityCatalogSha256) || !Array.isArray(catalog.cases) || catalog.cases.length !== 40) return fail("catalog identity or census");
+  if (!exactOwnerPath(facts.path) || /[:*?"<>|]/u.test(facts.path)) return fail("source coordinate");
+  const index = catalog.cases.findIndex((entry) => entry.sourcePath === facts.path);
+  if (index < 0) return { ...empty, disposition: "none" };
+  const owner = catalog.cases[index], selected = Object.entries(revisions).find(([, row]) => row.catalogCaseIndex === index);
+  const preimage = selected ? selected[1].currentPreimage : owner.preimage;
+  if (!preimage || !/^[0-9a-f]{64}$/u.test(preimage.sha256) || preimage.mode !== "0644" || !Number.isSafeInteger(preimage.size) || preimage.size < 0) return fail("selected preimage tuple");
+  if (facts.nodeKind !== "file" || facts.contentHash !== preimage.sha256 || facts.mode !== Number.parseInt(preimage.mode, 8) || facts.size !== preimage.size) return fail("selected source preimage drifted");
+  if (!selected) return { ...empty, disposition: "catalog", catalogCaseIndex: index, preimage: { sha256: preimage.sha256, size: preimage.size, mode: preimage.mode } };
+  const [id, row] = selected, ownerEvidence = catalog.ownerEvidence[owner.ownerEvidenceId], referenceOwner = catalog.referenceOwners["markdown-relative-reference-adapter"];
+  if (row.sourcePath !== owner.sourcePath) return fail("declared raw source does not match its catalog row");
+  if (owner.ownerEvidenceId !== "nx-project-owner-documentation" || ownerEvidence?.kind !== "ordinary-owner-doc" || !Array.isArray(ownerEvidence.evidencePaths) || ownerEvidence.evidencePaths.some((path) => !exactOwnerPath(path)) || owner.disposition !== "owner-documentation-relocate" || owner.fixedContractId !== null || owner.generatorOwnerId !== null || owner.projectionContractId !== "exact-owner-readme-projection" || !exactOwnerPath(owner.sourcePath) || posix.basename(owner.sourcePath) !== "README.md" || !exactOwnerPath(owner.destinationPath) || owner.destinationPath !== posix.dirname(owner.sourcePath) + "/📃️readme/📝️.md" || JSON.stringify(owner.referenceOwnerIds) !== JSON.stringify(["markdown-relative-reference-adapter"]) || referenceOwner?.kind !== "reference-adapter" || referenceOwner.ownerPath !== "repo-lib normalization reference graph") return fail("revision is not the approved ordinary README owner");
+  const sameTuple = (left: unknown, right: Readonly<{ sha256: string; size: number; mode: string }>): boolean => {
+    if (!left || typeof left !== "object" || Array.isArray(left)) return false;
+    const value = left as Record<string, unknown>;
+    return value.sha256 === right.sha256 && value.size === right.size && value.mode === right.mode;
+  };
+  if (!sameTuple(owner.preimage, row.baselinePreimage)) return fail("catalog baseline tuple drifted");
+  if (!Array.isArray(facts.expectations) || facts.expectations.length !== 1) return fail("missing or duplicate expectation identity");
+  const evidence = facts.expectations[0];
+  if (!exactOwnerPath(evidence.path) || evidence.path !== row.expectationsPath || evidence.nodeKind !== "file" || evidence.mode !== 0o644 || !Array.isArray(evidence.ancestorNodeKinds) || evidence.ancestorNodeKinds.length !== evidence.path.split("/").length - 1 || evidence.ancestorNodeKinds.some((kind: string) => kind !== "directory") || !(evidence.bytes instanceof Uint8Array)) return fail("expectation is not an exact no-follow regular input");
+  const bytes = Buffer.from(evidence.bytes), text = bytes.toString("utf8");
+  if (!Buffer.from(text).equals(bytes)) return fail("expectation has lossy UTF-8");
+  if (createHash("sha256").update(bytes).digest("hex") !== row.expectationsSha256) return fail("expectation bytes drifted");
+  let expectation: Record<string, unknown>;
+  try { expectation = JSON.parse(text); } catch { return fail("expectation JSON is invalid"); }
+  if (!expectation || typeof expectation !== "object" || Array.isArray(expectation)) return fail("expectation JSON is not an object");
+  const lineage = expectation.frozenAuthority as Record<string, unknown> | undefined, documents = expectation.documents as Record<string, unknown> | undefined;
+  if (expectation.schemaVersion !== 1 || expectation.contract !== "testing-readme-current-coordinates-v1" || !lineage || !documents || lineage.path !== contract.authorityCatalogPath || lineage.sha256 !== contract.authorityCatalogSha256 || lineage.row !== row.catalogCaseIndex || lineage.baselineCommit !== row.baselineCommit || lineage.baselineBlob !== row.baselineBlob || !sameTuple(lineage.preimage, row.baselinePreimage) || documents.readme !== owner.sourcePath) return fail("expectation baseline or source-owner binding drifted");
+  const envelope = {
+    kind: "exact-owner-current-source-revision-v1",
+    catalogIdentity: { path: contract.authorityCatalogPath, sha256: contract.authorityCatalogSha256 },
+    revisionId: id,
+    revision: row,
+    owner: {
+      catalogCaseIndex: index,
+      sourcePath: owner.sourcePath,
+      destinationPath: owner.destinationPath,
+      ownerEvidenceId: owner.ownerEvidenceId,
+      ownerEvidence: { kind: ownerEvidence.kind, evidencePaths: ownerEvidence.evidencePaths },
+      disposition: owner.disposition,
+      fixedContractId: owner.fixedContractId,
+      projectionContractId: owner.projectionContractId,
+      generatorOwnerId: owner.generatorOwnerId,
+      referenceOwners: owner.referenceOwnerIds.map((referenceId: string) => ({ id: referenceId, kind: catalog.referenceOwners[referenceId].kind, ownerPath: catalog.referenceOwners[referenceId].ownerPath })),
+    },
+  };
+  const revisionDigest = createHash("sha256").update(semanticOwnedCurrentRevisionCanonical(envelope)).digest("hex");
+  return { disposition: "revised", catalogCaseIndex: index, preimage: { ...row.currentPreimage }, revisionId: id, revisionDigest, problems: [] };
+}
+//#endregion 🪪️Reviewed Current Owner Preimages
+
 //#region 🖋️Exact Authored Owner Documents
 /** 📏️ Validates the closed language-neutral authored-document correction grammar. */
 export function parseSemanticOwnedDocumentCorrections(input: unknown): Readonly<Record<string, SemanticOwnedDocumentCorrection>> {
@@ -3970,16 +4167,49 @@ function exactOwnerRegularFile(repoRoot: string, path: string): "file" | "absent
   return "file";
 }
 
+/** 🛡️ Captures a safe regular input once and rejects changed descriptors or ancestry. */
+export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string): SemanticOwnedInputFileSnapshot | null {
+  if (!exactOwnerPath(path) || /[:*?"<>|]/u.test(path) || Buffer.from(path).toString("utf8") !== path) throw new Error("Exact owner input has an unsafe coordinate");
+  const parts = path.split("/"), witnesses: { path: string; dev: number; ino: number }[] = [];
+  let current = repoRoot;
+  const root = lstatSync(current);
+  if (!root.isDirectory() || root.isSymbolicLink()) throw new Error("Exact owner input repository root is not a no-follow directory");
+  witnesses.push({ path: current, dev: root.dev, ino: root.ino });
+  for (const [index, part] of parts.entries()) {
+    current = join(current, part);
+    let node;
+    try { node = lstatSync(current); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
+    if (node.isSymbolicLink() || (index === parts.length - 1 ? !node.isFile() : !node.isDirectory())) throw new Error("Exact owner input must be a regular file beneath no-follow directories: " + path);
+    if (index < parts.length - 1) witnesses.push({ path: current, dev: node.dev, ino: node.ino });
+  }
+  const before = lstatSync(current), descriptor = openSync(current, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const node = fstatSync(descriptor);
+    if (!node.isFile() || node.dev !== before.dev || node.ino !== before.ino || node.mode !== before.mode || node.size !== before.size || node.mtimeMs !== before.mtimeMs || node.ctimeMs !== before.ctimeMs) throw new Error("Exact owner input changed during open: " + path);
+    const bytes = readFileSync(descriptor), after = fstatSync(descriptor), named = lstatSync(current);
+    if (bytes.byteLength !== node.size || after.dev !== node.dev || after.ino !== node.ino || after.mode !== node.mode || after.size !== node.size || after.mtimeMs !== node.mtimeMs || after.ctimeMs !== node.ctimeMs || named.isSymbolicLink() || !named.isFile() || named.dev !== node.dev || named.ino !== node.ino || named.mode !== node.mode || named.size !== node.size || named.mtimeMs !== node.mtimeMs || named.ctimeMs !== node.ctimeMs) throw new Error("Exact owner input changed during read: " + path);
+    for (const witness of witnesses) {
+      const ancestor = lstatSync(witness.path);
+      if (!ancestor.isDirectory() || ancestor.isSymbolicLink() || ancestor.dev !== witness.dev || ancestor.ino !== witness.ino) throw new Error("Exact owner input ancestry changed: " + path);
+    }
+    return { path, nodeKind: "file", contentHash: createHash("sha256").update(bytes).digest("hex"), mode: node.mode & 0o7777, size: bytes.byteLength, ancestorNodeKinds: parts.slice(1).map(() => "directory"), bytes };
+  } finally { closeSync(descriptor); }
+}
+
 /** 🔐️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */
-export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy): SemanticExactOwnedFileCatalog | null {
+export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxonomy, observe?: (snapshot: SemanticOwnedInputFileSnapshot) => void): SemanticExactOwnedFileCatalog | null {
   const contract = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   if (contract?.contractKind !== "exact-owner-path-catalog") return null;
   const path = contract.authorityCatalogPath;
   const state = exactOwnerRegularFile(repoRoot, path);
   if (state === "absent") return null;
   if (state !== "file") throw new Error("Exact owner catalog must be a regular file beneath non-symlink parents");
-  const bytes = readFileSync(join(repoRoot, path));
+  const snapshot = semanticOwnedInputFileSnapshot(repoRoot, path);
+  if (!snapshot) throw new Error("Exact owner catalog disappeared during capture: " + path);
+  if (snapshot.mode !== 0o644) throw new Error("Exact owner catalog mode drift: " + path);
+  const bytes = Buffer.from(snapshot.bytes);
   if (createHash("sha256").update(bytes).digest("hex") !== contract.authorityCatalogSha256) throw new Error("Exact owner catalog digest drift: " + path);
+  if (!Buffer.from(bytes.toString("utf8")).equals(bytes)) throw new Error("Exact owner catalog has lossy UTF-8: " + path);
   const value = JSON.parse(bytes.toString("utf8")) as Record<string, unknown>;
   const object = (input: unknown): Record<string, unknown> => {
     if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Exact owner catalog requires object records");
@@ -4019,22 +4249,29 @@ export function semanticExactOwnedFileCatalog(repoRoot: string, taxonomy: Taxono
     return row;
   });
   if (Object.keys(counts).some((key) => counts[key as keyof typeof counts] !== contract.expectedCounts[key as keyof typeof counts])) throw new Error("Exact owner catalog census drifted");
+  observe?.(snapshot);
   return { cases, ownerEvidence, referenceOwners, generatorOwners };
 }
 
 /** 🧭️ Resolves an exact owner leaf from language-neutral facts; raw-source bytes authorize projection once. */
-export function semanticExactOwnedFileProjectionAuthority(catalog: SemanticExactOwnedFileCatalog, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: SemanticExactOwnedFileCase | null; problems: readonly string[] }> {
+export function semanticExactOwnedFileProjectionAuthority(catalog: SemanticExactOwnedFileCatalog, facts: Readonly<{ path: string; nodeKind: string; contentHash: string; mode: number; size: number; sourcePresent: boolean; destinationPresent: boolean; destinationPreimage?: Readonly<{ contentHash: string; mode: number; size: number }>; occupiedPaths: readonly string[] }>, current?: Readonly<{ contract: Pick<SemanticExactOwnedFileProjectionContract, "authorityCatalogPath" | "authorityCatalogSha256">; revisions: unknown; expectations: readonly SemanticOwnedCurrentSourceExpectation[] }>): Readonly<{ disposition: "none" | "fixed" | "project" | "regenerate" | "canonical" | "problem"; entry: SemanticExactOwnedFileCase | null; problems: readonly string[]; currentSource?: SemanticOwnedCurrentSourcePreimageResult }> {
   const entry = catalog.cases.find((entry) => entry.sourcePath === facts.path || entry.destinationPath === facts.path);
   if (!entry) return { disposition: "none", entry: null, problems: [] };
   const problems: string[] = [];
   const fixed = entry.disposition === "fixed", raw = facts.path === entry.sourcePath;
+  let preimage = entry.preimage, currentSource: SemanticOwnedCurrentSourcePreimageResult | undefined;
+  if (current) {
+    const selected = semanticExactOwnedFileCurrentPreimageAuthority(catalog, current.contract, current.revisions, { ...facts, expectations: current.expectations });
+    if (!raw || fixed || selected.disposition !== "revised" || selected.catalogCaseIndex !== catalog.cases.indexOf(entry) || !selected.preimage) problems.push(...(selected.problems.length ? selected.problems : ["Current source proof does not select this revised raw owner"]));
+    else { preimage = selected.preimage; currentSource = selected; }
+  }
   const convergentGenerator = entry.generatorOwnerId !== null && facts.destinationPreimage?.contentHash === entry.preimage.sha256 && facts.destinationPreimage?.mode === Number.parseInt(entry.preimage.mode, 8) && facts.destinationPreimage?.size === entry.preimage.size;
   if (facts.nodeKind !== "file") problems.push("Owner leaf must be a regular file");
   if (!fixed && facts.sourcePresent && facts.destinationPresent && !convergentGenerator) problems.push("Raw and projected owner leaves coexist");
-  if (raw && (facts.contentHash !== entry.preimage.sha256 || facts.mode !== Number.parseInt(entry.preimage.mode, 8) || facts.size !== entry.preimage.size)) problems.push("Frozen owner leaf preimage drifted");
+  if (raw && (facts.contentHash !== preimage.sha256 || facts.mode !== Number.parseInt(preimage.mode, 8) || facts.size !== preimage.size)) problems.push("Frozen owner leaf preimage drifted");
   const fold = (path: string): string => path.normalize("NFC").replaceAll("\uFE0F", "").toLocaleLowerCase("und");
   if (!fixed && raw && facts.occupiedPaths.some((path) => path !== entry.sourcePath && !(convergentGenerator && path === entry.destinationPath) && fold(path) === fold(entry.destinationPath))) problems.push("Projected owner destination is occupied or folded-colliding");
-  return { disposition: problems.length ? "problem" : fixed ? "fixed" : raw ? entry.generatorOwnerId ? "regenerate" : "project" : "canonical", entry, problems };
+  return { disposition: problems.length ? "problem" : fixed ? "fixed" : raw ? entry.generatorOwnerId ? "regenerate" : "project" : "canonical", entry, problems, ...(currentSource ? { currentSource } : {}) };
 }
 
 function exactOwnerGeneratorPrestate(repoRoot: string, outputPath: string, generatorId: string, catalog: SemanticExactOwnedFileCatalog | null): boolean {
@@ -4460,6 +4697,32 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
   const rows: Candidate[] = [];
   const literal = (token: RustToken | undefined): token is RustToken & { readonly kind: "string" } => token?.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"') && !token.text.includes("\\");
   const macros = new Set(["assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne"]);
+  const formatArguments: Readonly<Record<string, number>> = { format: 0, format_args: 0, print: 0, println: 0, eprint: 0, eprintln: 0, panic: 0, write: 1, writeln: 1, assert: 1, assert_eq: 2, assert_ne: 2, debug_assert: 1, debug_assert_eq: 2, debug_assert_ne: 2 };
+  const opaqueMacroContext = tokens.some((token) => token.text === "use" || token.text === "macro_rules");
+  const formatCaptures = (text: string, name: string): boolean => {
+    for (let index = 0; index < text.length; index++) {
+      if (text[index] !== "{") continue;
+      if (text[index + 1] === "{") { index++; continue; }
+      const end = text.indexOf("}", index + 1), field = text.slice(index + 1, end < 0 ? undefined : end), colon = field.indexOf(":");
+      if ((colon < 0 ? field : field.slice(0, colon)).trim() === name || colon >= 0 && [...field.slice(colon + 1).matchAll(/([_\p{ID_Start}][_\p{ID_Continue}]*)\$/gu)].some((match) => match[1] === name)) return true;
+      if (end < 0) break;
+      index = end;
+    }
+    return false;
+  };
+  const macroCaptures = (start: number, end: number, name: string): boolean => {
+    for (let index = start; index + 2 < end; index++) {
+      if (tokens[index + 1]?.text !== "!" || !["(", "[", "{"].includes(tokens[index + 2]?.text ?? "")) continue;
+      const close = pairs.get(index + 2);
+      if (close === undefined || close >= end) continue;
+      const qualified = tokens[index - 1]?.text === "::", standard = qualified ? tokens[index - 2]?.text === "std" && (tokens[index - 3]?.text !== "::" || tokens[index - 4]?.kind !== "identifier") : !opaqueMacroContext;
+      const argumentIndex = standard ? formatArguments[tokens[index]!.text] : undefined;
+      const argument = argumentIndex === undefined ? undefined : rustTokenSegments(tokens, pairs, index + 3, close, ",")[argumentIndex], value = argument && argument[1] === argument[0] + 1 ? tokens[argument[0]] : undefined;
+      if (literal(value)) { if (formatCaptures(value.text.slice(1, -1), name)) return true; }
+      else if (tokens.slice(index + 3, close).some((token) => token.kind === "string" && token.text.split(/[^_\p{ID_Continue}]+/u).includes(name))) return true;
+    }
+    return false;
+  };
   const path = (start: number, end: number, bindings: ReadonlyMap<string, Binding>, emit: boolean): { readonly end: number; readonly base: readonly string[] | null } | null => {
     let cursor = start, base: readonly string[] | null = null;
     const binding = bindings.get(tokens[cursor]?.text ?? "");
@@ -4470,8 +4733,8 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
       base = nested.base; cursor = close! + 1;
     } else {
       if (tokens[cursor]?.text === "::") cursor++;
-      const prefix = ["std", "::", "path", "::", "Path", "::", "new", "("];
-      if (!prefix.every((text, offset) => tokens[cursor + offset]?.text === text)) return null;
+      const prefix = [["std", "::", "path", "::", "Path", "::", "new", "("], ["std", "::", "path", "::", "PathBuf", "::", "from", "("]].find((candidate) => candidate.every((text, offset) => tokens[cursor + offset]?.text === text));
+      if (!prefix) return null;
       const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
       if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
       base = []; cursor = close + 1;
@@ -4556,7 +4819,7 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
             child.set(name.text, { kind: "loop", loop });
             visit(open + 1, close, child);
             const uses = tokens.slice(open + 1, close).filter((candidate) => candidate.kind === "identifier" && candidate.text === name.text).length;
-            loop.valid = uses === 1 && loop.uses.size === 1;
+            loop.valid = uses === 1 && loop.uses.size === 1 && !macroCaptures(open + 1, close, name.text);
             index = close + 1;
             continue;
           }
@@ -4595,13 +4858,333 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
   return [...grouped.values()].filter((values) => new Set(values.map((row) => JSON.stringify(row.base))).size === 1).map(([row]) => ({ start: row!.start, end: row!.end, value: row!.value, base: row!.base })).sort((left, right) => left.start - right.start);
 }
 
-/** 🚧️ Identifies literal join arguments without granting any receiver or target ownership. */
+/** 🧮️ Complete manifest-relative alternatives for one literal, never writable reference authority. */
+export interface RustManifestPathCandidate {
+  readonly start: number;
+  readonly end: number;
+  readonly value: string;
+  readonly targets: readonly (readonly string[])[];
+}
+
+/** 🧮️ Evaluates bounded immutable loop receivers while preserving tuple correlation and source identity. */
+export function inspectRustManifestPathCandidates(source: string): readonly RustManifestPathCandidate[] {
+  if (!source.includes("CARGO_MANIFEST_DIR") || !/\.\s*join\s*\(/u.test(source)) return [];
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), limit = 256;
+  if (tokens.some((token, index) => /^[()[\]{}]$/u.test(token.text) && !pairs.has(index))) return [];
+  if (tokens.some((token, index) => token.text === "std" && ["mod", "as", "let", "type", "struct", "use"].includes(tokens[index - 1]?.text ?? ""))) return [];
+  type State = { valid: boolean };
+  type Value = { readonly state: State; readonly dependencies: readonly State[] } & (
+    { readonly kind: "string"; readonly token: RustToken } |
+    { readonly kind: "path"; readonly parts: readonly string[] } |
+    { readonly kind: "array" | "tuple"; readonly values: readonly Value[] } |
+    { readonly kind: "metadata" });
+  type Row = { readonly token: RustToken; readonly alternatives: Map<string, readonly string[]>; readonly dependencies: State[] };
+  const rows = new Map<number, Row>(), standardMacros = new Set(["assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne", "print", "println", "eprint", "eprintln", "format", "format_args", "panic", "write", "writeln"]);
+  const shadowedMacros = new Set<string>(), moduleEnds: number[] = [];
+  let wildcardMacroImport = false;
+  for (let index = 0; index < tokens.length; index++) {
+    while (moduleEnds.length && moduleEnds.at(-1)! < index) moduleEnds.pop();
+    if (tokens[index]?.text === "mod" && tokens[index + 2]?.text === "{" && pairs.has(index + 2)) moduleEnds.push(pairs.get(index + 2)!);
+    if (tokens[index]?.text === "macro_rules" && tokens[index + 1]?.text === "!") shadowedMacros.add(tokens[index + 2]?.text ?? "");
+    if (tokens[index]?.text !== "use") continue;
+    const end = rustFindTopLevel(tokens, pairs, index + 1, tokens.length, new Set([";"])), specifier = tokens.slice(index + 1, end < 0 ? tokens.length : end);
+    const text = specifier.map((token) => token.text).join(""), localParent = /^(?:super::)+\*$/u.test(text) && text.split("::").length - 1 <= moduleEnds.length;
+    if (specifier.some((token) => token.text === "*") && !localParent) wildcardMacroImport = true;
+    for (const token of specifier) if (standardMacros.has(token.text) || token.text === "env") shadowedMacros.add(token.text);
+  }
+  if (wildcardMacroImport || shadowedMacros.has("env") || tokens.some((token) => ["no_std", "no_implicit_prelude", "macro_use"].includes(token.text))) return [];
+  let expanded = 0, overflow = false;
+  const wrap = (value: Value, parents: readonly State[] = []): Value => ({ ...value, state: { valid: true }, dependencies: [...value.dependencies, value.state, ...parents] });
+  const metadata = (): Value => ({ kind: "metadata", state: { valid: true }, dependencies: [] });
+  const invalidate = (value: Value | undefined): void => { if (value) value.state.valid = false; };
+  const states = (value: Value): readonly State[] => [value.state, ...value.dependencies];
+  const parse = (start: number, end: number, bindings: ReadonlyMap<string, Value>, emit: boolean): { value: Value; end: number } | null => {
+    let cursor = start, value: Value | undefined, token = tokens[cursor];
+    if (!token) return null;
+    if (token.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"') && !token.text.includes("\\")) {
+      value = { kind: "string", token, state: { valid: true }, dependencies: [] }; cursor++;
+    } else if (token.kind === "number" || ["true", "false"].includes(token.text)) { value = metadata(); cursor++; }
+    else if (bindings.has(token.text)) { value = bindings.get(token.text)!; cursor++; }
+    else if (token.text === "(" || token.text === "[") {
+      const close = pairs.get(cursor);
+      if (close === undefined || close >= end) return null;
+      const segments = rustTokenSegments(tokens, pairs, cursor + 1, close, ","), values: Value[] = [];
+      for (const [first, last] of segments) {
+        const child = parse(first, last, bindings, emit);
+        if (!child || child.end !== last) return null;
+        values.push(child.value);
+      }
+      value = token.text === "(" && values.length === 1 && tokens[close - 1]?.text !== "," ? values[0]! : { kind: token.text === "[" ? "array" : "tuple", values, state: { valid: true }, dependencies: [] };
+      cursor = close + 1;
+    } else if (token.text === "&" && tokens[cursor + 1]?.text === "[") {
+      const close = pairs.get(cursor + 1), child = close === undefined ? null : parse(cursor + 1, close + 1, bindings, emit);
+      if (!child || tokens[close! + 1]?.text !== "[" || tokens[close! + 2]?.text !== ".." || tokens[close! + 3]?.text !== "]") return null;
+      value = child.value; cursor = close! + 4;
+    } else {
+      if (token.text === "::") cursor++;
+      const prefix = [["std", "::", "path", "::", "Path", "::", "new", "("], ["std", "::", "path", "::", "PathBuf", "::", "from", "("]].find((row) => row.every((text, offset) => tokens[cursor + offset]?.text === text));
+      if (!prefix) return null;
+      const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
+      if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
+      value = { kind: "path", parts: [], state: { valid: true }, dependencies: [] }; cursor = close + 1;
+    }
+    while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 2]?.text === "(") {
+      const close = pairs.get(cursor + 2);
+      if (close === undefined || close >= end) break;
+      if (tokens[cursor + 1]?.text === "iter" && value.kind === "array" && close === cursor + 3 && tokens.slice(close + 1, close + 5).map((item) => item.text).join("") === ".enumerate()" && close + 4 < end) {
+        value = { kind: "array", values: value.values.map((item) => ({ kind: "tuple", values: [metadata(), wrap(item, states(value!))], state: { valid: true }, dependencies: [] })), state: { valid: true }, dependencies: states(value) };
+        cursor = close + 5; continue;
+      }
+      if (tokens[cursor + 1]?.text !== "join" || value.kind !== "path") break;
+      const segments = rustTokenSegments(tokens, pairs, cursor + 3, close, ","), argument = segments.length === 1 ? parse(segments[0]![0], segments[0]![1], bindings, emit) : null;
+      if (!argument || argument.end !== segments[0]![1] || argument.value.kind !== "string") break;
+      if (/^(?:\/|[A-Za-z]:)/u.test(argument.value.token.text.slice(1, -1))) break;
+      const leaf = argument.value, parts: readonly string[] = [...value.parts, leaf.token.text.slice(1, -1)], dependencies: State[] = [...states(value), ...states(leaf)];
+      if (emit) {
+        const row: Row = rows.get(leaf.token.start) ?? { token: leaf.token, alternatives: new Map(), dependencies: [] };
+        row.alternatives.set(JSON.stringify(parts), parts); row.dependencies.push(...dependencies); rows.set(leaf.token.start, row);
+        if (row.alternatives.size > limit) overflow = true;
+      }
+      value = { kind: "path", parts, state: { valid: true }, dependencies }; cursor = close + 1;
+    }
+    return { value, end: cursor };
+  };
+  const bind = (start: number, end: number, value: Value, bindings: Map<string, Value>): boolean => {
+    if (start + 1 === end && tokens[start]?.kind === "identifier") { bindings.set(tokens[start]!.text, wrap(value)); return true; }
+    if (tokens[start]?.text !== "(" || pairs.get(start) !== end - 1 || value.kind !== "tuple") return false;
+    const names = rustTokenSegments(tokens, pairs, start + 1, end - 1, ",");
+    if (names.length !== value.values.length || names.some(([first, last]) => first + 1 !== last || tokens[first]?.kind !== "identifier") || new Set(names.map(([first]) => tokens[first]!.text).filter((name) => name !== "_")).size !== names.filter(([first]) => tokens[first]!.text !== "_").length) return false;
+    for (let index = 0; index < names.length; index++) bindings.set(tokens[names[index]![0]]!.text, wrap(value.values[index]!, states(value)));
+    return true;
+  };
+  const callbackNamespace = !tokens.some((token, index) => {
+    if (token.text === "#" || token.text === "std" && ["enum", "union", "trait", "<", ","].includes(tokens[index - 1]?.text ?? "")) return true;
+    if (tokens[index + 1]?.text !== "!" || !["(", "[", "{"].includes(tokens[index + 2]?.text ?? "")) return false;
+    if (token.text !== "env" && !standardMacros.has(token.text)) return true;
+    return tokens[index - 1]?.text === "::" ? tokens[index - 2]?.text !== "std" || tokens[index - 3]?.text === "::" && tokens[index - 4]?.kind === "identifier" : shadowedMacros.has(token.text);
+  });
+  const divergentCallback = (start: number, end: number, bindings: ReadonlyMap<string, Value>): boolean => {
+    if (!callbackNamespace || tokens[start - 1]?.text !== "(" || pairs.get(start - 1) !== end || tokens[start - 2]?.text !== "unwrap_or_else" || tokens[start - 3]?.text !== "." || tokens[start - 4]?.text !== ")") return false;
+    const readClose = start - 4, readOpen = pairs.get(readClose);
+    if (readOpen === undefined || readClose !== readOpen + 7 || !["std", "::", "fs", "::", "read_to_string"].every((text, index) => tokens[readOpen - 5 + index]?.text === text)) return false;
+    if (tokens[readOpen - 6]?.text === "." || tokens[readOpen - 6]?.text === "::" && tokens[readOpen - 7]?.kind === "identifier") return false;
+    const receiver = tokens[readOpen + 1], label = tokens[readOpen + 5], parameter = tokens[start + 1];
+    if (receiver?.kind !== "identifier" || label?.kind !== "identifier" || parameter?.kind !== "identifier" || parameter.text === "_" || bindings.has(parameter.text) || tokens[start + 2]?.text !== "|" || ![".", "join", "("].every((text, index) => tokens[readOpen + 2 + index]?.text === text) || pairs.get(readOpen + 4) !== readOpen + 6) return false;
+    const leaf = bindings.get(label.text), path = parse(readOpen + 1, readClose, bindings, false);
+    if (leaf?.kind !== "string" || !states(leaf).every((state) => state.valid) || path?.end !== readClose || path.value.kind !== "path" || !states(path.value).every((state) => state.valid) || !path.value.dependencies.includes(leaf.state)) return false;
+    let cursor = start + 3;
+    if (tokens[cursor]?.text === "::") cursor++;
+    if (tokens[cursor]?.text === "std" && tokens[cursor + 1]?.text === "::") cursor += 2;
+    else if (cursor !== start + 3 || shadowedMacros.has("panic")) return false;
+    if (tokens[cursor]?.text !== "panic" || tokens[cursor + 1]?.text !== "!" || tokens[cursor + 2]?.text !== "(" || pairs.get(cursor + 2) !== cursor + 4 || cursor + 5 !== end) return false;
+    const message = tokens[cursor + 3];
+    if (message?.kind !== "string" || !message.text.startsWith('"') || !message.text.endsWith('"') || message.text.includes("\\")) return false;
+    const text = message.text.slice(1, -1), captures = new Set<string>();
+    for (let index = 0; index < text.length;) {
+      if (text[index] === "}") return false;
+      if (text[index] !== "{") { index++; continue; }
+      const close = text.indexOf("}", index + 1), name = text.slice(index + 1, close);
+      if (close < 0 || !/^[A-Za-z_][A-Za-z0-9_]*$/u.test(name) || name !== label.text && name !== parameter.text) return false;
+      captures.add(name); index = close + 1;
+    }
+    return captures.has(label.text) && captures.has(parameter.text);
+  };
+  const visit = (start: number, end: number, bindings: Map<string, Value>, readOnly = false): void => {
+    for (let index = start; index < end && !overflow;) {
+      const token = tokens[index]!;
+      if (token.text === "fn") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{", ";"])), close = pairs.get(open);
+        if (open >= 0 && tokens[open]?.text === "{" && close !== undefined) visit(open + 1, close, new Map());
+        index = open < 0 ? end : (close ?? open) + 1; continue;
+      }
+      if (["unsafe", "while", "match", "loop"].includes(token.text) || token.text === "if" && tokens[index + 1]?.text === "let") {
+        for (const value of bindings.values()) invalidate(value);
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{"])), close = pairs.get(open);
+        index = close === undefined ? end : close + 1; continue;
+      }
+      const attributeOpen = tokens[index - 1]?.text === "]" ? pairs.get(index - 1) : undefined;
+      if (token.text === "|" && ([undefined, "=", "(", ",", "move"].includes(tokens[index - 1]?.text) || attributeOpen !== undefined && tokens[attributeOpen - 1]?.text === "#")) {
+        if (divergentCallback(index, end, bindings)) { index = end; continue; }
+        for (const value of bindings.values()) invalidate(value);
+        const boundary = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"]));
+        index = boundary < 0 ? end : boundary + 1; continue;
+      }
+      if (token.text === "for") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{"])), close = pairs.get(open), inToken = rustFindTopLevel(tokens, pairs, index + 1, open, new Set(["in"]));
+        if (open < 0 || close === undefined || inToken < 0) return;
+        const sequence = parse(inToken + 1, open, bindings, false);
+        if (sequence?.end === open && sequence.value.kind === "array") {
+          for (const item of sequence.value.values) {
+            if (++expanded > limit) { overflow = true; return; }
+            const child = new Map(bindings);
+            if (!bind(index + 1, inToken, wrap(item, states(sequence.value)), child)) { for (const value of bindings.values()) invalidate(value); break; }
+            visit(open + 1, close, child);
+          }
+        } else for (const value of bindings.values()) invalidate(value);
+        index = close + 1; continue;
+      }
+      if (token.text === "let") {
+        const boundary = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"]));
+        if (boundary < 0) return;
+        const equal = rustFindTopLevel(tokens, pairs, index + 1, boundary, new Set(["="])), resolved = equal < 0 ? null : parse(equal + 1, boundary, bindings, false);
+        if (equal >= 0) visit(equal + 1, boundary, bindings, resolved?.end === boundary);
+        for (const parameter of tokens.slice(index + 1, equal < 0 ? boundary : equal)) if (parameter.kind === "identifier") { invalidate(bindings.get(parameter.text)); bindings.delete(parameter.text); }
+        if (equal >= 0 && resolved?.end === boundary) bind(index + 1, equal, resolved.value, bindings);
+        index = boundary + 1; continue;
+      }
+      if (tokens[index + 1]?.text === "!" && ["(", "[", "{"].includes(tokens[index + 2]?.text ?? "")) {
+        const close = pairs.get(index + 2);
+        if (close === undefined) return;
+        const qualified = tokens[index - 1]?.text === "::", standard = standardMacros.has(token.text) && (qualified ? tokens[index - 2]?.text === "std" && (tokens[index - 3]?.text !== "::" || tokens[index - 4]?.kind !== "identifier") : !wildcardMacroImport && !shadowedMacros.has(token.text));
+        if (standard) visit(index + 3, close, bindings, true);
+        else for (const item of tokens.slice(index + 3, close)) {
+          if (item.kind === "identifier") invalidate(bindings.get(item.text));
+          else if (item.kind === "string") for (const [name, value] of bindings) if (item.text.split(/[^_\p{ID_Continue}]+/u).includes(name)) invalidate(value);
+        }
+        index = close + 1; continue;
+      }
+      const parsed = parse(index, end, bindings, true);
+      if (parsed?.value.kind === "path" && parsed.end > index + 1) { index = parsed.end; continue; }
+      if (!readOnly && token.kind === "identifier" && bindings.has(token.text)) invalidate(bindings.get(token.text));
+      const close = pairs.get(index);
+      if (close !== undefined && close > index) { visit(index + 1, close, token.text === "{" ? new Map(bindings) : bindings, readOnly); index = close + 1; }
+      else index++;
+    }
+  };
+  visit(0, tokens.length, new Map());
+  if (overflow) return [];
+  return [...rows.values()].filter((row) => row.dependencies.every((state) => state.valid)).sort((left, right) => left.token.start - right.token.start).map((row) => ({ start: row.token.start + 1, end: row.token.end - 1, value: row.token.text.slice(1, -1), targets: [...row.alternatives.entries()].sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0).map(([, parts]) => parts) }));
+}
+
+/** 🧵️ Proves local standard string-collection delimiters without granting path receiver authority. */
+function rustStringCollectionJoinArguments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, macros: ReadonlySet<string>): ReadonlySet<number> {
+  const shadows = new Set<string>(), names = new Set(["Vec", "String", "std", "format"]), moduleEnds: number[] = [];
+  let wildcard = false, override = false;
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index]!, previous = tokens[index - 1]?.text, next = tokens[index + 1]?.text;
+    while (moduleEnds.length > 0 && moduleEnds.at(-1)! < index) moduleEnds.pop();
+    if (token.text === "mod" && tokens[index + 1]?.kind === "identifier" && tokens[index + 2]?.text === "{" && pairs.has(index + 2)) moduleEnds.push(pairs.get(index + 2)!);
+    if (token.text === "no_implicit_prelude" || token.text === "no_std") wildcard = true;
+    if (token.text === "join" && previous === "fn") override = true;
+    if (names.has(token.text) && ["struct", "enum", "union", "type", "trait", "mod", "as", "let"].includes(previous ?? "")) shadows.add(token.text);
+    if (["fn", "impl", "struct", "enum", "trait", "type", "union"].includes(token.text)) {
+      const open = index + (token.text === "impl" ? 1 : 2);
+      if (tokens[open]?.text === "<") for (let cursor = open + 1, depth = 1; cursor < tokens.length && depth > 0; cursor++) {
+        const value = tokens[cursor]!.text;
+        if (depth === 1 && ["<", ","].includes(tokens[cursor - 1]?.text ?? "") && names.has(value)) shadows.add(value);
+        if (value === "<") depth++;
+        else if (value === ">" || value === ">>") depth -= value.length;
+      }
+    }
+    if (token.text === "macro_rules" && next === "!" && names.has(tokens[index + 2]?.text ?? "")) shadows.add(tokens[index + 2]!.text);
+    if (token.text === "use") {
+      const end = rustFindTopLevel(tokens, pairs, index + 1, tokens.length, new Set([";"]));
+      const specifier = rustTokenText(tokens, index + 1, end < 0 ? tokens.length : end).replace(/\s/gu, "");
+      const localParent = /^(?:super::)+\*$/u.test(specifier) && specifier.split("::").length - 1 <= moduleEnds.length;
+      for (const item of tokens.slice(index + 1, end < 0 ? tokens.length : end)) {
+        if (item.text === "*" && !localParent) wildcard = true;
+        if (names.has(item.text) && item.text !== "std") shadows.add(item.text);
+      }
+    }
+  }
+  if (override) return new Set();
+  type Collection = { valid: boolean; strings: boolean };
+  const rows: { start: number; collection: Collection }[] = [];
+  const compact = (start: number, end: number): string => rustTokenText(tokens, start, end).replace(/\s/gu, "");
+  const standard = (value: string, unqualified: string, qualified: string): boolean => value === unqualified ? !wildcard && !shadows.has(unqualified.split(/[:<]/u)[0]!) : (value === qualified || value === "::" + qualified) && !shadows.has("std");
+  const stringType = (start: number, end: number): boolean => {
+    const match = /^(.*)<(.*)>$/u.exec(compact(start, end));
+    return match !== null && standard(match[1]!, "Vec", "std::vec::Vec") && standard(match[2]!, "String", "std::string::String");
+  };
+  const stringValue = (start: number, end: number): boolean => {
+    const token = tokens[start];
+    if (start + 1 === end && token?.kind === "string" && (token.text.startsWith('"') || /^r#*"/u.test(token.text))) return true;
+    let open = start;
+    while (open < end && tokens[open]?.text !== "!") open++;
+    if (tokens[open + 1]?.text !== "(" || pairs.get(open + 1) !== end - 1) return false;
+    return standard(compact(start, open), "format", "std::format");
+  };
+  const clear = (start: number, end: number, bindings: Map<string, Collection>): void => { for (const token of tokens.slice(start, end)) if (token.kind === "identifier") bindings.delete(token.text); };
+  const visit = (start: number, end: number, bindings: Map<string, Collection>): void => {
+    for (let index = start; index < end;) {
+      const token = tokens[index]!;
+      if (tokens[index + 1]?.text === "!" && ["(", "[", "{"].includes(tokens[index + 2]?.text ?? "")) {
+        const close = pairs.get(index + 2);
+        if (close === undefined) return;
+        if (macros.has(token.text)) visit(index + 3, close, bindings);
+        else for (const item of tokens.slice(index + 3, close)) { const value = bindings.get(item.text); if (value) value.valid = false; }
+        index = close + 1; continue;
+      }
+      if (token.text === "fn") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{", ";"])), close = pairs.get(open);
+        if (open >= 0 && tokens[open]?.text === "{" && close !== undefined) visit(open + 1, close, new Map());
+        index = open < 0 ? end : (close ?? open) + 1; continue;
+      }
+      if (token.text === "let") {
+        const boundary = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"]));
+        if (boundary < 0) return;
+        const equal = rustFindTopLevel(tokens, pairs, index + 1, boundary, new Set(["="])), nameIndex = tokens[index + 1]?.text === "mut" ? index + 2 : index + 1;
+        if (equal >= 0) visit(equal + 1, boundary, bindings);
+        clear(index + 1, equal < 0 ? boundary : equal, bindings);
+        if (equal >= 0 && tokens[nameIndex]?.kind === "identifier" && (nameIndex + 1 === equal || tokens[nameIndex + 1]?.text === ":") && standard(compact(equal + 1, boundary), "Vec::new()", "std::vec::Vec::new()")) bindings.set(tokens[nameIndex]!.text, { valid: true, strings: tokens[nameIndex + 1]?.text === ":" && stringType(nameIndex + 2, equal) });
+        index = boundary + 1; continue;
+      }
+      if (token.text === "for" || ["if", "while"].includes(token.text) && tokens[index + 1]?.text === "let") {
+        const patternStart = index + (token.text === "for" ? 1 : 2), split = rustFindTopLevel(tokens, pairs, patternStart, end, new Set([token.text === "for" ? "in" : "="])), open = rustFindTopLevel(tokens, pairs, split + 1, end, new Set(["{"])), close = pairs.get(open);
+        if (split < 0 || open < 0 || close === undefined) return;
+        visit(split + 1, open, bindings);
+        const child = new Map(bindings); clear(patternStart, split, child); visit(open + 1, close, child);
+        index = close + 1; continue;
+      }
+      if (token.text === "match") {
+        const open = rustFindTopLevel(tokens, pairs, index + 1, end, new Set(["{"])), close = pairs.get(open);
+        if (open < 0 || close === undefined) return;
+        visit(index + 1, open, bindings);
+        for (const [first, last] of rustTokenSegments(tokens, pairs, open + 1, close, ",")) {
+          const arrow = rustFindTopLevel(tokens, pairs, first, last, new Set(["=>"]));
+          if (arrow < 0) continue;
+          const child = new Map(bindings); clear(first, arrow, child); visit(arrow + 1, last, child);
+        }
+        index = close + 1; continue;
+      }
+      if (token.text === "|" && [undefined, "=", "(", ",", "move"].includes(tokens[index - 1]?.text)) {
+        const close = tokens.findIndex((item, offset) => offset > index && offset < end && item.text === "|");
+        if (close < 0) return;
+        const boundary = rustFindTopLevel(tokens, pairs, close + 1, end, new Set([",", ";"])), child = new Map(bindings);
+        clear(index + 1, close, child); visit(close + 1, boundary < 0 ? end : boundary, child);
+        index = boundary < 0 ? end : boundary + 1; continue;
+      }
+      const collection = bindings.get(token.text);
+      if (collection) {
+        const method = tokens[index + 2]?.text, open = index + 3, close = pairs.get(open);
+        if (tokens[index + 1]?.text === "." && tokens[open]?.text === "(" && close !== undefined) {
+          const arguments_ = rustTokenSegments(tokens, pairs, open + 1, close, ","), argument = arguments_.length === 1 ? arguments_[0] : undefined;
+          if (method === "push") { if (argument && stringValue(...argument)) collection.strings = true; else collection.valid = false; }
+          else if (method === "join" && argument && argument[0] + 1 === argument[1] && tokens[argument[0]]?.kind === "string") rows.push({ start: tokens[argument[0]]!.start, collection });
+          else if (!["len", "is_empty"].includes(method ?? "") || arguments_.length !== 0) collection.valid = false;
+          visit(open + 1, close, bindings); index = close + 1; continue;
+        }
+        collection.valid = false;
+        if (tokens[index + 1]?.text === "=") bindings.delete(token.text);
+      }
+      const close = pairs.get(index);
+      if (close !== undefined && close > index) { visit(index + 1, close, token.text === "{" ? new Map(bindings) : bindings); index = close + 1; }
+      else index++;
+    }
+  };
+  visit(0, tokens.length, new Map());
+  return new Set(rows.filter(({ collection }) => collection.valid && collection.strings).map(({ start }) => start));
+}
+
+
+/** 🚧️ Identifies literal path candidates while excluding only proven standard collection delimiters. */
 export function inspectRustJoinArgumentSpans(source: string): readonly Pick<RustManifestPathReference, "start" | "end" | "value">[] {
   if (!/\.\s*join\s*\(/u.test(source)) return [];
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), rows = new Map<number, Pick<RustManifestPathReference, "start" | "end" | "value">>();
   const macros = new Set(["assert", "assert_eq", "assert_ne", "debug_assert", "debug_assert_eq", "debug_assert_ne", "print", "println", "eprint", "eprintln", "format", "write", "writeln", "panic"]);
+  const delimiters = rustStringCollectionJoinArguments(tokens, pairs, macros);
   const literal = (token: RustToken | undefined): token is RustToken & { readonly kind: "string" } => token?.kind === "string" && token.text.startsWith('"') && token.text.endsWith('"');
-  const add = (token: RustToken): void => { rows.set(token.start + 1, { start: token.start + 1, end: token.end - 1, value: token.text.slice(1, -1) }); };
+  const add = (token: RustToken): void => { if (!delimiters.has(token.start)) rows.set(token.start + 1, { start: token.start + 1, end: token.end - 1, value: token.text.slice(1, -1) }); };
   const visit = (start: number, end: number, loops: ReadonlyMap<string, readonly RustToken[]>): void => {
     for (let index = start; index < end; index++) {
       const token = tokens[index]!;
@@ -6335,6 +6918,24 @@ export function registryStaticImports(source: string, sourcePath: string): reado
     return decoded !== entry.path && !decoded.includes("\ufffd") && source.includes(decoded) ? decoded : entry.path;
   }))].sort();
 }
+
+export type RegistryCompilerInputRole = "implementation-entry" | "static-import";
+
+export interface RegistryCompilerInputDependencies {
+  readonly kind: "module" | "json-data";
+  readonly imports: readonly string[];
+}
+
+/** 🧾️ Admits strict JSON only as imported data; compiler entries retain their exact module grammar. */
+export function registryCompilerInputDependencies(source: string, sourcePath: string, role: RegistryCompilerInputRole): RegistryCompilerInputDependencies {
+  if (role !== "implementation-entry" && role !== "static-import") throw new Error(`Registry compiler input role is not supported: ${String(role)}`);
+  if (role === "static-import" && extname(sourcePath) === ".json") {
+    try { JSON.parse(source); }
+    catch (error) { throw new Error(`Registry imported JSON is invalid: ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`); }
+    return { kind: "json-data", imports: [] };
+  }
+  return { kind: "module", imports: registryStaticImports(source, sourcePath) };
+}
 //#endregion 🔗️RegistryCompilerImports
 
 /** 📇️ Exact content inputs plus positive membership witnesses; ignored files are not excluded. */
@@ -6350,16 +6951,21 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
     if (kind) inputs.add(descriptor);
     registryExampleCatalog(repoRoot, pkg.packageRel, taxonomy, view, inputs);
   }
-  const visited = new Set<string>();
-  const visit = (path: string): void => {
-    if (visited.has(path)) return;
-    visited.add(path);
+  const visited = new Map<string, { source: string; kind: RegistryCompilerInputDependencies["kind"] }>();
+  const visit = (path: string, role: RegistryCompilerInputRole): void => {
+    const previous = visited.get(path);
+    if (previous) {
+      if (role === "implementation-entry" && previous.kind === "json-data") registryCompilerInputDependencies(previous.source, path, role);
+      return;
+    }
     const source = view.readText(path);
+    const dependencies = registryCompilerInputDependencies(source, path, role);
+    visited.set(path, { source, kind: dependencies.kind });
     inputs.add(path);
-    for (const specifier of registryStaticImports(source, path)) {
+    for (const specifier of dependencies.imports) {
       if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
       if (specifier.startsWith(".")) {
-        visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"));
+        visit(relative(repoRoot, resolve(repoRoot, dirname(path), specifier)).replaceAll("\\", "/"), "static-import");
         continue;
       }
       const binding = authority.workspaceImports[specifier];
@@ -6367,10 +6973,10 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
       const manifest = JSON.parse(view.readText(binding.manifestPath)) as { name?: string; exports?: Record<string, unknown> };
       if (manifest.name !== specifier || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
       inputs.add(binding.manifestPath);
-      visit(binding.entryPath);
+      visit(binding.entryPath, "implementation-entry");
     }
   };
-  for (const path of authority.implementationEntryPaths) visit(path);
+  for (const path of authority.implementationEntryPaths) visit(path, "implementation-entry");
   return [...inputs].filter(Boolean).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
 }
 //#endregion 📇️CatalogInputs
@@ -7072,12 +7678,17 @@ function mutationMetadataPath(path: string): readonly string[] | null {
   return parts.length > 0 && parts.every((part) => /^[A-Za-z_][A-Za-z0-9_]*$/u.test(part)) ? parts : null;
 }
 
-function mutationMetadataBindings(root: string, manifest: string, crate: string, cache: Map<string, readonly CargoProviderBinding[]>): readonly CargoProviderBinding[] {
+function mutationMetadataBindings(root: string, manifest: string, crate: string, cache: Map<string, readonly CargoProviderBinding[]>, readSource?: (path: string) => string | undefined): readonly CargoProviderBinding[] {
   const key = `${root}\0${manifest}\0${crate}`;
   const cached = cache.get(key);
   if (cached !== undefined) return cached;
+  const manifestSource = readSource?.(manifest), projected = manifestSource === undefined ? undefined : projectCargoProviderManifest({ locator: manifest, source: manifestSource });
+  const dependencyKeys = [...new Set([crate, crate.replaceAll("_", "-"), ...(projected?.dependencies.filter((dependency) => dependency.targetCondition === undefined).map((dependency) => dependency.key) ?? [])])];
   const bindings: CargoProviderBinding[] = [];
-  for (const dependencyKey of [...new Set([crate, crate.replaceAll("_", "-")])]) try { bindings.push(resolveCargoProviderBinding({ workspaceRoot: root, consumerManifestLocator: manifest, dependencyKey })); } catch {}
+  for (const dependencyKey of dependencyKeys) try {
+    const binding = resolveCargoProviderBinding({ workspaceRoot: root, consumerManifestLocator: manifest, dependencyKey });
+    if (dependencyKey === crate || dependencyKey === crate.replaceAll("_", "-") || binding.externName === crate) bindings.push(binding);
+  } catch {}
   const resolved = bindings.filter((binding, index) => bindings.findIndex((other) => other.providerManifestLocator === binding.providerManifestLocator && other.dependencyKey === binding.dependencyKey) === index);
   cache.set(key, resolved);
   return resolved;
@@ -7088,7 +7699,7 @@ function mutationMetadataAliasPaths(facts: RustMutationMetadataFacts, modulePath
   return [...scoped.filter((alias) => alias.alias === root).map((alias) => [...(mutationMetadataPath(alias.source) ?? []), ...tail]), ...scoped.filter((alias) => alias.alias === "*").map((alias) => [...(mutationMetadataPath(alias.source) ?? []), root, ...tail])].filter((candidate) => candidate.length > 0);
 }
 
-function mutationMetadataExternal(root: string, manifest: string, facts: RustMutationMetadataFacts, modulePath: readonly string[], path: string, cache: Map<string, readonly CargoProviderBinding[]>, publicOnly = false): readonly { readonly binding: CargoProviderBinding; readonly terminal: string }[] {
+function mutationMetadataExternal(root: string, manifest: string, facts: RustMutationMetadataFacts, modulePath: readonly string[], path: string, cache: Map<string, readonly CargoProviderBinding[]>, readSource: (path: string) => string | undefined, publicOnly = false, terminalOverride?: string): readonly { readonly binding: CargoProviderBinding; readonly terminal: string }[] {
   const direct = mutationMetadataPath(path);
   if (!direct) return [];
   const resolve = (candidate: readonly string[], scope: readonly string[], depth: number, requirePublic: boolean): readonly { readonly binding: CargoProviderBinding; readonly terminal: string }[] => {
@@ -7098,16 +7709,16 @@ function mutationMetadataExternal(root: string, manifest: string, facts: RustMut
     else if (candidate[0] === "self") { target = scope; rest = candidate.slice(1); }
     else if (candidate[0] === "super") { let index = 0, parent = [...scope]; while (candidate[index] === "super") { if (parent.length === 0) return []; parent.pop(); index += 1; } target = parent; rest = candidate.slice(index); }
     if (target === null) {
-      const bindings = mutationMetadataBindings(root, manifest, candidate[0]!, cache);
-      if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: candidate.at(-1)! }));
+      const bindings = mutationMetadataBindings(root, manifest, candidate[0]!, cache, readSource);
+      if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: terminalOverride ?? candidate.at(-1)! }));
       const aliases = mutationMetadataAliasPaths(facts, scope, candidate, requirePublic);
       const transformed = aliases.filter((alias) => alias.join("\0") !== candidate.join("\0"));
       if (transformed.length > 0) return transformed.flatMap((alias) => resolve(alias, scope, depth + 1, requirePublic));
       return [];
     }
     if (rest.length === 0) return [];
-    const bindings = mutationMetadataBindings(root, manifest, rest[0]!, cache);
-    if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: rest.at(-1)! }));
+    const bindings = mutationMetadataBindings(root, manifest, rest[0]!, cache, readSource);
+    if (bindings.length > 0) return bindings.map((binding) => ({ binding, terminal: terminalOverride ?? rest.at(-1)! }));
     const nextScope = [...target, ...rest.slice(0, -1)], aliases = mutationMetadataAliasPaths(facts, nextScope, [rest.at(-1)!], requirePublic || nextScope.join("\0") !== scope.join("\0"));
     return aliases.flatMap((alias) => resolve(alias, [...target, ...nextScope], depth + 1, true));
   };
@@ -7117,16 +7728,22 @@ function mutationMetadataExternal(root: string, manifest: string, facts: RustMut
 function mutationMetadataFacadeRoutes(input: MutationMetadataSourceInput, graph: RustModuleGraph, binding: CargoProviderBinding, expected: MutationMetadataProviderIdentity, seen: ReadonlySet<string>, cache: Map<string, readonly CargoProviderBinding[]>): readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[] {
   const root = (graph.contexts.get(binding.librarySourceLocator) ?? []).filter((context) => context.crateRoot === binding.librarySourceLocator && context.manifestPath === binding.providerManifestLocator && context.modulePath.length === 0);
   if (root.length !== 1) return [];
-  const walked = new Set<string>();
+  const walked = new Set<string>(), symbols = new Set<string>(), factsBySource = new Map<string, RustMutationMetadataFacts>();
   const walk = (sourcePath: string, context: RustModuleContext, path: readonly string[], depth: number): readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[] => {
+    input.checkCancellation?.();
     if (depth > 32 || path.length === 0) return [];
     const key = `${sourcePath}\0${context.modulePath.join("\0")}\0${path.join("\0")}`;
     if (walked.has(key)) return [];
+    const symbol = `${sourcePath}\0${context.modulePath.join("\0")}\0${path[0]!}\0${path.at(-1)!}`;
+    if (symbols.has(symbol)) return [];
     walked.add(key);
+    symbols.add(symbol);
     const source = input.readSource(sourcePath);
     if (source === undefined) return [null];
-    const facts = inspectRustMutationMetadataFacts(source), aliases = mutationMetadataAliasPaths(facts, context.sourceScope, path, true), localName = (candidate: readonly string[]): boolean => { const first = candidate[0], base = first === "crate" ? [] : first === "self" ? context.modulePath : context.modulePath; const rest = first === "crate" || first === "self" ? candidate.slice(1) : candidate; return rest.length > 1 && graph.targets.has(`${binding.librarySourceLocator}\0${[...base, rest[0]!].join("::")}`); }, external = [...mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache).map((candidate) => ({ candidate, terminal: path.at(-1)! })), ...aliases.flatMap((path) => ["crate", "self", "super"].includes(path[0] ?? "") || localName(path) ? [] : mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache).map((candidate) => ({ candidate, terminal: path.at(-1)! })))].map(({ candidate, terminal }) => mutationMetadataRoute(input, graph, candidate, terminal, expected, cache, seen));
-    const local = aliases.flatMap((candidate) => {
+    const facts = factsBySource.get(sourcePath) ?? inspectRustMutationMetadataFacts(source);
+    factsBySource.set(sourcePath, facts);
+    const aliases = mutationMetadataAliasPaths(facts, context.sourceScope, path, true), localName = (candidate: readonly string[]): boolean => { const first = candidate[0], base = first === "crate" ? [] : first === "self" ? context.modulePath : context.modulePath; const rest = first === "crate" || first === "self" ? candidate.slice(1) : candidate; return rest.length > 1 && graph.targets.has(`${binding.librarySourceLocator}\0${[...base, rest[0]!].join("::")}`); }, external = [...mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache, input.readSource).map((candidate) => ({ candidate, terminal: path.at(-1)! })), ...aliases.flatMap((path) => ["crate", "self", "super"].includes(path[0] ?? "") || localName(path) ? [] : mutationMetadataBindings(input.repositoryRoot, binding.providerManifestLocator, path[0]!, cache, input.readSource).map((candidate) => ({ candidate, terminal: path.at(-1)! })))].flatMap(({ candidate, terminal }) => { const route = mutationMetadataRoute(input, graph, candidate, terminal, expected, cache, seen, true); return route === undefined ? [] : [route]; });
+    const local = [path, ...aliases].flatMap((candidate) => {
       let base = context.modulePath, rest = candidate;
       if (candidate[0] === "crate") { base = []; rest = candidate.slice(1); }
       else if (candidate[0] === "self") { rest = candidate.slice(1); }
@@ -7141,18 +7758,19 @@ function mutationMetadataFacadeRoutes(input: MutationMetadataSourceInput, graph:
   return walk(binding.librarySourceLocator, root[0]!, ["MutationLeaf"], 0);
 }
 
-function mutationMetadataRoute(input: MutationMetadataSourceInput, graph: RustModuleGraph, binding: CargoProviderBinding, terminal: string, expected: MutationMetadataProviderIdentity, cache: Map<string, readonly CargoProviderBinding[]>, seen: ReadonlySet<string> = new Set()): { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null {
+function mutationMetadataRoute(input: MutationMetadataSourceInput, graph: RustModuleGraph, binding: CargoProviderBinding, terminal: string, expected: MutationMetadataProviderIdentity, cache: Map<string, readonly CargoProviderBinding[]>, seen: ReadonlySet<string> = new Set(), facadeHop = false): { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null | undefined {
   input.checkCancellation?.();
   const provider = mutationMetadataProvider(binding);
   if (provider?.role === expected.role && terminal === "MutationLeaf") return { provider, facade: null };
+  if (facadeHop && provider !== null && provider.role !== "os-facade") return undefined;
   if (provider?.role !== "os-facade" || expected.role === "os-facade" || terminal !== "MutationLeaf" || seen.has(binding.providerManifestLocator)) return null;
-  const routes = mutationMetadataResolvedRoutes(mutationMetadataFacadeRoutes(input, graph, binding, expected, new Set([...seen, binding.providerManifestLocator]), cache));
+  const facadeRoutes = mutationMetadataFacadeRoutes(input, graph, binding, expected, new Set([...seen, binding.providerManifestLocator]), cache), routes = mutationMetadataResolvedRoutes(facadeRoutes);
   return routes?.length === 1 ? { provider: routes[0]!.provider, facade: provider } : null;
 }
 
-function mutationMetadataResolvedRoutes(routes: readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null)[]): readonly { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null }[] | null {
-  if (routes.length === 0 || routes.some((route) => route === null)) return null;
-  return routes.filter((route, index): route is { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } => route !== null && routes.findIndex((other) => other !== null && other.provider.manifestLocator === route.provider.manifestLocator && other.facade?.manifestLocator === route.facade?.manifestLocator) === index);
+function mutationMetadataResolvedRoutes(routes: readonly ({ readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } | null | undefined)[]): readonly { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null }[] | null {
+  if (routes.length === 0 || routes.some((route) => route === null || route === undefined)) return null;
+  return routes.filter((route, index): route is { readonly provider: MutationMetadataProviderIdentity; readonly facade: MutationMetadataProviderIdentity | null } => route !== null && route !== undefined && routes.findIndex((other) => other !== null && other !== undefined && other.provider.manifestLocator === route.provider.manifestLocator && other.facade?.manifestLocator === route.facade?.manifestLocator) === index);
 }
 
 /** 🧬️ Proves exact derive and lower-trait providers for one already-wrapped consumer declaration. */
@@ -7168,11 +7786,11 @@ export function inspectMutationMetadataSource(input: MutationMetadataSourceInput
   if (declaration.length !== 1) return reject("wrapped declaration is absent, conditional, private, or ambiguous", consumerContext);
   const item = declaration[0]!;
   if (item.mutationLeaf.state !== "valid") return reject("wrapped declaration has no unconditional valid mutation_leaf contract", consumerContext);
-  const deriveRoutes = mutationMetadataResolvedRoutes(item.derives.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[2]!, bindingCache))));
+  const deriveRoutes = mutationMetadataResolvedRoutes(item.derives.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache, input.readSource).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[2]!, bindingCache))));
   if (deriveRoutes?.length !== 1) return reject("metadata derive route is unresolved, ambiguous, or not canonical", consumerContext);
-  const contractRoutes = mutationMetadataResolvedRoutes(item.mutationLeaf.contracts.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))));
+  const contractRoutes = mutationMetadataResolvedRoutes(item.mutationLeaf.contracts.flatMap((path) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, path, bindingCache, input.readSource, false, "MutationLeaf").map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))));
   if (contractRoutes?.length !== 1) return reject("mutation_leaf contract route is unresolved, ambiguous, or not canonical", consumerContext);
-  const manual = inspectRustStructure(source).impls.filter((impl) => impl.selfType.split("::").at(-1) === item.name && impl.traitPath !== null).flatMap((impl) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, impl.traitPath!, bindingCache).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))).some((route) => route !== null);
+  const manual = inspectRustStructure(source).impls.filter((impl) => impl.selfType.split("::").at(-1) === item.name && impl.traitPath !== null).flatMap((impl) => mutationMetadataExternal(input.repositoryRoot, input.consumerManifestLocator, facts, item.modulePath, impl.traitPath!, bindingCache, input.readSource).map((route) => mutationMetadataRoute(input, graph, route.binding, route.terminal, MUTATION_METADATA_PROVIDERS[0]!, bindingCache))).some((route) => route !== null);
   if (manual) return reject("wrapped declaration manually implements the genuine MutationLeaf trait", consumerContext);
   const facades = contractRoutes.map((route) => route.facade).filter((provider): provider is MutationMetadataProviderIdentity => provider !== null);
   if (facades.length > 1) return reject("mutation_leaf contract has ambiguous facade routes", consumerContext);

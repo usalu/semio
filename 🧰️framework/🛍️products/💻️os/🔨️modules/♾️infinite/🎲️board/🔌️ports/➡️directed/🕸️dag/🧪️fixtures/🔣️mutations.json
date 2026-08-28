@@ -1,0 +1,1596 @@
+{
+  "valid": [
+    {
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "created",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [
+            {
+              "id": "in",
+              "label": "Input",
+              "code": "I",
+              "abbreviation": "In",
+              "fullName": "Full Input",
+              "type": "number",
+              "default": {
+                "a": [
+                  1,
+                  null
+                ]
+              },
+              "value": false,
+              "connected": true,
+              "resourceKind": "text",
+              "cardinality": "!",
+              "shape": "triangle",
+              "visible": true,
+              "resolved": false
+            }
+          ],
+          "outputs": [],
+          "abbreviation": "A",
+          "icon": "circle",
+          "x": 1,
+          "y": -2,
+          "width": 72,
+          "height": 24,
+          "operatorKind": "add",
+          "properties": {
+            "nil": null,
+            "bool": true,
+            "number": 1.5,
+            "string": "x",
+            "array": [
+              1,
+              "x",
+              null
+            ],
+            "object": {
+              "key": false
+            }
+          },
+          "variadic_inputs": true,
+          "variadic_outputs": false
+        },
+        "index": 1
+      }
+    },
+    {
+      "operation": "deleteNode",
+      "payload": {
+        "id": "a"
+      }
+    },
+    {
+      "operation": "renameNode",
+      "payload": {
+        "id": "a",
+        "newId": "renamed"
+      }
+    },
+    {
+      "operation": "changeNodeName",
+      "payload": {
+        "id": "a",
+        "newName": "Alpha"
+      }
+    },
+    {
+      "operation": "moveNode",
+      "payload": {
+        "id": "a",
+        "x": 1,
+        "y": -2.25
+      }
+    },
+    {
+      "operation": "resizeNode",
+      "payload": {
+        "id": "a",
+        "width": 72,
+        "height": 24
+      }
+    },
+    {
+      "operation": "changeNodeIcon",
+      "payload": {
+        "id": "a",
+        "newIcon": "circle"
+      }
+    },
+    {
+      "operation": "changeNodeAbbreviation",
+      "payload": {
+        "id": "a",
+        "newAbbreviation": "A"
+      }
+    },
+    {
+      "operation": "changeNodeOperatorKind",
+      "payload": {
+        "id": "a",
+        "newOperatorKind": null
+      }
+    },
+    {
+      "operation": "replaceNodeKind",
+      "payload": {
+        "id": "a",
+        "newKind": {
+          "kind": "note",
+          "text": "x",
+          "output": {
+            "id": "out",
+            "label": "Output"
+          }
+        }
+      }
+    },
+    {
+      "operation": "replaceNodeProperties",
+      "payload": {
+        "id": "a",
+        "newProperties": {
+          "nil": null,
+          "bool": true,
+          "number": 1.5,
+          "string": "x",
+          "array": [
+            1,
+            "x",
+            null
+          ],
+          "object": {
+            "key": false
+          }
+        }
+      }
+    },
+    {
+      "operation": "reorderNodes",
+      "payload": {
+        "order": [
+          "c",
+          "a",
+          "b"
+        ]
+      }
+    },
+    {
+      "operation": "connectNodes",
+      "payload": {
+        "id": "added",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": {
+          "nested": {
+            "array": [
+              null,
+              1,
+              "x"
+            ]
+          },
+          "visible": true
+        },
+        "index": 1
+      }
+    },
+    {
+      "operation": "disconnectNodes",
+      "payload": {
+        "id": "e"
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "garbage node",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "garbage": true
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "missing node name",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "missing node id",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong nested common number",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": [],
+          "x": "1"
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "null node",
+      "operation": "createNode",
+      "payload": {
+        "node": null,
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "negative node index",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": -1
+      },
+      "valid": false
+    },
+    {
+      "name": "fractional node index",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": 0.5
+      },
+      "valid": false
+    },
+    {
+      "name": "safe overflow node index",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": 1e+21
+      },
+      "valid": false
+    },
+    {
+      "name": "string node index",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": "1"
+      },
+      "valid": false
+    },
+    {
+      "name": "negative edge index",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": {},
+        "index": -1
+      },
+      "valid": false
+    },
+    {
+      "name": "fractional edge index",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": {},
+        "index": 0.5
+      },
+      "valid": false
+    },
+    {
+      "name": "safe overflow edge index",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": {},
+        "index": 1e+21
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong route enum",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "Bezier",
+        "properties": {},
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong edge map container",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": [],
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong optional scalar",
+      "operation": "changeNodeOperatorKind",
+      "payload": {
+        "id": "a",
+        "newOperatorKind": 1
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong properties array",
+      "operation": "replaceNodeProperties",
+      "payload": {
+        "id": "a",
+        "newProperties": []
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong properties null",
+      "operation": "replaceNodeProperties",
+      "payload": {
+        "id": "a",
+        "newProperties": null
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong properties string",
+      "operation": "replaceNodeProperties",
+      "payload": {
+        "id": "a",
+        "newProperties": "bad"
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong order item",
+      "operation": "reorderNodes",
+      "payload": {
+        "order": [
+          "a",
+          1
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong order container",
+      "operation": "reorderNodes",
+      "payload": {
+        "order": "a"
+      },
+      "valid": false
+    },
+    {
+      "name": "missing node kind",
+      "operation": "replaceNodeKind",
+      "payload": {
+        "id": "a",
+        "newKind": {}
+      },
+      "valid": false
+    },
+    {
+      "name": "nested object kind tag",
+      "operation": "replaceNodeKind",
+      "payload": {
+        "id": "a",
+        "newKind": {
+          "kind": {
+            "note": {
+              "text": "x"
+            }
+          }
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong move scalar",
+      "operation": "moveNode",
+      "payload": {
+        "id": "a",
+        "x": null,
+        "y": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong rename scalar",
+      "operation": "renameNode",
+      "payload": {
+        "id": "a",
+        "newId": false
+      },
+      "valid": false
+    },
+    {
+      "name": "null node operator mismatch",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": [],
+          "operatorKind": 1
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "invalid nested node map container",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": [],
+          "properties": []
+        },
+        "index": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "common node icon wrong type with valid app icon",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "app",
+          "name": "App",
+          "icon": false,
+          "kind": "appInstance",
+          "instanceId": "instance",
+          "pluginId": "plugin",
+          "appId": "app",
+          "inputs": [],
+          "outputs": [],
+          "appIcon": "circle"
+        },
+        "index": 0
+      },
+      "valid": false
+    }
+  ],
+  "nodeKinds": [
+    {
+      "name": "computation complete",
+      "value": {
+        "kind": "computation",
+        "inputs": [],
+        "outputs": [],
+        "variadic_inputs": true,
+        "variadic_outputs": false
+      },
+      "valid": true
+    },
+    {
+      "name": "slider complete",
+      "value": {
+        "kind": "slider",
+        "min": 0,
+        "max": 100,
+        "step": 0.5,
+        "value": 5,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "select complete",
+      "value": {
+        "kind": "select",
+        "options": [
+          "a",
+          "b"
+        ],
+        "selected": 1,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "screen complete",
+      "value": {
+        "kind": "screen",
+        "media": {
+          "kind": "pdf",
+          "src": "local.pdf"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "note complete",
+      "value": {
+        "kind": "note",
+        "text": "Hello",
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "image complete",
+      "value": {
+        "kind": "image",
+        "src": "local.png",
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "preview complete",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "tree",
+          "json": {
+            "x": [
+              null,
+              true,
+              1,
+              "text"
+            ]
+          }
+        },
+        "expanded": [
+          "x"
+        ],
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "action complete",
+      "value": {
+        "kind": "action",
+        "label": "Run",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "export complete",
+      "value": {
+        "kind": "export",
+        "label": "Save",
+        "format": "json",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "cluster complete",
+      "value": {
+        "kind": "cluster",
+        "inputs": [],
+        "outputs": []
+      },
+      "valid": true
+    },
+    {
+      "name": "app instance complete distinct appIcon",
+      "value": {
+        "kind": "appInstance",
+        "instanceId": "instance",
+        "pluginId": "plugin",
+        "appId": "app",
+        "inputs": [],
+        "outputs": [],
+        "appIcon": "circle"
+      },
+      "valid": true
+    },
+    {
+      "name": "nullable port options",
+      "value": {
+        "kind": "note",
+        "text": "x",
+        "output": {
+          "id": "out",
+          "label": "Output",
+          "type": null,
+          "default": null,
+          "value": null,
+          "connected": null,
+          "resourceKind": null,
+          "resolved": null
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "nullable media",
+      "value": {
+        "kind": "screen",
+        "media": null,
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "screen default media",
+      "value": {
+        "kind": "screen",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "select default selected",
+      "value": {
+        "kind": "select",
+        "options": [],
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "image default src",
+      "value": {
+        "kind": "image",
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "preview defaults",
+      "value": {
+        "kind": "preview",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "preview empty",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "empty"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "preview scalar",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "scalar",
+          "text": "42"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "preview image",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "image",
+          "src": "local.png"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "set duplicate input accepted",
+      "value": {
+        "kind": "preview",
+        "expanded": [
+          "x",
+          "x"
+        ],
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "unknown kind field serde ignored",
+      "value": {
+        "kind": "cluster",
+        "inputs": [],
+        "outputs": [],
+        "unknown": true
+      },
+      "valid": true
+    },
+    {
+      "name": "unknown port field serde ignored",
+      "value": {
+        "kind": "note",
+        "text": "x",
+        "output": {
+          "id": "out",
+          "label": "Output",
+          "unknown": true
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "unknown media field serde ignored",
+      "value": {
+        "kind": "screen",
+        "media": {
+          "kind": "image",
+          "src": "local",
+          "unknown": true
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "unknown preview field serde ignored",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "empty",
+          "unknown": true
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "camel variadic field unknown serde ignored",
+      "value": {
+        "kind": "computation",
+        "inputs": [],
+        "outputs": [],
+        "variadicInputs": true
+      },
+      "valid": true
+    },
+    {
+      "name": "wrong kind enum case",
+      "value": {
+        "kind": "Note",
+        "text": "x",
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "unknown kind enum",
+      "value": {
+        "kind": "garbage"
+      },
+      "valid": false
+    },
+    {
+      "name": "missing computation inputs",
+      "value": {
+        "kind": "computation",
+        "outputs": []
+      },
+      "valid": false
+    },
+    {
+      "name": "missing computation outputs",
+      "value": {
+        "kind": "computation",
+        "inputs": []
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong known variadic value",
+      "value": {
+        "kind": "computation",
+        "inputs": [],
+        "outputs": [],
+        "variadic_inputs": "true"
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong port shape enum",
+      "value": {
+        "kind": "computation",
+        "inputs": [
+          {
+            "id": "in",
+            "label": "Input",
+            "shape": "circle"
+          }
+        ],
+        "outputs": []
+      },
+      "valid": false
+    },
+    {
+      "name": "missing port label",
+      "value": {
+        "kind": "note",
+        "text": "x",
+        "output": {
+          "id": "out"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing port id",
+      "value": {
+        "kind": "note",
+        "text": "x",
+        "output": {
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong port connected",
+      "value": {
+        "kind": "note",
+        "text": "x",
+        "output": {
+          "id": "out",
+          "label": "Output",
+          "connected": 1
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing note output",
+      "value": {
+        "kind": "note",
+        "text": "x"
+      },
+      "valid": false
+    },
+    {
+      "name": "missing slider value",
+      "value": {
+        "kind": "slider",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "negative selected",
+      "value": {
+        "kind": "select",
+        "options": [],
+        "selected": -1,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "fractional selected",
+      "value": {
+        "kind": "select",
+        "options": [],
+        "selected": 0.5,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "overflow selected",
+      "value": {
+        "kind": "select",
+        "options": [],
+        "selected": 1e+21,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong option item",
+      "value": {
+        "kind": "select",
+        "options": [
+          1
+        ],
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong media enum",
+      "value": {
+        "kind": "screen",
+        "media": {
+          "kind": "audio",
+          "src": "local"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing media src",
+      "value": {
+        "kind": "screen",
+        "media": {
+          "kind": "image"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong preview enum",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "Empty"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing preview tree json",
+      "value": {
+        "kind": "preview",
+        "content": {
+          "variant": "tree"
+        },
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "null preview content",
+      "value": {
+        "kind": "preview",
+        "content": null,
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong expanded item",
+      "value": {
+        "kind": "preview",
+        "expanded": [
+          1
+        ],
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing app ID",
+      "value": {
+        "kind": "appInstance",
+        "instanceId": "instance",
+        "pluginId": "plugin",
+        "inputs": [],
+        "outputs": []
+      },
+      "valid": false
+    },
+    {
+      "name": "missing action label",
+      "value": {
+        "kind": "action",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "missing export format",
+      "value": {
+        "kind": "export",
+        "label": "Save",
+        "input": {
+          "id": "in",
+          "label": "Input"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "wrong image src",
+      "value": {
+        "kind": "image",
+        "src": null,
+        "output": {
+          "id": "out",
+          "label": "Output"
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "app icon wrong type",
+      "value": {
+        "kind": "appInstance",
+        "instanceId": "instance",
+        "pluginId": "plugin",
+        "appId": "app",
+        "inputs": [],
+        "outputs": [],
+        "appIcon": false
+      },
+      "valid": false
+    }
+  ],
+  "decimalIndices": [
+    {
+      "decimal": "0",
+      "valid": true
+    },
+    {
+      "decimal": "9007199254740991",
+      "valid": true
+    },
+    {
+      "decimal": "18446744073709551615",
+      "valid": true
+    },
+    {
+      "decimal": "18446744073709551616",
+      "valid": false
+    },
+    {
+      "decimal": "1000000000000000000000",
+      "valid": false
+    },
+    {
+      "decimal": "-1",
+      "valid": false
+    },
+    {
+      "decimal": "0.5",
+      "valid": false
+    }
+  ],
+  "algebra": [
+    {
+      "name": "two moves preserve different targets",
+      "mutations": [
+        {
+          "operation": "moveNode",
+          "id": "a",
+          "x": 10,
+          "y": 11
+        },
+        {
+          "operation": "moveNode",
+          "id": "b",
+          "x": 20,
+          "y": 21
+        }
+      ],
+      "nodeOrder": [
+        "a",
+        "b",
+        "c"
+      ],
+      "edgeOrder": [
+        "e",
+        "keep",
+        "last"
+      ],
+      "x": {
+        "a": 10,
+        "b": 20
+      }
+    },
+    {
+      "name": "rename then move renamed target",
+      "mutations": [
+        {
+          "operation": "renameNode",
+          "id": "a",
+          "newId": "renamed"
+        },
+        {
+          "operation": "moveNode",
+          "id": "renamed",
+          "x": 7,
+          "y": 8
+        }
+      ],
+      "nodeOrder": [
+        "renamed",
+        "b",
+        "c"
+      ],
+      "edgeOrder": [
+        "e",
+        "keep",
+        "last"
+      ],
+      "x": {
+        "renamed": 7
+      }
+    },
+    {
+      "name": "two creates preserve insertion order",
+      "mutations": [
+        {
+          "operation": "createNode",
+          "node": {
+            "id": "x",
+            "name": "x",
+            "kind": "computation",
+            "inputs": [],
+            "outputs": []
+          },
+          "index": 1
+        },
+        {
+          "operation": "createNode",
+          "node": {
+            "id": "y",
+            "name": "y",
+            "kind": "computation",
+            "inputs": [],
+            "outputs": []
+          },
+          "index": 2
+        }
+      ],
+      "nodeOrder": [
+        "a",
+        "x",
+        "y",
+        "b",
+        "c"
+      ],
+      "edgeOrder": [
+        "e",
+        "keep",
+        "last"
+      ],
+      "x": {}
+    },
+    {
+      "name": "delete then create same identity",
+      "mutations": [
+        {
+          "operation": "deleteNode",
+          "id": "a"
+        },
+        {
+          "operation": "createNode",
+          "node": {
+            "id": "a",
+            "name": "new",
+            "kind": "computation",
+            "inputs": [],
+            "outputs": []
+          },
+          "index": 2
+        }
+      ],
+      "nodeOrder": [
+        "b",
+        "c",
+        "a"
+      ],
+      "edgeOrder": [
+        "keep"
+      ],
+      "x": {}
+    },
+    {
+      "name": "disconnect reconnect preserves structural order",
+      "mutations": [
+        {
+          "operation": "disconnectNodes",
+          "id": "keep"
+        },
+        {
+          "operation": "connectNodes",
+          "id": "keep",
+          "source": "b@out",
+          "target": "c@in",
+          "routeStyle": "sharpSz",
+          "properties": {
+            "weight": 3
+          },
+          "index": 0
+        }
+      ],
+      "nodeOrder": [
+        "a",
+        "b",
+        "c"
+      ],
+      "edgeOrder": [
+        "keep",
+        "e",
+        "last"
+      ],
+      "x": {}
+    },
+    {
+      "name": "rename chain then reorder",
+      "mutations": [
+        {
+          "operation": "renameNode",
+          "id": "a",
+          "newId": "x"
+        },
+        {
+          "operation": "renameNode",
+          "id": "x",
+          "newId": "z"
+        },
+        {
+          "operation": "reorderNodes",
+          "order": [
+            "c",
+            "z",
+            "b"
+          ]
+        }
+      ],
+      "nodeOrder": [
+        "c",
+        "z",
+        "b"
+      ],
+      "edgeOrder": [
+        "e",
+        "keep",
+        "last"
+      ],
+      "x": {}
+    }
+  ],
+  "additionalValid": [
+    {
+      "name": "omitted Option is None",
+      "operation": "changeNodeOperatorKind",
+      "payload": {
+        "id": "a"
+      },
+      "valid": true
+    },
+    {
+      "name": "Some operator string",
+      "operation": "changeNodeOperatorKind",
+      "payload": {
+        "id": "a",
+        "newOperatorKind": "add"
+      },
+      "valid": true
+    },
+    {
+      "name": "node defaults nullable operator",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": [],
+          "operatorKind": null
+        },
+        "index": 1
+      },
+      "valid": true
+    },
+    {
+      "name": "duplicate order serde valid",
+      "operation": "reorderNodes",
+      "payload": {
+        "order": [
+          "a",
+          "a"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "empty order serde valid",
+      "operation": "reorderNodes",
+      "payload": {
+        "order": []
+      },
+      "valid": true
+    },
+    {
+      "name": "sharpSz edge",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "sharpSz",
+        "properties": {},
+        "index": 0
+      },
+      "valid": true
+    },
+    {
+      "name": "largest safe JS node index",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": []
+        },
+        "index": 9007199254740991
+      },
+      "valid": true
+    },
+    {
+      "name": "largest safe JS edge index",
+      "operation": "connectNodes",
+      "payload": {
+        "id": "e",
+        "source": "a@out",
+        "target": "b@in",
+        "routeStyle": "bezier",
+        "properties": {},
+        "index": 9007199254740991
+      },
+      "valid": true
+    },
+    {
+      "name": "negative size serde valid",
+      "operation": "resizeNode",
+      "payload": {
+        "id": "a",
+        "width": -1,
+        "height": 0
+      },
+      "valid": true
+    },
+    {
+      "name": "empty id serde valid",
+      "operation": "deleteNode",
+      "payload": {
+        "id": ""
+      },
+      "valid": true
+    },
+    {
+      "name": "nested unknown ignored by current serde",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "a",
+          "name": "Alpha",
+          "kind": "computation",
+          "inputs": [],
+          "outputs": [],
+          "unknown": true
+        },
+        "index": 0
+      },
+      "valid": true
+    },
+    {
+      "name": "distinct common node icon and app icon",
+      "operation": "createNode",
+      "payload": {
+        "node": {
+          "id": "app",
+          "name": "App",
+          "icon": "node-icon",
+          "kind": "appInstance",
+          "instanceId": "instance",
+          "pluginId": "plugin",
+          "appId": "app",
+          "inputs": [],
+          "outputs": [],
+          "appIcon": "circle"
+        },
+        "index": 0
+      },
+      "valid": true
+    }
+  ],
+  "endpointRenames": [
+    {
+      "id": "a",
+      "newId": "z",
+      "source": "a",
+      "expected": "z"
+    },
+    {
+      "id": "a",
+      "newId": "z",
+      "source": "a@",
+      "expected": "z@"
+    },
+    {
+      "id": "a",
+      "newId": "z",
+      "source": "a@out",
+      "expected": "z@out"
+    },
+    {
+      "id": "α@β",
+      "newId": "γ",
+      "source": "α@β@port",
+      "expected": "γ@port"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "maximumBytes", "vectors", "invalidHex", "pairing", "feedback", "wireEmptyPatchPayloadBytes", "outerReceiptOrder"],
+  "properties": {
+    "version": { "const": 1 }, "maximumBytes": { "const": 35 },
+    "vectors": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["value", "hex"], "properties": { "value": { "$ref": "semio.actor.ui-patch-receipt.v1" }, "hex": { "type": "string", "minLength": 8, "maxLength": 70, "pattern": "^([0-9a-f]{2})+$" } } } },
+    "invalidHex": { "type": "array", "minItems": 8, "maxItems": 8, "items": { "type": "string", "pattern": "^([0-9a-f]{2})*$" } },
+    "pairing": { "const": [{ "patchCount": 0, "hasReceipt": false, "accepted": true }, { "patchCount": 0, "hasReceipt": true, "accepted": false }, { "patchCount": 1, "hasReceipt": false, "accepted": false }, { "patchCount": 1, "hasReceipt": true, "accepted": true }, { "patchCount": 2, "hasReceipt": true, "accepted": false }] },
+    "feedback": { "const": { "kinds": ["ack", "rejected"], "surface": "7:保留,🙂", "revision": "1", "oldGuestAccepted": false, "oldSequenceAccepted": false, "duplicateConsumesTwice": false, "clockFaultRetainsReceipt": true } },
+    "wireEmptyPatchPayloadBytes": { "const": 0 },
+    "outerReceiptOrder": { "const": ["lifecycleReceipt", "uiPatchReceipt"] }
+  }
+}

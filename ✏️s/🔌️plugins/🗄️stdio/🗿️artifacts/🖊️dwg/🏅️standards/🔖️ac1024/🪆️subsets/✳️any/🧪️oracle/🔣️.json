@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. ⚠️ The `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the SAME three kinds, and that is correct rather than a copy-paste: `🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs` is a one-line `pub use` of `🔖️ac1024`'s, as are its `🧬️schema` and `📸️snapshot` facets, so `DwgMutation` is ONE Rust enum shared by both standards. They are identical BY CONSTRUCTION, not by agreement, and the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and fails the moment that stops being true. Two catalogs and two capabilities exist anyway because the contract gate counts coverage per subset and a catalog claimed by no feature is itself a breach.",
   "oracles": [],
   "noOracleDecisions": [

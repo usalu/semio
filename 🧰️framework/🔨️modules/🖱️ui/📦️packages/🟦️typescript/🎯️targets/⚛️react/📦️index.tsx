@@ -21810,6 +21810,26 @@ if (treeVitest) {
       tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
     });
 
+    //#region 🏠️LocalInteractionCompositionTests
+    it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
+      const source = await import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts");
+      const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../../../🛂️manifest/🧪️fixtures/🔣️tutorial-local-interaction.schema.json"); const { default: localSchema } = await import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️local-interaction.schema.json");
+      const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
+      type State = import("../../../../../📡️replication/📡️wire/🏠️local-interaction/🟦️component.ts").LocalInteractionState; type Change = import("../../../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️component.ts").TutorialLocalInteractionChange;
+      const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).compile<{ cases: readonly { name: string; before: State; after: State; changes: readonly Change[] }[] }>(schema); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
+      expect(typeof source.diffTutorialLocalInteractionCold).toBe("function"); expect(typeof source.applyTutorialLocalInteractionCold).toBe("function");
+      for (const row of fixture.cases) {
+        const before = JSON.stringify(row.before); const changes = source.diffTutorialLocalInteractionCold(row.before, row.after); assert.deepStrictEqual(changes, row.changes, row.name);
+        let actual = row.before; let oracle = { selection: new Map(Object.entries(row.before.selection)), activeMode: new Map(Object.entries(row.before.activeMode)), activeGranularity: new Map(Object.entries(row.before.activeGranularity)) };
+        for (const change of changes) {
+          actual = source.applyTutorialLocalInteractionCold(actual, change);
+          oracle = produce(oracle, draft => { if (change.patch.selection === null) draft.selection.delete(change.domainId); else draft.selection.set(change.domainId, { ...change.patch.selection, ids: [...change.patch.selection.ids] }); if (change.patch.activeMode === null) draft.activeMode.delete(change.domainId); else draft.activeMode.set(change.domainId, change.patch.activeMode); if (change.patch.activeGranularity === null) draft.activeGranularity.delete(change.domainId); else draft.activeGranularity.set(change.domainId, change.patch.activeGranularity); });
+        }
+        assert.deepStrictEqual(actual, { selection: Object.fromEntries(oracle.selection), activeMode: Object.fromEntries(oracle.activeMode), activeGranularity: Object.fromEntries(oracle.activeGranularity) }, row.name); assert.deepStrictEqual(actual, row.after, row.name); expect(JSON.stringify(row.before)).toBe(before); expect(source.diffTutorialLocalInteractionCold(row.after, row.after)).toEqual([]);
+      }
+    });
+    //#endregion 🏠️LocalInteractionCompositionTests
+
     it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
       expect(formatTutorialTime(0)).toBe("0:00");
       expect(formatTutorialTime(1_500)).toBe("0:01");

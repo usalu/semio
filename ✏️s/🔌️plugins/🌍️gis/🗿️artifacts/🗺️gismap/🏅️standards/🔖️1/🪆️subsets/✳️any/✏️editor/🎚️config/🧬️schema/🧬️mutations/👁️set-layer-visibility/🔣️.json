@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/👁️set-layer-visibility",
+  "semanticKind": "set-layer-visibility",
+  "displayName": "Set Layer Visibility",
+  "emoji": "👁️",
+  "aggregateVariant": "SetLayerVisibility",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-layer-visibility",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

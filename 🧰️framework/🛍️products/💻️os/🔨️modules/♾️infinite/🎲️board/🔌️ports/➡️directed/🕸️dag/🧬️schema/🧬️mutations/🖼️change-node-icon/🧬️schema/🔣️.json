@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "id",
+        "newIcon"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newIcon": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "operation"
+      ],
+      "properties": {
+        "operation": {
+          "const": "addCounter"
+        }
+      },
+      "$ref": "➕️add-counter/🧬️schema/🔣️.json#/$defs/payload",
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation"
+      ],
+      "properties": {
+        "operation": {
+          "const": "addCounterTwice"
+        }
+      },
+      "$ref": "✌️add-counter-twice/🧬️schema/🔣️.json#/$defs/payload",
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation"
+      ],
+      "properties": {
+        "operation": {
+          "const": "addCounterFourTimes"
+        }
+      },
+      "$ref": "4️⃣add-counter-four-times/🧬️schema/🔣️.json#/$defs/payload",
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation"
+      ],
+      "properties": {
+        "operation": {
+          "const": "addCounterThenNotifyForeign"
+        }
+      },
+      "$ref": "🌐️add-counter-then-notify-foreign/🧬️schema/🔣️.json#/$defs/payload",
+      "unevaluatedProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "operation"
+      ],
+      "properties": {
+        "operation": {
+          "const": "addCounterSequence"
+        }
+      },
+      "$ref": "🔢️add-counter-sequence/🧬️schema/🔣️.json#/$defs/payload",
+      "unevaluatedProperties": false
+    }
+  ]
+}
+

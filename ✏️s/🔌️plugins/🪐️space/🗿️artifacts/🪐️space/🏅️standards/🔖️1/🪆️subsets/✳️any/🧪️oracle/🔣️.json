@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.space.space` is a hub space's artifact INDEX — id-keyed metadata rows, never the indexed documents' own bytes — and it is semio-NATIVE, so no oracle is registered; see `noOracleDecisions` below for the two candidate families that were surveyed and declined.",
   "oracles": [],
   "noOracleDecisions": [

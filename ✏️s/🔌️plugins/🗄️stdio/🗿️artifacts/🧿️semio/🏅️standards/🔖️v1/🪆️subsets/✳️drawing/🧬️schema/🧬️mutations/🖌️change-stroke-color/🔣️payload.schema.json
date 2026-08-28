@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeStrokeColor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "styleName"
+  ],
+  "properties": {
+    "styleName": {
+      "type": "string"
+    },
+    "newColor": {
+      "title": "SemioRgba",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a",
+        "b",
+        "g",
+        "r"
+      ],
+      "properties": {
+        "r": {
+          "type": "number"
+        },
+        "g": {
+          "type": "number"
+        },
+        "b": {
+          "type": "number"
+        },
+        "a": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

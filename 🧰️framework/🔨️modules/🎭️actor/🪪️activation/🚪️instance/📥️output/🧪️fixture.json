@@ -1,0 +1,27 @@
+{
+  "capacity": 2,
+  "maximumSequence": "18446744073709551615",
+  "trace": [
+    { "capacity": 2, "sequence": "1", "phase": "reserved", "retained": false },
+    { "capacity": 2, "sequence": "1", "phase": "pending", "retained": false },
+    { "capacity": 2, "sequence": "1", "phase": "returned", "retained": true }
+  ],
+  "refusals": ["full", "closed", "sequence-exhausted", "already-submitted", "cancel-returned"],
+  "mutablePayload": { "before": "original", "after": "changed-alias" },
+  "construction": {
+    "faults": ["before-finalize", "after-finalize"],
+    "order": ["typed-slot-registration", "shell-installation", "fallible-finalization"],
+    "retainedSlotsAfterFault": 1,
+    "nextSequence": "2",
+    "publicCapabilityKeys": [],
+    "cancelUnused": true,
+    "cancelReplay": false,
+    "neutralMetadataAdmitted": false
+  },
+  "responseSettlement": {
+    "phases": ["capture", "pending-removal", "heartbeat-recompute", "error-graft", "external-continuation"],
+    "outcomes": ["success", "graft-fault", "callback-fault"],
+    "unknownPayloadBytes": 8192,
+    "replaceCapturedResponse": false
+  }
+}

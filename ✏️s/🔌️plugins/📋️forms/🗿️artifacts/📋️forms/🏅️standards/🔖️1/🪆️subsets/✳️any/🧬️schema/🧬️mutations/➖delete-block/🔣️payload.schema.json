@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DeleteBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "stepId"
+  ],
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  }
+}

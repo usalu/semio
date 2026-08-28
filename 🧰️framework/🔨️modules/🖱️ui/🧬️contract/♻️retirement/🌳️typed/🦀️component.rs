@@ -20,6 +20,7 @@ impl std::fmt::Debug for UiTypedRetirementCursor {
 }
 
 impl UiTypedRetirementCursor {
+    pub(crate) const fn empty() -> Self { Self { path: [0; UI_TYPED_RETIREMENT_DEPTH], value: None, complete: false } }
     /// 🪶️ Visits one leaf of a root that remains exclusively retained by its arena slot.
     pub(crate) fn advance<T: UiTypedRetire>(&mut self, root: &mut T, maximum_items: usize, maximum_bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         if self.complete { return Ok(done()); }
@@ -152,14 +153,14 @@ impl<T: UiTypedRetire, const N: usize> UiTypedRetire for UiFixedList<T, N> {
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> {
         let (index, path) = split(path)?;
         if *index == 1 {
-            self.pop();
+            self.truncate_retired_last()?;
             *index = 0;
             path.fill(0);
             return Ok(UiValueRetirementStep::progress(1, 0));
         }
         let Some(field) = self.last_mut() else {
-            let released = self.release_empty_allocation()?;
-            return Ok(UiValueRetirementStep { complete: true, ..UiValueRetirementStep::progress(usize::from(released), 0) });
+            let released = self.release_empty_page()?;
+            return Ok(UiValueRetirementStep { complete: self.terminal_is_empty(), ..UiValueRetirementStep::progress(usize::from(released.progressed), 0) });
         };
         let mut step = field.retire_typed(path, value, bytes)?;
         if step.complete { *index = 1; path.fill(0); }
@@ -181,42 +182,8 @@ impl UiTypedRetire for Label {
 impl UiTypedRetire for SurfaceId {
     fn retire_typed(&mut self, path: &mut [u8], value: &mut Option<UiValueRetirement>, bytes: usize) -> Result<UiValueRetirementStep, &'static str> { self.0.retire_typed(path, value, bytes) }
 }
-typed_fields!(ActionId { 0 => scope: UiText, 1 => name: UiText, 2 => version: u16 });
-typed_fields!(ActionBinding { 0 => trigger: Trigger, 1 => action: ActionId, 2 => args: Option<UiValue>, 3 => capability: Option<UiText> });
-typed_fields!(MenuRef { 0 => id: UiText, 1 => args: Option<UiValue> });
-typed_fields!(UiIntent { 0 => surface: SurfaceId, 1 => revision: UiRevision, 2 => node: UiNodeId, 3 => node_key: UiText, 4 => trigger: Trigger, 5 => action: ActionId, 6 => args: Option<UiValue>, 7 => input: Option<UiValue>, 8 => seq: u64 });
-typed_fields!(AccessibilitySpec { 0 => label: Option<Label>, 1 => description: Option<Label>, 2 => live: Liveness, 3 => shortcut: Option<UiText>, 4 => hidden: bool });
-typed_fields!(DropOverlaySpec { 0 => title: Label, 1 => hint: Label, 2 => accept: Option<UiText> });
-typed_fields!(SelectItem { 0 => value: UiText, 1 => label: Label });
-typed_fields!(KeyValueEntry { 0 => label: Label, 1 => value: UiText });
-typed_fields!(RowAction { 0 => icon: UiText, 1 => label: Option<Label>, 2 => action: ActionBinding, 3 => placement: RowActionPlacement });
-typed_fields!(ContainerProps { 0 => role: ContainerRole, 1 => label: Option<Label>, 2 => description: Option<UiText>, 3 => required: Option<bool>, 4 => error: Option<UiText>, 5 => default_open: Option<bool>, 6 => drop_overlay: Option<DropOverlaySpec> });
-typed_fields!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>> });
-typed_fields!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
-typed_fields!(SeparatorProps {});
-typed_fields!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText> });
-typed_fields!(SelectProps { 0 => value: UiText, 1 => items: UiFixedList<SelectItem>, 2 => placeholder: Option<Label> });
-typed_fields!(ToggleProps { 0 => on: bool, 1 => icon: UiText, 2 => text: Option<Label> });
-typed_fields!(KeyValueListProps { 0 => entries: UiFixedList<KeyValueEntry> });
-typed_fields!(SliderProps { 0 => value: f64, 1 => min: f64, 2 => max: f64, 3 => step: f64, 4 => unit: Option<UiText> });
-typed_fields!(NumberStepperProps { 0 => value: f64, 1 => step: f64, 2 => uniform: bool });
-typed_fields!(RingProps { 0 => orb_id: UiText, 1 => t: f64 });
-typed_fields!(IconSelectProps { 0 => value: UiText, 1 => uniform: bool, 2 => classifier_kind: UiText });
-typed_fields!(TreeProps { 0 => interaction_domain: Option<UiText> });
-typed_fields!(TreeSectionProps { 0 => label: Option<Label>, 1 => default_open: Option<bool> });
-typed_fields!(TreeItemProps { 0 => label: Label, 1 => description: Option<UiText>, 2 => icon: Option<UiText>, 3 => default_open: Option<bool>, 4 => draggable: Option<bool>, 5 => drag_data: Option<UiFixedMap<UiText>>, 6 => dimmed: Option<bool>, 7 => row_actions: UiFixedList<RowAction> });
-typed_fields!(ImageProps { 0 => src: UiText, 1 => alt: Option<Label> });
-typed_fields!(ExtensionProps { 0 => extension: UiText, 1 => props: UiValue });
-typed_fields!(SurfaceProps { 0 => kind: SurfaceKind, 1 => doc_schema: UiText, 2 => doc: SurfaceDoc, 3 => bindings: UiNodeBindings });
-typed_fields!(SurfaceDoc { 0 => bytes: UiFixedBytes });
-typed_fields!(GridLayout { 0 => columns: UiGridTracks, 1 => rows: UiGridTracks, 2 => column_gap: SpaceToken, 3 => row_gap: SpaceToken, 4 => padding: EdgeSpace, 5 => align: Align, 6 => justify: Justify });
-typed_fields!(StackLayout { 0 => axis: Axis, 1 => gap: SpaceToken, 2 => padding: EdgeSpace, 3 => align: Align, 4 => justify: Justify, 5 => grow: bool, 6 => wrap: bool });
-typed_fields!(OverlayLayout { 0 => anchor: Anchor, 1 => inset: EdgeSpace, 2 => dismissible: bool });
-typed_fields!(ScrollLayout { 0 => axes: ScrollAxes, 1 => padding: EdgeSpace, 2 => sizing: Sizing });
-typed_fields!(AbsoluteLayout { 0 => sizing_width: Sizing, 1 => sizing_height: Sizing });
-typed_fields!(LeafLayout { 0 => width: Sizing, 1 => height: Sizing });
-typed_fields!(UiNodeRecord { 0 => id: UiNodeId, 1 => key: UiText, 2 => component: Component, 3 => layout: LayoutSpec, 4 => style: StyleSpec, 5 => activity: Activity, 6 => disabled: bool, 7 => transition: Option<TransitionHint>, 8 => accessibility: AccessibilitySpec, 9 => bindings: UiNodeBindings, 10 => menu: Option<MenuRef>, 11 => children: UiNodeChildren });
-typed_fields!(UiSnapshot { 0 => surface: SurfaceId, 1 => revision: UiRevision, 2 => root: UiNodeId, 3 => nodes: UiSnapshotNodes, 4 => layout_epoch: u64 });
+include!("../../🧬️typed/📋️fields.rs");
+ui_typed_field_catalog!(typed_fields);
 typed_fields!(UiPatch { 0 => surface: SurfaceId, 1 => base_revision: UiRevision, 2 => revision: UiRevision, 3 => ops: UiPatchOps });
 
 impl UiTypedRetire for Component {

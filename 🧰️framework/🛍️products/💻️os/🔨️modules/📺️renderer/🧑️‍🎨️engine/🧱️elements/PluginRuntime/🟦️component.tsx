@@ -63,23 +63,43 @@ import {
   ActivationRegistry,
   type ActivationReason,
   createTurnOutcomeBroadcast,
+  fetchDescriptorManifest,
   type PluginWasmHandle as KernelPluginWasmHandle,
   type TurnOutcome,
 } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";
+export { fetchDescriptorManifest };
 import {
   createShardCommandIngressPages,
   ShardClient,
+  type OwnedNativeUiPatchAuthority,
+  type OwnedNativeUiPatchSubmissionReceipt,
+  type ShardActorActivationLease,
   type ShardBudget,
   type ShardCommandIngressPage,
   type ShardEventEnvelope,
+  type ShardInstanceLifecycleLease,
+  type ShardInstanceOpenInput,
   type ShardWorkerLike,
 } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import type { ActorInstanceLifecycleReceipt } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts";
+import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️component.ts";
+import { rendererResidentLedger } from "../../💾️resident/🟦️component.ts";
+import type { OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
+import { wireExtensionInvocation } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 import { type PluginManifest, type ViewModel } from "../Shell/🟦️component.tsx";
 import { SEGMENTED_DOWNLOAD_MARKER_PREFIX } from "../SegmentedDownload/🟦️component.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️plugin-runtime
+
+/** 🎟️ Captures requester activation and request identity before extension work or queue admission. */
+export interface PluginExtensionCompletion {
+  readonly instanceId: number;
+  readonly req: bigint;
+  assertActive(): void;
+  complete(outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<InvocationResponse>;
+}
 
 export type PluginWasmHandle = {
   readonly pluginId: string;
@@ -132,14 +152,8 @@ export type PluginWasmHandle = {
    * index (`null` for a folder-only session with no hub); `peers` is the whole roster with the
    * caller's own actor already dropped. */
   readonly pushPresence?: (instanceId: number, ownColor: number | null, peers: readonly ArtifactPresencePeer[]) => Promise<void>;
-  /** 🔁️ H1-react (design-abi.md §2) — delivers the result of an `Effect::InvokeExtension` back to
-   * the ORIGINATING instance's actor as `Event::Completed{req, outcome}`, resuming the guest SDK
-   * future `RequestRegistry` parked on `req`. Replaces the old `responseAction` redispatch —
-   * `ShellHost/🟦️component.tsx`'s `applyHostEffects` `invokeExtension` branch is this method's one
-   * real caller. Optional: only the `ActivationRegistry`/`ShardClient`-backed handle this file
-   * constructs can submit a turn at all; a bare `adaptPluginHandle` (every inline test) has no actor
-   * to submit one to. */
-  readonly completeExtensionInvoke?: (instanceId: number, req: number, outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }) => Promise<void>;
+  /** 🔁️ Binds one canonical Completed submission to the originating activation before evaluation. */
+  readonly captureExtensionCompletion?: (instanceId: number, req: bigint) => PluginExtensionCompletion;
   /** 📦️ The instance's cached document pack (ticket
    * 26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS, scout-1 §4) — `null`
    * before any document has been loaded/read on this instance. `TransactionCoordinator` reads this to
@@ -225,12 +239,14 @@ function handlePluginShardLost(shardIndex: number, actorIds: readonly string[]):
  * environment doesn't provide. `createWorker` defaults to the real `Worker` constructor for every
  * production call (`getShardClient` never passes an override). */
 function buildShardClientOptions(createWorker: () => ShardWorkerLike = () => new Worker(SHARD_WORKER_URL, { type: "module" }) as unknown as ShardWorkerLike): {
+  readonly residentLedger: OwnedResidentLedger;
   readonly shardCount: number;
   readonly createWorker: () => ShardWorkerLike;
   readonly onActorTrap: (actorId: string, message: string) => void;
   readonly onShardLost: (shardIndex: number, actorIds: readonly string[]) => void;
 } {
   return {
+    residentLedger: rendererResidentLedger(),
     shardCount: poolConcurrency(),
     // 🎭️ A real DOM `Worker` satisfies `ShardWorkerLike` structurally at runtime (same claim
     // `🌐plugin-web-materialize.ts`'s own doc makes) — the cast only bridges `onmessage`/`onerror`'s
@@ -291,6 +307,9 @@ type WireUiPatch = {
 };
 
 type WireTurnResult = {
+  readonly original?: object;
+  readonly lifecycleReceipt?: Uint8Array;
+  readonly uiPatchReceipt?: Uint8Array;
   readonly uiPatches: readonly WireUiPatch[];
   readonly effects: readonly WireVariant[];
   readonly nextWake: number | null;
@@ -308,7 +327,11 @@ function coerceTurnResult(raw: unknown): WireTurnResult {
   const nextWake = typeof record.nextWake === "number" ? record.nextWake : null;
   const status = record.status;
   const commandIngress = record.commandIngress && typeof record.commandIngress === "object" ? (record.commandIngress as WireVariant) : undefined;
-  return { uiPatches, effects, nextWake, status, commandIngress };
+  const lifecycleReceipt = record.lifecycleReceipt;
+  if (lifecycleReceipt !== undefined && lifecycleReceipt !== null && !(lifecycleReceipt instanceof Uint8Array)) throw new Error("actor-lifecycle.receipt-bytes");
+  const uiPatchReceipt = record.uiPatchReceipt;
+  if (uiPatchReceipt !== undefined && uiPatchReceipt !== null && !(uiPatchReceipt instanceof Uint8Array)) throw new Error("actor-ui-patch.receipt-bytes");
+  return { original: raw !== null && typeof raw === "object" ? raw : undefined, lifecycleReceipt: lifecycleReceipt ?? undefined, uiPatchReceipt: uiPatchReceipt ?? undefined, uiPatches, effects, nextWake, status, commandIngress };
 }
 
 /** 🧯️ Decodes the scalar WIT command-ingress fault envelope while retaining readable kernel
@@ -568,7 +591,7 @@ function wireEffectToFriendly(effect: WireVariant): Effect | null {
     case "open-dialog":
       return { openDialog: { req: num("req"), dialogId: str("dialogId"), args: packField("args") as Record<string, unknown> | undefined } };
     case "invoke-extension":
-      return { invokeExtension: { req: num("req"), extensionId: str("extensionId"), capability: str("capability"), requestJson: JSON.stringify(packField("payload") ?? {}) } };
+      return wireExtensionInvocation(effect);
     case "spawn-plugin-instance":
       return { spawnPluginInstance: { req: num("req"), pluginId: str("pluginId"), appId: str("appId"), osInstanceId: val.osInstanceId as string | undefined, label: val.label as string | undefined, documentJson: val.documentJson as string | undefined } };
     case "open-plugin-instance":
@@ -685,10 +708,37 @@ interface PluginTurnWaiter {
  * before the `await`) — a call arriving AFTER that point must start a fresh coalescing cycle, not
  * append to one that's already running or already finished. */
 interface PluginTurnPayload {
+  readonly kind: "operation";
   events: readonly ShardEventEnvelope[];
   readonly commandPage?: ShardCommandIngressPage;
+  readonly activation?: ShardActorActivationLease;
   readonly waiters: PluginTurnWaiter[];
   readonly coalesceMapKey?: string;
+}
+
+type PluginLifecycleWork =
+  | { readonly kind: "open"; readonly input: ShardInstanceOpenInput }
+  | { readonly kind: "poll" }
+  | { readonly kind: "close" }
+  | { readonly kind: "receipt-ack"; readonly receipt: ActorInstanceLifecycleReceipt; readonly retirement?: OwnedUiInstanceRetirement }
+  | { readonly kind: "issued-ui-ack"; readonly source: OwnedNativeUiPatchAuthority; readonly token: OwnedUiPatchAcknowledgement };
+type PluginLifecycleTurnResult = { readonly owner: ShardInstanceLifecycleLease; readonly raw: unknown; readonly turn: WireTurnResult; readonly submission: OwnedNativeUiPatchSubmissionReceipt | null };
+type PluginLifecycleTurnPayload = { readonly kind: "lifecycle"; readonly owner: ShardInstanceLifecycleLease; readonly work: PluginLifecycleWork; readonly resolve: (result: PluginLifecycleTurnResult) => void; readonly reject: (error: unknown) => void };
+type PendingPluginTurn = PluginTurnPayload | PluginLifecycleTurnPayload;
+
+/** 🚪️ Only the captured lifecycle owner can dispatch retirement-authorized work. */
+async function runPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: PluginLifecycleWork, budget: ShardBudget): Promise<PluginLifecycleTurnResult> {
+  let raw: unknown;
+  let submission: OwnedNativeUiPatchSubmissionReceipt | null = null;
+  switch (work.kind) {
+    case "open": raw = await owner.open(work.input, budget); break;
+    case "poll": raw = await owner.poll(budget); break;
+    case "close": raw = await owner.close(budget); break;
+    case "receipt-ack": raw = await owner.acknowledge(work.receipt, budget, work.retirement); break;
+    case "issued-ui-ack": { const result = await owner.submitUiAcknowledgement(work.source, work.token, budget); raw = result.result; submission = result.receipt; break; }
+    default: throw new Error("actor-lifecycle.work-kind");
+  }
+  return Object.freeze({ owner, raw, turn: coerceTurnResult(raw), submission });
 }
 
 /** 🧮️ Matches `ActivationRegistry`'s own `DEFAULT_TURN_MAILBOX_CAPACITY` — no reason for this file's
@@ -696,23 +746,30 @@ interface PluginTurnPayload {
 const PLUGIN_TURN_MAILBOX_CAPACITY = 32;
 
 const pendingCoalescedTurns = new Map<string, PluginTurnPayload>();
+const pendingLifecycleTurns = new Map<string, number>();
 const tearingDownPluginActors = new Set<string>();
 
-let sharedPluginTurnScheduler: TurnScheduler<PluginTurnPayload, ShardBudget> | null = null;
+let sharedPluginTurnScheduler: TurnScheduler<PendingPluginTurn, ShardBudget> | null = null;
 /** 🧵️ Reads `getShardClient()` INSIDE `runTurn` (not once at construction) purely so a test can swap
  * the module-private `sharedShardClient` for a fake between calls without this scheduler ever pinning
  * itself to whichever shard client happened to exist first — in production there is only ever one. */
-function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget> {
-  sharedPluginTurnScheduler ??= new TurnScheduler<PluginTurnPayload, ShardBudget>({
+function getPluginTurnScheduler(): TurnScheduler<PendingPluginTurn, ShardBudget> {
+  sharedPluginTurnScheduler ??= new TurnScheduler<PendingPluginTurn, ShardBudget>({
     mailboxCapacity: PLUGIN_TURN_MAILBOX_CAPACITY,
     budgetFor: () => DEFAULT_SHARD_BUDGET,
     runTurn: async (actorId, payload, budget) => {
-      if (payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
+      if (payload.kind === "lifecycle") releasePendingLifecycleTurn(actorId);
+      if (payload.kind === "operation" && payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
       try {
-        const result = coerceTurnResult(await getShardClient().turn(actorId, payload.events, budget, payload.commandPage));
+        if (payload.kind === "lifecycle") { payload.resolve(await runPluginLifecycleTurn(payload.owner, payload.work, budget)); return; }
+        payload.activation?.assertActive();
+        const raw = await (payload.activation ? payload.activation.turn(payload.events, budget, payload.commandPage) : getShardClient().turn(actorId, payload.events, budget, payload.commandPage));
+        payload.activation?.assertActive();
+        const result = coerceTurnResult(raw);
         for (const waiter of payload.waiters) waiter.resolve(result);
       } catch (error) {
-        for (const waiter of payload.waiters) waiter.reject(error);
+        if (payload.kind === "lifecycle") payload.reject(error);
+        else for (const waiter of payload.waiters) waiter.reject(error);
         if (!tearingDownPluginActors.has(actorId)) throw error;
       }
     },
@@ -721,10 +778,23 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
   return sharedPluginTurnScheduler;
 }
 
+function releasePendingLifecycleTurn(actorId: string): void {
+  const remaining = (pendingLifecycleTurns.get(actorId) ?? 1) - 1;
+  if (remaining === 0) pendingLifecycleTurns.delete(actorId); else pendingLifecycleTurns.set(actorId, remaining);
+}
+
+function enqueuePluginTurn(actorId: string, payload: PendingPluginTurn, lane: Lane, coalesce?: string): ReturnType<TurnScheduler<PendingPluginTurn, ShardBudget>["enqueue"]> {
+  const scheduler = getPluginTurnScheduler();
+  if ((payload.kind === "lifecycle" || pendingLifecycleTurns.has(actorId)) && scheduler.pendingCount(actorId) >= PLUGIN_TURN_MAILBOX_CAPACITY) return { kind: "rejected" };
+  const backpressure = scheduler.enqueue(actorId, { lane, coalesce, payload });
+  if (payload.kind === "lifecycle" && backpressure.kind !== "rejected") pendingLifecycleTurns.set(actorId, (pendingLifecycleTurns.get(actorId) ?? 0) + 1);
+  return backpressure;
+}
+
 /**
  * 🚦 This file's own internal turn-dispatch seam — replaces the old unbounded `actorTurnQueue` chain.
  * `lane` prioritizes across an actor's own pending turns (`"Interactive"` for anything a caller awaits
- * a specific reply from — `runQueuedTurn`/`createApp`/`completeExtensionInvoke` all use it below —
+ * a specific reply from — `runQueuedTurn`/`createApp`/`captureExtensionCompletion` all use it below —
  * `"UserVisible"` for {@link loadPluginModule}'s opportunistic `refreshUi` probe, so a real command
  * always preempts a mere redraw poll). `coalesceKey`, when passed, collapses a burst of same-key calls
  * for the SAME actor into the single latest one — every caller in the burst (not just the winner) still
@@ -742,9 +812,10 @@ function getPluginTurnScheduler(): TurnScheduler<PluginTurnPayload, ShardBudget>
  * risked, per this repo's own "must not assume" rule — see `📓️terra-web-plugin-runtime-report.md`
  * `## honest gaps`.
  */
-function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string, commandPage?: ShardCommandIngressPage): Promise<WireTurnResult> {
-  const scheduler = getPluginTurnScheduler();
+function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[], lane: Lane, coalesceKey?: string, commandPage?: ShardCommandIngressPage, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
   return new Promise<WireTurnResult>((resolve, reject) => {
+    if (activation && (activation.actorId !== actorId || coalesceKey !== undefined)) throw new Error("actor-activation.turn-owner-mismatch");
+    activation?.assertActive();
     const waiter: PluginTurnWaiter = { resolve, reject };
     if (coalesceKey !== undefined) {
       const mapKey = `${actorId} ${coalesceKey}`;
@@ -754,18 +825,36 @@ function submitPluginTurn(actorId: string, events: readonly ShardEventEnvelope[]
         pending.waiters.push(waiter);
         return;
       }
-      const payload: PluginTurnPayload = { events, waiters: [waiter], coalesceMapKey: mapKey, commandPage };
+      const payload: PluginTurnPayload = { kind: "operation", events, waiters: [waiter], coalesceMapKey: mapKey, commandPage };
       pendingCoalescedTurns.set(mapKey, payload);
-      const backpressure = scheduler.enqueue(actorId, { lane, coalesce: coalesceKey, payload });
+      const backpressure = enqueuePluginTurn(actorId, payload, lane, coalesceKey);
       if (backpressure.kind === "rejected") {
         pendingCoalescedTurns.delete(mapKey);
         reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
       }
       return;
     }
-    const payload: PluginTurnPayload = { events, waiters: [waiter], commandPage };
-    const backpressure = scheduler.enqueue(actorId, { lane, payload });
+    const payload: PluginTurnPayload = { kind: "operation", events, waiters: [waiter], commandPage, activation };
+    const backpressure = enqueuePluginTurn(actorId, payload, lane);
     if (backpressure.kind === "rejected") reject(new Error(`[DEBUG] PluginRuntime: actor ${actorId}'s turn queue is full — rejected rather than growing unbounded`));
+  });
+}
+
+/** 📨️ Lifecycle work shares actor serialization without borrowing revoked command authority. */
+function submitPluginLifecycleTurn(owner: ShardInstanceLifecycleLease, work: PluginLifecycleWork, lane: Lane): Promise<PluginLifecycleTurnResult> {
+  return new Promise((resolve, reject) => {
+    let captured: PluginLifecycleWork;
+    switch (work.kind) {
+      case "open": captured = Object.freeze({ kind: work.kind, input: work.input }); break;
+      case "poll": case "close": captured = Object.freeze({ kind: work.kind }); break;
+      case "receipt-ack": captured = Object.freeze({ kind: work.kind, receipt: work.receipt, retirement: work.retirement }); break;
+      case "issued-ui-ack": captured = Object.freeze({ kind: work.kind, source: work.source, token: work.token }); break;
+      default: throw new Error("actor-lifecycle.work-kind");
+    }
+    const actorId = owner.activation.actorId;
+    const payload: PluginLifecycleTurnPayload = { kind: "lifecycle", owner, work: captured, resolve, reject };
+    const backpressure = enqueuePluginTurn(actorId, payload, lane);
+    if (backpressure.kind === "rejected") reject(new Error("actor-lifecycle.queue-full"));
   });
 }
 
@@ -773,6 +862,7 @@ function teardownPluginActor(actorId: string): void {
   const fault = new Error(`plugin actor ${actorId} disposed`);
   tearingDownPluginActors.add(actorId);
   getPluginTurnScheduler().teardownActor(actorId, (payload) => {
+    if (payload.kind === "lifecycle") { releasePendingLifecycleTurn(actorId); payload.reject(fault); return; }
     if (payload.coalesceMapKey) pendingCoalescedTurns.delete(payload.coalesceMapKey);
     for (const waiter of payload.waiters) waiter.reject(fault);
   });
@@ -813,13 +903,16 @@ async function yieldPluginUiContinuation(): Promise<void> {
  * publish them across multiple MoreWork frames. A supplied empty `requiredSurfaceIds` means every
  * requested surface is already retained, so an unchanged refresh needs no continuation at all.
  * Accepted patches are acknowledged between turns to release bounded publication capacity. */
-async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[], drainOperations = false): Promise<WireTurnResult> {
+async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: Lane, requiredSurfaceIds?: ReadonlySet<string>, acceptPatches?: (result: WireTurnResult) => readonly ShardEventEnvelope[], drainOperations = false, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
   const results: WireTurnResult[] = [initial];
-  const acknowledge = (result: WireTurnResult) => [...(acceptPatches?.(result) ?? []), ...typedOperationAcknowledgements(result)];
+  const acknowledge = (result: WireTurnResult) => {
+    activation?.assertActive();
+    return [...(acceptPatches?.(result) ?? []), ...typedOperationAcknowledgements(result)];
+  };
   const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   let acknowledgements = acknowledge(initial);
   for (let continuation = 0; (acknowledgements.length > 0 || hasWork()) && continuation < PLUGIN_UI_CONTINUATION_LIMIT; continuation += 1) {
-    const continued = await submitPluginTurn(actorId, acknowledgements, lane);
+    const continued = await submitPluginTurn(actorId, acknowledgements, lane, undefined, undefined, activation);
     results.push(continued);
     acknowledgements = acknowledge(continued);
     if ((continuation + 1) % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0 && hasWork()) {
@@ -839,6 +932,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     const missing = [...requiredSurfaceIds].filter((surface) => !published.has(surface));
     throw new Error(`[DEBUG] PluginRuntime: actor ${actorId} stopped without publishing requested UI surfaces (missing=${JSON.stringify(missing)}, status=${wireTurnStatusTag(results.at(-1)?.status)})`);
   }
+  activation?.assertActive();
   return {
     uiPatches: results.flatMap((result) => result.uiPatches),
     effects: consumeTypedOperationEffects(results.flatMap((result) => result.effects)),
@@ -945,9 +1039,9 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * turn (its own doc: "call on every turn, not just activation"); turns dispatch through this file's
    * own {@link submitPluginTurn} rather than `ActivationRegistry.enqueueTurn` (see that decision's
    * write-up above `serializePerActor`), so nothing else would ever call it. */
-  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string; readonly commandPage?: ShardCommandIngressPage }): Promise<WireTurnResult> => {
+  const submitTurn = (actorId: string, events: readonly ShardEventEnvelope[], options?: { readonly lane?: Lane; readonly coalesceKey?: string; readonly commandPage?: ShardCommandIngressPage; readonly activation?: ShardActorActivationLease }): Promise<WireTurnResult> => {
     registry.touch(actorId);
-    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey, options?.commandPage);
+    return submitPluginTurn(actorId, events, options?.lane ?? "Interactive", options?.coalesceKey, options?.commandPage, options?.activation);
   };
 
   /** 📤️📥️ Backs {@link KernelPluginWasmHandle.enqueue}/`.outcomes` (see this file's own header doc).
@@ -1098,24 +1192,44 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     return retainedUiRefreshResponse(instanceId, request, retained ?? new Map(), result.effects);
   };
 
-  /** 🔁️ H1-react item 2 ("finish the invokeExtension branch") — the real `req`-correlated completion
-   * `ShellHost/🟦️component.tsx`'s `applyHostEffects` used to only log loudly about. Submits
-   * `Event::Completed{req, outcome}` on the ORIGINATING instance's own actor so its `RequestRegistry`
-   * resumes the parked future (design-abi.md §2's "the SDK resumes the awaiting future on
-   * `event.completed`"). */
-  const completeExtensionInvoke = async (instanceId: number, req: number, outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<void> => {
+  /** 🔁️ Retains one completion's exact activation across evaluation, queueing and publication. */
+  const captureExtensionCompletion = (instanceId: number, req: bigint): PluginExtensionCompletion => {
+    if (typeof req !== "bigint" || req <= 0n || req > 0xffffffffffffffffn) throw new Error("extension.request-id-invalid");
     const actorId = requireActorId(instanceId);
-    await serializeCommandIngressForActor(actorId, () =>
-      submitTurn(actorId, [
-        {
-          kind: "completed",
-          payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } },
-        },
-      ]),
-    );
+    const activation = shardClient.captureActorActivation(actorId);
+    let submitted = false;
+    const assertActive = (): void => { requireActorId(instanceId); activation.assertActive(); };
+    const complete = async (outcome: { readonly ok: Uint8Array } | { readonly fault: Uint8Array }): Promise<InvocationResponse> => {
+      assertActive();
+      if (submitted) throw new Error("extension.completion-already-submitted");
+      submitted = true;
+      return serializeCommandIngressForActor(actorId, async () => {
+        assertActive();
+        const settled = await settlePluginTurn(
+          actorId,
+          await submitTurn(actorId, [{ kind: "completed", payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } } }], { activation }),
+          "Interactive",
+          new Set(),
+          (turn) => { assertActive(); return patchAckEvents(retainTurnUiPatches(actorId, turn)); },
+          true,
+          activation,
+        );
+        assertActive();
+        const frames: Uint8Array[] = [];
+        const effects: WireVariant[] = [];
+        for (const effect of settled.effects) {
+          const frame = shellFrameBytes(effect, instanceId);
+          if (frame) frames.push(frame);
+          else effects.push(effect);
+        }
+        turnOutcomes.push({ instanceId, frames });
+        return invocationFromFrames(frames.map(decodeAppFrame), effects, "extension completion");
+      });
+    };
+    return Object.freeze({ instanceId, req, assertActive, complete });
   };
 
-  return { ...richHandle, refreshUi, completeExtensionInvoke };
+  return { ...richHandle, refreshUi, captureExtensionCompletion };
 }
 
 function patchAckEvents(uiPatches: readonly WireUiPatch[]): ShardEventEnvelope[] {
@@ -1149,36 +1263,6 @@ function retainTurnUiPatches(actorId: string, result: Pick<WireTurnResult, "uiPa
   return result.uiPatches.length > 0 ? applyRetainedWindowPatches(actorId, result.uiPatches) : [];
 }
 
-/** 📇️ H1-react — reads the build-time `🔣️descriptor.json` (design-abi.md §3, packet E1-describe's
- * emitter) siblinged next to `moduleUrl`'s directory, matching `ProgramBridge/🧊️component.rs`'s
- * native `read_descriptor_manifest` (H3-wgpu-native) exactly: an honest EMPTY manifest (zero apps),
- * not a fabricated one, whenever no descriptor exists yet — as of this packet, only `🗒️note` has a
- * real committed one (`📓️status.md`'s "E2-builder-descriptor" entry); every other plugin hits this
- * fallback until W3 migrates it. Never instantiates wasm to ask — that's exactly the "no eager
- * loading" property `loadPluginModule` used to break (per H2's lease-request naming this file).
- *
- * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-web-plugin-runtime): `signal`, when given, is
- * forwarded straight to `fetch` — a caller (a component unmount mid-boot, or
- * {@link loadPluginModulesInDependencyOrder}'s own `signal` option) that wants to give up on a slow
- * descriptor fetch can now do so. An abort PROPAGATES rather than falling back to the empty-manifest
- * default: silently continuing to load a plugin the caller explicitly gave up on would be a worse
- * surprise than a rejected promise. A genuine network failure (not an abort) keeps the existing
- * fallback — no descriptor existing yet is this wave's honest, expected default (see above). */
-export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
-  const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
-  try {
-    const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-    const contentType = response.headers?.get?.("content-type") ?? "";
-    if (response.ok && !contentType.includes("text/html")) {
-      const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
-      if (descriptor.manifest) return descriptor.manifest;
-    }
-  } catch (error) {
-    if (signal?.aborted) throw error;
-  }
-  return { pluginId, label: pluginId, version: "", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [], dependencies: [], contributions: [] } as unknown as PluginManifest;
-}
-
 //#region 🔖️ChannelAdapter
 /** 🎯️ DslValue may ship `Vec<u8>` as a number array, a Uint8Array, or a `{ kind:"bytes", value }`
  * object — used both for the old DSL-pack byte fields AND (H1-react) for `pack`-typed fields inside a
@@ -1209,6 +1293,13 @@ export function coerceWireBytes(raw: unknown): Uint8Array {
  * native `invocation_from_frames` already flags identically). */
 async function performInvocation(client: AppChannelClient, instanceId: number, invocation: unknown, invocationKind: "action" | "command", viewState: unknown): Promise<InvocationResponse> {
   const frames = await client.command(encodePackValue(invocation), viewState);
+  const leftover = pendingTurnEffects.get(instanceId) ?? [];
+  pendingTurnEffects.delete(instanceId);
+  return invocationFromFrames(frames, leftover, invocationKind);
+}
+
+/** 📬️ Decodes the shared invocation publication without losing its host effects or typed fault. */
+function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readonly WireVariant[], invocationKind: string): InvocationResponse {
   let output: unknown = null;
   let diagnostics: InvocationResponse["diagnostics"] = [];
   let uiScope: InvocationResponse["uiScope"];
@@ -1231,8 +1322,6 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
       throw new Error(`${invocationKind} failed: ${faultDisplayMessage(frame.Error.fault, decodePackValue)}`);
     }
   }
-  const leftover = pendingTurnEffects.get(instanceId) ?? [];
-  pendingTurnEffects.delete(instanceId);
   const requestedEffects = leftover.map(wireEffectToFriendly).filter((effect): effect is Effect => effect !== null);
   return {
     output,
@@ -1298,12 +1387,10 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       return instanceId;
     },
     destroyApp: async (instanceId) => {
-      // 🔌️ Ends this instance's channel's own outcome subscription BEFORE dropping it from `channels`
-      // — otherwise it leaks a live subscriber against `handle.outcomes` for the rest of the handle's
-      // lifetime (see `AppChannelClient.dispose`'s own doc).
-      channels.get(instanceId)?.dispose();
-      channels.delete(instanceId);
+      const channel = channels.get(instanceId);
       await handle.destroyApp(instanceId);
+      channel?.dispose();
+      if (channels.get(instanceId) === channel) channels.delete(instanceId);
     },
     takeSegmentedDownloadChunk: (instanceId, operationId) => handle.takeSegmentedDownloadChunk(instanceId, operationId),
     handleAction: (instanceId, actionJson, viewState) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState),
@@ -1881,6 +1968,223 @@ export async function loadPluginModulesInDependencyOrder(
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
+  it("RendererResidentComposition never replaces a closing composition ledger", async () => {
+    const { execFileSync } = await import("node:child_process"); const { fileURLToPath, pathToFileURL } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const { default: fixture } = await import("../../💾️resident/🧪️fixture.json"); const moduleUrl = pathToFileURL(resolve(dirname(fileURLToPath(import.meta.url)), "../../💾️resident/🟦️component.ts")).href;
+    const source = `const { rendererResidentLedger } = await import(process.argv[1]); const first = rendererResidentLedger(); first.beginClose(); const result = first.closeStep({maxItems:1,maxBytes:256}); const second = rendererResidentLedger(); const admission = second.reserveRecord('data',{bytes:1,slots:1,owners:1},{maxItems:1,maxBytes:256}); process.stdout.write(JSON.stringify({same:first===second,terminal:first.terminalIsEmpty(),result:result.kind,admission:admission.step.kind}));`;
+    const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, moduleUrl], { encoding: "utf8", timeout: 10000 }));
+    expect(actual).toEqual({ same: !fixture.replacesClosingLedger, terminal: true, result: "complete", admission: "rejected" });
+  });
+
+  it("RendererResidentComposition shares one exact ledger and preserves both consumers' charges", async () => {
+    const { rendererResidentLedger } = await import("../../💾️resident/🟦️component.ts"); const { default: fixture } = await import("../../💾️resident/🧪️fixture.json");
+    const { default: schema } = await import("../../💾️resident/🧬️schema.json"); const { default: resident } = await import("../../../../../../../🔨️modules/🌱️value/💾️resident/🧬️schema.json"); const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+    expect(new Ajv({ strict: true }).addSchema(resident).compile(schema)(fixture.capacity)).toBe(true);
+    const react = rendererResidentLedger(); const wgpu = rendererResidentLedger(); expect(react === wgpu).toBe(fixture.sameLedger); expect(react.capacity).toEqual(fixture.capacity);
+    expect({ bytes: react.capacity.bytes - react.capacity.control.bytes, slots: react.capacity.slots - react.capacity.control.slots, owners: react.capacity.owners - react.capacity.control.owners }).toEqual(fixture.data);
+    const grant = { maxItems: 1, maxBytes: 256 }; const first = react.reserveRecord("data", fixture.recordEnvelope, grant).record; const second = wgpu.reserveRecord("data", fixture.recordEnvelope, grant).record;
+    if (!first || !second) throw new Error("Renderer composition fixture admission refused");
+    expect(react.usage.data).toEqual(fixture.twoRecordUsage); expect(wgpu.usage.data).toEqual(fixture.twoRecordUsage);
+    first.beginClose(); expect(first.closeStep(grant).kind).toBe("complete");
+    expect(wgpu.usage.data).toEqual(produce(fixture.twoRecordUsage, state => { state.bytes /= 2; state.slots /= 2; state.owners /= 2; }));
+    second.beginClose(); expect(second.closeStep(grant).kind).toBe("complete"); expect(react.usage.data).toEqual(fixture.afterUnusedClose);
+    expect(fixture.capacity.bytes).toBe(fixture.aggregateUiPolicyBytes); expect(fixture.surfaceUiPolicyBytes).toBe(8388608);
+  });
+
+  describe("extension invocation WIT request identity", () => {
+    it("rejects narrowed, exhausted or malformed request identities", () => {
+      for (const req of [0n, -1n, 0x10000000000000000n, 1, "1", undefined]) {
+        expect(() => wireExtensionInvocation({ tag: "invoke-extension", val: { req, params: { extensionId: "text", capability: "evaluate", payload: [] } } })).toThrow("extension.request-id-invalid");
+      }
+    });
+
+    it("preserves nested UTF-8 payloads and exact u64 ids in both renderer decoders", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const { wireEffectToFriendly: sharedDecode } = await import("../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts");
+      const requestJson = JSON.stringify({ ...fixture.request, label: "Hölzer 日本語" });
+      for (const id of fixture.requestIds) {
+        const req = BigInt(id);
+        const wire = { tag: "invoke-extension", val: { req, params: { extensionId: fixture.extensionId, capability: fixture.capability, payload: new TextEncoder().encode(requestJson) } } };
+        const expected = { invokeExtension: { req, extensionId: fixture.extensionId, capability: fixture.capability, requestJson } };
+        expect(wireEffectToFriendly(wire)).toEqual(expected);
+        expect(sharedDecode(wire, decodePackValue)).toEqual(expected);
+      }
+    });
+  });
+
+  describe("extension invocation completion publication", () => {
+    async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>): Promise<void> {
+      const previous = { registry: sharedActivationRegistry, shard: sharedShardClient, fetch: globalThis.fetch };
+      const idle: WireTurnResult = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      let generation = 1n;
+      let captures = 0;
+      let guardedTurns = 0;
+      const dispatch = async (actor: string, events: readonly ShardEventEnvelope[]) => events.some((event) => event.kind === "instance-open") ? idle : turn(actor, events);
+      sharedActivationRegistry = { registerManifest: () => {}, activate: async () => {}, touch: () => {} } as unknown as ActivationRegistry;
+      sharedShardClient = {
+        turn: dispatch,
+        captureActorActivation: (actorId: string) => {
+          captures += 1;
+          const activationGeneration = generation;
+          return { actorId, activationGeneration, assertActive: () => { if (generation !== activationGeneration) throw new Error("actor-activation.revoked"); }, turn: (events: readonly ShardEventEnvelope[]) => { guardedTurns += 1; return dispatch(actorId, events); } };
+        },
+        dispose: () => {},
+      } as unknown as ShardClient;
+      globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "extension-requester", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+      let handle: PluginWasmHandle | undefined;
+      try {
+        handle = await loadPluginModule("extension-requester", "https://fixture.invalid/plugin.js");
+        await run(handle, await handle.createApp("fixture"), { replace: () => { generation += 1n; }, captures: () => captures, guardedTurns: () => guardedTurns });
+      } finally {
+        handle?.dispose();
+        sharedActivationRegistry = previous.registry;
+        sharedShardClient = previous.shard;
+        globalThis.fetch = previous.fetch;
+      }
+    }
+
+    it("settles the exact completion, acknowledges its retained patch and returns frames and host effects", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const { encodeAppFrame } = await import("@semio-tech/framework-os");
+      const bytes = (value: unknown) => Array.from(encodePackValue(value));
+      let instance = 0;
+      const submitted: ShardEventEnvelope[][] = [];
+      const root: UiNodeRecord = { id: 0, key: fixture.completion.surface, component: { type: "text", value: fixture.response.text, emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
+      await withRequester(async (_actor, events) => {
+        submitted.push([...events]);
+        if (submitted.length === 1) return { uiPatches: [], effects: [{ tag: "notify", val: { message: fixture.completion.notification } }], nextWake: null, status: { tag: "more-work" } };
+        if (submitted.length === 2) return {
+          uiPatches: [{ surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: bytes(root) } }, { tag: "set-root", val: 0n }] }],
+          effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [] } })) } }],
+          nextWake: null, status: { tag: "idle" },
+        };
+        return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      }, async (handle, opened) => {
+        instance = opened;
+        const req = BigInt(fixture.requestIds[2]!);
+        const outcome = { ok: encodePackValue(fixture.response) };
+        const response = await handle.captureExtensionCompletion!(instance, req).complete(outcome);
+        expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], [], [{ kind: "patch-ack", payload: { surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n } }]]);
+        expect(response).toMatchObject({ output: fixture.response, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch });
+        expect(retainedWindowByActor.get(`extension-requester#${instance}`)?.get(retainedSurfaceId(instance, fixture.completion.surface))?.revision).toBe(fixture.completion.revision);
+      });
+    });
+
+    it("rejects a framed completion fault without swallowing its structured fields", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const { encodeAppFrame } = await import("@semio-tech/framework-os");
+      let instance = 0;
+      await withRequester(async () => ({ uiPatches: [], effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Error: { in_reply_to: null, fault: Array.from(encodePackValue(fixture.fault)), report: [] } })) } }], nextWake: null, status: { tag: "idle" } }), async (handle, opened) => {
+        instance = opened;
+        await expect(handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) })).rejects.toMatchObject({ fault: fixture.fault });
+      });
+    });
+
+    it("does not publish a late completion after its originating instance is destroyed", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const entered = Promise.withResolvers<void>();
+      const result = Promise.withResolvers<WireTurnResult>();
+      let turns = 0;
+      await withRequester(async () => { turns += 1; entered.resolve(); return result.promise; }, async (handle, instance) => {
+        const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) });
+        const observed = expect(completion).rejects.toThrow("no actor");
+        await entered.promise;
+        await handle.destroyApp(instance);
+        result.resolve({ uiPatches: [], effects: [{ tag: "notify", val: { message: fixture.completion.notification } }], nextWake: null, status: { tag: "idle" } });
+        await observed;
+        expect(turns).toBe(1);
+        expect(retainedWindowByActor.has(`extension-requester#${instance}`)).toBe(false);
+      });
+    });
+
+    it("captures activation before queued completion and rejects a same-name replacement before dispatch", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      let dispatched = 0;
+      await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance, activation) => {
+        const entered = Promise.withResolvers<void>();
+        const release = Promise.withResolvers<void>();
+        const held = serializeCommandIngressForActor(`extension-requester#${instance}`, async () => { entered.resolve(); await release.promise; });
+        await entered.promise;
+        const completing = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) });
+        const observed = expect(completing).rejects.toThrow("actor-activation.revoked");
+        const captures = activation.captures();
+        activation.replace();
+        release.resolve();
+        await held;
+        await observed;
+        expect(captures).toBe(1);
+        expect(activation.captures()).toBe(1);
+        expect(dispatched).toBe(0);
+      });
+    });
+
+    it("refuses publication after in-flight activation replacement without running a new continuation", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const entered = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<WireTurnResult>();
+      let dispatched = 0;
+      await withRequester(async () => { dispatched += 1; entered.resolve(); return release.promise; }, async (handle, instance, activation) => {
+        const completing = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) });
+        const observed = expect(completing).rejects.toThrow("actor-activation.revoked");
+        await entered.promise;
+        activation.replace();
+        release.resolve({ uiPatches: [], effects: [{ tag: "notify", val: { message: "stale activation" } }], nextWake: null, status: { tag: "idle" } });
+        await observed;
+        expect(activation.captures()).toBe(1);
+        expect(activation.guardedTurns()).toBe(1);
+        expect(dispatched).toBe(1);
+        expect(retainedWindowByActor.get(`extension-requester#${instance}`)?.size ?? 0).toBe(0);
+      });
+    });
+
+    it("keeps the original activation lease through every completion continuation", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      const entered = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<WireTurnResult>();
+      let dispatched = 0;
+      await withRequester(async () => {
+        dispatched += 1;
+        if (dispatched === 1) return { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } };
+        entered.resolve();
+        return release.promise;
+      }, async (handle, instance, activation) => {
+        const completing = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId)).complete({ ok: encodePackValue(fixture.response) });
+        const observed = expect(completing).rejects.toThrow("actor-activation.revoked");
+        await entered.promise;
+        activation.replace();
+        release.resolve({ uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } });
+        await observed;
+        expect(dispatched).toBe(2);
+        expect(activation.captures()).toBe(1);
+        expect(activation.guardedTurns()).toBe(2);
+      });
+    });
+
+    it("rejects a completion captured before evaluation when that activation is later replaced", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      let dispatched = 0;
+      await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance, activation) => {
+        const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId));
+        activation.replace();
+        await expect(completion.complete({ ok: encodePackValue(fixture.response) })).rejects.toThrow("actor-activation.revoked");
+        expect(dispatched).toBe(0);
+        expect(activation.captures()).toBe(1);
+      });
+    });
+
+    it("claims one completion submission per captured request", async () => {
+      const { default: fixture } = await import("../ShellHost/🧪️fixtures/🔣️extension-invocation.json");
+      let dispatched = 0;
+      await withRequester(async () => { dispatched += 1; return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } }; }, async (handle, instance) => {
+        const completion = handle.captureExtensionCompletion!(instance, BigInt(fixture.requestId));
+        expect(Object.isFrozen(completion)).toBe(true);
+        expect([completion.instanceId, completion.req]).toEqual([instance, BigInt(fixture.requestId)]);
+        await completion.complete({ ok: encodePackValue(fixture.response) });
+        await expect(completion.complete({ ok: encodePackValue(fixture.response) })).rejects.toThrow("extension.completion-already-submitted");
+        expect(dispatched).toBe(1);
+      });
+    });
+  });
+
   function encodeForeignStepBytes(step: {
     readonly target: { readonly artifactId: string; readonly artifactKind: string };
     readonly mutationId: string;
@@ -2368,6 +2672,61 @@ if (import.meta.vitest) {
   });
 
   describe("PluginRuntime documentPack/transaction wire adapter", () => {
+    it("keeps the exact channel subscribed through refused close and releases only that channel after retry", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️channel-close.json");
+      const { default: schema } = await import("./🧪️fixtures/🔣️channel-close.schema.json");
+      const { default: Ajv } = await import("ajv");
+      const { produce } = await import("immer");
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const returned: number[] = [];
+      let subscriptions = 0;
+      let rejectClose!: (reason: unknown) => void;
+      let resolveClose!: () => void;
+      const lease = {
+        handle: {
+          manifest: async () => encodePackValue({ pluginId: "close-fixture", apps: [] }), createApp: async () => fixture.instance,
+          destroyApp: () => new Promise<void>((resolve, reject) => { resolveClose = resolve; rejectClose = reject; }),
+          enqueue: () => {}, takeSegmentedDownloadChunk: async () => undefined,
+          outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { const id = subscriptions++; return { next: () => new Promise(() => {}), return: async () => { returned.push(id); return { done: true, value: undefined }; } }; } },
+          dispose: () => {},
+        },
+        release: () => {},
+      };
+      const handle = await adaptPluginHandle("close-fixture", lease); const instance = await handle.createApp("fixture");
+      expect(returned).toEqual(fixture.refusal.before);
+      const first = handle.destroyApp(instance); const refused = expect(first).rejects.toThrow("native close refused");
+      expect(returned).toEqual(fixture.refusal.before);
+      rejectClose(new Error("native close refused")); await refused;
+      expect(returned).toEqual(fixture.refusal.afterFailure); expect(handle.documentPack(instance)).toBeNull();
+      const retry = handle.destroyApp(instance); resolveClose(); await retry;
+      expect(returned).toEqual(produce(fixture.refusal.afterFailure as number[], state => { state.push(0); }));
+      expect(returned).toEqual(fixture.refusal.afterRetry);
+    });
+
+    it("settles an old channel close without removing a replacement using the same numeric instance", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️channel-close.json");
+      const returned: number[] = [];
+      let subscriptions = 0;
+      const closes: Array<() => void> = [];
+      const lease = {
+        handle: {
+          manifest: async () => encodePackValue({ pluginId: "close-fixture", apps: [] }), createApp: async () => fixture.instance,
+          destroyApp: () => new Promise<void>(resolve => { closes.push(resolve); }),
+          enqueue: () => {}, takeSegmentedDownloadChunk: async () => undefined,
+          outcomes: { [Symbol.asyncIterator](): AsyncIterator<TurnOutcome> { const id = subscriptions++; return { next: () => new Promise(() => {}), return: async () => { returned.push(id); return { done: true, value: undefined }; } }; } },
+          dispose: () => {},
+        },
+        release: () => {},
+      };
+      const handle = await adaptPluginHandle("close-fixture", lease); const instance = await handle.createApp("old");
+      const first = handle.destroyApp(instance); await handle.createApp("replacement");
+      expect(returned).toEqual(fixture.replacement.whileClosing);
+      closes[0]!(); await first;
+      expect(returned).toEqual(fixture.replacement.afterOldClose); expect(handle.documentPack(instance)).toBeNull();
+      const replacement = handle.destroyApp(instance); closes[1]!(); await replacement;
+      expect(returned).toEqual(fixture.replacement.afterReplacementClose);
+    });
+
     it("adaptPluginHandle's documentPack/transactionPrepare/transactionCommit/transactionRollback/transactionUndo/transactionRedo frame through AppChannelClient", async () => {
       const { decodeAppCommand, encodeAppFrame } = await import("@semio-tech/framework-os");
       const seenCommands: unknown[] = [];
@@ -2474,6 +2833,123 @@ if (import.meta.vitest) {
         sharedShardClient = previous;
       });
     }
+
+    it("schedules captured lifecycle work through the original owner after operation revocation", async () => {
+      const { default: Ajv } = await import("ajv");
+      const { default: fixture } = await import("./🧪️fixtures/🔣️lifecycle-scheduler.json");
+      const { default: schema } = await import("./🧪️fixtures/🔣️lifecycle-scheduler.schema.json");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts");
+      const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts");
+      expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+      const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
+      const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
+      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); const message = sent.at(-1)!; worker.onmessage!({ data: { kind: "result", requestId: message.requestId, ok: true, value } }); return pending; }
+      await answer(client.activate(fixture.actor, "/fixture.js", [], DEFAULT_SHARD_BUDGET), undefined);
+      const owner = client.captureInstanceLifecycle(fixture.actor, fixture.instance);
+      const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+      const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
+      const input = { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() };
+      const raw = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" }, lifecycleReceipt: encodeActorInstanceLifecycle(captured) };
+      const opened = await answer(submitPluginLifecycleTurn(owner, { kind: "open", input }, "Interactive"), raw);
+      expect(opened.owner).toBe(owner); expect(opened.raw).toBe(raw); expect(opened.turn.original).toBe(raw); expect(opened.turn.lifecycleReceipt).toBe(raw.lifecycleReceipt);
+      const ui = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 });
+      owner.bindHostRetirement(ui);
+      const phases = [owner.progress().kind]; const kinds = [sent.at(-1)!.events?.[0]?.kind ?? null];
+      const plainidle = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plainidle); phases.push(owner.progress().kind); kinds.push(sent.at(-1)!.events?.[0]?.kind ?? null);
+      await answer(submitPluginLifecycleTurn(owner, { kind: "poll" }, "UserVisible"), plainidle); phases.push(owner.progress().kind); kinds.push(sent.at(-1)!.events?.[0]?.kind ?? null);
+      const request = owner.beginClose(); ui.beginClose();
+      await expect(submitPluginTurn(fixture.actor, [{ kind: "app-command", payload: {} }], "Interactive", undefined, undefined, owner.activation)).rejects.toThrow(/revoked/);
+      const accepted = { kind: "accepted" as const, lifetime, requestSequence: request.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) };
+      const retired = { ...accepted, kind: "retired" as const };
+      await answer(submitPluginLifecycleTurn(owner, { kind: "close" }, "Interactive"), { ...plainidle, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) }); phases.push(owner.progress().kind); kinds.push(sent.at(-1)!.events?.[0]?.kind ?? null);
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: accepted }, "Interactive"), { ...plainidle, lifecycleReceipt: encodeActorInstanceLifecycle(retired) }); phases.push(owner.progress().kind); kinds.push(sent.at(-1)!.events?.[0]?.kind ?? null);
+      while (ui.closeStep({ maxItems: 1, maxBytes: 4096 }).kind !== "complete") {}
+      const retirement = ui.takeRetirementWitness()!;
+      const failed = submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: retired, retirement }, "Interactive");
+      const observed = expect(failed).rejects.toThrow("actor-lifecycle.ack-not-admitted");
+      await answer(failed.catch(() => undefined), { ...plainidle, status: { tag: "faulted", val: new Uint8Array([1]) } }); await observed; expect(owner.pendingReceipt).toEqual(retired);
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: retired, retirement }, "Interactive"), plainidle); phases.push(owner.progress().kind); kinds.push(sent.at(-1)!.events?.[0]?.kind ?? null);
+      expect(phases).toEqual(fixture.phases); expect(kinds).toEqual(fixture.events);
+      const before = sent.length;
+      for (const kind of fixture.refusedWork) await expect(submitPluginLifecycleTurn(owner, { kind, events: [{ kind: "app-command", payload: {} }], run: () => { throw new Error("Unowned callback"); } } as never, "Interactive")).rejects.toThrow("actor-lifecycle.work-kind");
+      expect(sent).toHaveLength(before);
+      teardownPluginActor(fixture.actor); client.disposeAll();
+    });
+
+    it("schedules captured lifecycle UI ACKs with their exact private source and successful submission receipt", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️lifecycle-scheduler.json");
+      const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts");
+      const { encodeActorUiPatchReceipt } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts");
+      const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️component.ts");
+      const sent: Array<{ kind: string; requestId: string; events?: readonly ShardEventEnvelope[] }> = [];
+      const worker: ShardWorkerLike = { onmessage: null, onerror: null, postMessage(message) { sent.push(message as typeof sent[number]); }, terminate() {} };
+      const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+      async function answer<T>(pending: Promise<T>, value: unknown): Promise<T> { await flushMicrotasks(8); worker.onmessage!({ data: { kind: "result", requestId: sent.at(-1)!.requestId, ok: true, value } }); return pending; }
+      const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+      const actorId = `${fixture.actor}-ui-ack`;
+      await answer(client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), undefined);
+      const owner = client.captureInstanceLifecycle(actorId, fixture.instance);
+      const lifetime = { activationGeneration: owner.activation.activationGeneration, instanceId: fixture.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+      const captured = { kind: "captured" as const, lifetime, requestSequence: owner.openRequest.requestSequence };
+      await answer(submitPluginLifecycleTurn(owner, { kind: "open", input: { appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() } }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+      const ui = new OwnedUiInstance(owner.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65536 }, { usizeBits: 32 }); owner.bindHostRetirement(ui);
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: captured }, "Interactive"), plain);
+      const value = fixture.uiAcknowledgement;
+      const receipt = { lifetime, patchSequence: BigInt(value.patchSequence) };
+      const original = { ...plain, uiPatchReceipt: encodeActorUiPatchReceipt(receipt), uiPatches: [{ surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(value.revision), baseRevision: BigInt(value.baseRevision), ops: [] }] };
+      const polled = await answer(submitPluginLifecycleTurn(owner, { kind: "poll" }, "UserVisible"), original);
+      expect(polled.turn.uiPatchReceipt).toBe(original.uiPatchReceipt);
+      const source = owner.captureUiPatchAuthority(original, 0);
+      expect(source.value.operationCount).toBe(value.operationCount);
+      const grant = { maxItems: 1, maxBytes: 4096 };
+      const lookup = ui.beginSurfaceLookup(owner.activation, lifetime, value.surface)!;
+      for (let count = 0; lookup.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture lookup did not complete");
+      const facade = lookup.takeResult()!; lookup.beginClose(); while (lookup.closeStep(grant).kind !== "complete") {}
+      const patch = ui.beginPatch(source, facade); patch.finishInput();
+      for (let count = 0; patch.advance(grant).kind !== "ready"; count++) if (count > 1024) throw new Error("Fixture publication did not complete");
+      const token = patch.peekAcknowledgement()!;
+      const close = owner.beginClose(); ui.beginClose();
+      const post = worker.postMessage; worker.postMessage = () => { throw new Error("fixture post refusal"); };
+      await expect(submitPluginLifecycleTurn(owner, { kind: "issued-ui-ack", source, token }, "Interactive")).rejects.toThrow("fixture post refusal");
+      expect(patch.peekAcknowledgement()).toBe(token); worker.postMessage = post;
+      const submitted = await answer(submitPluginLifecycleTurn(owner, { kind: "issued-ui-ack", source, token }, "Interactive"), plain);
+      expect(submitted.owner).toBe(owner); expect(submitted.raw).toBe(plain); expect(sent.at(-1)!.events?.[0]?.kind).toBe("patch-ack");
+      expect(sent.at(-1)!.events?.[0]?.payload).toEqual({ receipt, surface: { instance: fixture.instance, surface: value.surface }, revision: BigInt(value.revision) });
+      expect(patch.acceptAcknowledgement(submitted.submission)).toBe(true); expect(patch.acceptAcknowledgement(submitted.submission)).toBe(false);
+      const accepted = { kind: "accepted" as const, lifetime, requestSequence: close.requestSequence, closeGeneration: BigInt(fixture.closeGeneration) };
+      const retired = { ...accepted, kind: "retired" as const };
+      await answer(submitPluginLifecycleTurn(owner, { kind: "close" }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) });
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: accepted }, "Interactive"), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(retired) });
+      for (let count = 0; ui.closeStep(grant).kind !== "complete"; count++) if (count > 1024) throw new Error("Fixture UI close did not complete");
+      await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: retired, retirement: ui.takeRetirementWitness()! }, "Interactive"), plain);
+      expect(owner.progress().kind).toBe("complete"); teardownPluginActor(actorId); client.disposeAll();
+    });
+
+    it("schedules captured lifecycle without silent eviction when either ingress fills the actor queue", async () => {
+      const { default: fixture } = await import("./🧪️fixtures/🔣️lifecycle-scheduler.json");
+      expect(fixture.mailbox.capacity).toBe(PLUGIN_TURN_MAILBOX_CAPACITY);
+      for (const incoming of fixture.mailbox.overflow) {
+        const actorId = `${fixture.actor}-capacity-${incoming}`;
+        let release!: () => void;
+        const raw = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+        const gate = new Promise<typeof raw>(resolve => { release = () => resolve(raw); });
+        let first = true; let lifecycleDispatched = 0;
+        const owner = { activation: { actorId }, async poll() { lifecycleDispatched++; return raw; } } as unknown as ShardInstanceLifecycleLease;
+        await withFakeShardClient(async () => { if (first) { first = false; return gate; } return raw; }, async () => {
+          const running = submitPluginTurn(actorId, [], "Interactive"); await flushMicrotasks(8);
+          const pending = submitPluginLifecycleTurn(owner, { kind: "poll" }, "UserVisible");
+          let lifecycleSettled = false; void pending.then(() => { lifecycleSettled = true; }, () => {});
+          const commands = Array.from({ length: fixture.mailbox.capacity - 1 }, () => submitPluginTurn(actorId, [], "Interactive"));
+          const overflow = (incoming === "operation" ? submitPluginTurn(actorId, [], "Interactive") : submitPluginLifecycleTurn(owner, { kind: "poll" }, "Interactive")).then(() => "accepted", () => "refused");
+          expect(lifecycleDispatched).toBe(0);
+          release(); await running; await Promise.all(commands); const outcome = await overflow; await flushMicrotasks(8);
+          expect(outcome).toBe(fixture.mailbox.outcome); expect(lifecycleDispatched).toBe(1); expect(lifecycleSettled).toBe(true); expect((await pending).owner).toBe(owner);
+          teardownPluginActor(actorId);
+        });
+      }
+    });
 
     it("continues admitted operations after surfaces are retained and ACKs each exact result", async () => {
       const { Buffer } = await import("node:buffer");
@@ -2894,20 +3370,20 @@ if (import.meta.vitest) {
       }
     });
 
-    it("still falls back to an empty manifest on a genuine (non-abort) fetch failure — the existing E1-describe/W3 gap, unchanged", async () => {
+    it("propagates a network failure without manufacturing an empty descriptor", async () => {
       const originalFetch = globalThis.fetch;
+      const failure = new Error("network down");
       globalThis.fetch = (async () => {
-        throw new Error("network down");
+        throw failure;
       }) as typeof fetch;
       try {
-        const manifest = await fetchDescriptorManifest("p", "https://x/p.js");
-        expect(manifest.pluginId).toBe("p");
+        await expect(fetchDescriptorManifest("p", "https://x/p.js")).rejects.toBe(failure);
       } finally {
         globalThis.fetch = originalFetch;
       }
     });
 
-    it("treats the dev server's HTML SPA fallback as an absent descriptor without a parse warning", async () => {
+    it("rejects the dev server's HTML SPA fallback without a parse warning", async () => {
       const originalFetch = globalThis.fetch;
       const originalWarn = console.warn;
       let warningCount = 0;
@@ -2916,8 +3392,7 @@ if (import.meta.vitest) {
       };
       globalThis.fetch = (async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } })) as typeof fetch;
       try {
-        const manifest = await fetchDescriptorManifest("p", "https://x/p.js");
-        expect(manifest.pluginId).toBe("p");
+        await expect(fetchDescriptorManifest("p", "https://x/p.js")).rejects.toThrow("plugin.descriptor-invalid");
         expect(warningCount).toBe(0);
       } finally {
         console.warn = originalWarn;

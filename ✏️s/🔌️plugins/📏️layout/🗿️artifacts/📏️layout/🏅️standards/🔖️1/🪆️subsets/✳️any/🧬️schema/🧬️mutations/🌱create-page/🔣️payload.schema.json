@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreatePage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "page"
+  ],
+  "properties": {
+    "page": {
+      "$ref": "#/$defs/Page"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "Page": {
+      "title": "Page",
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "name",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

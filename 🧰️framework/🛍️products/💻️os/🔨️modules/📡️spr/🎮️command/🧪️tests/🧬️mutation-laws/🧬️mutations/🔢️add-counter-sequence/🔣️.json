@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence",
+  "semanticKind": "add-counter-sequence",
+  "displayName": "Add Counter Sequence",
+  "emoji": "🔢️",
+  "aggregateVariant": "AddCounterSequence",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-counter-sequence",
+  "binaryTag": 4,
+  "invertibility": "plan",
+  "diffParticipation": "plan",
+  "outcomeClasses": [
+    "applied",
+    "fatal"
+  ],
+  "composition": "composite",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

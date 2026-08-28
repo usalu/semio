@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.retained-return.v1",
+  "title": "Canonical Retained Actor Return",
+  "description": "One native typed return owner per captured activation. Raw input retirement is independent of semantic UI and instance lifecycle acknowledgements.",
+  "definitions": {
+    "u64": {"type": "string", "allOf": [{"$ref": "semio.actor.instance-lifetime-close.v1#/definitions/u64"}, {"not": {"pattern": "[^0-9]"}}]},
+    "origin": {
+      "description": "The exact dispatched transport poll's checked request id rN supplies N, not the separate Open/Close semantic requestSequence, AppCommand sequence or Event RequestId.",
+      "type": "object", "additionalProperties": false,
+      "required": ["activationGeneration", "requestSequence"],
+      "properties": {
+        "activationGeneration": {"$ref": "#/definitions/u64"},
+        "requestSequence": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}
+      }
+    },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["origin", "returnSequence"],
+      "properties": {"origin": {"$ref": "#/definitions/origin"}, "returnSequence": {"$ref": "#/definitions/u64"}}
+    },
+    "pageReceipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["identity", "pageSequence", "length", "final"],
+      "properties": {
+        "identity": {"$ref": "#/definitions/identity"},
+        "pageSequence": {"$ref": "#/definitions/u64"},
+        "length": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "final": {"type": "boolean"}
+      },
+      "allOf": [{"if": {"properties": {"final": {"const": false}}}, "then": {"properties": {"length": {"type": "integer", "minimum": 1}}}}]
+    },
+    "poll": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "identity"],
+      "properties": {"kind": {"const": "poll"}, "identity": {"$ref": "#/definitions/identity"}}
+    },
+    "inputAck": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "receipt"],
+      "properties": {"kind": {"const": "inputAck"}, "receipt": {"$ref": "#/definitions/pageReceipt"}}
+    },
+    "cancel": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "identity"],
+      "properties": {"kind": {"const": "cancel"}, "identity": {"$ref": "#/definitions/identity"}}
+    },
+    "retiredAck": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "identity"],
+      "properties": {"kind": {"const": "retiredAck"}, "identity": {"$ref": "#/definitions/identity"}}
+    },
+    "control": {"oneOf": [{"$ref": "#/definitions/poll"}, {"$ref": "#/definitions/inputAck"}, {"$ref": "#/definitions/cancel"}, {"$ref": "#/definitions/retiredAck"}]},
+    "execute": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "origin"],
+      "properties": {"kind": {"const": "execute"}, "origin": {"$ref": "#/definitions/origin"}}
+    },
+    "controlDrive": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "control"],
+      "properties": {"kind": {"const": "control"}, "control": {"$ref": "#/definitions/control"}}
+    },
+    "drive": {"oneOf": [{"$ref": "#/definitions/execute"}, {"$ref": "#/definitions/controlDrive"}]},
+    "fault": {"enum": ["none", "capacity", "sequenceExhausted", "staleOrigin", "staleIdentity", "wrongPage", "inputNotRetired", "notRetired", "clockUnavailable", "clockBackward", "deadline", "ownerFault", "malformedControl", "mixedControl"]},
+    "refused": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "origin", "fault"],
+      "properties": {"kind": {"const": "refused"}, "origin": {"$ref": "#/definitions/origin"}, "fault": {"$ref": "#/definitions/fault"}},
+      "not": {"properties": {"fault": {"const": "none"}}}
+    },
+    "pending": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "identity", "reason"],
+      "properties": {"kind": {"const": "pending"}, "identity": {"$ref": "#/definitions/identity"}, "reason": {"enum": ["working", "blocked", "awaitingInput", "closing"]}}
+    },
+    "page": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "receipt", "page"],
+      "properties": {"kind": {"const": "page"}, "receipt": {"$ref": "#/definitions/pageReceipt"}, "page": {"$ref": "semio.actor.byte-page.v1"}}
+    },
+    "retired": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "identity", "completion"],
+      "properties": {"kind": {"const": "retired"}, "identity": {"$ref": "#/definitions/identity"}, "completion": {"enum": ["complete", "cancelled", "faulted"]}}
+    },
+    "controlResult": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "control", "outcome", "fault"],
+      "properties": {"kind": {"const": "control"}, "control": {"$ref": "#/definitions/control"}, "outcome": {"enum": ["accepted", "duplicate", "blocked", "refused"]}, "fault": {"$ref": "#/definitions/fault"}},
+      "allOf": [
+        {"if": {"properties": {"outcome": {"enum": ["accepted", "duplicate"]}}}, "then": {"properties": {"fault": {"const": "none"}}}, "else": {"not": {"properties": {"fault": {"const": "none"}}}}},
+        {"if": {"properties": {"control": {"type": "object", "properties": {"kind": {"const": "poll"}}}}}, "then": {"properties": {"outcome": {"enum": ["blocked", "refused"]}}}}
+      ]
+    },
+    "protocolFault": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "fault"],
+      "properties": {"kind": {"const": "protocolFault"}, "fault": {"enum": ["malformedControl", "mixedControl"]}}
+    },
+    "result": {"oneOf": [{"$ref": "#/definitions/refused"}, {"$ref": "#/definitions/pending"}, {"$ref": "#/definitions/page"}, {"$ref": "#/definitions/retired"}, {"$ref": "#/definitions/controlResult"}, {"$ref": "#/definitions/protocolFault"}]}
+  },
+  "oneOf": [{"$ref": "#/definitions/drive"}, {"$ref": "#/definitions/result"}]
+}

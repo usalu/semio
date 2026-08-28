@@ -1,0 +1,12 @@
+# 🧭️ Own workspace root: a scratch spike for this ticket, never joins the repository's root workspace.
+[workspace]
+
+[package]
+name = "oracle-verify"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dxf = "0.6"
+quick-xml = "0.42"
+lopdf = "0.44"

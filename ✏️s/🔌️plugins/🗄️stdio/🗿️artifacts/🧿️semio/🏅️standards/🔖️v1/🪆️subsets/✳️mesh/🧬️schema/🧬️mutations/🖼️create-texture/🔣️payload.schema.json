@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateTexture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "texture"
+  ],
+  "properties": {
+    "texture": {
+      "title": "SemioTexture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "id",
+        "mime"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mime": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

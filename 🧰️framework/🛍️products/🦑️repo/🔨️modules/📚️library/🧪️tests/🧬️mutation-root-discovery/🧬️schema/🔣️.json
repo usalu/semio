@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schemaVersion", "ownedRoots", "physicalOwners", "includedRoots", "excludedRoots", "filePaths", "rejections"],
+  "additionalProperties": false,
+  "definitions": {
+    "paths": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "pattern": "^[^/\\\\]+(?:/[^/\\\\]+)*$" } }
+  },
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "ownedRoots": { "$ref": "#/definitions/paths" },
+    "physicalOwners": { "$ref": "#/definitions/paths" },
+    "includedRoots": { "$ref": "#/definitions/paths" },
+    "excludedRoots": { "$ref": "#/definitions/paths" },
+    "filePaths": { "$ref": "#/definitions/paths" },
+    "rejections": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["name", "path", "kind"], "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["directory", "symlink", "file", "unreadable", "vanished"] },
+          "roots": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+        }
+      }
+    }
+  }
+}

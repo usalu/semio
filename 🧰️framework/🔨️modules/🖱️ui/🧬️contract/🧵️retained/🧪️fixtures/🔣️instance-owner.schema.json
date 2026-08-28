@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "actor", "instanceId", "activationGeneration", "guestLifetimes", "surfaceNames", "nativeSurfaceMaximumBytes", "lookupSlots", "inputToken", "ackToken", "retirementWitness", "steps", "hostile", "closeObligations", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "actor": {"type": "string", "minLength": 1},
+    "instanceId": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "activationGeneration": {"type": "string", "pattern": "^[1-9][0-9]*$"},
+    "guestLifetimes": {"const": ["13", "14"]},
+    "surfaceNames": {"type": "array", "items": {"type": "string"}, "minItems": 3, "maxItems": 3, "uniqueItems": true},
+    "nativeSurfaceMaximumBytes": {"const": 512},
+    "lookupSlots": {"const": 1},
+    "inputToken": {"const": {"exactOriginalOperation": true, "acceptAfter": "successful-wire-offer", "mintAfter": ["decoded-input-retirement-and-apply", "cancelled-wire-terminal"], "releaseRequiresNativeSource": true, "rawOrdinalDischarge": false}},
+    "ackToken": {"const": {"mintAfter": "paired-publication-notification-retirement", "foreignSource": false, "rawBooleanDischarge": false, "retryPreservesIdentity": true}},
+    "retirementWitness": {"const": {"mintAfter": "all-exact-ui-descendants-and-outboxes", "transferCount": 1, "revokedActivationMayClose": true, "sameTupleForeignOwner": false, "structuralSuccess": false}},
+    "steps": {"type": "array", "items": {"type": "string"}, "minItems": 12, "maxItems": 12, "uniqueItems": true},
+    "hostile": {"type": "array", "items": {"type": "string"}, "minItems": 7, "maxItems": 7, "uniqueItems": true},
+    "closeObligations": {"type": "array", "items": {"type": "string"}, "minItems": 7, "maxItems": 7, "uniqueItems": true},
+    "laws": {"type": "array", "items": {"type": "string"}, "minItems": 8, "maxItems": 8, "uniqueItems": true}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLCrMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLCrMm"
+  ],
+  "properties": {
+    "newLCrMm": {
+      "type": "number"
+    }
+  }
+}

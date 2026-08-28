@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/DemoSnapshot",
+  "$defs": {
+    "I32": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "NullableI32": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/I32"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "U64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "DemoFieldChange": {
+      "type": "object",
+      "properties": { "value": { "$ref": "#/$defs/NullableI32" } }
+    },
+    "DemoDiff": {
+      "type": "object",
+      "properties": { "n": { "anyOf": [{ "$ref": "#/$defs/DemoFieldChange" }, { "type": "null" }] } }
+    },
+    "DemoSnapshot": {
+      "type": "object",
+      "properties": {
+        "n": {
+          "$ref": "#/$defs/NullableI32"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/plugin/declaration-channel-fixture-cases",
+  "type": "object",
+  "required": ["wireCases"],
+  "properties": {
+    "wireCases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["name", "text", "accept", "parserAccepts", "outerKeys", "innerKeys"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "accept": {"type": "boolean"},
+          "parserAccepts": {"type": "boolean"},
+          "outerKeys": {"type": "array", "items": {"const": "SetValue"}},
+          "innerKeys": {"type": "array", "items": {"const": "value"}},
+          "valueToken": {"type": "string", "minLength": 1},
+          "decodedValue": {"type": "integer", "minimum": -2147483648, "maximum": 2147483647}
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateAnalysisSettings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settings"
+  ],
+  "properties": {
+    "settings": {
+      "title": "FemAnalysisSettings",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bucklingCount",
+        "deformationScale",
+        "modalCount"
+      ],
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deformationScale": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-grip-kind",
+  "semanticKind": "create-grip-kind",
+  "displayName": "Create Grip Kind",
+  "emoji": "🌱",
+  "aggregateVariant": "CreateGripKind",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "create-grip-kind",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

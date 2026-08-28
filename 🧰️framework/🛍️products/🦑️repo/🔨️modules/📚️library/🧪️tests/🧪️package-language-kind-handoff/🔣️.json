@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "contractId": "package-language-semantic-kind-handoff-v1",
+  "semantics": {
+    "boundary": "semantic-directory-registry",
+    "parentKindId": "packages",
+    "variation": "canonical-registered-emoji",
+    "ambiguity": "fail-closed",
+    "packagePurity": "unchanged"
+  },
+  "oracleCompilation": {
+    "scope": "single-test-invocation",
+    "identity": "exact-serialized-json-schema",
+    "maxCompilationsPerIdentity": 1,
+    "validation": "every-scenario-step-and-compiler"
+  },
+  "languages": [
+    {
+      "id": "rust-language",
+      "name": "🦀️rust",
+      "emoji": "🦀️",
+      "slug": "rust",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "benchmarks",
+        "typescript-language",
+        "library",
+        "binary",
+        "builder",
+        "tests"
+      ]
+    },
+    {
+      "id": "typescript-language",
+      "name": "🟦️typescript",
+      "emoji": "🟦️",
+      "slug": "typescript",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures",
+        "apps"
+      ]
+    },
+    {
+      "id": "javascript-language",
+      "name": "🟨️javascript",
+      "emoji": "🟨️",
+      "slug": "javascript",
+      "allowedDirectoryKindIds": []
+    },
+    {
+      "id": "go-language",
+      "name": "🐹️go",
+      "emoji": "🐹️",
+      "slug": "go",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures"
+      ]
+    },
+    {
+      "id": "python-language",
+      "name": "🐍️python",
+      "emoji": "🐍️",
+      "slug": "python",
+      "allowedDirectoryKindIds": [
+        "fixtures",
+        "styling"
+      ]
+    },
+    {
+      "id": "dotnet-language",
+      "name": "🔷️dotnet",
+      "emoji": "🔷️",
+      "slug": "dotnet",
+      "allowedDirectoryKindIds": [
+        "targets",
+        "fixtures"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "rust-library-context",
+      "steps": [
+        {
+          "name": "🦀rust",
+          "parentKindId": "packages",
+          "kindId": "rust-language",
+          "canonicalName": "🦀️rust",
+          "violationCodes": []
+        },
+        {
+          "name": "📚library",
+          "parentKindId": "previous",
+          "kindId": "library",
+          "canonicalName": "📚️library",
+          "violationCodes": []
+        }
+      ]
+    },
+    {
+      "id": "wrong-language-parent",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "artifacts",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wrong-library-parent",
+      "steps": [
+        {
+          "name": "📚️library",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "📚️library",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "missing-semantic-language",
+      "removeKind": "rust-language",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-semantic-language",
+      "duplicateKind": "rust-language",
+      "steps": [
+        {
+          "name": "🦀️rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀️rust",
+          "violationCodes": [
+            "directory-kind-ambiguous"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-package-boundary",
+      "duplicateBoundary": "🦀️rust",
+      "steps": [
+        {
+          "name": "🦀rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀rust",
+          "violationCodes": [
+            "package-language-ambiguous"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "text-variation-is-not-emoji-variation",
+      "steps": [
+        {
+          "name": "🦀︎rust",
+          "parentKindId": "packages",
+          "kindId": null,
+          "canonicalName": "🦀︎rust",
+          "violationCodes": [
+            "directory-kind-unresolved"
+          ]
+        }
+      ]
+    }
+  ]
+}

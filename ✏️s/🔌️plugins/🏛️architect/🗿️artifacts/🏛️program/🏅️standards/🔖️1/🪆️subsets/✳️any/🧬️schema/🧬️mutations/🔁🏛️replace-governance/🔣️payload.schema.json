@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceGovernance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newGovernance"
+  ],
+  "properties": {
+    "newGovernance": {
+      "title": "Governance",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accountabilityRules",
+        "approvalMatrix",
+        "changeControlProcess",
+        "complianceObligations",
+        "dataGovernance",
+        "decisionRights",
+        "documentControl",
+        "escalationPaths",
+        "ethicsPolicy",
+        "exceptionManagement",
+        "framework",
+        "governancePerformance",
+        "id",
+        "meetingCadence",
+        "qualityPolicy",
+        "responsibilities",
+        "reviewHierarchy",
+        "roles",
+        "stakeholderEngagementPlan"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "framework": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "approvalMatrix": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "escalationPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "meetingCadence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisionRights": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "changeControlProcess": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "qualityPolicy": {
+          "title": "TextField",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ],
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "format": {
+              "type": "string"
+            }
+          }
+        },
+        "riskAppetite": {
+          "type": "string"
+        },
+        "complianceObligations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "auditSchedule": {
+          "type": "string"
+        },
+        "documentControl": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stakeholderEngagementPlan": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ethicsPolicy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dataGovernance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ownerId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reviewCycle": {
+          "type": "string"
+        },
+        "reviewHierarchy": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "policyOwnershipId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requirementOwnershipId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "riskOwnershipId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reportingFrequency": {
+          "type": "string"
+        },
+        "accountabilityRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exceptionManagement": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "governancePerformance": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

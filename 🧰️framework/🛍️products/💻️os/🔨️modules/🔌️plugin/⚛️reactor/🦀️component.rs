@@ -22,6 +22,10 @@ pub mod jobs;
 pub mod patches;
 #[path = "📮️requests/🦀️component.rs"]
 pub mod requests;
+#[path = "🚪️lifetime/🦀️component.rs"]
+pub(crate) mod instance_lifetime;
+#[path = "📨️pending/🦀️component.rs"]
+mod pending;
 
 // 🧬️ Only `wit_bridge` below (component-guest/-extension-guest wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
@@ -386,7 +390,10 @@ impl TaskRecordRegistry {
 }
 
 struct ReactorCloseState {
+    key: instance_lifetime::NativeCloseKey,
     instance: u32,
+    active: bool,
+    complete: bool,
     task_cursor: usize,
     timer_cursor: usize,
     request_cursor: requests::RequestCloseCursor,
@@ -854,27 +861,49 @@ pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> b
     }
 }
 
-fn begin_reactor_close(instance: u32) -> Result<(), semio_framework::Fault> {
+fn reserve_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    let instance = key.instance();
     let request_cursor = REGISTRY.with(|registry| registry.begin_cancel_instance(instance));
     let resume_remaining = TASK_RESUMES.with(|resumes| resumes.borrow().begin_cancel_instance());
-    let state = ReactorCloseState { instance, task_cursor: 0, timer_cursor: 0, request_cursor, resume_remaining, requests_complete: false, resumes_complete: false, timers_complete: false, metadata_complete: false };
+    let state = ReactorCloseState { key, instance, active: false, complete: false, task_cursor: 0, timer_cursor: 0, request_cursor, resume_remaining, requests_complete: false, resumes_complete: false, timers_complete: false, metadata_complete: false };
     REACTOR_CLOSES.with(|closes| {
-        closes
-            .try_borrow_mut()
-            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-busy"), "reactor close authority is busy"))?
-            .insert(state)
+        let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close authority is busy"))?;
+        if let Some(retained) = closes.slots.get(ReactorCloseRegistry::index(instance)) {
+            return if retained.key == key { Ok(()) } else { Err(reactor_close_fault("reactor close slot belongs to another captured allocation")) };
+        }
+        closes.insert(state)
             .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-capacity"), "fixed reactor close authority is saturated or collided"))
     })
 }
 
-fn abort_reactor_close(instance: u32) {
+fn reactor_close_fault(message: &'static str) -> semio_framework::Fault {
+    semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-authority"), message)
+}
+
+fn activate_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
     REACTOR_CLOSES.with(|closes| {
-        let Ok(mut closes) = closes.try_borrow_mut() else { return };
-        let index = ReactorCloseRegistry::index(instance);
-        if closes.slots.get(index).is_some_and(|state| state.instance == instance) {
-            drop(closes.take_at(index));
-        }
-    });
+        let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close authority is busy"))?;
+        let state = closes.slots.get_mut(ReactorCloseRegistry::index(key.instance())).filter(|state| state.key == key).ok_or_else(|| reactor_close_fault("exact reactor close reservation missing"))?;
+        state.active = true;
+        Ok(())
+    })
+}
+
+fn reactor_close_complete(key: instance_lifetime::NativeCloseKey) -> Result<bool, semio_framework::Fault> {
+    REACTOR_CLOSES.with(|closes| {
+        let closes = closes.try_borrow().map_err(|_| reactor_close_fault("reactor close receipt is busy"))?;
+        closes.slots.get(ReactorCloseRegistry::index(key.instance())).filter(|state| state.key == key).map(|state| state.complete).ok_or_else(|| reactor_close_fault("exact reactor close receipt missing"))
+    })
+}
+
+fn release_reactor_close(key: instance_lifetime::NativeCloseKey) -> Result<(), semio_framework::Fault> {
+    REACTOR_CLOSES.with(|closes| {
+        let mut closes = closes.try_borrow_mut().map_err(|_| reactor_close_fault("reactor close receipt is busy"))?;
+        let index = ReactorCloseRegistry::index(key.instance());
+        if !closes.slots.get(index).is_some_and(|state| state.key == key && state.complete) { return Err(reactor_close_fault("reactor close receipt is not terminal")); }
+        drop(closes.take_at(index));
+        Ok(())
+    })
 }
 
 fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
@@ -883,7 +912,9 @@ fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
         cursor.set((index + 1) % PLUGIN_REACTOR_INSTANCE_SLOTS);
         index
     });
-    let Some(mut state) = REACTOR_CLOSES.with(|closes| closes.try_borrow_mut().ok().and_then(|mut closes| closes.take_at(index))) else { return Ok(false) };
+    REACTOR_CLOSES.with(|closes| {
+    let Ok(mut closes) = closes.try_borrow_mut() else { return Ok(false) };
+    let Some(state) = closes.slots.get_mut(index).filter(|state| state.active && !state.complete) else { return Ok(false) };
     let complete = if !state.requests_complete {
         state.requests_complete = REGISTRY.with(|registry| registry.cancel_instance_step(&mut state.request_cursor) == requests::RequestCloseStep::Complete);
         false
@@ -905,16 +936,9 @@ fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
     } else {
         true
     };
-    if !complete {
-        REACTOR_CLOSES.with(|closes| {
-            closes
-                .try_borrow_mut()
-                .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-busy"), "reactor close authority is busy while restoring an exact cleanup cursor"))?
-                .put_at(index, state)
-                .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.reactor-close-lost"), "reactor close cursor lost its exact fixed slot"))
-        })?;
-    }
+    state.complete = complete;
     Ok(true)
+    })
 }
 
 #[cfg(test)]
@@ -1127,6 +1151,7 @@ mod wit_bridge {
     /// (and the `events`/`ui` siblings the same way) — not guessed.
     use crate::component::component::semio::framework::effects as wit_effects;
     use crate::component::component::semio::framework::events as wit_events;
+    use crate::component::component::semio::framework::instance_lifetime as wit_lifetime;
     use crate::component::component::semio::framework::types as wit_types;
     use crate::component::component::semio::framework::ui as wit_ui;
 
@@ -1139,17 +1164,13 @@ mod wit_bridge {
         command_page: Option<crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
         budget: crate::component::component::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
-        let mut close_instances = Vec::new();
         let mut kernel_events = Vec::with_capacity(events.len());
         for event in events {
-            if let WitReactorEvent::InstanceClose(ref payload) = event {
-                close_instances.push(payload.instance);
-            }
             kernel_events.push(wit_event_to_kernel(event));
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
         let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
-        let result = poll_kernel(runtime, kernel_events, command_page, kernel_budget, &close_instances).await?;
+        let result = poll_kernel(runtime, kernel_events, command_page, kernel_budget).await?;
         kernel_turn_result_to_wit(result, budget)
     }
 
@@ -1161,7 +1182,6 @@ mod wit_bridge {
         events: Vec<Event>,
         command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         budget: semio_framework::kernel::Budget,
-        close_instances: &[u32],
     ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
         let mut dirty = DirtyPollOwners::new();
         // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): intents that survived the revision guard below,
@@ -1172,7 +1192,7 @@ mod wit_bridge {
             JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(*numeric_instance));
             begin_reactor_close(*numeric_instance)?;
             PATCHES.with(|patches| patches.begin_close_instance(*numeric_instance));
-            PENDING_PATCHES.with(|pending| pending.borrow_mut().begin_close_instance(*numeric_instance));
+            with_pending_patches(|pending| pending.borrow_mut().begin_close_instance(*numeric_instance));
             if let Err(error) = crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance).await {
                 abort_reactor_close(*numeric_instance);
                 return Err(error);
@@ -1182,14 +1202,14 @@ mod wit_bridge {
         PATCHES.with(|patches| {
             patches.close_step();
         });
-        let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one();
+        let _ = semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-handback-close"), reason))?;
         let _ = ui_contract::close_ui_document_page_one();
         let _ = ui_contract::close_ui_patch_owner_one();
         let _ = ui_contract::close_ui_value_page_one();
         let _ = semio_framework::kernel::close_ui_turn_patch_owner_one();
         let _ = semio_framework::kernel::close_ui_turn_patch_transport_one();
         let _ = crate::app::close_table_rows_view_one();
-        PENDING_PATCHES.with(|pending| {
+        with_pending_patches(|pending| {
             pending.borrow_mut().close_step();
         });
         let close_cleanup_work = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
@@ -1254,7 +1274,7 @@ mod wit_bridge {
                 }
                 Event::SurfaceHidden { .. } | Event::SurfaceResized { .. } => {}
                 Event::PatchAck { surface, revision } => {
-                    PENDING_PATCHES.with(|pending| {
+                    with_pending_patches(|pending| {
                         pending.borrow_mut().apply_published_ack(&surface, revision, |ack| PATCHES.with(|patches| patches.mark_published_ack(ack)));
                     });
                 }
@@ -1709,16 +1729,16 @@ mod wit_bridge {
                     break;
                 }
                 more = patches.drive_one();
-                let can_publish = PENDING_PATCHES.with(|pending| pending.borrow().has_capacity());
+                let can_publish = with_pending_patches(|pending| pending.borrow().has_capacity());
                 if can_publish {
                     if let Some(patch) = patches.take_ready_patch() {
-                        if let Err(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().push_reconcile(patch)) {
+                        if let Err(patch) = with_pending_patches(|pending| pending.borrow_mut().push_reconcile(patch)) {
                             let _ = patches.return_ready_patch(patch);
                         }
                     }
                 }
             }
-            more || patches.has_work() || PENDING_PATCHES.with(|pending| pending.borrow().has_unpublished())
+            more || patches.has_work() || with_pending_patches(|pending| pending.borrow().has_unpublished())
         });
         if let Some((instance, message)) = PATCHES.with(patches::PatchTracker::take_render_fault) {
             effects.push(shell_fault_effect(instance, &semio_framework::Fault::new(semio_framework::FaultOrigin::Os, semio_framework::FaultCode::new("ui.surface-render"), message)));
@@ -1742,9 +1762,9 @@ mod wit_bridge {
         let more_work = more_work || close_cleanup_work || typed_operation_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().iter().any(Option::is_some));
 
         let mut ui_patches = semio_framework::kernel::UiTurnPatches::default();
-        if let Some(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().take_one()) {
+        if let Some(patch) = with_pending_patches(|pending| pending.borrow_mut().take_one()) {
             if let Err(patch) = ui_patches.try_push_ui_patch(patch) {
-                PENDING_PATCHES.with(|pending| pending.borrow_mut().hand_back_turn(patch));
+                with_pending_patches(|pending| pending.borrow_mut().hand_back_turn(patch));
             }
         }
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
@@ -1792,197 +1812,7 @@ mod wit_bridge {
             && left.metadata == right.metadata
     }
 
-    const PENDING_PATCH_CAPACITY: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_ADMISSION_SLOTS;
-
-    enum PendingPatchOwner {
-        Reconcile(SurfaceReconcileReadyPatch),
-        External(Option<UiPatch>),
-        Published(SurfaceReconcilePublishedPatch),
-    }
-
-    struct PendingPatchSlot {
-        sequence: u64,
-        instance: Option<u32>,
-        owner: PendingPatchOwner,
-    }
-
-    struct PendingPatchAuthority {
-        slots: [Option<PendingPatchSlot>; PENDING_PATCH_CAPACITY],
-        closing_instances: [Option<u32>; PENDING_PATCH_CAPACITY],
-        turn_handback: Option<UiPatch>,
-        next_sequence: u64,
-        exhausted: bool,
-    }
-
-    impl PendingPatchAuthority {
-        fn new() -> Self {
-            Self { slots: std::array::from_fn(|_| None), closing_instances: [None; PENDING_PATCH_CAPACITY], turn_handback: None, next_sequence: 0, exhausted: false }
-        }
-
-        fn reserve_sequence(&mut self) -> Option<u64> {
-            if self.exhausted || self.slots.iter().all(Option::is_some) {
-                return None;
-            }
-            let sequence = self.next_sequence.checked_add(1)?;
-            self.next_sequence = sequence;
-            self.exhausted = sequence == u64::MAX;
-            Some(sequence)
-        }
-
-        fn has_capacity(&self) -> bool {
-            !self.exhausted && self.slots.iter().any(Option::is_none)
-        }
-
-        fn push_reconcile(&mut self, owner: SurfaceReconcileReadyPatch) -> Result<(), SurfaceReconcileReadyPatch> {
-            let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(owner) };
-            let Some(sequence) = self.reserve_sequence() else { return Err(owner) };
-            let instance = owner.surface().and_then(|surface| parse_surface_instance(&surface.0));
-            self.slots[index] = Some(PendingPatchSlot { sequence, instance, owner: PendingPatchOwner::Reconcile(owner) });
-            Ok(())
-        }
-
-        fn push_external(&mut self, patch: UiPatch) -> Result<(), UiPatch> {
-            let Some(index) = self.slots.iter().position(Option::is_none) else { return Err(patch) };
-            let Some(sequence) = self.reserve_sequence() else { return Err(patch) };
-            let instance = parse_surface_instance(&patch.surface.0);
-            self.slots[index] = Some(PendingPatchSlot { sequence, instance, owner: PendingPatchOwner::External(Some(patch)) });
-            Ok(())
-        }
-
-        fn take_one(&mut self) -> Option<UiPatch> {
-            if let Some(patch) = self.turn_handback.take() {
-                return Some(patch);
-            }
-            let index =
-                self.slots.iter().enumerate().filter(|(_, slot)| slot.as_ref().is_some_and(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_)))).min_by_key(|(_, slot)| slot.as_ref().map(|slot| slot.sequence)).map(|(index, _)| index)?;
-            let slot = self.slots[index].take()?;
-            match slot.owner {
-                PendingPatchOwner::Reconcile(owner) => {
-                    let (patch, published) = owner.publish()?;
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
-                    Some(patch)
-                }
-                PendingPatchOwner::External(mut patch) => patch.take(),
-                PendingPatchOwner::Published(published) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
-                    None
-                }
-            }
-        }
-
-        fn hand_back_turn(&mut self, patch: UiPatch) {
-            self.turn_handback = Some(patch);
-        }
-
-        fn apply_published_ack(&mut self, surface: &str, revision: u64, advance: impl FnOnce(semio_framework_ui_runtime::SurfaceReconcilePublishedAck) -> Result<(), semio_framework_ui_runtime::SurfaceReconcilePublishedAck>) -> bool {
-            let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| matches!(&slot.owner, PendingPatchOwner::Published(owner) if owner.matches(surface, revision)))) else {
-                return false;
-            };
-            let Some(slot) = self.slots[index].take() else { return false };
-            let published = match slot.owner {
-                PendingPatchOwner::Published(owner) => owner,
-                owner => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner });
-                    return false;
-                }
-            };
-            let ack = match published.acknowledge(surface, revision) {
-                Ok(ack) => ack,
-                Err(published) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(published) });
-                    return false;
-                }
-            };
-            match advance(ack) {
-                Ok(()) => true,
-                Err(ack) => {
-                    self.slots[index] = Some(PendingPatchSlot { sequence: slot.sequence, instance: slot.instance, owner: PendingPatchOwner::Published(ack.into_published()) });
-                    false
-                }
-            }
-        }
-
-        fn close_instance_one(&mut self, instance: u32) -> bool {
-            if self.turn_handback.as_ref().and_then(|patch| parse_surface_instance(&patch.surface.0)) == Some(instance) {
-                if self.turn_handback.as_mut().is_some_and(|patch| patch.ops.pop().is_some()) {
-                    return false;
-                }
-                self.turn_handback.take();
-                return false;
-            }
-            let Some(index) = self.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(instance))) else {
-                return true;
-            };
-            let complete = match self.slots[index].as_mut().map(|slot| &mut slot.owner) {
-                Some(PendingPatchOwner::Reconcile(owner)) => owner.close_step(),
-                Some(PendingPatchOwner::External(patch)) => {
-                    if patch.as_mut().is_some_and(|patch| patch.ops.pop().is_some()) {
-                        false
-                    } else {
-                        patch.take();
-                        true
-                    }
-                }
-                Some(PendingPatchOwner::Published(owner)) => owner.close_step() && owner.terminal_is_empty(),
-                None => true,
-            };
-            if complete {
-                self.slots[index] = None;
-            }
-            false
-        }
-
-        fn begin_close_instance(&mut self, instance: u32) {
-            if self.closing_instances.iter().flatten().any(|closing| *closing == instance) {
-                return;
-            }
-            if let Some(slot) = self.closing_instances.iter_mut().find(|slot| slot.is_none()) {
-                *slot = Some(instance);
-            }
-        }
-
-        fn close_step(&mut self) -> bool {
-            let Some(index) = self.closing_instances.iter().position(Option::is_some) else { return true };
-            let Some(instance) = self.closing_instances[index] else { return false };
-            if self.close_instance_one(instance) {
-                self.closing_instances[index] = None;
-            }
-            false
-        }
-
-        fn has_unpublished(&self) -> bool {
-            self.turn_handback.is_some() || self.slots.iter().flatten().any(|slot| !matches!(&slot.owner, PendingPatchOwner::Published(_))) || self.closing_instances.iter().any(Option::is_some)
-        }
-    }
-
-    #[cfg(test)]
-    mod instance_lifetime_patch_close_tests {
-        use super::*;
-
-        #[test]
-        fn instance_lifetime_pending_patch_keeps_scope_after_payload_surface_retires() {
-            let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
-            let mut pending = PendingPatchAuthority::new();
-            pending.push_external(UiPatch { surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: Default::default() }).unwrap();
-            pending.begin_close_instance(7);
-            if let Some(PendingPatchSlot { owner: PendingPatchOwner::External(Some(patch)), .. }) = pending.slots[0].as_mut() { patch.surface = Default::default(); }
-            assert!(!pending.close_step());
-            assert_eq!(pending.slots[0].is_none(), fixture["nativeCases"]["scopeAfterSurfaceClear"].as_bool().unwrap());
-            assert!(!pending.close_step());
-            assert!(pending.close_step());
-        }
-    }
-
-    crate::component_persistent_local! {
-        static PENDING_PATCHES: RefCell<PendingPatchAuthority> = RefCell::new(PendingPatchAuthority::new());
-    }
-
-    /// 🪪️ Surfaces are named `"<instance>:<body-key>"` in this wave (no dedicated `surface-ref`
-    /// bookkeeping table yet — `ui.wit`'s `surface-ref` record exists at the WIT boundary, but the
-    /// Rust-side `kernel::UiPatch.surface` is still a plain `String` per A3's landed shape).
-    fn parse_surface_instance(surface: &str) -> Option<u32> {
-        surface.split(':').next()?.parse().ok()
-    }
+    use super::pending::{parse_surface_instance, with_state as with_pending_patches};
 
     fn surface_body_key(surface: &str) -> &str {
         surface.split_once(':').map(|(_, body_key)| body_key).unwrap_or(surface)
@@ -2015,7 +1845,7 @@ mod wit_bridge {
                 let Ok(ops) = dsl::from_dsl_value::<ui_contract::UiPatchOps>(ops_value) else { return };
                 let Ok(surface) = ui_contract::SurfaceId::try_from(surface) else { return };
                 let patch = UiPatch { surface, base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops };
-                if let Err(patch) = PENDING_PATCHES.with(|pending| pending.borrow_mut().push_external(patch)) {
+                if let Err(patch) = with_pending_patches(|pending| pending.borrow_mut().push_external(patch)) {
                     effects.push(Effect::SendMessage {
                         target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
                         payload: format!("patch-capacity-refused:{}:{}", patch.surface.0, patch.revision.0).into_bytes(),
@@ -2112,6 +1942,8 @@ mod wit_bridge {
     /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
     /// outright.
     fn wit_command_page_to_kernel(page: crate::component::component::exports::semio::framework::reactor::CommandIngressPage) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
+        let cursor = page.cursor;
+        let page = page.page;
         if page.length as usize > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-lift-cap"), "fixed command page declares more than 4096 bytes"));
         }
@@ -2189,7 +2021,6 @@ mod wit_bridge {
                 offset += fixed.len();
             }
         }
-        let cursor = page.cursor;
         let bytes = semio_framework::kernel::FixedCommandPage::try_from_array(bytes, page.length)?;
         Ok((
             semio_framework::kernel::CommandPageCursor {
@@ -2252,11 +2083,45 @@ mod wit_bridge {
 
     /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
     /// mirrors the kernel shape (see `📓️design-abi.md` §2 / `events.wit`'s own doc comments).
+    fn wit_lifetime_to_kernel(value: wit_lifetime::Lifetime) -> semio_framework::kernel::ActorInstanceLifetime {
+        semio_framework::kernel::ActorInstanceLifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
+    }
+
+    fn kernel_lifetime_to_wit(value: semio_framework::kernel::ActorInstanceLifetime) -> wit_lifetime::Lifetime {
+        wit_lifetime::Lifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
+    }
+
+    fn wit_patch_receipt_to_kernel(value: wit_lifetime::UiPatchReceipt) -> semio_framework::kernel::ActorUiPatchReceipt {
+        semio_framework::kernel::ActorUiPatchReceipt { lifetime: wit_lifetime_to_kernel(value.lifetime), patch_sequence: value.patch_sequence }
+    }
+
+    fn kernel_patch_receipt_to_wit(value: semio_framework::kernel::ActorUiPatchReceipt) -> wit_lifetime::UiPatchReceipt {
+        wit_lifetime::UiPatchReceipt { lifetime: kernel_lifetime_to_wit(value.lifetime), patch_sequence: value.patch_sequence }
+    }
+
+    fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framework::kernel::ActorInstanceLifecycleReceipt {
+        use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
+        match value {
+            wit_lifetime::Receipt::Captured(value) => R::Captured { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence },
+            wit_lifetime::Receipt::Accepted(value) => R::Accepted { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+            wit_lifetime::Receipt::Retired(value) => R::Retired { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+        }
+    }
+
+    fn kernel_lifecycle_receipt_to_wit(value: semio_framework::kernel::ActorInstanceLifecycleReceipt) -> wit_lifetime::Receipt {
+        use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
+        match value {
+            R::Captured { lifetime, request_sequence } => wit_lifetime::Receipt::Captured(wit_lifetime::CapturedReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence }),
+            R::Accepted { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Accepted(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+            R::Retired { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Retired(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+        }
+    }
+
     fn wit_event_to_kernel(event: crate::component::component::exports::semio::framework::reactor::Event) -> Event {
         use crate::component::component::exports::semio::framework::reactor::Event as W;
         match event {
             W::InstanceOpen(payload) => Event::InstanceOpen {
-                instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()),
+                request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: payload.activation_generation, instance_id: payload.instance, request_sequence: payload.request_sequence },
                 app_id: semio_framework::kernel::AppInstanceId(payload.app_id),
                 actor: payload.actor,
                 config: payload.config,
@@ -2268,7 +2133,8 @@ mod wit_bridge {
                 // failing `InstanceOpen` outright; a missing quota is "no limit declared", not a fault.
                 quotas: decode_wire_quotas(&payload.quotas),
             },
-            W::InstanceClose(_) => Event::InstanceClose,
+            W::InstanceClose(payload) => Event::InstanceClose(semio_framework::kernel::ActorInstanceCloseRequest { lifetime: wit_lifetime_to_kernel(payload.lifetime), request_sequence: payload.request_sequence }),
+            W::InstanceLifecycleAck(receipt) => Event::InstanceLifecycleAck(semio_framework::kernel::ActorInstanceLifecycleAck { receipt: wit_lifecycle_receipt_to_kernel(receipt) }),
             W::Activate(payload) => Event::Activate { reason: wit_activation_to_kernel(payload.reason) },
             W::SuspendRequest(_) => Event::SuspendRequest,
             W::CapabilityChanged(_) => Event::SuspendRequest,
@@ -2279,8 +2145,8 @@ mod wit_bridge {
             W::SurfaceVisible(payload) => Event::SurfaceVisible { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
             W::SurfaceHidden(payload) => Event::SurfaceHidden { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface) },
             W::SurfaceResized(payload) => Event::SurfaceResized { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), width: payload.width, height: payload.height },
-            W::PatchAck(payload) => Event::PatchAck { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision },
-            W::PatchRejected(payload) => Event::PatchRejected { surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision, reason: payload.reason },
+            W::PatchAck(payload) => Event::PatchAck { receipt: wit_patch_receipt_to_kernel(payload.receipt), surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision },
+            W::PatchRejected(payload) => Event::PatchRejected { receipt: wit_patch_receipt_to_kernel(payload.receipt), surface: format!("{}:{}", payload.surface.instance, payload.surface.surface), revision: payload.revision, reason: payload.reason },
             W::Completed(payload) => Event::Completed { req: semio_framework::kernel::RequestId(payload.req), result: wit_completion_to_kernel(payload.outcome) },
             W::HttpChunk(payload) => Event::HttpChunk { req: semio_framework::kernel::RequestId(payload.req), bytes: payload.params.bytes, done: payload.params.done },
             W::JobProgress(payload) => Event::JobProgress { job: payload.job, progress: Some(payload.progress) },
@@ -2352,6 +2218,8 @@ mod wit_bridge {
             },
             fuel_used: result.fuel_used,
             command_ingress: kernel_command_ingress_to_wit(result.command_ingress),
+            lifecycle_receipt: result.lifecycle_receipt.map(kernel_lifecycle_receipt_to_wit),
+            ui_patch_receipt: result.ui_patch_receipt.map(kernel_patch_receipt_to_wit),
         })
     }
 
@@ -2615,8 +2483,15 @@ pub(crate) mod test_support {
             }
             for _ in 0..512 {
                 patches.drive_one();
-                if let Some(owner) = patches.take_ready_patch() {
-                    return owner.publish().map(|(patch, _)| patch);
+                if let Some(mut owner) = patches.take_ready_patch() {
+                    let mut payload = ui_contract::UiPendingPatch::default();
+                    let mut published = None;
+                    let bytes = owner.publish_into(&mut payload, &mut published, semio_framework_ui_runtime::SurfaceReconcileReadyPatch::required_publish_bytes()).expect("test-owned publication grant");
+                    assert!(bytes > 0);
+                    let patch = payload.source_mut().expect("test-owned writable payload").take();
+                    while !owner.close_step_with_grant(1, 4096).expect("test ready close").complete {}
+                    if let Some(mut published) = published { while !published.close_step_with_grant(1, 4096).expect("test published close").complete {} }
+                    return patch;
                 }
             }
             None
@@ -2750,22 +2625,22 @@ mod reconcile_budget_tests {
     #[test]
     fn reactor_close_drains_requests_resumes_tasks_timers_and_metadata_in_bounded_steps() {
         let instance = 991u32;
-        abort_reactor_close(instance);
-        begin_reactor_close(instance).expect("fixed reactor close admission");
+        let key = instance_lifetime::NativeCloseKey::fixture(instance, 1);
+        reserve_reactor_close(key).expect("fixed reactor close admission");
+        activate_reactor_close(key).expect("all reservations admitted before activation");
         let mut steps = 0usize;
         loop {
             REACTOR_CLOSE_CURSOR.with(|cursor| cursor.set(ReactorCloseRegistry::index(instance)));
             assert!(step_reactor_close().expect("one bounded reactor close opportunity"));
             steps += 1;
-            let retained = REACTOR_CLOSES.with(|closes| {
-                let closes = closes.borrow();
-                closes.slots.get(ReactorCloseRegistry::index(instance)).is_some_and(|state| state.instance == instance)
-            });
-            if !retained {
+            if reactor_close_complete(key).expect("exact retained receipt") {
                 break;
             }
             assert!(steps < 8_192, "fixed close cursor must terminate within its structural capacities");
         }
         assert!(steps > REACTOR_TASK_SLOTS + REACTOR_TIMER_SLOTS, "request, resume, task, timer, and metadata owners must retire across distinct opportunities");
+        assert!(reserve_reactor_close(instance_lifetime::NativeCloseKey::fixture(instance, 2)).is_err(), "terminal receipt holds its exact slot until ACK");
+        release_reactor_close(key).expect("final exact receipt release");
+        assert!(reactor_close_complete(key).is_err(), "absence is not a terminal receipt");
     }
 }

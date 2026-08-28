@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeObjectSmoothShading",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSmoothShading"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newSmoothShading": {
+      "type": "boolean"
+    }
+  }
+}

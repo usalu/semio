@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAreaM2"
+  ],
+  "properties": {
+    "newAreaM2": {
+      "type": "number"
+    }
+  }
+}

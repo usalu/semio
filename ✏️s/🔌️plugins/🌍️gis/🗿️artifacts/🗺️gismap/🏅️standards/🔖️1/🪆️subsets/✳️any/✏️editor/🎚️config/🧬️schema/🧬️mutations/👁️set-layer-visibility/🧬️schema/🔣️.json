@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": ["layerId", "visible"],
+      "properties": {
+        "layerId": {"type": "string"},
+        "visible": {"type": ["boolean", "null"]}
+      }
+    }
+  },
+  "allOf": [{"$ref": "#/$defs/payload"}],
+  "unevaluatedProperties": false
+}

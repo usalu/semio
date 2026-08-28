@@ -4,6 +4,10 @@
     { "verb": "commit", "record": "Committed" },
     { "verb": "switch", "record": "Switched" },
     { "verb": "restore", "record": "Restored" },
+    { "verb": "append", "record": "Appended" },
+    { "verb": "start", "record": "Started" },
+    { "verb": "finish", "record": "Finished" },
+    { "verb": "seal", "record": "Sealed" },
     { "verb": "modify", "record": null },
     { "verb": "set-snapshot", "record": null }
   ]

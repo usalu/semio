@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveNodePort",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "nodeId"
+  ],
+  "properties": {
+    "nodeId": {
+      "title": "GraphNodeId",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

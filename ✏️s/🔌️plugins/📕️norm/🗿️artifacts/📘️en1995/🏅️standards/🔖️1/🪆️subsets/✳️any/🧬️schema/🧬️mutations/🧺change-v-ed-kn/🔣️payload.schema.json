@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeVEdKn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newVEdKn"
+  ],
+  "properties": {
+    "newVEdKn": {
+      "type": "number"
+    }
+  }
+}

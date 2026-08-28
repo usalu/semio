@@ -6,6 +6,7 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 import {
   Script,
   ScriptRouter,
+  authorArtifactScaffold,
   buildBudgetMs,
   canonicalFilenameForKind,
   canonicalFilenamesForKind,
@@ -65,6 +66,8 @@ import {
   TEST_LEVELS,
   tryRun,
   type BreachRecord,
+  type ArtifactScaffoldLeaf,
+  type ArtifactScaffoldOptions,
   type PackageRole,
   type LcovFileRecord,
   type TestLevel,
@@ -91,6 +94,7 @@ import {
   semanticPackageAdapterPreview,
   semanticPackageProjectionCatalog,
   semanticPackageProjectionAuthority,
+  semanticOwnedInputFileSnapshot,
   parseSemanticPackageBrowserProfile,
   parseGeneratorInputProjection,
   generatorProjectedInputView,
@@ -106,11 +110,13 @@ import {
 import {
   applyTaxonomyPlan,
   canonicalJson,
+  inventoryTaxonomySources,
   inventoryTaxonomy,
   parseTaxonomyPlan,
   planTaxonomy,
   taxonomyPlanDigest,
   verifyTaxonomy,
+  type TaxonomySourceInventory,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
@@ -6954,6 +6960,56 @@ function toolJobFemNumericalMicrocursorSelfTests(sparse: string, mesh: string, a
 //#endregion 🧮️P6hFemNumericalMicrocursors
 
 /** 🧪️ Proves the verifier rejects the historical and audited false-positive classes. */
+/** 🧾️ Joins the native ARC1 contract to strict schema validation and independent platform byte encoders. */
+export function toolJobCheckpointSelfTests(): number {
+  const base = join(getWorkspaceRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command");
+  const fixture = JSON.parse(readFileSync(join(base, "🧪️fixtures/🔣️artifact-command-checkpoint.json"), "utf8")) as {
+    format: string; version: number; maximumBytes: number; headerBytes: number;
+    cases: { name: string; workPhase: boolean; rawPageCursor: number; rawBytes: number; workProgress: number; contextDigest: number; workspaceIdentity: number; workState: { bytes?: number[]; fill?: number; length?: number }; outcome: string }[];
+  };
+  const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️artifact-command-checkpoint.schema.json"), "utf8"));
+  const Ajv2020 = createRequire(import.meta.url)("ajv/dist/2020").default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
+  if (!validate(fixture)) throw new Error(`[verify interactivity tool-jobs] native checkpoint fixture/schema mismatch: ${JSON.stringify(validate.errors)}`);
+  let checks = 1;
+  for (const entry of fixture.cases) {
+    const work = Uint8Array.from(entry.workState.bytes ?? Array(entry.workState.length).fill(entry.workState.fill));
+    const length = fixture.headerBytes + work.length;
+    const outcome = length <= fixture.maximumBytes ? "ok" : "capacityError";
+    if (outcome !== entry.outcome) throw new Error(`[verify interactivity tool-jobs] checkpoint capacity differs for ${entry.name}`);
+    checks += 1;
+    if (outcome !== "ok") continue;
+    const encoded = new Uint8Array(length);
+    encoded.set(new TextEncoder().encode(fixture.format));
+    encoded[4] = fixture.version;
+    encoded[5] = Number(entry.workPhase);
+    const view = new DataView(encoded.buffer);
+    const scalars = [entry.rawPageCursor, entry.rawBytes, entry.workProgress, entry.contextDigest, entry.workspaceIdentity];
+    scalars.forEach((value, index) => view.setBigUint64(8 + index * 8, BigInt(value), true));
+    encoded.set(work, fixture.headerBytes);
+    const oracle = Buffer.alloc(length);
+    oracle.write("ARC1", 0, "ascii");
+    oracle[4] = 3;
+    oracle[5] = Number(entry.workPhase);
+    scalars.forEach((value, index) => oracle.writeBigUInt64LE(BigInt(value), 8 + index * 8));
+    Buffer.from(work).copy(oracle, 48);
+    if (!oracle.equals(Buffer.from(encoded))) throw new Error(`[verify interactivity tool-jobs] checkpoint byte oracle differs for ${entry.name}`);
+    checks += 1;
+  }
+  const hostile = (name: string, mutate: (value: typeof fixture) => void) => {
+    const value = structuredClone(fixture);
+    mutate(value);
+    if (validate(value)) throw new Error(`[verify interactivity tool-jobs] checkpoint schema admitted ${name}`);
+    checks += 1;
+  };
+  hostile("work-byte-plus-one", value => { value.cases[1]!.workState = { bytes: [256] }; });
+  hostile("maximum-plus-one-success", value => { value.cases[3]!.workState = { fill: 165, length: 465 }; });
+  hostile("maximum-wrongly-rejected", value => { value.cases[4]!.workState = { fill: 90, length: 464 }; });
+  hostile("wrong-header-authority", value => { value.headerBytes = 40; });
+  hostile("unknown-owner", value => { Object.assign(value, { unowned: true }); });
+  return checks;
+}
+
 function toolJobCoverageSelfTests(): number {
   const evaluate = (sources: Record<string, string>) => {
     const files = new Map(Object.entries(sources));
@@ -6982,55 +7038,7 @@ function toolJobCoverageSelfTests(): number {
     ["default-migrated-builder", { "manifest.rs": 'fn bounded_catalog() { definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated; }', "plugin.rs": 'app_commands! { "solve" => solve::Payload }' }],
   ];
   for (const [name, sources] of fixtures) if (evaluate(sources).length === 0) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
-  const checkpointFixturePath = join(
-    getWorkspaceRoot(),
-    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️artifact-retained-command-checkpoint-v1.json",
-  );
-  const checkpointFixture = JSON.parse(readFileSync(checkpointFixturePath, "utf8")) as {
-    format: string;
-    version: number;
-    workPhase: boolean;
-    rawPageCursor: number;
-    rawBytes: number;
-    workProgress: number;
-    contextDigest: number;
-    workspaceIdentity: number;
-    workState: number[];
-    encoded: number[];
-  };
-  const checkpointSchema = {
-    type: "object",
-    additionalProperties: false,
-    required: ["format", "version", "workPhase", "rawPageCursor", "rawBytes", "workProgress", "contextDigest", "workspaceIdentity", "workState", "encoded"],
-    properties: {
-      format: { const: "ARC1" },
-      version: { const: 3 },
-      workPhase: { type: "boolean" },
-      rawPageCursor: { type: "integer", minimum: 0 },
-      rawBytes: { type: "integer", minimum: 0 },
-      workProgress: { type: "integer", minimum: 0 },
-      contextDigest: { type: "integer", minimum: 0 },
-      workspaceIdentity: { type: "integer", minimum: 0 },
-      workState: { type: "array", maxItems: 464, items: { type: "integer", minimum: 0, maximum: 255 } },
-      encoded: { type: "array", minItems: 48, maxItems: 512, items: { type: "integer", minimum: 0, maximum: 255 } },
-    },
-  } as const;
-  const checkpointErrors = validateJsonSchemaSubset(checkpointSchema, checkpointFixture);
-  if (checkpointErrors.length > 0) throw new Error(`[verify interactivity tool-jobs] self-test retained-command checkpoint schema rejected the language-neutral fixture: ${checkpointErrors.join(", ")}`);
-  const checkpointEncoded = new Uint8Array(48 + checkpointFixture.workState.length);
-  checkpointEncoded.set(new TextEncoder().encode(checkpointFixture.format), 0);
-  checkpointEncoded[4] = checkpointFixture.version;
-  checkpointEncoded[5] = Number(checkpointFixture.workPhase);
-  const checkpointView = new DataView(checkpointEncoded.buffer);
-  checkpointView.setBigUint64(8, BigInt(checkpointFixture.rawPageCursor), true);
-  checkpointView.setBigUint64(16, BigInt(checkpointFixture.rawBytes), true);
-  checkpointView.setBigUint64(24, BigInt(checkpointFixture.workProgress), true);
-  checkpointView.setBigUint64(32, BigInt(checkpointFixture.contextDigest), true);
-  checkpointView.setBigUint64(40, BigInt(checkpointFixture.workspaceIdentity), true);
-  checkpointEncoded.set(checkpointFixture.workState, 48);
-  if (JSON.stringify([...checkpointEncoded]) !== JSON.stringify(checkpointFixture.encoded)) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint language-neutral encoding drifted from Rust.");
-  const checkpointByteOverflow = { ...checkpointFixture, encoded: [...checkpointFixture.encoded.slice(0, -1), 256] };
-  if (validateJsonSchemaSubset(checkpointSchema, checkpointByteOverflow).length === 0) throw new Error("[verify interactivity tool-jobs] self-test retained-command checkpoint byte plus-one was falsely accepted by the schema validator.");
+  const checkpointChecks = toolJobCheckpointSelfTests();
   const globalStoreFixture = toolJobProductionProtocolSource(`
 thread_local! {
   static SCRATCH: RefCell<HashMap<String, Vec<u8>>> = RefCell::new(HashMap::new());
@@ -8806,7 +8814,7 @@ async fn run_job_on_worker() { WorkerJobSession::try_new(relay, params); self.re
   if (toolJobLayoutColdRelayRetainedExact(retainedLayoutExport, retainedLayoutWasm, retainedColdRelay.replace("guest_cold_relay_registry_max_plus_one_generation_and_zero_pump_are_exact", "guest_cold_relay_registry_smoke"))) throw new Error("[verify interactivity tool-jobs] self-test cold-relay-max-plus-one-generation-fixture-removal was falsely accepted.");
   const scalarConfig = toolJobScalarConfigCohortSelfTests();
   const sealer = storeCanonicalEditSealerSelfTests();
-  return fixtures.length + 401 + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
+  return fixtures.length + 398 + checkpointChecks + toolJobPuzzleReservedRoutesSelfTests() + toolJobOwnerFactoryResolutionSelfTests() + toolJobFactoryProofJoinSelfTests() + toolJobLatestWinsSelfTests() + toolJobMicrosecondBudgetSelfTests() + toolJobTelemetryContentionSelfTests() + toolJobCooperativeMaintenanceSelfTests() + cadPresenceRetirementSelfTests() + proceduralGenerationRootSelfTests() + flowTypedRetirementSelfTests() + flowSelectedCopySelfTests() + scalarConfig.routes + scalarConfig.mutationOracles + scalarConfig.hostileCases + sealer.grants + sealer.schemaHostiles + sealer.sourceHostiles + sealer.digestOracles + sealer.mapGrants + sealer.mapSchemaHostiles + sealer.mapSourceHostiles + sealer.mapDigestOracles + sealer.readerChecks;
 }
 
 function toolJobFixedOperationRegistryExact(source: string): boolean {
@@ -12517,9 +12525,13 @@ export function interactivityPuzzleFillPreviewJsonFailures(
   ) failures.push("Puzzle retained fill preview is not fixed-cap, one-fuel, generation-fenced, checkpointed, and incrementally closeable");
   if (
     !precompute.includes("pub fn fill_preview_json_page(&self, color: &str, status_label: &str) -> Option<String>") ||
-    !precompute.includes("let deadline = default_now_ms().saturating_add(2)") ||
+    !precompute.includes("let mut previous_us = default_now_us()?") ||
+    !precompute.includes("let deadline = previous_us.checked_add(2_000)?") ||
     !precompute.includes("let mut fuel = 1") ||
-    !precompute.includes("default_now_ms() >= deadline") ||
+    !precompute.includes("let now_us = default_now_us()?") ||
+    !precompute.includes("if now_us < previous_us") ||
+    !precompute.includes("previous_us = now_us") ||
+    !precompute.includes("now_us >= deadline") ||
     !precompute.includes("self.engine.fill_cancel.is_cancelled_now()") ||
     !precompute.includes("fill.preview_json_ready().map(ToOwned::to_owned)") ||
     precompute.includes("let build = session.fill_progress().preview?")
@@ -12630,7 +12642,13 @@ function interactivityPuzzleFillPreviewJsonSelfTests(repoRoot: string): void {
     ["output-cap", 1, "FILL_PREVIEW_JSON_MAX_BYTES: usize = 4 * 1024", "FILL_PREVIEW_JSON_MAX_BYTES: usize = 8 * 1024"],
     ["whole-preview", 1, "pub(crate) struct FillPreviewJsonCursor", "fn whole_preview() { let _ = serde_json::to_vec(&self.preview); }\npub(crate) struct FillPreviewJsonCursor"],
     ["lost-fuel", 1, "fuel.checked_sub(1)", "fuel.checked_sub(0)"],
-    ["lost-deadline", 0, "default_now_ms() >= deadline", "false"],
+    ["lost-deadline", 0, "now_us >= deadline", "false"],
+    ["deadline-equality", 0, "now_us >= deadline", "now_us > deadline"],
+    ["missing-start-clock", 0, "let mut previous_us = default_now_us()?", "let mut previous_us = default_now_us().unwrap_or(0)"],
+    ["missing-current-clock", 0, "let now_us = default_now_us()?", "let now_us = default_now_us().unwrap_or(previous_us)"],
+    ["backward-clock", 0, "if now_us < previous_us", "if false"],
+    ["backward-read-authority", 0, "previous_us = now_us", "previous_us = previous_us"],
+    ["deadline-overflow", 0, "let deadline = previous_us.checked_add(2_000)?", "let deadline = previous_us.saturating_add(2_000)"],
     ["lost-puzzle3d-consumer", 2, "session.fill_preview_json_page(&color, labels.fill_progress.as_str())", "None"],
     ["lost-puzzle5d-adapter", 3, "self.inner.fill_preview_json_page(color, status_label)", "None"],
     ["lost-puzzle5d-consumer", 4, "labels.fill_progress.as_str()", "\"Fill progress\""],
@@ -20615,6 +20633,7 @@ export interface MutationTaxonomyInventoryOptions {
   readonly cancelFile?: string;
   readonly progress?: (event: { readonly operation: "inventory"; readonly phase: string; readonly current: number; readonly total: number; readonly path?: string }) => void;
   readonly scope?: string;
+  readonly ticketDir?: string;
 }
 
 export interface MutationTaxonomyPlanMove { readonly source: string; readonly destination: string }
@@ -20634,30 +20653,10 @@ function mutationTaxonomySegmentAfter(path: string, marker: string): string | nu
   return index >= 0 ? policyStripEmoji(parts[index + 1] ?? "") || null : null;
 }
 
-function mutationTaxonomyFiles(repoRoot: string, rootRel: string): string[] {
-  const files: string[] = [];
-  const walk = (relDir: string): void => {
-    const directory = lstatSync(join(repoRoot, relDir));
-    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source scope must be a no-follow directory: ${relDir}.`);
-    for (const entry of readdirSync(join(repoRoot, relDir), { withFileTypes: true }).sort((left, right) => Buffer.from(left.name).compare(Buffer.from(right.name)))) {
-      const child = `${relDir}/${entry.name}`;
-      if (child === "compose" || child.startsWith("compose/")) continue;
-      const state = lstatSync(join(repoRoot, child));
-      if (state.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source scope must not traverse symlink ${child}.`);
-      if (state.isDirectory()) walk(child);
-      else if (state.isFile()) files.push(child);
-    }
-  };
-  if (rootRel === "compose" || rootRel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] source scope cannot include opaque root ${rootRel}.`);
-  walk(rootRel);
-  return files.sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
-}
-
 function mutationTaxonomyLocations(contents: ReadonlyMap<string, string>, files: readonly string[], pattern: RegExp): string[] {
   return files.filter((file) => pattern.test(contents.get(file) ?? "")).sort();
 }
 
-const MUTATION_TAXONOMY_SOURCE_SKIP = new Set([".git", ".nx", ".🧬semio", "build", "coverage", "dist", "node_modules", "target"]);
 const MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA = {
   type: "object",
   required: ["schemaVersion", "assignments"],
@@ -20695,6 +20694,8 @@ function mutationTaxonomyCancelled(repoRoot: string, options: MutationTaxonomyIn
 }
 
 function mutationTaxonomyInputPath(repoRoot: string, input: string): string {
+  const lexical = input.replaceAll("\\", "/");
+  if (lexical.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
   const path = resolve(repoRoot, input);
   const rel = relative(repoRoot, path).replaceAll("\\", "/");
   if (rel === "" || rel === ".." || rel.startsWith("../") || rel === "compose" || rel.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] opaque or escaping input path: ${input}.`);
@@ -20708,27 +20709,29 @@ function mutationTaxonomyInputPath(repoRoot: string, input: string): string {
 
 function mutationTaxonomyScope(scope: string): string {
   const normalized = scope.replaceAll("\\", "/");
-  if (!normalized || isAbsolute(scope) || /^[A-Za-z]:[\\/]/u.test(scope) || normalized === "." || normalized === ".." || normalized.startsWith("../") || normalized.includes("/../") || normalized === "compose" || normalized.startsWith("compose/")) throw new Error(`[clean taxonomy --kind mutation] source scope is opaque or non-relative: ${scope}.`);
+  if (!normalized || isAbsolute(scope) || /^[A-Za-z]:[\\/]/u.test(scope) || normalized === "." || normalized === ".." || normalized.startsWith("../") || normalized.includes("/../") || normalized.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose")) throw new Error(`[clean taxonomy --kind mutation] source scope is opaque or non-relative: ${scope}.`);
   return normalized;
 }
 
-function mutationTaxonomySourceFiles(repoRoot: string, options: MutationTaxonomyInventoryOptions): string[] {
-  const files: string[] = [];
-  const walk = (relDir: string): void => {
-    mutationTaxonomyCancelled(repoRoot, options);
-    const directory = lstatSync(join(repoRoot, relDir));
-    if (!directory.isDirectory() || directory.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source index must be a no-follow directory: ${relDir}.`);
-    for (const entry of readdirSync(join(repoRoot, relDir), { withFileTypes: true }).sort((left, right) => mutationTaxonomyCompare(left.name, right.name))) {
-      const child = `${relDir}/${entry.name}`;
-      if (entry.name === "compose" || child === "compose" || child.startsWith("compose/") || MUTATION_TAXONOMY_SOURCE_SKIP.has(entry.name) || entry.name.startsWith(".")) continue;
-      const state = lstatSync(join(repoRoot, child));
-      if (state.isSymbolicLink()) throw new Error(`[clean taxonomy --kind mutation] source index must not traverse symlink ${child}.`);
-      if (state.isDirectory()) walk(child);
-      else if (state.isFile()) files.push(child);
-    }
-  };
-  for (const root of policyRepositoryOwnedRoots()) if (root !== "compose" && !root.startsWith("compose/") && existsSync(join(repoRoot, root))) walk(root);
-  return files.sort(mutationTaxonomyCompare);
+/** 🧾️ Obtains one closed repository membership authority; callers may inject it for pure projection. */
+function mutationTaxonomySourceAdmission(repoRoot: string, options: MutationTaxonomyInventoryOptions): TaxonomySourceInventory {
+  const admission = inventoryTaxonomySources({
+    repoRoot,
+    ...(options.ticketDir ? { ticketDir: options.ticketDir } : {}),
+    ...(options.cancelFile ? { cancelFile: options.cancelFile } : {}),
+    ...(options.progress ? { progress: (event) => options.progress!({ operation: "inventory", phase: event.phase, current: event.current, total: event.total, ...(event.path ? { path: event.path } : {}) }) } : {}),
+  });
+  if (admission.status !== "complete") throw new Error(`[clean taxonomy --kind mutation] source admission is rejected: ${admission.diagnostics.map((diagnostic) => `${diagnostic.code}:${diagnostic.path}`).join(", ") || "unknown admission failure"}.`);
+  return admission;
+}
+
+/** 🧾️ Selects only admitted regular files; this projection never traverses or reads the filesystem. */
+export function mutationTaxonomySourceFiles(admission: TaxonomySourceInventory): string[] {
+  if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
+  return admission.observations
+    .filter((observation) => observation.observedKind === "file" && (observation.worktreeMode === "100644" || observation.worktreeMode === "100755"))
+    .map((observation) => observation.sourcePath)
+    .sort(mutationTaxonomyCompare);
 }
 
 function mutationTaxonomyAssignmentLedger(repoRoot: string, options: MutationTaxonomyInventoryOptions): { readonly path: string | null; readonly bytes: Buffer | null; readonly rows: readonly MutationTaxonomyAssignmentRow[]; readonly invalidReason: string | null } {
@@ -20750,17 +20753,21 @@ function mutationTaxonomyAssignmentLedger(repoRoot: string, options: MutationTax
   return { path, bytes, rows: (raw as { assignments: MutationTaxonomyAssignmentRow[] }).assignments, invalidReason: null };
 }
 
-function mutationTaxonomySourceIndex(repoRoot: string, options: MutationTaxonomyInventoryOptions): MutationTaxonomySourceIndex {
-  const allRoots = policyFindAllMutationsDirs(repoRoot).sort(mutationTaxonomyCompare);
+export function mutationTaxonomySourceIndex(repoRoot: string, options: MutationTaxonomyInventoryOptions, injectedAdmission?: TaxonomySourceInventory): MutationTaxonomySourceIndex {
+  const admission = injectedAdmission ?? mutationTaxonomySourceAdmission(repoRoot, options);
+  if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
+  const allRoots = policyFindAllMutationsDirs(repoRoot, admission).sort(mutationTaxonomyCompare);
   const scopes = (options.scope ?? "").split(",").map((scope) => scope.trim()).filter(Boolean).map(mutationTaxonomyScope);
   const roots = scopes.length === 0 ? allRoots : allRoots.filter((root) => scopes.some((scope) => root === scope || root.startsWith(`${scope}/`) || scope.startsWith(`${root}/`)));
   const evidenceFile = (path: string): boolean => roots.some((root) => path.startsWith(`${root}/`)) || /(?:\.(?:rs|ts|tsx|json|graphql|proto|semio|toml|yaml|yml|md)$|(?:^|\/)(?:package\.json|Cargo\.toml|go\.mod)$)/u.test(path);
-  const files = mutationTaxonomySourceFiles(repoRoot, options).filter(evidenceFile);
+  const files = mutationTaxonomySourceFiles(admission).filter(evidenceFile);
   const bytes = new Map<string, Buffer>();
   const contents = new Map<string, string>();
   for (const [index, file] of files.entries()) {
     mutationTaxonomyCancelled(repoRoot, options);
-    const value = readFileSync(join(repoRoot, file));
+    const snapshot = semanticOwnedInputFileSnapshot(repoRoot, file);
+    if (!snapshot) throw new Error(`[clean taxonomy --kind mutation] admitted source disappeared before content capture: ${file}.`);
+    const value = Buffer.from(snapshot.bytes);
     bytes.set(file, value);
     contents.set(file, value.toString("utf8"));
     options.progress?.({ operation: "inventory", phase: "source-index", current: index + 1, total: files.length, path: file });
@@ -20769,7 +20776,7 @@ function mutationTaxonomySourceIndex(repoRoot: string, options: MutationTaxonomy
   const sourceRoster = files.map((path) => ({ path, sha256: createHash("sha256").update(bytes.get(path)!).digest("hex"), role: "source" as const }));
   if (ledger.bytes) sourceRoster.push({ path: ledger.path ?? "<supplied-assignment-ledger>", sha256: createHash("sha256").update(ledger.bytes).digest("hex"), role: "assignment-ledger" });
   sourceRoster.sort((left, right) => mutationTaxonomyCompare(`${left.role}\0${left.path}`, `${right.role}\0${right.path}`));
-  return { roots, files, bytes, contents, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
+  return { roots, files, bytes, contents, sourceRoster, sourceTreeDigest: createHash("sha256").update(canonicalJson({ roots, sourceRoster, membershipDigest: admission.membershipDigest, taxonomyContentHash: admission.taxonomyContentHash })).digest("hex"), ledger: { path: ledger.path, rows: ledger.rows, invalidReason: ledger.invalidReason } };
 }
 
 function mutationTaxonomyLeafAlias(path: string): string {
@@ -20888,7 +20895,7 @@ export function inventoryMutationTaxonomy(repoRoot: string, options: MutationTax
     for (let rootIndex = 0; rootIndex < roots.length; rootIndex += 1) {
       mutationTaxonomyCancelled(repoRoot, options);
       const rootRel = roots[rootIndex]!;
-      const files = mutationTaxonomyFiles(repoRoot, rootRel);
+      const files = before.files.filter((file) => file.startsWith(`${rootRel}/`));
       const rootComponent = `${rootRel}/${POLICY_RS_COMPONENT_LEAF_NAME}`;
       const rootSource = policyReadFileSafe(repoRoot, rootComponent);
       const variants = policyMutationEnumVariantNames(rootSource);
@@ -21013,6 +21020,7 @@ export function runMutationTaxonomyCli(root: string, operation: TaxonomyCliOpera
   const inventoryOptions: MutationTaxonomyInventoryOptions = {
     ...(options.scope ? { scope: options.scope } : {}),
     ...(cancelFile ?? options.cancelFile ? { cancelFile: cancelFile ?? options.cancelFile } : {}),
+    ...(ticketDir ? { ticketDir } : {}),
     ...(ticketDir ? { assignmentLedgerPath: join(ticketDir, "📋️mutation-assignments.json") } : {}),
     progress: taxonomyCliProgress,
   };
@@ -21857,7 +21865,7 @@ function newScaffoldTsLeaf(label: string): string {
 }
 
 function newScaffoldEmptyFacetMarkdown(facetLabel: string): string {
-  return `# Empty ${facetLabel} facet\n\nThis facet currently declares no specific items. Generated by \`bun ./📜️script.ts new …\`.\n`;
+  return `# Empty ${facetLabel} facet\n\nThis facet currently declares no specific items. Authored by \`bun ./📜️script.ts new …\`.\n`;
 }
 
 /** 📝️ Writes `relPath` only when absent; an existing leaf is reported as skipped, never overwritten. */
@@ -21897,42 +21905,41 @@ function newResolveChildDir(parentAbs: string, wantStripped: string): string | u
  * cannot know in advance and therefore never creates) — `representationDirs` children for
  * 📸️snapshot/🔺️diff, a wildcard-slug-ready empty facet marker for 🧬️mutations/💡️inferences (their real
  * content is per-mutation/per-inference emoji slugs, which `new subset` also cannot know in advance). */
-function newScaffoldIoTree(repoRoot: string, ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, created: string[], skipped: string[], dryRun: boolean): void {
+function newScaffoldIoTree(ioRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, leaves: ArtifactScaffoldLeaf[]): void {
   const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
   const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
-  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${rustLeaf}`, newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${ioRel}/${typescriptLeaf}`, newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)"), created, skipped, dryRun);
+  leaves.push({ path: `${ioRel}/${rustLeaf}`, content: newScaffoldRustLeaf("io root (io() -> IoDeclaration stub)") });
+  leaves.push({ path: `${ioRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("io root (IoEntryDescriptor[] mirror)") });
   for (const kind of taxonomy.ioSemanticCollectionDirNames ?? []) {
     const kindRel = `${ioRel}/${kind}`;
     if (kind === "🧬️mutations" || kind === "💡️inferences") {
-      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${emptyMarker}`, newScaffoldEmptyFacetMarkdown(kind), created, skipped, dryRun);
+      leaves.push({ path: `${kindRel}/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown(kind) });
       continue;
     }
     for (const rep of taxonomy.representationDirs ?? []) {
-      newScaffoldWriteIfAbsent(repoRoot, `${kindRel}/${rep}/${rustLeaf}`, newScaffoldRustLeaf(`${kind}/${rep} native codec`), created, skipped, dryRun);
+      leaves.push({ path: `${kindRel}/${rep}/${rustLeaf}`, content: newScaffoldRustLeaf(`${kind}/${rep} native codec`) });
     }
   }
 }
 
-export function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean): { created: string[]; skipped: string[] } {
-  const created: string[] = [];
-  const skipped: string[] = [];
+export function newScaffoldSubsetTree(repoRoot: string, subsetRel: string, taxonomy: ReturnType<typeof loadTaxonomy>, dryRun: boolean, options: ArtifactScaffoldOptions = {}): { created: string[]; skipped: string[] } {
+  const leaves: ArtifactScaffoldLeaf[] = [];
   const rustLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🦀️rust");
   const typescriptLeaf = taxonomyMappedFilename(taxonomy, taxonomy.componentFileKinds, "🟦️typescript");
   const emptyMarker = canonicalFilenameForKind(taxonomy.windowEmptyFacetFileKindId, taxonomy);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${rustLeaf}`, newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/${typescriptLeaf}`, newScaffoldTsLeaf("subset root"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/${rustLeaf}`, newScaffoldRustLeaf("schema root — own Snapshot/Diff/Mutation types, no codecs"), created, skipped, dryRun);
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/🧬️schema/${typescriptLeaf}`, newScaffoldTsLeaf("schema root"), created, skipped, dryRun);
-  newScaffoldIoTree(repoRoot, `${subsetRel}/🚪️io`, taxonomy, created, skipped, dryRun);
+  leaves.push({ path: `${subsetRel}/${rustLeaf}`, content: newScaffoldRustLeaf("subset root (subset() -> SubsetDeclaration stub; mounts schema/io/viewer/editor/examples)") });
+  leaves.push({ path: `${subsetRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf("subset root") });
+  leaves.push({ path: `${subsetRel}/🧬️schema/${rustLeaf}`, content: newScaffoldRustLeaf("schema root — own Snapshot/Diff/Mutation types, no codecs") });
+  leaves.push({ path: `${subsetRel}/🧬️schema/${typescriptLeaf}`, content: newScaffoldTsLeaf("schema root") });
+  newScaffoldIoTree(`${subsetRel}/🚪️io`, taxonomy, leaves);
   for (const role of taxonomy.surfaceRoles) {
     const surfaceRel = `${subsetRel}/${taxonomy.surfaceDirNames[role]}`;
-    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${rustLeaf}`, newScaffoldRustLeaf(`${role} surface`), created, skipped, dryRun);
-    newScaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${typescriptLeaf}`, newScaffoldTsLeaf(`${role} surface`), created, skipped, dryRun);
+    leaves.push({ path: `${surfaceRel}/${rustLeaf}`, content: newScaffoldRustLeaf(`${role} surface`) });
+    leaves.push({ path: `${surfaceRel}/${typescriptLeaf}`, content: newScaffoldTsLeaf(`${role} surface`) });
   }
-  newScaffoldWriteIfAbsent(repoRoot, `${subsetRel}/📚️examples/${emptyMarker}`, newScaffoldEmptyFacetMarkdown("examples"), created, skipped, dryRun);
-  return { created, skipped };
+  leaves.push({ path: `${subsetRel}/📚️examples/${emptyMarker}`, content: newScaffoldEmptyFacetMarkdown("examples") });
+  return authorArtifactScaffold(repoRoot, { kind: "subset", subsetPath: subsetRel }, leaves, taxonomy, { ...options, dryRun });
 }
 
 export function newScaffoldStandardTree(repoRoot: string, standardRel: string, dryRun: boolean): { created: string[]; skipped: string[] } {
@@ -27297,8 +27304,8 @@ export function policyOsConfigShapeBreaches(repoRoot: string): BreachRecord[] {
 
 const POLICY_HANDCRAFTED_SPEC_ROOTS = ["✏️s", "🧰️framework"] as const;
 const POLICY_HANDCRAFTED_FACETS = ["🗣️dsl", "🔧️op", "🔺️diff", "🎒️pack", "📡️spr", "🧬️mutations"] as const;
-const POLICY_GRAMMAR_SPEC_LEAF = canonicalPrimaryFilenameForKind("grammar-semio");
-const POLICY_PROTOCOL_SPEC_LEAF = canonicalPrimaryFilenameForKind("protocol-semio");
+const POLICY_GRAMMAR_SPEC_LEAF = canonicalPrimaryFilenameForKind("grammar-semio", loadCatalogTaxonomy());
+const POLICY_PROTOCOL_SPEC_LEAF = canonicalPrimaryFilenameForKind("protocol-semio", loadCatalogTaxonomy());
 const POLICY_RS_COMPONENT_LEAF = canonicalPrimaryFilenameForKind(loadCatalogTaxonomy().componentFileKinds["🦀️rust"]!, loadCatalogTaxonomy());
 const POLICY_FAMILY_ROOT = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/👪️family";
 
@@ -28038,22 +28045,18 @@ function policyRepositoryOwnedRoots(): string[] {
     .sort();
 }
 
-function policyFindAllMutationsDirs(repoRoot: string): string[] {
+export function policyFindAllMutationsDirs(repoRoot: string, admission: TaxonomySourceInventory = mutationTaxonomySourceAdmission(repoRoot, {})): string[] {
+  if (admission.status !== "complete") throw new Error("[clean taxonomy --kind mutation] source admission is rejected.");
   const found: string[] = [];
-  const skipped = new Set(["compose", ".git", "node_modules", "target", ".nx", ".🧬semio", "dist", "build", "coverage", "📦️packages", "🧪️tests", "🧫️fixtures", "📚️examples", "🖼️assets", "🎯️targets", "🤖️generated", "🛂️manifest"]);
-  const walk = (relDir: string): void => {
-    for (const ent of policyReaddirSafe(repoRoot, relDir)) {
-      if (!ent.isDirectory || skipped.has(ent.name) || ent.name.startsWith(".")) continue;
-      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
-      if (ent.name === POLICY_MUTATIONS_FACET) {
-        found.push(childRel);
-        continue;
-      }
-      walk(childRel);
+  for (const observation of admission.observations) {
+    if (observation.observedKind !== "file" && observation.observedKind !== "directory") continue;
+    const segments = observation.sourcePath.split("/");
+    for (let index = 0; index < segments.length; index += 1) {
+      if (observation.observedKind === "file" && index === segments.length - 1) continue;
+      if (segments[index] === POLICY_MUTATIONS_FACET) found.push(segments.slice(0, index + 1).join("/"));
     }
-  };
-  for (const root of policyRepositoryOwnedRoots()) walk(root);
-  return [...new Set(found)].sort();
+  }
+  return [...new Set(found)].sort(mutationTaxonomyCompare);
 }
 
 /**
@@ -30743,12 +30746,12 @@ const POLICY_STDIO_REPRESENTATION_FALLBACK = [POLICY_STDIO_FACET_TEXT, POLICY_ST
 const POLICY_STDIO_ARTIFACT_FACET_FALLBACK = ["🧬️schema", "⚙️engine", "🚪️io", POLICY_STDIO_FACET_DECOMPOSER] as const;
 const POLICY_STDIO_LEGACY_ARTIFACT_FACETS = new Set(["🗣️dsl", "🔧️op", "📡️spr", "🔺️diff", "📸️snapshot"]);
 const POLICY_STDIO_TEXT_SPEC_LEAVES = [
-  ...["grammar-semio", "ebnf", "antlr", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId)),
+  ...["grammar-semio", "ebnf", "antlr", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId, loadCatalogTaxonomy())),
   POLICY_RS_COMPONENT_LEAF,
   POLICY_TS_COMPONENT_LEAF,
 ] as const;
 const POLICY_STDIO_BINARY_SPEC_LEAVES = [
-  ...["protocol-semio", "abnf", "kaitai", "spicy"].map((kindId) => canonicalPrimaryFilenameForKind(kindId)),
+  ...["protocol-semio", "abnf", "kaitai", "spicy"].map((kindId) => canonicalPrimaryFilenameForKind(kindId, loadCatalogTaxonomy())),
   POLICY_RS_COMPONENT_LEAF,
   POLICY_TS_COMPONENT_LEAF,
 ] as const;
@@ -32656,13 +32659,13 @@ function policyFieldSweepPresenceBreaches(repoRoot: string): BreachRecord[] {
  * earlier wave and are correctly NOT in this seed).
  */
 const POLICY_GRAMMAR_HONESTY_LEAF_MARKERS: Record<string, string> = {
-  [canonicalPrimaryFilenameForKind("antlr")]: "DOCUMENT: 'schema' [ ]+",
-  [canonicalPrimaryFilenameForKind("ebnf")]: "header = 'schema', space,",
-  [canonicalPrimaryFilenameForKind("grammar-semio")]: "payload = *OCTET",
-  [canonicalPrimaryFilenameForKind("abnf")]: "payload = *OCTET",
-  [canonicalPrimaryFilenameForKind("protocol-semio")]: "payload = *OCTET",
-  [canonicalPrimaryFilenameForKind("kaitai")]: "size-eos: true",
-  [canonicalPrimaryFilenameForKind("spicy")]: "payload: bytes &eod;",
+  [canonicalPrimaryFilenameForKind("antlr", loadCatalogTaxonomy())]: "DOCUMENT: 'schema' [ ]+",
+  [canonicalPrimaryFilenameForKind("ebnf", loadCatalogTaxonomy())]: "header = 'schema', space,",
+  [canonicalPrimaryFilenameForKind("grammar-semio", loadCatalogTaxonomy())]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("abnf", loadCatalogTaxonomy())]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("protocol-semio", loadCatalogTaxonomy())]: "payload = *OCTET",
+  [canonicalPrimaryFilenameForKind("kaitai", loadCatalogTaxonomy())]: "size-eos: true",
+  [canonicalPrimaryFilenameForKind("spicy", loadCatalogTaxonomy())]: "payload: bytes &eod;",
 };
 
 const POLICY_GRAMMAR_HONESTY_ALLOWLIST = new Set<string>([
@@ -33080,7 +33083,7 @@ function policyGrammarHonestyBreaches(repoRoot: string): BreachRecord[] {
  * zero as they rewrite each artifact's facets for real; this wave does NOT fix any facet itself.
  */
 const POLICY_FACET_MIRROR_DRIFT_FACETS = ["📸️snapshot", "🔺️diff", "🧬️mutations"] as const;
-const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["typescript-source", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId));
+const POLICY_FACET_MIRROR_DRIFT_SIBLINGS = ["typescript-source", "graphql", "json", "protobuf"].map((kindId) => canonicalPrimaryFilenameForKind(kindId, loadCatalogTaxonomy()));
 const POLICY_FACET_MIRROR_DRIFT_FIELD_RE = /(?:^|[\s{,(])(?:pub\s+)?([a-z][a-z0-9_]*)\s*:\s*[A-Za-z_&\[<('"]/gm;
 const POLICY_FACET_MIRROR_DRIFT_KEYWORDS = new Set(["self", "where", "if", "else", "match", "for", "while", "let", "fn", "return", "in", "as", "dyn", "mut", "ref", "impl", "type"]);
 

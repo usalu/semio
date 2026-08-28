@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateVortex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "vortex"
+  ],
+  "properties": {
+    "vortex": {
+      "title": "Block3dVortexTemplate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "id",
+        "position",
+        "radius",
+        "vortexKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vortexKind": {
+          "type": "string"
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "radius": {
+          "type": "number"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

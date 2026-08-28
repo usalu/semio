@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeVariableActionCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newCategory"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newCategory": {
+      "type": "string"
+    }
+  }
+}

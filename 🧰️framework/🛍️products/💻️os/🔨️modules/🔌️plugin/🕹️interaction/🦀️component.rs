@@ -14,3 +14,6 @@ pub(crate) mod query;
 
 #[path = "♻️retirement/🦀️component.rs"]
 pub(crate) mod retirement;
+
+#[path = "🧬️mutations/🔁️set-state/🦀️.rs"]
+pub(crate) mod set_state;

@@ -1,6 +1,8 @@
 {
   "schema": "nextest-execution-filter-vectors/v1",
   "cases": [
+    { "name": "no-fail-fast-is-execution-only", "input": ["--lib", "--no-fail-fast", "--features", "no-fail-fast", "--", "--nocapture"], "build": ["--lib", "--features", "no-fail-fast"], "execution": ["--no-fail-fast"], "libtest": ["--nocapture"] },
+    { "name": "separator-does-not-reclassify-no-fail-fast", "input": ["--lib", "--", "--no-fail-fast"], "build": ["--lib"], "execution": [], "libtest": ["--no-fail-fast"] },
     { "name": "unchanged-build-selection", "input": ["--lib", "--features", "fixtures", "--target", "aarch64-apple-darwin"], "build": ["--lib", "--features", "fixtures", "--target", "aarch64-apple-darwin"], "execution": [], "libtest": [] },
     { "name": "exact-filter-reaches-metadata-run", "input": ["--lib", "-E", "test(retained_factory_proofs_activate_)", "--features", "fixtures"], "build": ["--lib", "--features", "fixtures"], "execution": ["-E", "test(retained_factory_proofs_activate_)"], "libtest": [] },
     { "name": "inline-filter-and-partition", "input": ["--filter-expr=test(canonical_)", "--target-dir", "ticket-build", "--partition", "count:1/2", "--run-ignored=only"], "build": ["--target-dir", "ticket-build"], "execution": ["--filter-expr=test(canonical_)", "--partition", "count:1/2", "--run-ignored=only"], "libtest": [] },

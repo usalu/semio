@@ -3,6 +3,7 @@ import type * as Contract from "../../../../../🛂️manifest/🟦️component.
 import type { NumericIndexGrant } from "../../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts";
 import { RetainedUiWireValueCursor, type RetainedUiWireStep } from "../🟦️component.ts";
 import { UiSurfaceBytes, type UiSurfaceByteRetirement } from "../🔢️bytes/🟦️component.ts";
+import { takeOwnedNativeBuffer } from "../🔒️transport/🟦️component.ts";
 
 export interface UiSurfaceByteView { readonly length: number; byteAt(index: number): number }
 export type RetainedUiComponent = Exclude<Contract.Component, { type: "surface" }> | { readonly type: "surface"; readonly kind: Contract.UiSurfaceKind; readonly docSchema: string; readonly doc: { readonly bytes: UiSurfaceByteView }; readonly bindings: Contract.ActionBinding[] };
@@ -17,6 +18,7 @@ type Owned = { value: object | null; next: Owned | null };
 type Bytes = { value: UiSurfaceBytes | null; next: Bytes | null };
 type PayloadLink = { value: OwnedUiPayload<unknown> | null; next: PayloadLink | null };
 type Root<T> = { value: T | undefined; references: number; owned: Owned | null; bytes: Bytes | null; children: PayloadLink | null; fields: NodeFields | null; kind: Profile | null };
+const OWNER_MINT = Object.freeze({});
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const step = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> { return typeof value === "object" && value !== null && !Array.isArray(value) && Object.getPrototypeOf(value) === Object.prototype; }
@@ -53,14 +55,14 @@ let saturationProbe: ((source: OwnedUiPayload<RetainedUiNodeRecord>, replacement
 /** 📚️ Captured immutable typed payload; readers retain this owner, not a borrowed value alone. */
 export class OwnedUiPayload<T> {
   #root: Root<T> | null;
-  private constructor(root: Root<T>) { this.#root = root; Object.freeze(this); }
+  private constructor(mint: object, root: Root<T>) { if (mint !== OWNER_MINT) throw new Error("Typed payload requires exact mint authority"); this.#root = root; Object.freeze(this); }
   static {
-    ownPayload = <V>(root: Root<V>) => new OwnedUiPayload(root);
+    ownPayload = <V>(root: Root<V>) => new OwnedUiPayload(OWNER_MINT, root);
     payloadFields = payload => { if (payload.#root?.kind !== "node" || !payload.#root.fields) throw new Error("Expected an exact typed node field owner"); return payload.#root.fields; };
     checkPayload = (payload, kind) => { if (!payload.#root || payload.#root.kind !== kind) throw new Error("Typed UI payload field authority mismatch"); };
     checkCapture = (payload, kind) => { checkPayload(payload, kind); if (payload.#root!.references === Number.MAX_SAFE_INTEGER) throw new Error("Typed UI payload cannot be captured"); };
     exactPayload = <V>(payload: OwnedUiPayload<V>): V => { if (!payload.#root || payload.#root.value === undefined) throw new Error("Typed UI payload owner is closed"); return payload.#root.value; };
-    movedPayload = <V>(payload: OwnedUiPayload<V>, kind: Profile): OwnedUiPayload<V> => { if (!payload.#root || payload.#root.kind !== kind) throw new Error("Typed UI payload field authority mismatch"); const root = payload.#root; payload.#root = null; return new OwnedUiPayload(root); };
+    movedPayload = <V>(payload: OwnedUiPayload<V>, kind: Profile): OwnedUiPayload<V> => { if (!payload.#root || payload.#root.kind !== kind) throw new Error("Typed UI payload field authority mismatch"); const root = payload.#root; payload.#root = null; return new OwnedUiPayload(OWNER_MINT, root); };
     if (import.meta.vitest) saturationProbe = (source, replacement, activity) => {
       const results: CaptureProbe[] = [];
       const keys: readonly Field[] = ["component", "layout", "style", "accessibility", "bindings", "menu", "children"];
@@ -180,14 +182,15 @@ function nodeRoot(base: RetainedUiNodeRecord, fields: NodeFields, state?: Retain
 /** 🗂️ One immutable node owns seven direct field roots and never retains a previous node as an ancestor. */
 export class OwnedUiNode {
   #root: NodeRoot | null;
-  private constructor(root: NodeRoot) { this.#root = root; Object.freeze(this); }
+  private constructor(mint: object, root: NodeRoot) { if (mint !== OWNER_MINT) throw new Error("Typed node requires exact mint authority"); this.#root = root; Object.freeze(this); }
   static { nodeFields = node => { if (!node.#root?.fields) throw new Error("Retained UI node owner is closed"); return node.#root.fields; }; }
-  static captureFrom(payload: OwnedUiPayload<RetainedUiNodeRecord>): OwnedUiNode { const fields = payloadFields(payload); return new OwnedUiNode(nodeRoot(exactPayload(payload), copyFields(fields, null))); }
+  static captureFrom(payload: OwnedUiPayload<RetainedUiNodeRecord>): OwnedUiNode { const fields = payloadFields(payload); return new OwnedUiNode(OWNER_MINT, nodeRoot(exactPayload(payload), copyFields(fields, null))); }
   #value(): RetainedUiNodeRecord { if (!this.#root?.value) throw new Error("Retained UI node owner is closed"); return this.#root.value; }
   get value(): RetainedUiNodeRecord { return this.#value(); }
-  capture(): OwnedUiNode { if (!this.#root || this.#root.references === Number.MAX_SAFE_INTEGER) throw new Error("Retained UI node cannot be captured"); this.#root.references++; return new OwnedUiNode(this.#root); }
-  replace(change: RetainedUiFieldChange): OwnedUiNode { const value = this.#value(); return new OwnedUiNode(nodeRoot(value, copyFields(this.#root!.fields!, change))); }
-  withActivity(payload: OwnedUiPayload<RetainedUiTypedValues["activity"]>): OwnedUiNode { checkPayload(payload, "activity"); return new OwnedUiNode(nodeRoot(this.#value(), copyFields(this.#root!.fields!, null), exactPayload(payload))); }
+  capture(): OwnedUiNode { if (!this.#root || this.#root.references === Number.MAX_SAFE_INTEGER) throw new Error("Retained UI node cannot be captured"); this.#root.references++; return new OwnedUiNode(OWNER_MINT, this.#root); }
+  captureComponent(): OwnedUiPayload<RetainedUiComponent> { return nodeFields(this).component.capture(); }
+  replace(change: RetainedUiFieldChange): OwnedUiNode { const value = this.#value(); return new OwnedUiNode(OWNER_MINT, nodeRoot(value, copyFields(this.#root!.fields!, change))); }
+  withActivity(payload: OwnedUiPayload<RetainedUiTypedValues["activity"]>): OwnedUiNode { checkPayload(payload, "activity"); return new OwnedUiNode(OWNER_MINT, nodeRoot(this.#value(), copyFields(this.#root!.fields!, null), exactPayload(payload))); }
   beginClose(): UiNodeRetirement { if (!this.#root) throw new Error("Retained UI node already closed"); const root = this.#root; this.#root = null; return retireNode(root); }
   terminalIsEmpty(): boolean { return this.#root === null; }
 }
@@ -418,7 +421,7 @@ export class RetainedUiTypedCursor<P extends Profile> {
   #failure: string | null = null;
   #phase = "typed-decode";
   readonly #profile: P;
-  constructor(input: Uint8Array, profile: P) { this.#profile = profile; this.#decoder = new RetainedUiWireValueCursor(input, profile === "node" || profile === "component" ? profile : "value"); }
+  constructor(input: unknown, profile: P) { this.#profile = profile; this.#decoder = new RetainedUiWireValueCursor(input, profile === "node" || profile === "component" ? profile : "value"); }
   get profile(): P { return this.#profile; }
   get failure(): string | null { return this.#failure; }
   advance(grant: NumericIndexGrant): RetainedUiWireStep {
@@ -456,6 +459,50 @@ export class RetainedUiTypedCursor<P extends Profile> {
   terminalIsEmpty(): boolean { return this.#closing && !this.#decoder && !this.#program && !this.#payload && !this.#retirement && !this.#builder.owned && !this.#builder.bytes && !this.#builder.json && !this.#builder.active && !this.#builder.children && !this.#builder.fields; }
 }
 //#endregion 🚶️TypedCursor
+
+//#region 🔢️NativeChildField
+/** 🔢️ Consumes the exact native 128-slot u64 buffer, detaching all caller aliases before scalar traversal. */
+export class RetainedUiChildIdsCursor {
+  #input: BigUint64Array | null;
+  #output: number[] | null;
+  #index = 0;
+  #payload: OwnedUiPayload<number[]> | null = null;
+  #retirement: UiPayloadRetirement<number[]> | null = null;
+  #failure: string | null = null;
+  #closing = false;
+  #ready = false;
+  constructor(input: unknown) {
+    this.#input = new BigUint64Array(takeOwnedNativeBuffer(input, "BigUint64Array", 1024)); this.#output = new Array(this.#input.length);
+    Object.freeze(this);
+  }
+  get failure(): string | null { return this.#failure; }
+  advance(grant: NumericIndexGrant): RetainedUiWireStep {
+    if (!admitted(grant)) return step("blocked", "native-child-field");
+    if (this.#closing || this.#failure) return step("rejected", "native-child-field");
+    if (this.#ready) return step("ready", "native-child-field");
+    try {
+      if (this.#index < this.#input!.length) {
+        const value = this.#input![this.#index]!;
+        if (value > 9007199254740991n) throw new Error("Native child ID exceeds the exact renderer range");
+        Object.defineProperty(this.#output!, this.#index++, { value: Number(value), enumerable: true }); return step("pending", "native-child-field", 64);
+      }
+      const output = this.#output!; Object.defineProperty(output, "length", { writable: false }); Object.preventExtensions(output);
+      this.#payload = ownPayload({ value: output, references: 1, owned: { value: output, next: null }, bytes: null, children: null, fields: null, kind: "children" });
+      this.#output = null; this.#input = null; this.#ready = true; return step("ready", "native-child-field", 1280);
+    } catch (error) { this.#failure = error instanceof Error ? error.message : "Native child field failed"; return step("rejected", "native-child-field", 64); }
+  }
+  takeResult(): OwnedUiPayload<number[]> | null { if (!this.#ready || this.#closing || this.#failure) return null; const result = this.#payload; this.#payload = null; return result; }
+  beginClose(): void { this.#closing = true; }
+  closeStep(grant: NumericIndexGrant): RetainedUiWireStep {
+    if (!admitted(grant)) return step("blocked", "native-child-close"); if (!this.#closing) throw new Error("Native child close has not begun");
+    if (this.#payload) { this.#retirement = this.#payload.beginClose(); this.#payload = null; return step("pending", "native-child-close", 64); }
+    if (this.#retirement) { const current = this.#retirement.advance(grant); if (current.kind === "complete") this.#retirement = null; return { ...current, kind: "pending" }; }
+    if (this.#input || this.#output) { this.#input = null; this.#output = null; return step("pending", "native-child-close", 2112); }
+    return step("complete", "native-child-close");
+  }
+  terminalIsEmpty(): boolean { return this.#closing && !this.#input && !this.#output && !this.#payload && !this.#retirement; }
+}
+//#endregion 🔢️NativeChildField
 
 //#region 🧪️PrivateOwnershipProbe
 if (import.meta.vitest) {

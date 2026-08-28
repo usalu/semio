@@ -25,6 +25,20 @@ pub use semio_framework_job as job;
 #[path = "🚪️lifetime/🦀️component.rs"]
 pub mod instance_lifetime;
 
+#[path = "📄️page/🦀️component.rs"]
+pub mod byte_page;
+
+#[path = "📤️return/🦀️component.rs"]
+pub mod return_page;
+
+#[cfg(test)]
+#[path = "📄️page/🧪️component.rs"]
+mod byte_page_tests;
+
+#[cfg(test)]
+#[path = "📤️return/🧪️component.rs"]
+mod return_page_tests;
+
 //#region 🧬️SchemaMetadata
 #[cfg(feature = "typegen")]
 pub mod schema_metadata {
@@ -126,7 +140,7 @@ pub mod schema_metadata {
         SchemaMetadata { name: "ShardMetricsSample", version: 1, typescript: "export type ShardMetricsSample = { shard: ShardId, metrics: ShardMetrics, };" },
         SchemaMetadata { name: "ShardTable", version: 1, typescript: "export type ShardTable = { kind: ShardKind, shard_count: number, exclusive_reserve: number, assignment: Record<string, ShardId>, exclusive_leases: Record<string, ActorId>, };" },
         SchemaMetadata { name: "TurnGrant", version: 1, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, envelopes: Array<Envelope>, };" },
-        SchemaMetadata { name: "TurnResult", version: 1, typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, next_wake: bigint | null, status: TurnStatus, usage: Usage, };" },
+        SchemaMetadata { name: "TurnResult", version: 1, typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, lifecycle_receipt: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../🚪️lifetime/🩹️patch/🟦️component.js\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };" },
         SchemaMetadata {
             name: "TurnStatus",
             version: 1,
@@ -178,6 +192,8 @@ pub mod pack {
         InvalidTag { what: &'static str, tag: u8, offset: usize },
         InvalidUtf8(&'static str, usize),
         OverlongVarint(usize),
+        InvalidLifecycle(&'static str),
+        InvalidUiPatchReceipt(&'static str),
     }
 
     impl std::fmt::Display for PackError {
@@ -187,6 +203,8 @@ pub mod pack {
                 Self::InvalidTag { what, tag, offset } => write!(formatter, "pack: invalid tag {tag} for {what} at offset {offset}"),
                 Self::InvalidUtf8(what, offset) => write!(formatter, "pack: invalid utf8 in {what} at offset {offset}"),
                 Self::OverlongVarint(offset) => write!(formatter, "pack: overlong varint at offset {offset}"),
+                Self::InvalidLifecycle(reason) => write!(formatter, "pack: invalid instance lifecycle: {reason}"),
+                Self::InvalidUiPatchReceipt(reason) => write!(formatter, "pack: invalid issued UI patch receipt: {reason}"),
             }
         }
     }
@@ -2915,29 +2933,72 @@ pub struct TurnResult {
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
     pub command_ingress: Vec<u8>,
+    pub lifecycle_receipt: Option<instance_lifetime::ActorInstanceLifecycleReceipt>,
+    pub ui_patch_receipt: Option<instance_lifetime::ActorUiPatchReceipt>,
     pub next_wake: Option<u64>,
     pub status: TurnStatus,
     pub usage: Usage,
 }
 
 impl TurnResult {
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), pack::PackError> {
+        let mut receipt = [0; instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES];
+        let length = match self.lifecycle_receipt {
+            Some(value) => instance_lifetime::ActorInstanceLifecycleWire::Receipt(value).encode(&mut receipt).map_err(pack::PackError::InvalidLifecycle)?,
+            None => 0,
+        };
+        instance_lifetime::ActorUiPatchReceipt::validate_pairing(self.ui_patch_receipt, usize::from(!self.ui_patches.is_empty())).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        let mut patch_receipt = [0; instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES];
+        let patch_length = match self.ui_patch_receipt {
+            Some(value) => value.encode(&mut patch_receipt).map_err(pack::PackError::InvalidUiPatchReceipt)?,
+            None => 0,
+        };
         pack::write_bytes(out, &self.ui_patches).await;
         pack::write_bytes(out, &self.effects).await;
         pack::write_bytes(out, &self.command_ingress).await;
+        pack::write_bytes(out, &receipt[..length]).await;
+        pack::write_bytes(out, &patch_receipt[..patch_length]).await;
         pack::write_opt_u64(out, &self.next_wake).await;
         self.status.pack_encode(out).await;
         self.usage.pack_encode(out).await;
+        Ok(())
     }
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
-        Ok(Self {
+        let result = Self {
             ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
             effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
             command_ingress: pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
+            lifecycle_receipt: Self::read_lifecycle_receipt(bytes, pos).await?,
+            ui_patch_receipt: Self::read_ui_patch_receipt(bytes, pos).await?,
             next_wake: pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
             status: TurnStatus::pack_decode(bytes, pos).await?,
             usage: Usage::pack_decode(bytes, pos).await?,
-        })
+        };
+        instance_lifetime::ActorUiPatchReceipt::validate_pairing(result.ui_patch_receipt, usize::from(!result.ui_patches.is_empty())).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        Ok(result)
+    }
+
+    async fn read_ui_patch_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorUiPatchReceipt>, pack::PackError> {
+        let length = pack::read_u8(bytes, pos, "TurnResult::ui_patch_receipt.length").await? as usize;
+        if length > instance_lifetime::ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES { return Err(pack::PackError::InvalidUiPatchReceipt("receipt length exceeds fixed authority")); }
+        if length == 0 { return Ok(None); }
+        let end = pos.checked_add(length).ok_or(pack::PackError::InvalidUiPatchReceipt("receipt offset overflow"))?;
+        let receipt = instance_lifetime::ActorUiPatchReceipt::decode(bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::ui_patch_receipt"))?).map_err(pack::PackError::InvalidUiPatchReceipt)?;
+        *pos = end;
+        Ok(Some(receipt))
+    }
+
+    async fn read_lifecycle_receipt(bytes: &[u8], pos: &mut usize) -> Result<Option<instance_lifetime::ActorInstanceLifecycleReceipt>, pack::PackError> {
+        let length = pack::read_u8(bytes, pos, "TurnResult::lifecycle_receipt.length").await? as usize;
+        if length > instance_lifetime::ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES { return Err(pack::PackError::InvalidLifecycle("receipt length exceeds fixed authority")); }
+        if length == 0 { return Ok(None); }
+        let end = pos.checked_add(length).ok_or(pack::PackError::InvalidLifecycle("receipt offset overflow"))?;
+        let receipt = bytes.get(*pos..end).ok_or(pack::PackError::Truncated(*pos, "TurnResult::lifecycle_receipt"))?;
+        let instance_lifetime::ActorInstanceLifecycleWire::Receipt(receipt) = instance_lifetime::ActorInstanceLifecycleWire::decode(receipt).map_err(pack::PackError::InvalidLifecycle)? else {
+            return Err(pack::PackError::InvalidLifecycle("turn result requires a receipt"));
+        };
+        *pos = end;
+        Ok(Some(receipt))
     }
 }
 //#endregion 🔁️TurnResult
@@ -5022,7 +5083,7 @@ mod tests {
         }
 
         async fn ok_turn() -> TurnResult {
-            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
+            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
         }
 
         fn bridge_operation() -> job::Operation {
@@ -5490,6 +5551,8 @@ mod tests {
             assert!(matches!(&stale.outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == stale_identity));
             assert_eq!(log.sealed_records(), 0);
             assert!(!log.has_pending_work());
+            log.begin_close();
+            assert!(log.terminal_is_empty());
         }
 
         #[test]
@@ -5709,7 +5772,7 @@ mod tests {
             // turns), making it the one and only "clean" shard.
             let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
             let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
-            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
+            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
             for shard in hot_shards {
                 for actor in &by_shard[shard] {
                     kernel.complete(*actor, &hot_turn, 0).await.unwrap();
@@ -5949,7 +6012,7 @@ mod tests {
             let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
 
             for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
                 kernel.complete(a, &faulted, (i as u64) * 100).await.unwrap();
             }
             assert_eq!(kernel.actor_status(a).await, Some(&ActorStatus::Quarantined));
@@ -6195,7 +6258,7 @@ mod tests {
             let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
             kernel.link_extension(parent, extension).await.unwrap();
 
-            let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+            let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
             let escalation = kernel.complete(extension, &faulted, 10).await.unwrap();
             assert_eq!(escalation, FailureEscalation::Restart, "one trap must only Restart, never quarantine");
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
@@ -6204,7 +6267,7 @@ mod tests {
             // Push the SAME extension past the quarantine threshold — still must not reach the parent,
             // because this test gave the extension its own PackageId (distinct from the parent's).
             for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], lifecycle_receipt: None, ui_patch_receipt: None, next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
                 kernel.complete(extension, &faulted, 10 + i as u64).await.unwrap();
             }
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Quarantined), "the extension itself does escalate to quarantine");

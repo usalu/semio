@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.mathematical.mathematical` declares 15 mutation kinds, of which 14 address a graph and a point cloud that are no longer persisted fields but composed children, and one (`change-coefficient`) edits the labelled equation AST. Semio-NATIVE, no oracle; the decision below records both the declined candidates and the thinness of the committed vectors for the 13 graph/geometry kinds.",
   "oracles": [],
   "noOracleDecisions": [

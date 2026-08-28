@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ Coordination View 2.0's own contribution to the repository test platform: `ruststep` 0.4 registered as the independent ISO 10303-21 reader for this subset's `Ifc2x3Cv20Mutation` vocabulary, and the mutation catalog it is measured against. The vocabulary is NOT the ✳️any subset's -- ✳️any declares generic Part-21 graph editing (upsert-instance/remove-instance/set-header) and knows nothing about model view definitions, while every kind below is one rule of the CV2.0 conformance gate this repository already implements in production (`../🧬️schema/🦀️component.rs`'s `check_cv20_conformance`). The `semantic-ifc-v1` comparison profile is the ✳️any subset's own contribution, reused rather than copied: the exchange structure being compared is the same IFC2X3 Part-21 graph.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "ruststep",
       "version": "0.4",
-      "capabilities": ["ifc-2x3-cv20-mutate"],
-      "comparisonProfiles": ["semantic-ifc-v1"],
+      "capabilities": [
+        "ifc-2x3-cv20-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-ifc-v1"
+      ],
       "license": "Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "IFC2X3 is physically ISO 10303-21 (STEP physical file) syntax under the IFC2X3 EXPRESS schema, and `ruststep` 0.4 parses it exactly as it parses STEP AP214 -- already linked and already registered for the sibling `ifc 2x3/✳️any` and `step ap214/✳️any` subsets, and re-confirmed here against this subset's own real input (the committed 3464-entity slice of a real 21 MB IFC2X3 EDM export whose FILE_DESCRIPTION genuinely declares `ViewDefinition [CoordinationView_V2.0]`, parsed with zero errors). It has NO writer: `ast::ser::to_record` only builds an in-memory `Record` from an already-typed Rust struct, and no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`. Per the fleet brief's §6 that rules out `@mode-differential` -- ruststep cannot be a second PRODUCER of mutated bytes -- so it is registered strictly as the INDEPENDENT READER: every mutation this subset's own dispatcher performs (via ruststep's real parse plus the standard-level from-scratch Part-21 writer at `../../../🧪️oracle/🦀️component.rs`, never this repository's own production `step::engine::part21` writer, which would compare the implementation against itself) is read back through a FRESH `ruststep::ast::Exchange::from_str` call before `semantic-ifc-v1` compares it. STRONGER REFERENCE EVALUATED AND NOT ADOPTED: `ifcopenshell` 0.8.4 (Python) is the canonical IFC toolkit, it both READS and WRITES IFC, and it would make a genuine `@mode-differential` possible for exactly these model-view-definition subsets; it was installed and imported successfully in this environment, and the repository's Python oracle host has landed (working precedent: `🗿️artifacts/📄️pdf/🧪️tests/extract-text-pdf-1-4/🐍️component.py` with `pypdf`). It was NOT adopted because putting a Python distribution on a generated host's import path requires an `oracleHostPackages` entry in the SHARED `✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json` -- `oracleHostPackagesFor` resolves host packages by owner prefix, and this subset's own manifest is not a prefix of the case owner `🗿️artifacts/🏗️ifc` -- and this wave's brief forbids an executor from editing the shared stdio manifest. That is a governance boundary, not a capability gap, and it is the single highest-value follow-up for all three IFC2X3 MVD subsets.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -25,7 +37,14 @@
       "standardDirectoryName": "🔖️2x3",
       "subsetDirectoryName": "✳️cv20",
       "vectors": [],
-      "kinds": ["no-mutation", "set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-view-definition",
+        "set-structural-entity",
+        "set-project-units",
+        "set-product-placement"
+      ]
     }
   ],
   "comparisonProfiles": []

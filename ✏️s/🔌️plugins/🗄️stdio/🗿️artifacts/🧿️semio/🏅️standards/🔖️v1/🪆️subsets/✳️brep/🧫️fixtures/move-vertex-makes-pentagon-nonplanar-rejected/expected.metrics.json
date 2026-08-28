@@ -1,0 +1,26 @@
+{
+  "declaredOutcome": "rejected",
+  "kind": "move-vertex",
+  "hasExpected": false,
+  "solids": 0,
+  "shells": 0,
+  "faces": 1,
+  "edges": 5,
+  "vertices": 5,
+  "boundingBox": {
+    "xMin": -3.0000001,
+    "xMax": 13.0000001,
+    "yMin": -1e-7,
+    "yMax": 13.0000001,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 20.615528409429626,
+  "volume": 0,
+  "area": 144,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "before operand only — kernel produced no AFTER shape",
+  "rejectionReason": "polygon(moved-pentagon) — polygon: {\"kind\":\"VALIDATION\",\"code\":\"FACE_NOT_PLANAR\",\"message\":\"makeFace produced a non-planar face — wire may not be truly planar\"}"
+}

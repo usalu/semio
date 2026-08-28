@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/declarations/std1-any/snapshot",
+  "title": "Std1Any declaration snapshot",
+  "$ref": "#/$defs/snapshot",
+  "$defs": {
+    "i32": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/i32"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "diff": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/i32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
+

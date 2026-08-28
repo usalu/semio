@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateDrawing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "target"
+  ],
+  "properties": {
+    "childId": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    }
+  }
+}

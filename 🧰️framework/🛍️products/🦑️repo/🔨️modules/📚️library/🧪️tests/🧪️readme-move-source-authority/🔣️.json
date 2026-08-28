@@ -1,0 +1,777 @@
+{
+  "schemaVersion": 1,
+  "contract": "exact-owner-move-source-authority-v1",
+  "scope": "in-memory-only",
+  "strictCompilation": { "strict": true, "noEmit": true, "diagnostics": [] },
+  "execution": {
+    "packageName": "@semio-tech/repo-lib",
+    "target": "test-readme-move-source-authority",
+    "packageCommand": "nx run @semio-tech/repo-lib:test-readme-move-source-authority",
+    "command": "bun ./📜️script.ts test readme-move-source-authority",
+    "route": "readme-move-source-authority",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-move-source-authority/🟦️.ts",
+    "launchName": "🧹clean🧩️taxonomy🧪️readme-move-source-authority",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.197
+  },
+  "semantics": {
+    "syntax": "Closed shape and exact roles; syntax alone does not authenticate a well-shaped hash or know whether a source requires authority.",
+    "freshness": "The existing apply operationSets comparison must reject any departure from the freshly derived complete move.",
+    "phase": "Journal-owned reconciliation precedes logical input validation; use the existing source/stage/destination/edit-backup mapping.",
+    "inverse": "Inverse recovery authenticates owned writes without overwriting changed external inputs.",
+    "provenance": "Synthetic bytes exercise the grammar only; they do not establish real Git provenance or authorize a production move."
+  },
+  "revision": {
+    "kind": "exact-owner-current-source-revision-v1",
+    "revisionId": "testing-readme-protocol-v2-reviewed",
+    "revisionDigest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+  },
+  "source": {
+    "path": "🧪️owner/README.md",
+    "destinationPath": "🧪️owner/📃️readme/📝️.md",
+    "ownerId": "🧪️owner",
+    "contents": "Reviewed protocol v2.\n",
+    "mode": 420
+  },
+  "inputs": [
+    {
+      "role": "schema",
+      "path": "🧪️authority/🔣️taxonomy.json",
+      "contents": "{\"schemaVersion\":7,\"currentSourceRevisions\":\"synthetic\"}\n",
+      "mode": 420
+    },
+    {
+      "role": "catalog",
+      "path": "🧪️authority/📚️catalog/🔣️.json",
+      "contents": "{\"schemaVersion\":1,\"historicalOwner\":\"synthetic\"}\n",
+      "mode": 420
+    },
+    {
+      "role": "expectation",
+      "path": "🧪️authority/🧪️expectation/🔣️.json",
+      "contents": "{\"documents\":{\"readme\":\"🧪️owner/README.md\"}}\n",
+      "postContents": "{\"documents\":{\"readme\":\"🧪️owner/📃️readme/📝️.md\"}}\n",
+      "destinationPath": "🧪️authority/🧪️expectation/📃️current/🔣️.json",
+      "mode": 420
+    }
+  ],
+  "canonicalArrayKeys": [
+    "operationId",
+    "sourcePath",
+    "path",
+    "id",
+    "destinationPath",
+    "code",
+    "relativeRoot",
+    "structuredLocation"
+  ],
+  "cases": [
+    {
+      "id": "revised-exact-authority",
+      "context": "revised",
+      "changes": [],
+      "syntaxAccepted": true,
+      "freshAccepted": true
+    },
+    {
+      "id": "ordinary-no-authority",
+      "context": "ordinary",
+      "changes": [],
+      "syntaxAccepted": true,
+      "freshAccepted": true
+    },
+    {
+      "id": "omitted-required-authority",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove",
+          "pointer": "/sourceAuthority"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "ordinary-source-with-foreign-authority",
+      "context": "ordinary",
+      "changes": [
+        {
+          "op": "copy-authority"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "missing-authority-kind",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove",
+          "pointer": "/sourceAuthority/kind"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "missing-authority-revisionId",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove",
+          "pointer": "/sourceAuthority/revisionId"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "missing-authority-revisionDigest",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove",
+          "pointer": "/sourceAuthority/revisionDigest"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "missing-authority-inputs",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove",
+          "pointer": "/sourceAuthority/inputs"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unknown-authority-field",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourceAuthority/legacy",
+          "value": true
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsupported-authority-kind",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourceAuthority/kind",
+          "value": "old-source-fallback"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "foreign-revision-id",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourceAuthority/revisionId",
+          "value": "unregistered-owner"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "malformed-revision-digest",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourceAuthority/revisionDigest",
+          "value": "abc"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "stale-revision-digest",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourceAuthority/revisionDigest",
+          "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-schema-contentHash",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "schema",
+          "pointer": "/preimage/contentHash",
+          "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-schema-mode",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "schema",
+          "pointer": "/preimage/mode",
+          "value": 384
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-schema-size",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "schema",
+          "pointer": "/preimage/size",
+          "value": 999
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-catalog-contentHash",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "catalog",
+          "pointer": "/preimage/contentHash",
+          "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-catalog-mode",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "catalog",
+          "pointer": "/preimage/mode",
+          "value": 384
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-catalog-size",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "catalog",
+          "pointer": "/preimage/size",
+          "value": 999
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-expectation-contentHash",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/contentHash",
+          "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-expectation-mode",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/mode",
+          "value": 384
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "changed-expectation-size",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/size",
+          "value": 999
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "foreign-schema-path",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "schema",
+          "pointer": "/path",
+          "value": "🧪️foreign/schema/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "foreign-catalog-path",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "catalog",
+          "pointer": "/path",
+          "value": "🧪️foreign/catalog/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "foreign-expectation-path",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "🧪️foreign/expectation/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "missing-input",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "remove-input",
+          "role": "catalog"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "extra-duplicate-input",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "duplicate-input",
+          "role": "expectation"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "duplicate-role-distinct-path",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "catalog",
+          "pointer": "/role",
+          "value": "schema"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "duplicate-path-distinct-role",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "duplicate-path",
+          "from": "schema",
+          "to": "catalog"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unknown-input-field",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "schema",
+          "pointer": "/allowMissing",
+          "value": true
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "input-symlink",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/nodeKind",
+          "value": "symlink"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "input-directory",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/nodeKind",
+          "value": "directory"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "input-extra-tuple-field",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/preimage/target",
+          "value": "elsewhere"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-opaque-root",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "compose/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-opaque-temp",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "temp/compose/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-escape",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "../🔣️.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-absolute",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "/root/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-drive",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "C:/🔣️.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-backslash",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "root\\file.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-dot",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "root/./file.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "unsafe-input-double-slash",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set-input",
+          "role": "expectation",
+          "pointer": "/path",
+          "value": "root//file.json"
+        }
+      ],
+      "syntaxAccepted": false,
+      "freshAccepted": false
+    },
+    {
+      "id": "current-source-tuple-changed",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/sourcePreimage/contentHash",
+          "value": "9999999999999999999999999999999999999999999999999999999999999999"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "current-destination-changed",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/destinationPath",
+          "value": "🧪️foreign/📃️readme/📝️.md"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "current-owner-changed",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "set",
+          "pointer": "/ownerId",
+          "value": "🧪️foreign"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": false
+    },
+    {
+      "id": "input-order-only",
+      "context": "revised",
+      "changes": [
+        {
+          "op": "reverse-inputs"
+        }
+      ],
+      "syntaxAccepted": true,
+      "freshAccepted": true
+    }
+  ],
+  "phaseCases": [
+    {
+      "id": "source-before-stage",
+      "query": "source",
+      "state": "source",
+      "expectedPath": "${source}",
+      "expected": "same"
+    },
+    {
+      "id": "source-staged",
+      "query": "source",
+      "state": "staged",
+      "expectedPath": "${stagingRoot}/${sourceOperationId}",
+      "expected": "same"
+    },
+    {
+      "id": "source-installed",
+      "query": "source",
+      "state": "installed",
+      "expectedPath": "${destination}",
+      "expected": "same"
+    },
+    {
+      "id": "planned-expectation-edit",
+      "query": "expectation",
+      "state": "owned-edit",
+      "expectedPath": "${backupRoot}/expectation-preimage",
+      "expected": "same"
+    },
+    {
+      "id": "changed-external-expectation",
+      "query": "expectation",
+      "state": "foreign",
+      "expectedPath": "${input}",
+      "expected": "changed"
+    },
+    {
+      "id": "changed-external-schema",
+      "query": "schema",
+      "state": "foreign",
+      "expectedPath": "${input}",
+      "expected": "changed"
+    },
+    {
+      "id": "missing-external-catalog",
+      "query": "catalog",
+      "state": "missing",
+      "expectedPath": "${input}",
+      "expected": "unreadable"
+    },
+    {
+      "id": "changed-owned-expectation-backup",
+      "query": "expectation",
+      "state": "bad-backup",
+      "expectedPath": "${backupRoot}/expectation-preimage",
+      "expected": "changed"
+    },
+    {
+      "id": "unplanned-backup-does-not-hide-external-drift",
+      "query": "expectation",
+      "state": "unplanned-backup",
+      "expectedPath": "${input}",
+      "expected": "changed"
+    },
+    {
+      "id": "expectation-staged-by-own-move",
+      "query": "expectation",
+      "state": "expectation-staged",
+      "expectedPath": "${stagingRoot}/${expectationOperationId}",
+      "expected": "same"
+    },
+    {
+      "id": "expectation-installed-and-edited",
+      "query": "expectation",
+      "state": "expectation-installed-edit",
+      "expectedPath": "${backupRoot}/expectation-preimage",
+      "expected": "same"
+    },
+    {
+      "id": "external-expectation-symlink",
+      "query": "expectation",
+      "state": "symlink",
+      "expectedPath": "${input}",
+      "expected": "changed"
+    },
+    {
+      "id": "external-expectation-directory",
+      "query": "expectation",
+      "state": "directory",
+      "expectedPath": "${input}",
+      "expected": "changed"
+    }
+  ],
+  "forwardBoundary": {
+    "function": "validateResumeTuples",
+    "ownedFunction": "reconcileTransactionOwnedTuples",
+    "moveInputFunction": "validateForwardMoveSourceInputs",
+    "typedError": "TaxonomyMoveSourceInputDriftError",
+    "logicalPathFunction": "resumeGeneratorInputPhysicalPath"
+  },
+  "forwardOrderCases": [
+    { "id": "unchanged-owned-state", "ownedChanged": false, "failure": null, "calls": ["owned", "move", "generator"], "result": false },
+    { "id": "reconciled-owned-state", "ownedChanged": true, "failure": null, "calls": ["owned", "move", "generator"], "result": true },
+    { "id": "owned-proof-fails-before-external-read", "ownedChanged": false, "failure": "owned", "calls": ["owned"], "result": "owned" },
+    { "id": "move-input-drift-stops-forward-work", "ownedChanged": false, "failure": "move", "calls": ["owned", "move"], "result": "move" },
+    { "id": "generator-input-drift-remains-distinct", "ownedChanged": false, "failure": "generator", "calls": ["owned", "move", "generator"], "result": "generator" }
+  ],
+  "resumeErrorCases": [
+    { "id": "move-input-drift", "kind": "move", "expected": "rolled-back" },
+    { "id": "generator-input-drift", "kind": "generator", "expected": "rolled-back" },
+    { "id": "started-partial-output", "kind": "partial", "expected": "rolled-back" },
+    { "id": "unclassified-owned-drift", "kind": "unknown", "expected": "thrown" }
+  ],
+  "finalGateCases": [
+    { "id": "revised-without-generators", "revised": true, "generators": 0, "validations": 1 },
+    { "id": "ordinary-without-generators", "revised": false, "generators": 0, "validations": 0 },
+    { "id": "revised-with-generator", "revised": true, "generators": 1, "validations": 1 },
+    { "id": "ordinary-with-generator", "revised": false, "generators": 1, "validations": 1 }
+  ]
+}

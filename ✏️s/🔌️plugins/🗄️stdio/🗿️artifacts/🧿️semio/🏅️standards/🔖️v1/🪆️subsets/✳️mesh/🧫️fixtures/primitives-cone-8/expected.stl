@@ -1,0 +1,100 @@
+solid exported
+	facet normal -0.8665976788594435 -0.35895656711459245 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex -12 0 -15
+			vertex -8.485280990600586 -8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal -0.35895656711459245 -0.8665976788594435 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex -8.485280990600586 -8.485280990600586 -15
+			vertex 0 -12 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 0 12 -15
+			vertex 0 -12 -15
+			vertex -8.485280990600586 -8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex -8.485280990600586 8.485280990600586 -15
+			vertex -8.485280990600586 -8.485280990600586 -15
+			vertex -12 0 -15
+		endloop
+	endfacet
+	facet normal -0.8665976788594435 0.35895656711459245 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex -8.485280990600586 8.485280990600586 -15
+			vertex -12 0 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 0 12 -15
+			vertex -8.485280990600586 -8.485280990600586 -15
+			vertex -8.485280990600586 8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal -0.35895656711459245 0.8665976788594435 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex 0 12 -15
+			vertex -8.485280990600586 8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal 0.35895656711459245 -0.8665976788594435 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex 0 -12 -15
+			vertex 8.485280990600586 -8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 8.485280990600586 8.485280990600586 -15
+			vertex 8.485280990600586 -8.485280990600586 -15
+			vertex 0 -12 -15
+		endloop
+	endfacet
+	facet normal 0.8665976788594435 -0.35895656711459245 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex 8.485280990600586 -8.485280990600586 -15
+			vertex 12 0 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 8.485280990600586 8.485280990600586 -15
+			vertex 0 -12 -15
+			vertex 0 12 -15
+		endloop
+	endfacet
+	facet normal 0.35895656711459245 0.8665976788594435 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex 8.485280990600586 8.485280990600586 -15
+			vertex 0 12 -15
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 12 0 -15
+			vertex 8.485280990600586 -8.485280990600586 -15
+			vertex 8.485280990600586 8.485280990600586 -15
+		endloop
+	endfacet
+	facet normal 0.8665976788594435 0.35895656711459245 0.3466390715437774
+		outer loop
+			vertex 0 0 15
+			vertex 12 0 -15
+			vertex 8.485280990600586 8.485280990600586 -15
+		endloop
+	endfacet
+endsolid exported

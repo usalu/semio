@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "grant", "open", "priorGuestLifetime", "capturedGuestLifetime", "reopenedGuestLifetime", "closeRequestSequence", "closeGeneration", "nativeParticipants", "hostParticipants", "admission", "acknowledgements", "preflightFailures", "preflight", "faults", "faultRecovery", "terminalRelease", "pendingPatch", "retirement"],
+  "properties": {
+    "version": { "const": 1 },
+    "grant": { "const": { "items": 1, "bytes": 4096, "callbackLimitUs": 8000 } },
+    "open": { "const": { "activationGeneration": "41", "instanceId": 7, "requestSequence": 8 } },
+    "priorGuestLifetime": { "const": "12" }, "capturedGuestLifetime": { "const": "13" }, "reopenedGuestLifetime": { "const": "14" },
+    "closeRequestSequence": { "const": 9 }, "closeGeneration": { "const": "51" },
+    "nativeParticipants": { "const": ["app", "tasks", "requests", "resumes", "timers", "metadata", "patchTracker", "pendingPatches", "jobRenderBindings", "uiHandbacks", "turnPatchHandbacks"] },
+    "hostParticipants": { "const": ["capturedWorkerActivation", "ownedUiInstance", "receiptTransport"] },
+    "admission": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "object", "additionalProperties": false, "required": ["name", "secondRequest", "createdApps", "guestLifetime", "outcome"], "properties": {
+      "name": { "enum": ["duplicate-open-pending-capture", "replacement-open-before-final-ack", "reopen-after-final-ack"] }, "secondRequest": { "enum": [8, 10] }, "createdApps": { "enum": [1, 2] }, "guestLifetime": { "enum": ["13", "14"] }, "outcome": { "enum": ["same-owner", "blocked", "new-owner"] }
+    } } },
+    "acknowledgements": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "object", "additionalProperties": false, "required": ["receipt", "ack", "phase", "releasedSlots"], "properties": {
+      "receipt": { "enum": ["captured", "accepted", "retired"] }, "ack": { "enum": ["foreign-guest", "wrong-kind", "wrong-request", "exact"] }, "phase": { "enum": ["capture-pending", "live", "accepted-pending", "closing", "retired-pending", "released"] }, "releasedSlots": { "enum": [0, 1] }
+    } } },
+    "preflightFailures": { "const": ["lifetime-counter-exhaust", "lifecycle-slot-full", "reactor-slot-full", "patch-slot-full", "pending-patch-slot-full", "foreign-native-cell"] },
+    "preflight": { "const": { "detachedApps": 0, "detachedDescendants": 0, "lostOwners": 0 } },
+    "faults": { "const": ["open-after-construction", "capture-before-publication", "child-step-unwind", "publication-clock-missing", "publication-clock-backward", "publication-elapsed-equality", "output-full"] },
+    "faultRecovery": { "const": { "ownerRemainsReachable": true, "receiptRemainsOwned": true, "terminalReceiptPublished": false } },
+    "terminalRelease": { "const": { "startedUs": 100, "destructorWorkUs": 8000, "firstAckAccepted": false, "destructionsAfterRetry": 1, "receiptRetainedOnLateClock": true, "arbitraryPanickingDestructorSupported": false } },
+    "pendingPatch": { "const": { "surfaces": ["7:保留,🙂", "7:second"], "grants": [1, 64, 4096], "zeroGrantChangesOwner": false, "occupiedHandbackAcceptsReplacement": false, "terminalBeforeExactRelease": false, "faultLeavesStructuralOwner": true } },
+    "retirement": { "const": { "nativeAppAloneIsTerminal": false, "globalEmptyIsTerminal": false, "allCapturedNativeOwnersIsTerminal": true, "retiredReceiptAloneAllowsHostDispose": false } }
+  }
+}

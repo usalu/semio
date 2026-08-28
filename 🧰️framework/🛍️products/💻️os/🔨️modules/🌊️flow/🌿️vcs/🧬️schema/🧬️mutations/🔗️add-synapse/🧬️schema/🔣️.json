@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/add-synapse",
+  "title": "AddSynapse",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false,
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index"
+        },
+        "synapse": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse"
+        }
+      },
+      "required": [
+        "index",
+        "synapse"
+      ]
+    }
+  }
+}
+

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🧹️remove-object",
+  "semanticKind": "remove-object",
+  "displayName": "Remove Object",
+  "emoji": "🧹️",
+  "aggregateVariant": "RemoveObject",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-object",
+  "binaryTag": 7,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

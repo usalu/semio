@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "ownedRoots": ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand", "🧪️custom", "🧪️missing", "compose", "target", ".nx"],
+  "physicalOwners": ["✏️s", "🧰️framework", "🌎️hub", "♻️mit-bestand"],
+  "includedRoots": [
+    "✏️s/production/🧬️mutations",
+    "✏️s/production/🧬️mutations/🧪️tests/roundtrip/🧬️mutations",
+    "✏️s/📦️packages/typescript/example/🧬️mutations",
+    "✏️s/🧪️tests/counter/🧬️mutations",
+    "✏️s/🧫️fixtures/counter/🧬️mutations",
+    "✏️s/📚️examples/counter/🧬️mutations",
+    "✏️s/🖼️assets/counter/🧬️mutations",
+    "✏️s/🎯️targets/counter/🧬️mutations",
+    "✏️s/🤖️generated/visible-source/🧬️mutations",
+    "✏️s/🛂️manifest/counter/🧬️mutations",
+    "🧰️framework/🧪️tests/counter/🧬️mutations",
+    "🌎️hub/📦️packages/counter/🧬️mutations",
+    "♻️mit-bestand/🧫️fixtures/counter/🧬️mutations",
+    "🧪️custom/owned/🧬️mutations"
+  ],
+  "excludedRoots": [
+    "compose/opaque/🧬️mutations",
+    "target/build-output/🧬️mutations",
+    ".nx/cache/🧬️mutations",
+    "✏️s/compose/opaque/🧬️mutations",
+    "✏️s/node_modules/dependency/🧬️mutations",
+    "✏️s/target/compiled/🧬️mutations",
+    "✏️s/dist/bundle/🧬️mutations",
+    "✏️s/build/compiler/🧬️mutations",
+    "✏️s/coverage/report/🧬️mutations",
+    "✏️s/.git/internal/🧬️mutations",
+    "✏️s/.nx/cache/🧬️mutations",
+    "✏️s/.🧬semio/tickets/🧬️mutations",
+    "✏️s/.hidden/private/🧬️mutations",
+    "✏️s/production/🧬️mutations/target/compiled/🧬️mutations"
+  ],
+  "filePaths": ["✏️s/not-a-facet/🧬️mutations", "✏️s/production/🦀️.rs"],
+  "rejections": [
+    { "name": "symlink-owned-root", "path": "✏️s", "kind": "symlink" },
+    { "name": "symlink-child", "path": "✏️s/alias", "kind": "symlink" },
+    { "name": "symlink-mutation-facet", "path": "✏️s/🧬️mutations", "kind": "symlink" },
+    { "name": "non-directory-owned-root", "path": "✏️s", "kind": "file" },
+    { "name": "unreadable-owned-root", "path": "✏️s", "kind": "unreadable" },
+    { "name": "unreadable-child", "path": "✏️s/locked", "kind": "unreadable" },
+    { "name": "vanished-child", "path": "✏️s/vanished", "kind": "vanished" },
+    { "name": "symlink-owned-ancestor", "path": "✏️s/alias", "kind": "symlink", "roots": ["✏️s/alias/nested"] },
+    { "name": "relative-parent-escape", "path": "✏️s", "kind": "directory", "roots": ["../compose"] },
+    { "name": "nested-parent-escape", "path": "✏️s", "kind": "directory", "roots": ["✏️s/../compose"] },
+    { "name": "posix-absolute-escape", "path": "✏️s", "kind": "directory", "roots": ["/compose"] },
+    { "name": "windows-absolute-escape", "path": "✏️s", "kind": "directory", "roots": ["C:\\compose"] }
+  ]
+}

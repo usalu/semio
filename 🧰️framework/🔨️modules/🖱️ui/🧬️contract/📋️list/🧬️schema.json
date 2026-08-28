@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "maximumPageBytes", "maximumGrantBytes", "fanout", "edgeCases", "counter", "ordered", "binding", "oversized", "retirement"],
+  "properties": {
+    "version": { "const": 1 }, "maximumPageBytes": { "const": 4096 }, "maximumGrantBytes": { "const": 32768 }, "fanout": { "const": 16 },
+    "edgeCases": { "const": { "zeroCapacity": 0, "zeroSizedCount": 7, "tailCount": 600, "retainedPrefix": 512, "reuseValue": 900 } },
+    "counter": { "const": { "preflightAddressable": true, "allocatorMultiplier": 2, "failedAllocationOwnerRetained": true } },
+    "ordered": { "type": "object", "additionalProperties": false, "required": ["count", "first", "last", "sum"], "properties": { "count": { "const": 600 }, "first": { "const": 0 }, "last": { "const": 599 }, "sum": { "const": 179700 } } },
+    "binding": { "type": "object", "additionalProperties": false, "required": ["count", "elementBytes", "smallGrantBytes"], "properties": { "count": { "const": 32 }, "elementBytes": { "const": 2072 }, "smallGrantBytes": { "const": 2048 } } },
+    "oversized": { "type": "object", "additionalProperties": false, "required": ["elementBytes", "placed"], "properties": { "elementBytes": { "const": 32769 }, "placed": { "const": false } } },
+    "retirement": { "type": "object", "additionalProperties": false, "required": ["allocates", "releasesLivePayload"], "properties": { "allocates": { "const": false }, "releasesLivePayload": { "const": false } } }
+  }
+}

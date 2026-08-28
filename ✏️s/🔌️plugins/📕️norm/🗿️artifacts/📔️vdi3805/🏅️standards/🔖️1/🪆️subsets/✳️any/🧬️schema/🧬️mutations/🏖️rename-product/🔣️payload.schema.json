@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenameProduct",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTitle"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newTitle": {
+      "type": "array",
+      "items": {
+        "title": "LocalizedText",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locale",
+          "text"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

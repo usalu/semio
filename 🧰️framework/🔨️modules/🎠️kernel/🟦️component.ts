@@ -14,7 +14,10 @@ import type {
 } from "../🛂️manifest/🟦️component.ts";
 import type { StoragePort } from "../🖥️platform/🟦️component.ts";
 import { ShardClient, type ShardAsset, type ShardBudget, type ShardCapabilityGrant, type ShardEventEnvelope } from "../🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { OwnedResidentLedger } from "../🌱️value/💾️resident/🟦️component.ts";
 import { TurnScheduler, type Backpressure, type CoalesceKey, type Lane } from "../🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts";
+export { KernelReturnContentFraming, type KernelReturnContentMetadata, type KernelReturnContentByte } from "./📤️return/📦️content/🟦️component.ts";
+export { KernelReturnUiOperationHeader, type KernelReturnUiOperationFields, type KernelReturnUiFieldName } from "./📤️return/📦️content/🟦️component.ts";
 
 //#region EphemeralLane
 /** 🫧 Process-local box for module ephemeral values. */
@@ -99,6 +102,35 @@ export function ephemeralWeakMap<K extends object, V>(key: string): WeakMap<K, V
   return defaultOsTransient.weakMap(key);
 }
 //#endregion EphemeralLane
+
+//#region 📇️DescriptorAdmission
+/** 📇️ Requires a published descriptor with the requested owner before any actor runtime is started. */
+export async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
+  signal?.throwIfAborted();
+  const path = moduleUrl.split(/[?#]/u)[0]!;
+  const descriptorUrl = path.slice(0, path.lastIndexOf("/") + 1) + "🔣️descriptor.json";
+  const fault = (code: string, detail: string) => new SemioFaultError({
+    origin: "os", code, severity: "error", message: `${code}: ${detail}`,
+    scope: { pluginId }, retryable: true,
+  });
+  const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
+  signal?.throwIfAborted();
+  if (!response.ok) throw fault("plugin.descriptor-unavailable", `${descriptorUrl} (HTTP ${response.status})`);
+  if (response.headers?.get?.("content-type")?.toLowerCase().includes("text/html")) throw fault("plugin.descriptor-invalid", `${descriptorUrl} returned HTML`);
+  let descriptor: unknown;
+  try { descriptor = await response.json(); }
+  catch {
+    signal?.throwIfAborted();
+    throw fault("plugin.descriptor-invalid", `${descriptorUrl} is not JSON`);
+  }
+  signal?.throwIfAborted();
+  const manifest = descriptor && typeof descriptor === "object" && "manifest" in descriptor ? descriptor.manifest : undefined;
+  if (!manifest || typeof manifest !== "object" || !("pluginId" in manifest) || typeof manifest.pluginId !== "string") throw fault("plugin.descriptor-invalid", "missing manifest owner");
+  if (manifest.pluginId !== pluginId) throw fault("plugin.descriptor-identity-mismatch", `expected ${pluginId}, received ${manifest.pluginId}`);
+  if (!("apps" in manifest) || !Array.isArray(manifest.apps)) throw fault("plugin.descriptor-invalid", "missing app roster");
+  return manifest as PluginManifest;
+}
+//#endregion 📇️DescriptorAdmission
 
 //#region 🔖️TurnOutcomeBroadcast
 /** 📨️ One instance's reply to whatever {@link PluginWasmHandle.enqueue} most recently queued for
@@ -1275,7 +1307,7 @@ export type Effect =
    * future on a `completed` event carrying the same `req` instead of a `responseAction` redispatch. */
   | {
       readonly invokeExtension: {
-        readonly req: number;
+        readonly req: bigint;
         readonly extensionId: string;
         readonly capability: string;
         readonly requestJson: string;
@@ -2267,8 +2299,10 @@ if (import.meta.vitest) {
   }
 
   function fakeShardClient(shardCount = 1): ShardClient {
-    return new ShardClient({ shardCount, createWorker: () => createAutoReplyWorker() });
+    return new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount, createWorker: () => createAutoReplyWorker() });
   }
+
+  function fixtureResidentLedger(): OwnedResidentLedger { return new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }); }
 
   /** 🧪️ Advances `n` real microtask ticks with no real timer/sleep involved — enough hops for a
    * `TurnScheduler` pump + a fake-worker's `queueMicrotask` reply + this registry's own
@@ -2467,7 +2501,7 @@ if (import.meta.vitest) {
         if (msg.kind === "activate" && msg.actorId) sentCaps.set(msg.actorId, msg.caps ?? []);
         originalPostMessage(message);
       };
-      const client = new ShardClient({ shardCount: 1, createWorker: () => worker });
+      const client = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => worker });
       const registry = new ActivationRegistry({ shardClient: client, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
       registry.registerCatalog(catalogWithOneExtension());
       const grant = (id: string): ShardCapabilityGrant => ({ id, token: "t", scope: "s", expiresMs: null });
@@ -2530,6 +2564,7 @@ if (import.meta.vitest) {
     it("is a valid ShardClientOptions.onShardLost value", () => {
       let registry!: ActivationRegistry;
       const shardClient = new ShardClient({
+        residentLedger: fixtureResidentLedger(),
         shardCount: 1,
         createWorker: () => createAutoReplyWorker(),
         onShardLost: (shardIndex, actorIds) => registry.handleShardLost(shardIndex, actorIds),
@@ -2539,7 +2574,7 @@ if (import.meta.vitest) {
     });
 
     it("restores exactly the actors that were on the lost shard, leaving an actor on a different shard untouched", async () => {
-      const shardClient = new ShardClient({ shardCount: 2, exclusiveShardCount: 0, createWorker: () => createAutoReplyWorker() });
+      const shardClient = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 2, exclusiveShardCount: 0, createWorker: () => createAutoReplyWorker() });
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [] });
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });
 
@@ -2564,7 +2599,7 @@ if (import.meta.vitest) {
 
   describe("ActivationRegistry restore ordering", () => {
     it("a restored actor does not receive turns that were queued before the restore, but does receive turns queued after", async () => {
-      const shardClient = new ShardClient({ shardCount: 1, createWorker: () => createAutoReplyWorker() });
+      const shardClient = new ShardClient({ residentLedger: fixtureResidentLedger(), shardCount: 1, createWorker: () => createAutoReplyWorker() });
       const delivered: string[] = [];
       const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET_FIXTURE, fetchAssets: async () => [], onTurnResult: () => delivered.push("delivered") });
       registry.registerManifest({ pluginId: "p1", moduleUrl: "https://x/p1.js", caps: [] });

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDomain",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDomain"
+  ],
+  "properties": {
+    "newDomain": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.return-source.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "authority",
+    "source",
+    "grants",
+    "cases",
+    "laws"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "authority": {
+      "const": {
+        "activationGeneration": "7",
+        "firstOrigin": 13,
+        "retryEnvelope": 17,
+        "nextOrigin": 19,
+        "firstReturn": "11",
+        "firstPage": "1"
+      }
+    },
+    "source": {
+      "const": {
+        "payloadHex": "00ff07",
+        "target": {
+          "kind": "shell",
+          "instance": "7"
+        },
+        "sourceCopies": 0,
+        "sourceOwners": 1
+      }
+    },
+    "grants": {
+      "const": {
+        "items": [
+          0,
+          1
+        ],
+        "bytes": [
+          0,
+          1,
+          64,
+          4096
+        ],
+        "allocationBytes": [
+          0,
+          32768
+        ]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "events",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "events": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "execute-zero-items",
+                "execute-zero-bytes",
+                "execute-no-output-slot",
+                "execute",
+                "producer-message",
+                "retry-same-origin-new-envelope",
+                "producer-fault",
+                "freeze",
+                "encode-prefix",
+                "move-parent",
+                "encode-tail",
+                "issue-page",
+                "cancel",
+                "stage-input-ack",
+                "clock-8000",
+                "input-ack",
+                "retire-source",
+                "retired-ack",
+                "execute-old-origin",
+                "execute-next-origin"
+              ]
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "producerSteps",
+              "activeSources",
+              "originFrontier"
+            ],
+            "properties": {
+              "producerSteps": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "activeSources": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "originFrontier": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        }
+      }
+    },
+    "laws": {
+      "const": {
+        "sourceExistsBeforeProducer": true,
+        "cursorReferencesInsideOwner": false,
+        "wholeTypedClone": false,
+        "globalOwnerLookup": false,
+        "oneSemanticSource": true,
+        "inputAckIsUiAck": false,
+        "sourceEmptyIsTerminalReceipt": false,
+        "lateClockDiscardsReceipt": false
+      }
+    }
+  }
+}

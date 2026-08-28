@@ -51,7 +51,7 @@ macro_rules! impl_dsl_field_int {
             }
             fn from_value(value: &FieldValue) -> Result<Self, String> {
                 match value {
-                    FieldValue::$variant(v) => Ok(*v as $ty),
+                    FieldValue::$variant(v) => <$ty>::try_from(*v).map_err(|_| format!("integer {v} out of range for {}", stringify!($ty))),
                     other => Err(format!("expected {}, found {other:?}", stringify!($variant))),
                 }
             }
@@ -353,11 +353,12 @@ pub mod variants_binary {
         let (keyword, record) = op.to_named_record();
         let variants = T::variants();
         let ordinal = variants.iter().position(|(k, _)| k == &keyword).ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword '{keyword}' missing from variants()") })?;
+        let wire_ordinal = u64::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the u64 wire range") })?;
         let spec = variants[ordinal].1();
         let body = encode_record_body(&spec, &record, &EncodeOptions::default()).map_err(ProtocolError::from)?;
         let mut out = Vec::with_capacity(body.len() + 3);
         out.push(OP_BINARY_FORMAT);
-        write_varint_u64(&mut out, ordinal as u64);
+        write_varint_u64(&mut out, wire_ordinal);
         out.extend_from_slice(&body);
         Ok(out)
     }
@@ -369,8 +370,9 @@ pub mod variants_binary {
             return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
         }
         let ordinal = reader.read_varint_u64()?;
+        let index = usize::try_from(ordinal).map_err(|_| ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} exceeds the native index range") })?;
         let variants = T::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let (keyword, spec_fn) = variants.get(index).ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
         let spec = spec_fn();
         let body = &bytes[reader.position()..];
         let (record, _report) = decode_record_body(body, &spec, &DecodeOptions::default()).map_err(ProtocolError::from)?;
@@ -719,6 +721,10 @@ pub mod test_support {
 //#endregion 🔖️TestSupport
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔢️checked-integers/🦀️.rs"]
+mod checked_integer_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;

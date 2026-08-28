@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDeltaTauStudMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDeltaTauStudMpa"
+  ],
+  "properties": {
+    "newDeltaTauStudMpa": {
+      "type": "number"
+    }
+  }
+}

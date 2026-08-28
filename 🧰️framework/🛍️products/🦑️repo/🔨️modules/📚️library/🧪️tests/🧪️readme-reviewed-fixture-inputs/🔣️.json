@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "contract": "self-contained-reviewed-readme-inputs-v1",
+  "execution": {
+    "packageName": "@semio-tech/repo-lib",
+    "packageCommand": "nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs",
+    "target": "test-readme-reviewed-fixture-inputs",
+    "command": "bun ./📜️script.ts test readme-reviewed-fixture-inputs",
+    "route": "readme-reviewed-fixture-inputs",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🟦️.ts",
+    "launchName": "🧹clean🧩️taxonomy🧪️readme-reviewed-fixture-inputs",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.206
+  },
+  "fixtureAuthority": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures/🔣️.json",
+  "fixtureAuthoritySha256": "ce363f1cdf5395eacc3cd5ff5c036230d2eeaf76a44a7137e43bf1f8409f8135",
+  "runParent": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️readme-current-source/📓️fixture-inputs/🧾️runs",
+  "isolation": {
+    "rawSource": "absent",
+    "canonicalSource": "edited",
+    "liveExpectation": "absent",
+    "gateSource": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts",
+    "expectedPasses": 11,
+    "expectedFailures": 0,
+    "canonicalBytes": "# Independently Edited Canonical README\n\nThis isolated body is intentionally not the reviewed raw preimage.\n",
+    "activationGateSource": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts",
+    "activationTestPattern": "actual schema loader parses and binds one captured input without a second byte read"
+  },
+  "copies": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-revision/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    ".vscode/🧩️launch.seed.jsonc",
+    ".vscode/launch.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+  ],
+  "inputCases": [
+    {
+      "id": "exact",
+      "state": "exact",
+      "accepted": true
+    },
+    {
+      "id": "changed-content",
+      "state": "changed",
+      "accepted": false
+    },
+    {
+      "id": "changed-mode",
+      "state": "mode",
+      "accepted": false
+    },
+    {
+      "id": "missing-leaf",
+      "state": "missing",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-leaf",
+      "state": "symlink",
+      "accepted": false
+    },
+    {
+      "id": "symbolic-parent",
+      "state": "parent-symlink",
+      "accepted": false
+    }
+  ],
+  "repeatedCapture": {
+    "first": "first reviewed bytes\n",
+    "changed": "changed reviewed bytes\n",
+    "expected": "reject-preserve-first"
+  },
+  "childSafety": {
+    "budgetMs": 4500,
+    "maxBytes": 1048576,
+    "probes": [
+      {
+        "id": "timeout",
+        "reason": "timeout",
+        "budgetMs": 500,
+        "maxBytes": 4096
+      },
+      {
+        "id": "output-limit",
+        "reason": "output-limit",
+        "budgetMs": 500,
+        "maxBytes": 4096
+      }
+    ],
+    "utf8Probe": {
+      "segmentsHex": [
+        "f09f",
+        "93a6"
+      ],
+      "expected": "📦",
+      "budgetMs": 500,
+      "maxBytes": 4096
+    }
+  },
+  "directoryCases": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs",
+      "kind": "test-case",
+      "parent": "tests"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧬️schema",
+      "kind": "schema",
+      "parent": "test-case"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures",
+      "kind": "fixtures",
+      "parent": "test-case"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-reviewed-fixture-inputs/🧫️fixtures/🧬️schema",
+      "kind": "schema",
+      "parent": "fixtures"
+    }
+  ]
+}

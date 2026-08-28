@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🔀️move-synapse",
+  "semanticKind": "move-synapse",
+  "displayName": "Move Synapse",
+  "emoji": "🔀️",
+  "aggregateVariant": "MoveSynapse",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "move-synapse",
+  "binaryTag": 6,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

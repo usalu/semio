@@ -459,7 +459,7 @@ mod tests {
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
         let variants = ["NoMutation", "SetSnapshot", "SetVersionInfo"];
         assert_eq!(KINDS.len(), variants.len());
-        for manifest in [include_str!("🔣️component.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
+        for manifest in [include_str!("🔣️.json"), include_str!("../../../../🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🔣️.json")] {
             for kind in KINDS {
                 assert!(manifest.contains(&format!("\"{kind}\"")), "a committed DWG catalog is missing kind {kind:?}");
             }
@@ -467,7 +467,7 @@ mod tests {
         for (kind, variant) in KINDS.iter().zip(variants.iter()) {
             assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "DwgMutation is missing variant {variant:?} for kind {kind:?}");
         }
-        for feature in [include_str!("../../../../../🧪️tests/mutate-dwg-ac1024/component.feature"), include_str!("../../../../../🧪️tests/mutate-dwg-ac1018/component.feature")] {
+        for feature in [include_str!("../../../../../🧪️tests/mutate-dwg-ac1024/🥒️.feature"), include_str!("../../../../../🧪️tests/mutate-dwg-ac1018/🥒️.feature")] {
             for kind in KINDS {
                 assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}  ")), "a DWG case's Examples table is missing kind {kind:?}");
             }

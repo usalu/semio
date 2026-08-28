@@ -2,7 +2,8 @@
   "declaredOutcome": "applied",
   "solids": 1,
   "empty": false,
-  "volume": 17035.681469282044,
+  "measuredFrom": "expected.step, re-imported",
+  "volume": 17035.681469282023,
   "area": 7065.575191894878,
   "boundingBox": {
     "xMin": -1e-7,
@@ -17,6 +18,7 @@
   "edges": 36,
   "vertices": 24,
   "validSolid": true,
-  "meshVertexCount": 2584,
-  "meshTriangleCount": 2572
+  "tessellationTolerance": 0.0021766028665973955,
+  "meshVertexCount": 2072,
+  "meshTriangleCount": 2060
 }

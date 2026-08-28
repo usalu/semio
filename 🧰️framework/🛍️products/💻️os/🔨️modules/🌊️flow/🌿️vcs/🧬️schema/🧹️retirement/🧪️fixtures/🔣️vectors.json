@@ -1,0 +1,15 @@
+{
+  "cases": [
+    { "leaf": "AddWidget", "owners": ["Widget"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "RemoveWidget", "owners": ["Bytes"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "MoveWidget", "owners": ["Bytes"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "ChangeWidget", "owners": ["Bytes", "Widget"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "AddSynapse", "owners": ["Specs"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "RemoveSynapse", "owners": ["Bytes"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "MoveSynapse", "owners": ["Bytes"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "ChangeSynapse", "owners": ["Bytes", "Specs"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "ChangeLayout", "owners": ["Layout"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] },
+    { "leaf": "ReplaceFlowFixture", "owners": ["Fixture"], "grants": [{ "items": 0, "bytes": 64, "result": "blocked" }, { "items": 1, "bytes": 0, "result": "blocked" }, { "items": 1, "bytes": 64, "result": "handoff" }, { "items": 1, "bytes": 64, "result": "nested" }] }
+  ],
+  "fault": { "injected": true, "productionObserved": false, "ownershipRetained": true }
+}

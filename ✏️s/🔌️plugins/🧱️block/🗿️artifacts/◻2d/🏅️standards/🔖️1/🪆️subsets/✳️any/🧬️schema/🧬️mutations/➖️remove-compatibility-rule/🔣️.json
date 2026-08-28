@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-compatibility-rule",
+  "semanticKind": "remove-compatibility-rule",
+  "displayName": "Remove Compatibility Rule",
+  "emoji": "➖️",
+  "aggregateVariant": "RemoveCompatibilityRule",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-compatibility-rule",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["version", "root", "child", "node", "fields", "scalarTags", "forgedAuthorities", "rawRetirement", "stream", "nativeChildren", "hostile", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "root": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "child": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+    "node": {"type": "object", "additionalProperties": false, "required": ["id", "key", "component", "layout", "style", "activity", "accessibility"], "properties": {"id": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "key": {"type": "string"}, "component": {"type": "object", "additionalProperties": false, "required": ["type", "value"], "properties": {"type": {"const": "text"}, "value": {"type": "string"}}}, "layout": {"type": "object", "additionalProperties": false, "required": ["kind", "width", "height"], "properties": {"kind": {"const": "leaf"}, "width": {"enum": ["hug", "fill"]}, "height": {"enum": ["hug", "fill"]}}}, "style": {"const": {}}, "activity": {"const": "idle"}, "accessibility": {"const": {}}}},
+    "fields": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"type": "object", "additionalProperties": false, "required": ["tag", "field", "value"], "properties": {"tag": {"enum": ["set-component", "set-layout", "set-activity", "set-style", "set-accessibility", "set-bindings", "set-menu"]}, "field": {"enum": ["component", "layout", "activity", "style", "accessibility", "bindings", "menu"]}, "value": {}}}},
+    "scalarTags": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"enum": ["remove", "set-root"]}},
+    "forgedAuthorities": {"const": ["operation-root", "operation-retirement", "view-buffer-shadow"]},
+    "rawRetirement": {"const": {"knownFieldsOnly": true, "unknownWrapperPreserved": true, "unknownBytes": 8192, "invalidTargetTransfersPayload": false}},
+    "stream": {"const": {"slots": 1, "operations": 2, "rejectWrongOrdinalBeforeRead": true, "pageReceiptBeforePatchAck": true, "lateCancelPreservesAck": true}},
+    "nativeChildren": {"type": "object", "additionalProperties": false, "required": ["representation", "maximum", "values"], "properties": {"representation": {"const": "BigUint64Array"}, "maximum": {"const": 128}, "values": {"type": "array", "items": {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, "minItems": 3, "maxItems": 3}}},
+    "hostile": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "minItems": 10},
+    "laws": {"type": "array", "items": {"type": "string"}, "uniqueItems": true, "minItems": 9}
+  }
+}

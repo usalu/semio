@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBearingDRdMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBearingDRdMm"
+  ],
+  "properties": {
+    "newBearingDRdMm": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-object-kind-description",
+  "semanticKind": "change-object-kind-description",
+  "displayName": "Change Object Kind Description",
+  "emoji": "📃️",
+  "aggregateVariant": "ChangeObjectKindDescription",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-object-kind-description",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "info",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

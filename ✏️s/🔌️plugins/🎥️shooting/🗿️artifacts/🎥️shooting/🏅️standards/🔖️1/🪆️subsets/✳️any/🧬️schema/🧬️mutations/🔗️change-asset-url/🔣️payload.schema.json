@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAssetUrl",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newUrl"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newUrl": {
+      "type": "string"
+    }
+  }
+}

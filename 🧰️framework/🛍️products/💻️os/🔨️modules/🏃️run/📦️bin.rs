@@ -226,13 +226,13 @@ fn main() {
 /// `Apply`, `snapshot_pack`" pattern every other document in this codebase persists through) and
 /// writes the resulting pack+spr to `runs/<RUN_ID>.run.pack|.spr`, plus every node document/config
 /// `sink` accumulated — the ONLY two places this CLI ever writes bytes for a run.
-fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
-    let envelope = protocol::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document(), None);
-    let mut document_store = protocol::ArtifactStore::new(envelope).map_err(|error| error.to_string())?;
+async fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::error::Error>> {
+    let envelope = protocol::create_document_envelope::<workflow::RunArtifact, workflow::RunMutation>(workflow::S_RUN_SCHEMA, RUN_ID, workflow::empty_run_document().await, None);
+    let mut document_store = protocol::ArtifactStore::new(envelope).await.map_err(|error| error.to_string())?;
     if !sink.mutations.is_empty() {
-        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).map_err(|error| error.to_string())?;
+        document_store.dispatch(protocol::ArtifactCommand::Apply { mutations: sink.mutations.clone(), description: None }).await.map_err(|error| error.to_string())?;
     }
-    let snapshot = document_store.snapshot_pack().map_err(|error| error.to_string())?;
+    let snapshot = document_store.snapshot_pack().await.map_err(|error| error.to_string())?;
     bundle.write_run_document(RUN_ID, &snapshot.pack, &snapshot.spr)?;
     bundle.write_run_nodes(RUN_ID, sink)?;
     Ok(())
@@ -266,7 +266,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     // `workflow::WorkflowSnapshot`/`WorkflowMutation` pair (the `s.workflow` artifact document)
     // instead — only the typed decode target moved, wiring the root slot to a real
     // `space::SpaceSnapshot` manifest is later-wave work.
-    let parsed: protocol::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::parse_document_pack(&space_pack, &space_spr).map_err(|error| error.to_string())?;
+    let parsed: protocol::ParsedDocumentText<workflow::WorkflowSnapshot, workflow::WorkflowMutation> = protocol::parse_document_pack(&space_pack, &space_spr).await.map_err(|error| error.to_string())?;
     let snapshot = parsed.snapshot;
 
     let mut graph = snapshot.graph.clone();
@@ -294,7 +294,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         if run_pack.is_empty() {
             BTreeMap::new()
         } else {
-            let parsed: protocol::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = protocol::parse_document_pack(&run_pack, &run_spr).map_err(|error| error.to_string())?;
+            let parsed: protocol::ParsedDocumentText<workflow::RunArtifact, workflow::RunMutation> = protocol::parse_document_pack(&run_pack, &run_spr).await.map_err(|error| error.to_string())?;
             parsed.snapshot.node_records.into_iter().map(|record| (record.node_id.clone(), record)).collect()
         }
     };
@@ -316,8 +316,8 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let mut runner = SpaceRunner::new(host, blob_store, args.policy);
     let mut cache = FileMediaCache::new(bundle.media_cache_dir());
 
-    let mut sink = RunSink::new(workflow::empty_run_document());
-    sink.record(workflow::RunMutation::Start {
+    let mut sink = RunSink::new(workflow::empty_run_document().await);
+    sink.record(workflow::RunMutation::StartRun(workflow::StartRun {
         workflow_ref: args.bundle.display().to_string(),
         workflow_checkpoint_id: String::new(),
         input_collection_ref: String::new(),
@@ -325,7 +325,7 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         parameter_values: parameter_values.clone(),
         output_collection_ref: String::new(),
         trigger: workflow::RunTrigger::Manual { actor: "cli".into() },
-    })
+    })).await
     .map_err(|error| error.to_string())?;
 
     // 🌀️ `SpaceRunner::run` is `async fn` since the async-first rewrite (ticket
@@ -343,16 +343,16 @@ async fn run_async(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         Ok(report) => {
             println!("recomputed: {:?}", report.recomputed);
             println!("clean:      {:?}", report.clean);
-            sink.record(workflow::RunMutation::Seal { status: workflow::RunStatus::Succeeded }).map_err(|error| error.to_string())?;
-            persist_run(&bundle, &sink)?;
+            sink.record(workflow::RunMutation::SealRun(workflow::SealRun { status: workflow::RunStatus::Succeeded })).await.map_err(|error| error.to_string())?;
+            persist_run(&bundle, &sink).await?;
             Ok(())
         }
         Err(error) => {
             // 🧾️ A failed run still gets a real, sealed audit trail — readonly-over-source holds even
             // on failure, and a later invocation can see WHY the last run failed.
-            let _ = sink.record(workflow::RunMutation::Log { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::now_iso() });
-            let _ = sink.record(workflow::RunMutation::Seal { status: workflow::RunStatus::Failed });
-            persist_run(&bundle, &sink)?;
+            let _ = sink.record(workflow::RunMutation::AppendRunLog(workflow::AppendRunLog { node_id: String::new(), level: "error".into(), message: error.to_string(), at: protocol::now_iso() })).await;
+            let _ = sink.record(workflow::RunMutation::SealRun(workflow::SealRun { status: workflow::RunStatus::Failed })).await;
+            persist_run(&bundle, &sink).await?;
             Err(error.into())
         }
     }

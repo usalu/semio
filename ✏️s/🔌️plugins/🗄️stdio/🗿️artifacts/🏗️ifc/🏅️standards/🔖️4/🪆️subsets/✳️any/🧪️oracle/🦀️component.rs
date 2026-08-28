@@ -18,7 +18,7 @@
 //! ## §6: ruststep is the independent READER, never a second producer
 //! Because ruststep cannot write, this module cannot be a genuine differential producer of mutated
 //! bytes against a real third-party writer. Every scenario in
-//! `../../../../🧪️tests/mutate-ifc-4/component.feature` is therefore typed `@mode-property`/
+//! `../../../../🧪️tests/mutate-ifc-4/🥒️.feature` is therefore typed `@mode-property`/
 //! `@mode-round-trip`, never `@mode-differential` — the fleet brief's §6 situation. `ruststep::ast::
 //! Exchange::from_str` is what actually reads both the real input and every re-serialized result —
 //! including this dispatcher's own mutation output and (once the subject phase compiles) the

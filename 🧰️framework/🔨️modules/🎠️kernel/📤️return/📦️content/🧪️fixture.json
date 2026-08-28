@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "magicHex": "73727401",
+  "metadata": {"status": "idle", "nextWake": null, "fuelUsed": "1", "effectCount": "0", "presenceCount": "0"},
+  "uiBegin": {"receipt": {"lifetime": {"activationGeneration": "1", "instanceId": 7, "guestLifetime": "2"}, "patchSequence": "3"}, "surface": "Größe😀", "baseRevision": "0", "revision": "1", "operationCount": 1},
+  "recordVectors": [
+    {"tag": 0, "bodyHex": "0000010000", "frameHex": "00050000010000"},
+    {"tag": 2, "bodyHex": "010702030b4772c3b6c39f65f09f9880000101", "frameHex": "0213010702030b4772c3b6c39f65f09f9880000101"},
+    {"tag": 3, "bodyHex": "0907", "frameHex": "03020907"},
+    {"tag": 4, "bodyHex": "", "frameHex": "0400"},
+    {"tag": 7, "bodyHex": "00000000000000000000000000", "frameHex": "070d00000000000000000000000000"},
+    {"tag": 9, "bodyHex": "", "frameHex": "0900"}
+  ],
+  "scalarOperationVectors": [
+    {"name": "remove", "opcode": 9, "node": "7", "hex": "0907"},
+    {"name": "setRoot", "opcode": 10, "node": "18446744073709551615", "hex": "0affffffffffffffffff01"},
+    {"name": "setChildren", "opcode": 4, "node": "7", "children": ["1", "128", "18446744073709551615"], "hex": "040703018001ffffffffffffffffff01"}
+  ],
+  "invocation": {"inReplyTo": 128, "output": [0, 255, 7], "diagnostics": [195, 164], "uiScope": [], "historyPatch": [9], "messages": [1, 2], "appFrameHex": "0180010300ff0702c3a4000109020102", "shellInstance": 7, "effectBodyHex": "000007100180010300ff0702c3a4000109020102", "effectRecordHex": "0514000007100180010300ff0702c3a4000109020102", "uiAcknowledgement": false},
+  "presence": {"value": {"surface": "document", "nodeKey": "item:根,1", "own": {"hovered": true, "selected": true}, "peers": [{"actor": "peer-1", "color": 3, "hovered": true, "label": "Ü"}], "ttlMs": 1000}, "nodeKeyUtf8Hex": "6974656d3ae6a0b92c31", "labelUtf8Hex": "c39c", "recordTag": 6, "documentMutation": false, "uiAcknowledgement": false},
+  "crossPage": {"pageBytes": [1, 64, 4096], "splitEveryPrefix": true, "splitUtf8": true, "splitVarint": true, "largeSurfaceBytes": 8193, "largeOperationExceedsPage": true, "retainedBorrowWaitingForNextPage": false, "inputAckRequiresIndependentOwnedStorage": true},
+  "negativeSequences": [[2, 3, 4, 7, 9], [0, 3, 4, 7, 9], [0, 2, 4, 7, 9], [0, 2, 3, 3, 4, 7, 9], [0, 2, 3, 7, 9], [0, 2, 3, 4, 9], [0, 2, 3, 4, 7, 9, 9]],
+  "cancellation": {"afterUiBeginBeforeUiEnd": true, "publishesUi": false, "dropsIncompletePackedRoot": false, "retainsExactRawInputUntilClose": true, "retiresOwnedSemanticPages": true},
+  "laws": ["exact-record-length", "strict-section-order", "all-eleven-opcodes", "same-packed-field-dialect", "no-whole-dsl-conversion", "no-whole-field-buffer", "measure-under-grant", "copy-admission-before-page-ack", "original-ui-receipt", "page-final-after-end-only", "effects-use-wit-declaration-order", "status-payload-matches-metadata"]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeN50HInv",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newN50HInv"
+  ],
+  "properties": {
+    "newN50HInv": {
+      "type": "number"
+    }
+  }
+}

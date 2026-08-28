@@ -45,7 +45,7 @@ export function poolConcurrency(): number {
  * function itself is untestable in isolation since it hardcodes a real DOM `Worker`, which a `jsdom`
  * suite doesn't provide). */
 export function buildShardClientOptions(
-  overrides: Partial<ShardClientOptions> & { readonly onShardLost: ShardClientOptions["onShardLost"]; readonly onActorTrap?: ShardClientOptions["onActorTrap"] },
+  overrides: Partial<ShardClientOptions> & { readonly residentLedger: ShardClientOptions["residentLedger"]; readonly onShardLost: ShardClientOptions["onShardLost"]; readonly onActorTrap?: ShardClientOptions["onActorTrap"] },
 ): ShardClientOptions {
   return {
     shardCount: poolConcurrency(),
@@ -68,6 +68,7 @@ export interface PooledActorRuntime {
  * single JS realm hosting more than one renderer target is out of scope here, same limitation
  * `PluginRuntime`'s own `currentPluginRuntimeActor` doc already flags for actor identity). */
 export function createPooledActorRuntime(options: {
+  readonly residentLedger: ShardClientOptions["residentLedger"];
   readonly onActorTrap?: ShardClientOptions["onActorTrap"];
   readonly onShardLost: ShardClientOptions["onShardLost"];
   readonly createWorker?: ShardClientOptions["createWorker"];

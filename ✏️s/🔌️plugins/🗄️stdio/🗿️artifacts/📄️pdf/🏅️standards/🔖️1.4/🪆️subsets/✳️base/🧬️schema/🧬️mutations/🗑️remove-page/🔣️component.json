@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🧬️schema/🧬️mutations/🗑️remove-page",
+  "semanticKind": "remove-page",
+  "displayName": "Remove Page",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemovePage",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-page",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBM"
+  ],
+  "properties": {
+    "newBM": {
+      "type": "number"
+    }
+  }
+}

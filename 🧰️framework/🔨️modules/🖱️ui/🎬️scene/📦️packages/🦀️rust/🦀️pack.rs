@@ -405,8 +405,8 @@ macro_rules! forward_to_deserialize_num {
             fn $method<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, PackError> {
                 let tag = self.read_tag()?;
                 match tag {
-                    TAG_U64 => { let v = self.read_varint()?; visitor.$visit(v as $ty) }
-                    TAG_I64 => { let raw = self.read_varint()?; visitor.$visit(zigzag_decode(raw) as $ty) }
+                    TAG_U64 => { let v = self.read_varint()?; visitor.$visit(<$ty>::try_from(v).map_err(|_| PackError::Unsupported("integer range"))?) }
+                    TAG_I64 => { let raw = self.read_varint()?; visitor.$visit(<$ty>::try_from(zigzag_decode(raw)).map_err(|_| PackError::Unsupported("integer range"))?) }
                     other => Err(PackError::InvalidTag(other)),
                 }
             }
@@ -722,6 +722,27 @@ mod tests {
             Idle,
             Scale(u64),
         }
+        #[derive(Serialize)]
+        struct NestedMap {
+            a: (bool, u64),
+            b: TextMap,
+        }
+        #[derive(Serialize)]
+        struct TextMap {
+            x: &'static str,
+        }
+        #[derive(Serialize)]
+        struct PrototypeMap {
+            #[serde(rename = "__proto__")]
+            value: bool,
+        }
+        #[derive(Serialize)]
+        struct CollisionMap {
+            costarring: bool,
+            liquid: bool,
+        }
+        #[derive(Serialize)]
+        struct EmptyMap {}
         struct Bytes<'a>(&'a [u8]);
         impl Serialize for Bytes<'_> {
             fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
@@ -748,10 +769,93 @@ mod tests {
                 "char" => to_bytes(&'🧹').unwrap(),
                 "unit-variant" => to_bytes(&FixtureVariant::Idle).unwrap(),
                 "data-variant" => to_bytes(&FixtureVariant::Scale(2)).unwrap(),
-                "sequence" | "nested-map" | "prototype-key" | "empty-containers" | "fnv-collision-exact-keys" => to_bytes(&case["value"]).unwrap(),
+                "sequence" => to_bytes(&case["value"]).unwrap(),
+                "nested-map" => to_bytes(&NestedMap { a: (false, 7), b: TextMap { x: "雪" } }).unwrap(),
+                "prototype-key" => to_bytes(&PrototypeMap { value: true }).unwrap(),
+                "empty-containers" => to_bytes(&(Vec::<u8>::new(), EmptyMap {}, "")).unwrap(),
+                "fnv-collision-exact-keys" => to_bytes(&CollisionMap { costarring: true, liquid: false }).unwrap(),
                 _ => panic!("Unmatched neutral scene case: {name}"),
             };
             assert_eq!(actual, expected, "{name}");
+        }
+    }
+    #[test]
+    fn typed_scene_neutral_catalog_matches_native_serde_contracts() {
+        use crate::*;
+        fn packet(value: &serde_json::Value, bytes: &mut Vec<u8>) {
+            match value {
+                serde_json::Value::Null => bytes.push(TAG_NONE),
+                serde_json::Value::Bool(value) => bytes.extend(to_bytes(value).unwrap()),
+                serde_json::Value::Number(value) => bytes.extend(to_bytes(&value.as_f64().unwrap()).unwrap()),
+                serde_json::Value::String(value) => bytes.extend(to_bytes(value).unwrap()),
+                serde_json::Value::Array(values) => {
+                    bytes.push(TAG_SEQ);
+                    write_varint(bytes, values.len() as u64);
+                    for value in values { packet(value, bytes); }
+                }
+                serde_json::Value::Object(values) => {
+                    if let Some(value) = values.get("$some") {
+                        bytes.push(TAG_SOME);
+                        packet(value, bytes);
+                    } else {
+                        bytes.push(TAG_MAP);
+                        write_varint(bytes, values.len() as u64);
+                        for (key, value) in values { bytes.extend(to_bytes(key).unwrap()); packet(value, bytes); }
+                    }
+                }
+            }
+        }
+        fn check<T: SceneDoc>(schema: &str, bytes: &[u8]) -> bool {
+            schema == T::SCHEMA && T::decode_pack(bytes).is_ok()
+        }
+        fn admitted(case: &serde_json::Value) -> bool {
+            let mut bytes = Vec::new();
+            packet(&case["value"], &mut bytes);
+            let schema = case["schema"].as_str().unwrap();
+            match case["kind"].as_str().unwrap() {
+                "canvas-2d" => check::<Canvas2dScene>(schema, &bytes),
+                "world-3d" => check::<World3dScene>(schema, &bytes),
+                "node-graph" => check::<NodeGraphScene>(schema, &bytes),
+                "text-editor" => check::<TextEditorScene>(schema, &bytes),
+                "table" => check::<TableScene>(schema, &bytes),
+                "paint-2d" => check::<Paint2dScene>(schema, &bytes),
+                "virtual-file-system" => check::<VirtualFileSystemScene>(schema, &bytes),
+                "tiled-map" => check::<TiledMapScene>(schema, &bytes),
+                "board-2d" => check::<Board2dScene>(schema, &bytes),
+                "icon-render" => check::<IconRenderScene>(schema, &bytes),
+                "ink-canvas" => check::<InkCanvasScene>(schema, &bytes),
+                "graph-timeline" => check::<GraphTimelineScene>(schema, &bytes),
+                "block-list" => check::<BlockListScene>(schema, &bytes),
+                "diff-view" => check::<DiffViewScene>(schema, &bytes),
+                "event-feed" => check::<EventFeedScene>(schema, &bytes),
+                _ => false,
+            }
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🔣️typed-scene.json")).unwrap();
+        assert_eq!(fixture["cases"].as_array().unwrap().len(), 15);
+        for case in fixture["cases"].as_array().unwrap() { assert!(admitted(case), "{case}"); }
+        for case in fixture["hostile"].as_array().unwrap() { assert!(!admitted(case), "{case}"); }
+    }
+    #[test]
+    fn scene_pack_numeric_widths_do_not_wrap() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️contract/🧵️retained/🧪️fixtures/🔣️scene-numeric.json")).unwrap();
+        for case in fixture["cases"].as_array().unwrap() {
+            let bytes: Vec<u8> = case["hex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|digits| u8::from_str_radix(std::str::from_utf8(digits).unwrap(), 16).unwrap()).collect();
+            let admitted = match case["type"].as_str().unwrap() {
+                "u8" => from_bytes::<u8>(&bytes).is_ok(),
+                "u32" => from_bytes::<u32>(&bytes).is_ok(),
+                "u64" => from_bytes::<u64>(&bytes).is_ok(),
+                "i64" => from_bytes::<i64>(&bytes).is_ok(),
+                "usize" => from_bytes::<usize>(&bytes).is_ok(),
+                "f64" => {
+                    let decoded = from_bytes::<f64>(&bytes);
+                    if let Ok(value) = decoded { assert_eq!(value.is_finite(), case["finite"].as_bool().unwrap()); assert_eq!(value.to_bits().to_le_bytes(), bytes[1..]); }
+                    decoded.is_ok()
+                }
+                _ => panic!("Unknown numeric fixture"),
+            };
+            let expected = case[if usize::BITS == 32 { "native32" } else { "native64" }].as_bool().unwrap();
+            assert_eq!(admitted, expected, "{}", case["name"]);
         }
     }
     //#endregion 🎬️RetainedSceneOracle

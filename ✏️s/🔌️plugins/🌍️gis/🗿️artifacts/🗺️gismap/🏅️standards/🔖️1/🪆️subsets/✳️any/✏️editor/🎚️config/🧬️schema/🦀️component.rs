@@ -3,6 +3,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+//#region 🧬️Configuration
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
 #[artifact_schema(id = "s.gis.gis2d.config")]
@@ -22,6 +23,7 @@ pub struct Gis2dConfig {
     #[state(config)]
     pub locale: String,
 }
+//#endregion 🧬️Configuration
 
 //region 📎 App-schema descriptor
 /// 📎 `s.gis.gis2d`'s config+presence schema descriptor — returned, not self-registered;

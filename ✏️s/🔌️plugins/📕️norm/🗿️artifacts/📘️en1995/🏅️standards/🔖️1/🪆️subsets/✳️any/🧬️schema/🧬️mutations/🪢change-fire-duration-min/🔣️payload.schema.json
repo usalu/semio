@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFireDurationMin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireDurationMin"
+  ],
+  "properties": {
+    "newFireDurationMin": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.dev/schema/plugin/reactor/job-test-mutations/add-value","title":"Add Job Test Value","type":"object","additionalProperties":false,"required":["delta"],"properties":{"delta":{"$ref":"https://semio.dev/schema/plugin/reactor/job-test-mutations/snapshot#/$defs/i32"}}}

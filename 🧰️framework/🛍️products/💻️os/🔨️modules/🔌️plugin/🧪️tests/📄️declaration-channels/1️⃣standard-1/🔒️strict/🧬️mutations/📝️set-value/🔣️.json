@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📄️declaration-channels/1️⃣standard-1/🔒️strict/🧬️mutations/📝️set-value",
+  "semanticKind": "set-value",
+  "displayName": "Set Value",
+  "emoji": "📝️",
+  "aggregateVariant": "SetValue",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

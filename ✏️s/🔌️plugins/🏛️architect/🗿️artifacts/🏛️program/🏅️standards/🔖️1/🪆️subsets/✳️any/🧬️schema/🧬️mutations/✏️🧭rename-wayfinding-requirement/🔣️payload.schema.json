@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RenameWayfindingRequirement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newName": {
+      "type": "string"
+    }
+  }
+}

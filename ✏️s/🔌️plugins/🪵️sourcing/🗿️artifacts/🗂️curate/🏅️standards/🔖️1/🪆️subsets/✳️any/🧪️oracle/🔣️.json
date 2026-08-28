@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `sourcing.curate` is a semio-NATIVE curation document — a composed `s.stdio.semio@v1/kit` catalogue child, a bulk-populated stock table and an ordered id-keyed curation. Nothing third-party reads `.curate.dsl.semio` and no inventory library is authoritative over the closed three-kind vocabulary, so the reference is a SECOND IMPLEMENTATION in Python written from this subset's committed schemas, grammar and specification vectors.",
   "oracles": [
     {
@@ -16,7 +16,15 @@
       ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "A second implementation of the `sourcing.curate` document and all three typed mutations, in Python, at `../../../../../🧪️tests/mutate-curate-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document, including the closed four-variant `GeometryRecipe` union and the `{objectId, count}` shape of a `CuratedItem`), `../🧬️schema/🧬️mutations/🔣️component.json` (the three variants and their internally tagged wire form) and `../🧬️schema/🧬️mutations/📖️component.grammar.semio` (the three verbs), plus the three committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `stock` is outside the vocabulary — it is replaced wholesale through the store's non-history reset path — and a `CuratedItem` is two scalars with no rename and no nested collection, so the whole surface is create/delete/change over ONE ordered list, which is a membership-plus-position algebra rather than anything a bill-of-materials or inventory library adjudicates, and none of them reads `.curate.dsl.semio` in any case. This reference deliberately does NOT read the carrier: it has no prose document, and its committed example's rules for strings, absent members and numbers cannot be read off one file — the more so because this repository's own `parse_curate_dsl` currently rejects that example outright. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`."
+      "rationale": "A second implementation of the `sourcing.curate` document and all three typed mutations, in Python, at `../../../../../🧪️tests/mutate-curate-1/🐍️component.py`. Written from `../🧬️schema/📸️snapshot/🔣️component.json` (the document, including the closed four-variant `GeometryRecipe` union and the `{objectId, count}` shape of a `CuratedItem`), `../🧬️schema/🧬️mutations/🔣️component.json` (the three variants and their internally tagged wire form) and `../🧬️schema/🧬️mutations/📖️component.grammar.semio` (the three verbs), plus the three committed `(before, mutation, after, outcome)` specification vectors. It imports nothing from this repository and transliterates none of its Rust. A third-party library was declined, not merely absent: `stock` is outside the vocabulary — it is replaced wholesale through the store's non-history reset path — and a `CuratedItem` is two scalars with no rename and no nested collection, so the whole surface is create/delete/change over ONE ordered list, which is a membership-plus-position algebra rather than anything a bill-of-materials or inventory library adjudicates, and none of them reads `.curate.dsl.semio` in any case. This reference deliberately does NOT read the carrier: it has no prose document, and its committed example's rules for strings, absent members and numbers cannot be read off one file — the more so because this repository's own `parse_curate_dsl` currently rejects that example outright. `package` is deliberately empty: the implementation needs no distribution, so this entry contributes nothing to `🔒️dependencies.json`.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `curate-1-mutate`'s external-oracle requirement for its 3-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [

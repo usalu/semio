@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC1 (config data only) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc1_conformance` actually reads. CC1 admits no *_SHAPE_REPRESENTATION at all, so its ladder verb is `remove-shape-representation` and it owns no verb that could write one; against the real committed export both representations (#13 at rung 6 and #836 at rung 2) are above its ceiling. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🧪️oracle/🦀️component.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "ruststep 0.4 is the real, independent ISO 10303-21 READER for this subset: `ast::Exchange::from_str` parses the real committed `📐️hexagonal-cut-concrete-forest-left-ap214.stp` (a genuine Rhino 8.31 / ST-Developer v19.2 export, 1,396 real entities) with zero errors, and it is what reads back every result this subset's oracle produces before `semantic-step-conformance-class-v1` compares it. It has NO writer at all (`ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct; no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`), so per the fleet brief's §6 nothing in this case is typed `@mode-differential` — ruststep cannot be a second PRODUCER of mutated bytes. The re-serializer is this standard's own from-scratch Part-21 writer in ../../../🧪️oracle/🦀️component.rs, deliberately independent of this repository's production `step::engine::part21` writer. What the evidence therefore is, stated plainly: a real third-party parse of the conformance-relevant STRUCTURE of every result — the ladder census, the declared schema and the product identity chain — plus the inverse and identity laws asserted in role, not a byte-level differential claim.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

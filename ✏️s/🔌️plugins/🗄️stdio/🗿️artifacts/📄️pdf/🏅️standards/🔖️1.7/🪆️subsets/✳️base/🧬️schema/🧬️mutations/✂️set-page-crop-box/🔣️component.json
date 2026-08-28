@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🧬️schema/🧬️mutations/✂️set-page-crop-box",
+  "semanticKind": "set-page-crop-box",
+  "displayName": "Set Page Crop Box",
+  "emoji": "✂️",
+  "aggregateVariant": "SetPageCropBox",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "set-page-crop-box",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

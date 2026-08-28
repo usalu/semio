@@ -514,7 +514,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -542,7 +542,7 @@ pub mod artifacts {
                 pub mod subsets {
                     #[path = "."]
                     pub mod any {
-                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️base/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -934,3 +934,36 @@ pub mod artifacts {
     }
 }
 //#endregion 🔖️Artifacts
+
+//#region 🔖️Plugins
+// 🪆️ Sibling plugins' own subsets, contributed here for the SAME reason the artifacts above are:
+// each subset's `🧪️oracle/🔣️.json` names this crate as its `oracleHostPackages` entry (a case at a
+// non-stdio owner still resolves its linked crates from the CASE OWNER, exactly as
+// `✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🧪️oracle/🔣️.json` already documents), so the module tree
+// mirrors `<plugin>::artifacts::<format>::standards::<version>::subsets::<subset>` one level deeper
+// than the stdio-owned tree above, rather than duplicating any reader here.
+#[path = "."]
+pub mod note {
+    #[path = "."]
+    pub mod artifacts {
+        #[path = "."]
+        pub mod note {
+            #[path = "."]
+            pub mod standards {
+                #[path = "."]
+                pub mod v1 {
+                    #[path = "."]
+                    pub mod subsets {
+                        #[path = "."]
+                        pub mod any {
+                            #[path = "../../../../🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 🔖️Plugins

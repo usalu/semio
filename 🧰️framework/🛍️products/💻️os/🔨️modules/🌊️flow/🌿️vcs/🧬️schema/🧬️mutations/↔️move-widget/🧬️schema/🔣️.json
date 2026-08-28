@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/move-widget",
+  "title": "MoveWidget",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false,
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "toIndex": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/index"
+        }
+      },
+      "required": [
+        "id",
+        "toIndex"
+      ]
+    }
+  }
+}
+

@@ -1,0 +1,10 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "oneOf":[
+    {"type":"object","properties":{"operation":{"const":"addCounter"},"payload":{"$ref":"➕️add-counter/🧬️schema/🔣️.json"}},"required":["operation","payload"],"additionalProperties":false},
+    {"type":"object","properties":{"operation":{"const":"addMissingCounter"},"payload":{"$ref":"🚫️add-missing-counter/🧬️schema/🔣️.json"}},"required":["operation","payload"],"additionalProperties":false},
+    {"type":"object","properties":{"operation":{"const":"addUncheckedCounter"},"payload":{"$ref":"🐛️add-unchecked-counter/🧬️schema/🔣️.json"}},"required":["operation","payload"],"additionalProperties":false},
+    {"type":"object","properties":{"operation":{"const":"addObservedCounter"},"payload":{"$ref":"👁️add-observed-counter/🧬️schema/🔣️.json"}},"required":["operation","payload"],"additionalProperties":false},
+    {"type":"object","properties":{"operation":{"const":"addRejectedCounter"},"payload":{"$ref":"⛔️add-rejected-counter/🧬️schema/🔣️.json"}},"required":["operation","payload"],"additionalProperties":false}
+  ]
+}

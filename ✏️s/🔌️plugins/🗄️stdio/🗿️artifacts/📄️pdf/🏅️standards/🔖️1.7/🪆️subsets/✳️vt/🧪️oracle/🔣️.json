@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform. The ✳️any subset registers `lopdf` under `pdf-1-7-mutate` for the DOCUMENT vocabulary; this file registers the same package under a distinct id and the `pdf-1-7-vt-mutate` capability the CONFORMANCE-CLASS case (`mutate-pdf-1-7-vt`) tags, because reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
       "rationale": "`lopdf` parses and re-serializes the complete COS object graph of a real PDF, which is the exact surface ISO 16612-2 (PDF/VT-1) conformance is defined on: every axis `check_vt_conformance` reads is an indirect object, a catalog key or a dictionary entry, and every one of them is reachable and writable through this crate. It is registered under its own id and capability so this subset's 18-kind conformance catalog is measured against a reference surveyed for that capability rather than borrowing the ✳️any subset's document-vocabulary entry.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf Rust PDF object-graph library",
+        "version": "0.44"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeComfortCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newComfortCategory"
+  ],
+  "properties": {
+    "newComfortCategory": {
+      "type": "string"
+    }
+  }
+}

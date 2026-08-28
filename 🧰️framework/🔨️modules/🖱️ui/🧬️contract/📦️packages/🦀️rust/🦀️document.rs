@@ -8,7 +8,7 @@
 //! default for exactly this crate.
 
 use serde::{Deserialize, Serialize};
-use std::sync::{LazyLock, Mutex};
+use std::sync::Mutex;
 
 //#region 🔖️Document
 
@@ -89,7 +89,16 @@ pub const UI_DOCUMENT_PATCH_OPS: usize = UI_DOCUMENT_NODES * 9 + 1;
 pub type UiNodeChildren = crate::UiFixedList<UiNodeId, UI_DOCUMENT_NODES>;
 pub type UiNodeBindings = crate::UiFixedList<crate::ActionBinding, UI_NODE_BINDINGS>;
 pub type UiSnapshotNodes = crate::UiFixedList<UiNodeRecord, UI_DOCUMENT_NODES>;
-pub type UiPatchOps = crate::UiFixedList<UiPatchOp, UI_DOCUMENT_PATCH_OPS>;
+#[path = "../../♻️retirement/📋️patch/🦀️component.rs"]
+mod patch_storage;
+pub use patch_storage::{UiPatchAllocationError, UiPatchOps, UiPendingPatchOp};
+#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🦀️component.rs"]
+mod pending_whole_patch;
+pub use pending_whole_patch::UiPendingPatch;
+
+#[cfg(test)]
+#[path = "../../♻️retirement/📋️patch/🧪️component.rs"]
+mod patch_storage_tests;
 
 pub fn credited_bindings(source: &UiNodeBindings) -> Option<UiNodeBindings> {
     let mut bindings = UiNodeBindings::default();
@@ -409,7 +418,13 @@ impl<'a> Iterator for UiSubtreeIter<'a> {
 //#endregion 🗄️SnapshotState
 
 //#region 🪪️DocumentLease
-pub const UI_DOCUMENT_LEASE_SLOTS: usize = 8;
+#[path = "../../🎟️resident/🦀️component.rs"]
+mod resident;
+pub use resident::*;
+#[cfg(test)]
+#[path = "../../🎟️resident/📄️root/🧪️component.rs"]
+mod resident_root_tests;
+pub const UI_DOCUMENT_LEASE_SLOTS: usize = UI_RESIDENT_SLOTS;
 pub const UI_DOCUMENT_LEASE_ALIASES: u64 = 8;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -435,6 +450,9 @@ pub enum UiDocumentLeaseError {
     Closing,
     AliasCapacity,
     PageCapacity,
+    NodeIdentity,
+    Contended,
+    Poisoned,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -479,6 +497,7 @@ impl UiDocumentNodePage {
 
 #[derive(Debug)]
 struct UiDocumentSlot {
+    resident: Option<UiResidentPermit>,
     epoch: u64,
     generation: u64,
     surface: Option<SurfaceId>,
@@ -497,7 +516,13 @@ struct UiDocumentSlot {
 
 impl Default for UiDocumentSlot {
     fn default() -> Self {
-        Self { epoch: 0, generation: 0, surface: None, revision: UiRevision::default(), root: None, layout_epoch: 0, nodes: UiNodeTable::default(), aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: Default::default() }
+        Self::empty()
+    }
+}
+
+impl UiDocumentSlot {
+    const fn empty() -> Self {
+        Self { resident: None, epoch: 0, generation: 0, surface: None, revision: UiRevision(0), root: None, layout_epoch: 0, nodes: UiNodeTable { entries: UiSnapshotNodes::empty() }, aliases: 0, occupied: false, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: crate::UiTypedRetirementCursor::empty() }
     }
 }
 
@@ -512,7 +537,11 @@ impl Default for UiDocumentArena {
     }
 }
 
-static UI_DOCUMENT_ARENA: LazyLock<Mutex<UiDocumentArena>> = LazyLock::new(|| Mutex::new(UiDocumentArena::default()));
+static UI_DOCUMENT_ARENA: Mutex<UiDocumentArena> = Mutex::new(UiDocumentArena { slots: [const { UiDocumentSlot::empty() }; UI_DOCUMENT_LEASE_SLOTS], close_cursor: 0 });
+
+pub(crate) const fn resident_static_backing_bytes() -> usize {
+    std::mem::size_of::<Mutex<UiDocumentArena>>() + std::mem::size_of::<crate::UiArenaHandbacks<UI_DOCUMENT_LEASE_SLOTS, 1>>()
+}
 
 fn with_ui_document_arena<T>(f: impl FnOnce(&mut UiDocumentArena) -> T) -> T {
     let mut arena = UI_DOCUMENT_ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -534,13 +563,16 @@ impl UiDocumentArena {
         if generation == 0 {
             return Err((UiDocumentBuildError::InvalidGeneration, surface));
         }
-        let Some(slot_index) = self.slots.iter().position(|slot| !slot.occupied) else {
-            return Err((UiDocumentBuildError::ArenaFull, surface));
-        };
-        let Some(epoch) = self.slots[slot_index].epoch.checked_add(1) else {
-            return Err((UiDocumentBuildError::ArenaFull, surface));
-        };
-        self.slots[slot_index] = UiDocumentSlot { epoch, generation, surface: Some(surface), revision, root, layout_epoch, nodes: UiNodeTable::default(), aliases: 1, occupied: true, complete: false, retiring: false, retire_scalar: 0, retirement_claimed: false, retirement: Default::default() };
+        let mut resident = None;
+        if !matches!(UiResidentPermit::try_reserve(UiResidentLimits { items: UI_RESIDENT_SURFACE_ITEMS, bytes: UI_RESIDENT_SURFACE_BYTES }, &mut resident, UiResidentPermit::required_reservation_bytes()), Ok(true)) { return Err((UiDocumentBuildError::ArenaFull, surface)); }
+        let key = resident.as_ref().unwrap().root_key().unwrap();
+        let slot_index = key.slot;
+        let epoch = key.epoch;
+        if self.slots[slot_index].occupied || self.slots[slot_index].resident.is_some() {
+            let _ = resident.as_mut().unwrap().close_step(1);
+            return Err((UiDocumentBuildError::StaleHandle, surface));
+        }
+        self.slots[slot_index] = UiDocumentSlot { resident, epoch, generation, surface: Some(surface), revision, root, layout_epoch, aliases: 1, occupied: true, ..UiDocumentSlot::empty() };
         Ok(UiDocumentHandle { slot: slot_index, epoch, generation })
     }
 
@@ -720,9 +752,25 @@ pub fn close_ui_document_page_one() -> bool {
 mod typed_retirement;
 pub use typed_retirement::close_ui_document_page_with_grant;
 use typed_retirement::{close_document_owner, hand_back_document_owner};
+#[path = "../../⚖️compare/📄️document/🦀️component.rs"]
+mod document_component_compare;
+pub use document_component_compare::{UiDocumentComponentCompare, UiDocumentCompareAdmission, UiDocumentCompareError};
+#[path = "../../📄️document/🎟️assembly/🦀️component.rs"]
+mod document_assembly;
+pub use document_assembly::{UiDocumentAssembly, UiDocumentAssemblyError, UiDocumentAssemblyErrorKind, UiDocumentAssemblyProgress, UiDocumentRead, UiDocumentRootIdentity};
 //#endregion 🪪️DocumentLease
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path = "../../📄️document/🎟️assembly/🧪️component.rs"]
+mod document_assembly_tests;
+#[cfg(test)]
+#[path = "../../⚖️compare/📄️document/🧪️component.rs"]
+mod document_component_compare_tests;
+#[cfg(test)]
+#[path = "../../♻️retirement/📋️patch/📨️pending/📄️whole/🧪️component.rs"]
+mod pending_whole_patch_tests;
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -752,7 +800,7 @@ mod tests {
         assert_eq!(revision.try_next(), Some(UiRevision(5)));
     }
 
-    fn leaf_record(id: u64, key: &str) -> UiNodeRecord {
+    pub(super) fn leaf_record(id: u64, key: &str) -> UiNodeRecord {
         UiNodeRecord {
             id: UiNodeId(id),
             key: text(key),

@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateLayerTransform",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layerId",
+    "transform"
+  ],
+  "properties": {
+    "layerId": {
+      "type": "string"
+    },
+    "transform": {
+      "title": "DrawTransform",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rotation",
+        "scaleX",
+        "scaleY",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "scaleX": {
+          "type": "number"
+        },
+        "scaleY": {
+          "type": "number"
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

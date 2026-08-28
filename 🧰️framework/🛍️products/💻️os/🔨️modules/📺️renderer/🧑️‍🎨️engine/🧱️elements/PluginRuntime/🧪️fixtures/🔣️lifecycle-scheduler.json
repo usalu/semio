@@ -1,0 +1,12 @@
+{
+  "actor": "lifecycle-scheduler",
+  "instance": 7,
+  "guestLifetime": "13",
+  "closeGeneration": "41",
+  "work": ["open", "receipt-ack", "poll", "close", "receipt-ack", "receipt-ack"],
+  "events": ["instance-open", "instance-lifecycle-ack", null, "instance-close", "instance-lifecycle-ack", "instance-lifecycle-ack"],
+  "phases": ["captured", "open", "open", "accepted", "retired", "complete"],
+  "refusedWork": ["app-command", "events", "callback"],
+  "mailbox": { "capacity": 32, "overflow": ["operation", "lifecycle"], "outcome": "refused" },
+  "uiAcknowledgement": { "surface": "window", "revision": 1, "baseRevision": 0, "operationCount": 0, "patchSequence": "9007199254740993" }
+}

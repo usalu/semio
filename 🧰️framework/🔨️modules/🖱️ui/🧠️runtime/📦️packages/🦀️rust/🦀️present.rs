@@ -238,6 +238,10 @@ impl ComponentTreeProducer {
         ComponentTreeProducerStep::MoreWork
     }
 
+    pub fn has_complete(&self) -> bool {
+        self.complete.is_some()
+    }
+
     pub fn take_complete(&mut self) -> Option<ComponentTree> {
         self.complete.take()
     }

@@ -11,7 +11,7 @@ use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::schema::default_terrain_document;
 use crate::artifacts::gisterrain::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 use crate::editor::gis3d::commands::{exaggeration, locale, view};
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera, SetLocale};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
@@ -292,8 +292,8 @@ fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutatio
 fn prepare_gis3d_config(base: &Gis3dConfig, mutation: Gis3dConfigMutation) -> Result<(Gis3dConfig, Vec<Gis3dConfigMutation>, Gis3dConfigMutation, usize), String> {
     use protocol::{Mutation as _, MutationDiff as _};
     let valid = match &mutation {
-        Gis3dConfigMutation::SetCamera { camera_json } => camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()),
-        Gis3dConfigMutation::SetLocale { value } => matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE"),
+        Gis3dConfigMutation::SetCamera(SetCamera { camera_json }) => camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()),
+        Gis3dConfigMutation::SetLocale(SetLocale { value }) => matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE"),
     };
     if !valid {
         return Err("GIS terrain Config preparation rejected its exact mutation envelope".into());
@@ -436,8 +436,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<Gis3dConfig, Gis3dConfigMutat
             return Err("GIS terrain Config preparation rejected its lane or description".into());
         }
         let retained_bytes = match mutation {
-            Gis3dConfigMutation::SetCamera { camera_json } if camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()) => camera_json.len(),
-            Gis3dConfigMutation::SetLocale { value } if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => value.len(),
+            Gis3dConfigMutation::SetCamera(SetCamera { camera_json }) if camera_json.len() <= GIS3D_RETAINED_RAW_BYTES && serde_json::from_str::<Value>(camera_json).is_ok_and(|camera| camera.is_object()) => camera_json.len(),
+            Gis3dConfigMutation::SetLocale(SetLocale { value }) if matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE") => value.len(),
             _ => return Err("GIS terrain Config preparation rejected its exact mutation".into()),
         };
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })

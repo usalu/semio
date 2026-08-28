@@ -1,0 +1,321 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.byte-page.v1",
+  "title": "Actor Byte Page",
+  "description": "Neutral fixed storage, not a command, return, page-release, or lifetime authority. All bytes at or beyond length must be zero; that relational law is enforced by bounded codecs and shared fixtures.",
+  "definitions": {
+    "word": {
+      "type": "string",
+      "maxLength": 20,
+      "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-4]|18446744073709551615)$"
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "word0",
+        "word1",
+        "word2",
+        "word3",
+        "word4",
+        "word5",
+        "word6",
+        "word7"
+      ],
+      "properties": {
+        "word0": {
+          "$ref": "#/definitions/word"
+        },
+        "word1": {
+          "$ref": "#/definitions/word"
+        },
+        "word2": {
+          "$ref": "#/definitions/word"
+        },
+        "word3": {
+          "$ref": "#/definitions/word"
+        },
+        "word4": {
+          "$ref": "#/definitions/word"
+        },
+        "word5": {
+          "$ref": "#/definitions/word"
+        },
+        "word6": {
+          "$ref": "#/definitions/word"
+        },
+        "word7": {
+          "$ref": "#/definitions/word"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "length",
+    "block00",
+    "block01",
+    "block02",
+    "block03",
+    "block04",
+    "block05",
+    "block06",
+    "block07",
+    "block08",
+    "block09",
+    "block10",
+    "block11",
+    "block12",
+    "block13",
+    "block14",
+    "block15",
+    "block16",
+    "block17",
+    "block18",
+    "block19",
+    "block20",
+    "block21",
+    "block22",
+    "block23",
+    "block24",
+    "block25",
+    "block26",
+    "block27",
+    "block28",
+    "block29",
+    "block30",
+    "block31",
+    "block32",
+    "block33",
+    "block34",
+    "block35",
+    "block36",
+    "block37",
+    "block38",
+    "block39",
+    "block40",
+    "block41",
+    "block42",
+    "block43",
+    "block44",
+    "block45",
+    "block46",
+    "block47",
+    "block48",
+    "block49",
+    "block50",
+    "block51",
+    "block52",
+    "block53",
+    "block54",
+    "block55",
+    "block56",
+    "block57",
+    "block58",
+    "block59",
+    "block60",
+    "block61",
+    "block62",
+    "block63"
+  ],
+  "properties": {
+    "length": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4096
+    },
+    "block00": {
+      "$ref": "#/definitions/block"
+    },
+    "block01": {
+      "$ref": "#/definitions/block"
+    },
+    "block02": {
+      "$ref": "#/definitions/block"
+    },
+    "block03": {
+      "$ref": "#/definitions/block"
+    },
+    "block04": {
+      "$ref": "#/definitions/block"
+    },
+    "block05": {
+      "$ref": "#/definitions/block"
+    },
+    "block06": {
+      "$ref": "#/definitions/block"
+    },
+    "block07": {
+      "$ref": "#/definitions/block"
+    },
+    "block08": {
+      "$ref": "#/definitions/block"
+    },
+    "block09": {
+      "$ref": "#/definitions/block"
+    },
+    "block10": {
+      "$ref": "#/definitions/block"
+    },
+    "block11": {
+      "$ref": "#/definitions/block"
+    },
+    "block12": {
+      "$ref": "#/definitions/block"
+    },
+    "block13": {
+      "$ref": "#/definitions/block"
+    },
+    "block14": {
+      "$ref": "#/definitions/block"
+    },
+    "block15": {
+      "$ref": "#/definitions/block"
+    },
+    "block16": {
+      "$ref": "#/definitions/block"
+    },
+    "block17": {
+      "$ref": "#/definitions/block"
+    },
+    "block18": {
+      "$ref": "#/definitions/block"
+    },
+    "block19": {
+      "$ref": "#/definitions/block"
+    },
+    "block20": {
+      "$ref": "#/definitions/block"
+    },
+    "block21": {
+      "$ref": "#/definitions/block"
+    },
+    "block22": {
+      "$ref": "#/definitions/block"
+    },
+    "block23": {
+      "$ref": "#/definitions/block"
+    },
+    "block24": {
+      "$ref": "#/definitions/block"
+    },
+    "block25": {
+      "$ref": "#/definitions/block"
+    },
+    "block26": {
+      "$ref": "#/definitions/block"
+    },
+    "block27": {
+      "$ref": "#/definitions/block"
+    },
+    "block28": {
+      "$ref": "#/definitions/block"
+    },
+    "block29": {
+      "$ref": "#/definitions/block"
+    },
+    "block30": {
+      "$ref": "#/definitions/block"
+    },
+    "block31": {
+      "$ref": "#/definitions/block"
+    },
+    "block32": {
+      "$ref": "#/definitions/block"
+    },
+    "block33": {
+      "$ref": "#/definitions/block"
+    },
+    "block34": {
+      "$ref": "#/definitions/block"
+    },
+    "block35": {
+      "$ref": "#/definitions/block"
+    },
+    "block36": {
+      "$ref": "#/definitions/block"
+    },
+    "block37": {
+      "$ref": "#/definitions/block"
+    },
+    "block38": {
+      "$ref": "#/definitions/block"
+    },
+    "block39": {
+      "$ref": "#/definitions/block"
+    },
+    "block40": {
+      "$ref": "#/definitions/block"
+    },
+    "block41": {
+      "$ref": "#/definitions/block"
+    },
+    "block42": {
+      "$ref": "#/definitions/block"
+    },
+    "block43": {
+      "$ref": "#/definitions/block"
+    },
+    "block44": {
+      "$ref": "#/definitions/block"
+    },
+    "block45": {
+      "$ref": "#/definitions/block"
+    },
+    "block46": {
+      "$ref": "#/definitions/block"
+    },
+    "block47": {
+      "$ref": "#/definitions/block"
+    },
+    "block48": {
+      "$ref": "#/definitions/block"
+    },
+    "block49": {
+      "$ref": "#/definitions/block"
+    },
+    "block50": {
+      "$ref": "#/definitions/block"
+    },
+    "block51": {
+      "$ref": "#/definitions/block"
+    },
+    "block52": {
+      "$ref": "#/definitions/block"
+    },
+    "block53": {
+      "$ref": "#/definitions/block"
+    },
+    "block54": {
+      "$ref": "#/definitions/block"
+    },
+    "block55": {
+      "$ref": "#/definitions/block"
+    },
+    "block56": {
+      "$ref": "#/definitions/block"
+    },
+    "block57": {
+      "$ref": "#/definitions/block"
+    },
+    "block58": {
+      "$ref": "#/definitions/block"
+    },
+    "block59": {
+      "$ref": "#/definitions/block"
+    },
+    "block60": {
+      "$ref": "#/definitions/block"
+    },
+    "block61": {
+      "$ref": "#/definitions/block"
+    },
+    "block62": {
+      "$ref": "#/definitions/block"
+    },
+    "block63": {
+      "$ref": "#/definitions/block"
+    }
+  }
+}

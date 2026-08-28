@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag",
+  "semanticKind": "remove-representation-tag",
+  "displayName": "Remove Representation Tag",
+  "emoji": "🚫",
+  "aggregateVariant": "RemoveRepresentationTag",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "remove-representation-tag",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.return-source-entries.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "fifo", "maximumEntries", "cancelAfterFreezeItems", "unwindPayloadBytes", "grants", "laws"],
+  "properties": {
+    "version": {"const": 1},
+    "fifo": {"const": [3, 1, 4, 1, 5, 9]},
+    "maximumEntries": {"const": 6},
+    "cancelAfterFreezeItems": {"const": 2},
+    "unwindPayloadBytes": {"const": 8193},
+    "grants": {"const": ["zero", "requiredMinusOne", "required"]},
+    "laws": {"const": {"allocationBeforePlacement": true, "sourceMovedOnBlockedPlacement": false, "repeatedReservationAllocates": false, "payloadCloned": false, "freezeVisitsOneNode": true, "occupiedHandoffTargetMutatesSource": false, "emptyReservedBackingLostOnCancel": false, "entryReleaseDropsLivePayload": false, "entryTransferClaimsPayloadRetirement": false, "maximumIsCallerBudget": true, "overAdmissionErrorRetainsActualBacking": true, "placementOccursInsideUnwindingCallback": true}}
+  }
+}

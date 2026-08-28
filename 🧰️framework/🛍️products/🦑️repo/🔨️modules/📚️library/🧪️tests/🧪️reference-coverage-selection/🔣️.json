@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "contract": "adapter-local-reference-coverage-v1",
+  "execution": {
+    "target": "test-reference-coverage-selection",
+    "route": "reference-coverage-selection",
+    "launchName": "🧹clean🧩️taxonomy🧪️reference-coverage-selection",
+    "launchOrder": 410.208
+  },
+  "nonRustAdapters": [
+    { "path": "🧪️case/🟦️.ts", "adapter": "typescript" },
+    { "path": "🧪️case/🐹️.go", "adapter": "go" },
+    { "path": "🧪️case/🐍️.py", "adapter": "python" },
+    { "path": "🧪️case/🔷️.cs", "adapter": "dotnet" },
+    { "path": "🧪️case/source.cpp", "adapter": "native" },
+    { "path": "🧪️case/🔣️.json", "adapter": "json" },
+    { "path": "🧪️case/🔣️.jsonc", "adapter": "jsonc" },
+    { "path": "🧪️case/Cargo.toml", "adapter": "toml" },
+    { "path": "🧪️case/source.yaml", "adapter": "yaml" },
+    { "path": "🧪️case/source.xml", "adapter": "xml" },
+    { "path": "🧪️case/📝️.md", "adapter": "markdown" },
+    { "path": "🧪️case/🥒️.feature", "adapter": "gherkin" }
+  ],
+  "tokens": {
+    "writable": { "adapter": "rust", "start": 10, "end": 20, "value": "α/source.rs", "rewriteKind": "rust-path-join" },
+    "interior": { "adapter": "rust", "start": 12, "end": 18, "value": "source.rs" },
+    "exact": { "adapter": "rust", "start": 10, "end": 20, "value": "α/source.rs" },
+    "overlap": { "adapter": "rust", "start": 15, "end": 21, "value": "source.rs" },
+    "left": { "adapter": "rust", "start": 9, "end": 19, "value": "source.rs" },
+    "finite": { "adapter": "rust", "start": 40, "end": 50, "value": "target.rs", "physicalInterpretation": "rust-finite-manifest-targets", "physicalTargets": ["🧪️target/🦀️.rs"], "unsupportedReason": "No writable literal authority" },
+    "finite-exact": { "adapter": "rust", "start": 40, "end": 50, "value": "target.rs" },
+    "finite-value": { "adapter": "rust", "start": 40, "end": 50, "value": "different.rs" },
+    "finite-inner": { "adapter": "rust", "start": 41, "end": 49, "value": "target.rs" },
+    "finite-no-target": { "adapter": "rust", "start": 40, "end": 50, "value": "target.rs", "physicalInterpretation": "rust-finite-manifest-targets", "physicalTargets": [], "unsupportedReason": "No writable literal authority" },
+    "finite-no-reason": { "adapter": "rust", "start": 40, "end": 50, "value": "target.rs", "physicalInterpretation": "rust-finite-manifest-targets", "physicalTargets": ["🧪️target/🦀️.rs"] },
+    "finite-other-rewrite": { "adapter": "rust", "start": 40, "end": 50, "value": "target.rs", "rewriteKind": "path-prefix", "physicalInterpretation": "rust-finite-manifest-targets", "physicalTargets": ["🧪️target/🦀️.rs"], "unsupportedReason": "No writable literal authority" },
+    "non-rust-writable": { "adapter": "json", "start": 10, "end": 20, "value": "α/source.rs", "rewriteKind": "rust-path-join" }
+  },
+  "rustCases": [
+    { "id": "writable-contained", "supported": ["writable"], "unsupported": ["interior", "exact"], "retained": [] },
+    { "id": "writable-partial-overlaps", "supported": ["writable"], "unsupported": ["left", "overlap"], "retained": ["left", "overlap"] },
+    { "id": "finite-exact", "supported": ["finite"], "unsupported": ["finite-exact"], "retained": [] },
+    { "id": "finite-value-mismatch", "supported": ["finite"], "unsupported": ["finite-value"], "retained": ["finite-value"] },
+    { "id": "finite-span-mismatch", "supported": ["finite"], "unsupported": ["finite-inner"], "retained": ["finite-inner"] },
+    { "id": "finite-no-target", "supported": ["finite-no-target"], "unsupported": ["finite-exact"], "retained": ["finite-exact"] },
+    { "id": "finite-no-reason", "supported": ["finite-no-reason"], "unsupported": ["finite-exact"], "retained": ["finite-exact"] },
+    { "id": "finite-other-rewrite", "supported": ["finite-other-rewrite"], "unsupported": ["finite-exact"], "retained": ["finite-exact"] },
+    { "id": "non-rust-cannot-cover-rust", "supported": ["non-rust-writable"], "unsupported": ["interior"], "retained": ["interior"] },
+    { "id": "order-and-duplicate-retention", "supported": ["finite", "writable"], "unsupported": ["overlap", "finite-exact", "left", "overlap", "exact"], "retained": ["overlap", "left", "overlap"] },
+    { "id": "no-supported", "supported": [], "unsupported": ["exact", "finite-exact"], "retained": ["exact", "finite-exact"] },
+    { "id": "no-unsupported", "supported": ["writable", "finite"], "unsupported": [], "retained": [] }
+  ],
+  "nonRustSupported": ["writable", "finite"],
+  "nonRustUnsupported": ["interior", "finite-exact", "interior"],
+  "scale": { "supported": 256, "unsupported": 256, "expectedCoverageCalls": 0 }
+}

@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "text", "utf8Hex", "ranges", "invalid", "repeat", "maximumChunkBytes"],
+  "properties": {
+    "version": {"const": 1}, "text": {"const": "A😀äZ"}, "utf8Hex": {"const": "41f09f9880c3a45a"},
+    "repeat": {"const": 1000}, "maximumChunkBytes": {"const": 256},
+    "ranges": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "object", "additionalProperties": false, "required": ["offset", "length", "hex"], "properties": {"offset": {"type": "integer", "minimum": 0}, "length": {"type": "integer", "minimum": 0}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})*$"}}}},
+    "invalid": {"const": [{"offset": -1, "length": 1}, {"offset": 0, "length": -1}, {"offset": 9, "length": 0}, {"offset": 7, "length": 2}]}
+  }
+}

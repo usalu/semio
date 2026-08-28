@@ -21,7 +21,7 @@
 //! ## §6: `ruststep` is the independent READER, never a second producer
 //! `ruststep` 0.4 parses real ISO 10303-21 clear text (IFC2X3 is that syntax under the IFC2X3
 //! EXPRESS schema) but has no writer at all, so this module cannot claim a differential against a
-//! third-party PRODUCER. Every scenario in `../../../../🧪️tests/mutate-ifc-2x3-cv20/component.feature`
+//! third-party PRODUCER. Every scenario in `../../../../🧪️tests/mutate-ifc-2x3-cv20/🥒️.feature`
 //! is typed `@mode-property`/`@mode-round-trip` accordingly. `ruststep` IS what reads every result
 //! back before `semantic-ifc-v1` compares it, through `project_ifc_2x3_cv20` below.
 //!

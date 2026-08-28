@@ -1,0 +1,11 @@
+# Canonical Transaction Output Admission
+
+The remaining transaction path currently removes a raw UiPatch from the completed cursor and appends it to Transacted.patches. This loses the paired output permit. Replacing the vector element type alone would still run multiple strict ReadyPatch handbacks on clear/Drop, and a new paged queue allocated after seal would lack an assigned resident owner.
+
+Chosen next implementation: one shared pool of64 total output entries, with separate fixed queue headers (not64×64 payload entries). A transaction reserves its exact output entry before calling a surface producer and before candidate seal. The reservation is retained structurally through presentation, reconciliation, seal, publication and refusal. ReadyPatch moves into the already-admitted entry; FIFO extraction moves one exact owner into an already-admitted target. Normal close retires one ReadyPatch step; collection/reservation Drop records an atomic exact return with no allocation or mutex. Epoch reuse waits for actual terminal release, and overflow refuses before source detachment.
+
+The pool must not gain an independent payload quota. Its once-only physical fixed backing, the canonical64-slot document arena, and the fixed UiValue arena backing are part of the existing32MiB aggregate baseline. Per-job root1/output2 permits remain the sole dynamic resident authority. Baseline integration must preserve64 dynamic slots and fixed8MiB/32MiB constants; tests that assumed all32MiB were payload-only must instead prove exact remaining capacity, not enlarge the ceiling. The physical entry size is measured from the actual current ReadyPatch type, not a stale6416B patch-op constant.
+
+Required neutral/native laws: saturation plus one before producer invocation; zero physical grant; occupied target/refusal preserving exact ReadyPatch; FIFO identity/order; held-pool-mutex Drop and normal close; poison distinction; u64 epoch exhaustion/ABA; cancelled producer before/after seal; root1/output2 close in both orders; static backing charged once; existing real nine-surface/reader-pressure laws retained.
+
+No output-pool implementation or native PASS is claimed by this design note. Current R46 existing-component2 and R47 actual jobs2 remain separate scoped green evidence; original inline census and full physical overlap acceptance remain open.

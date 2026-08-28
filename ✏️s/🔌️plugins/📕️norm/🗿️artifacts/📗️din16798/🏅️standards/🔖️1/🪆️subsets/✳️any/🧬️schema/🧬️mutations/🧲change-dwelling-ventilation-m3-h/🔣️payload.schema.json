@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeDwellingVentilationM3H",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newDwellingVentilationM3H"
+  ],
+  "properties": {
+    "newDwellingVentilationM3H": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/↔️move-widget",
+  "semanticKind": "move-widget",
+  "displayName": "Move Widget",
+  "emoji": "↔️",
+  "aggregateVariant": "MoveWidget",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "move-widget",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

@@ -1,0 +1,28 @@
+{
+  "declaredOutcome": "applied",
+  "kind": "replace-surface",
+  "hasExpected": true,
+  "solids": 0,
+  "shells": 1,
+  "faces": 1,
+  "edges": 4,
+  "vertices": 4,
+  "boundingBox": {
+    "xMin": -25.0000001,
+    "xMax": 525.0000001,
+    "yMin": -25.0000001,
+    "yMax": 525.0000001,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 777.8174595880449,
+  "volume": 0,
+  "area": 249999.9999999996,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.023334523787641347,
+  "meshVertexCount": 8,
+  "meshTriangleCount": 10
+}

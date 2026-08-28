@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/📐️change-layout",
+  "semanticKind": "change-layout",
+  "displayName": "Change Layout",
+  "emoji": "📐️",
+  "aggregateVariant": "ChangeLayout",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-layout",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

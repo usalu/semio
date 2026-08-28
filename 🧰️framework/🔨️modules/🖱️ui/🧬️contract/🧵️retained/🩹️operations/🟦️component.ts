@@ -8,6 +8,7 @@ import type { RetainedUiWireStep } from "../📦️wire/🟦️component.ts";
 type Operation = { kind: "upsert"; node: OwnedUiNode } | { kind: "field"; id: number; change: RetainedUiFieldChange } | { kind: "activity"; id: number; payload: OwnedUiPayload<RetainedUiTypedValues["activity"]> } | { kind: "remove"; id: number } | { kind: "root"; id: number | null };
 type Program = Generator<number, void, void>;
 type Link = { id: number; next: Link | null };
+const MINT = Symbol("owned-ui-operation");
 export type OwnedUiOperationResult = { readonly nodes: OwnedUiNodeIndex; readonly root: number | null; readonly touched: NumericIndex<true>; readonly estimatedBytes: number };
 const admitted = (grant: NumericIndexGrant): boolean => Number.isSafeInteger(grant.maxItems) && Number.isSafeInteger(grant.maxBytes) && grant.maxItems >= 1 && grant.maxBytes >= 4096;
 const state = (kind: RetainedUiWireStep["kind"], phase: string, bytes = 0): RetainedUiWireStep => ({ kind, phase, items: bytes ? 1 : 0, bytes });
@@ -29,23 +30,24 @@ function* operationStrings(operation: Operation): Generator<string> {
 /** 🩹️ A typed operation captures exact normalized field owners, never arbitrary borrowed JSON. */
 export class OwnedUiOperation {
   #value: Operation | null;
-  private constructor(value: Operation) { this.#value = value; Object.freeze(this); }
+  private constructor(mint: symbol, value: Operation) { if (mint !== MINT) throw new Error("Invalid owned UI operation authority"); this.#value = value; Object.freeze(this); }
   static {
     checkOperation = owner => { if (!owner.#value) throw new Error("Owned UI operation is closed"); };
     takeOperation = owner => { checkOperation(owner); const value = owner.#value!; owner.#value = null; return value; };
   }
-  static upsert(payload: OwnedUiPayload<RetainedUiNodeRecord>): OwnedUiOperation { return new OwnedUiOperation({ kind: "upsert", node: OwnedUiNode.captureFrom(payload) }); }
-  static field(node: number, change: RetainedUiFieldChange): OwnedUiOperation { const exact = id(node); return new OwnedUiOperation({ kind: "field", id: exact, change: captureUiFieldChange(change) }); }
-  static activity(node: number, payload: OwnedUiPayload<RetainedUiTypedValues["activity"]>): OwnedUiOperation { const exact = id(node); return new OwnedUiOperation({ kind: "activity", id: exact, payload: captureTypedUiPayload("activity", payload) }); }
-  static remove(node: number): OwnedUiOperation { return new OwnedUiOperation({ kind: "remove", id: id(node) }); }
-  static setRoot(node: number | null): OwnedUiOperation { return new OwnedUiOperation({ kind: "root", id: node === null ? null : id(node) }); }
-  beginClose(): OwnedUiOperationRetirement { return new OwnedUiOperationRetirement(takeOperation(this)); }
+  static upsert(payload: OwnedUiPayload<RetainedUiNodeRecord>): OwnedUiOperation { return new OwnedUiOperation(MINT, { kind: "upsert", node: OwnedUiNode.captureFrom(payload) }); }
+  static field(node: number, change: RetainedUiFieldChange): OwnedUiOperation { const exact = id(node); return new OwnedUiOperation(MINT, { kind: "field", id: exact, change: captureUiFieldChange(change) }); }
+  static activity(node: number, payload: OwnedUiPayload<RetainedUiTypedValues["activity"]>): OwnedUiOperation { const exact = id(node); return new OwnedUiOperation(MINT, { kind: "activity", id: exact, payload: captureTypedUiPayload("activity", payload) }); }
+  static remove(node: number): OwnedUiOperation { return new OwnedUiOperation(MINT, { kind: "remove", id: id(node) }); }
+  static setRoot(node: number | null): OwnedUiOperation { return new OwnedUiOperation(MINT, { kind: "root", id: node === null ? null : id(node) }); }
+  beginClose(): OwnedUiOperationRetirement { return new OwnedUiOperationRetirement(MINT, takeOperation(this)); }
   terminalIsEmpty(): boolean { return this.#value === null; }
 }
 
 export class OwnedUiOperationRetirement {
   #retirement: UiNodeRetirement | UiPayloadRetirement<unknown> | null;
-  constructor(value: Operation) {
+  constructor(mint: symbol, value: Operation) {
+    if (mint !== MINT) throw new Error("Invalid owned UI operation retirement authority");
     const owner = value.kind === "upsert" ? value.node : value.kind === "field" ? value.change.payload : value.kind === "activity" ? value.payload : null;
     this.#retirement = owner && !owner.terminalIsEmpty() ? owner.beginClose() : null;
     Object.freeze(this);
@@ -137,7 +139,7 @@ export class OwnedUiOperationCursor {
       yield* this.#change(this.#nodes!.beginSet(this.#replacement)); yield* this.#touched.set(operation.id, true);
       yield* this.#releaseNode(); this.#node = this.#replacement; this.#replacement = null; yield* this.#releaseNode();
     }
-    this.#operationRetirement = new OwnedUiOperationRetirement(operation); this.#operation = null; yield 64;
+    this.#operationRetirement = new OwnedUiOperationRetirement(MINT, operation); this.#operation = null; yield 64;
     while (this.#operationRetirement) { const result = this.#operationRetirement.advance(this.#grant); if (result.kind === "complete") this.#operationRetirement = null; yield result.bytes; }
   }
 
@@ -164,7 +166,7 @@ export class OwnedUiOperationCursor {
     if (this.#node) { this.#nodeRetirement = this.#node.beginClose(); this.#node = null; return state("pending", "operation-node-close", 64); }
     if (this.#replacement) { this.#nodeRetirement = this.#replacement.beginClose(); this.#replacement = null; return state("pending", "operation-replacement-close", 64); }
     if (this.#operationRetirement) { const result = this.#operationRetirement.advance(grant); if (result.kind === "complete") this.#operationRetirement = null; return { ...result, kind: "pending" }; }
-    if (this.#operation) { this.#operationRetirement = new OwnedUiOperationRetirement(this.#operation); this.#operation = null; return state("pending", "operation-payload-close", 64); }
+    if (this.#operation) { this.#operationRetirement = new OwnedUiOperationRetirement(MINT, this.#operation); this.#operation = null; return state("pending", "operation-payload-close", 64); }
     if (this.#nodes) { this.#retirement = this.#nodes.beginClose(); this.#nodes = null; return state("pending", "operation-index-close", 64); }
     const touched = this.#touched.closeStep(grant); if (!touched.complete) return state("pending", "operation-touched-close", touched.bytes);
     this.#status = "closed"; return state("complete", "operation-close");

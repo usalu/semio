@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePileBaseAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newPileBaseAreaM2"
+  ],
+  "properties": {
+    "newPileBaseAreaM2": {
+      "type": "number"
+    }
+  }
+}

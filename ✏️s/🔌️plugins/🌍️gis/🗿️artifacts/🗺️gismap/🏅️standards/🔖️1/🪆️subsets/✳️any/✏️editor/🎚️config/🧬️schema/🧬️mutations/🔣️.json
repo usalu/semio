@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "oneOf": [
+    {
+      "allOf": [
+        {"$ref": "👁️set-layer-visibility/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLayerVisibility"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "🎥️set-camera/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setCamera"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "🖼️set-render-mode/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setRenderMode"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "🎨️set-vector-style/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setVectorStyle"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "🔽️set-lod-mode/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLodMode"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "📏️set-layer-stroke-scale/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLayerStrokeScale"}}}
+      ],
+      "unevaluatedProperties": false
+    },
+    {
+      "allOf": [
+        {"$ref": "🗣️set-locale/🧬️schema/🔣️.json#/$defs/payload"},
+        {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "setLocale"}}}
+      ],
+      "unevaluatedProperties": false
+    }
+  ],
+  "unevaluatedProperties": false
+}

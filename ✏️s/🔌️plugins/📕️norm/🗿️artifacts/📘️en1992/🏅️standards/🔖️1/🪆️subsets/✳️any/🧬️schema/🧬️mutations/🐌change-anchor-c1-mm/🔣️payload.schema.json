@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAnchorC1Mm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAnchorC1Mm"
+  ],
+  "properties": {
+    "newAnchorC1Mm": {
+      "type": "number"
+    }
+  }
+}

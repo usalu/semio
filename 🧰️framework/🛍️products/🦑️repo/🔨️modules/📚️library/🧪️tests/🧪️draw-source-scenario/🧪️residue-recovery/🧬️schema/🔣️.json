@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Draw Residue Durable Recovery Scenarios",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "childExitCode", "foreignInput", "generatorStarts", "inverseState", "preservation", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-residue-durable-recovery-v1" },
+    "childExitCode": { "const": 73 },
+    "foreignInput": { "const": "ignored-source-directory-with-file-empty-directory-and-symlink" },
+    "generatorStarts": { "const": 0 },
+    "inverseState": { "const": "rolled-back" },
+    "preservation": { "const": "all-owned-preimages-and-all-foreign-residue" },
+    "cases": {
+      "const": [
+        { "id": "durable-resume", "checkpoint": "durable", "phase": "transaction-wal-prepared", "canonicalState": "regenerating", "candidateState": null, "installed": "all", "cancel": false },
+        { "id": "cancelled-resume", "checkpoint": "durable", "phase": "transaction-wal-prepared", "canonicalState": "regenerating", "candidateState": null, "installed": "all", "cancel": true },
+        { "id": "next-journal-wal", "checkpoint": "candidate", "phase": "transaction-journal-candidate-written", "canonicalState": "editing", "candidateState": "regenerating", "installed": "all", "cancel": false },
+        { "id": "rename-before-journal", "checkpoint": "rename", "phase": "transaction-journal-write-mkdir", "canonicalState": "installing", "candidateState": null, "installed": "first-unrecorded", "cancel": false }
+      ]
+    }
+  }
+}

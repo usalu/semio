@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceGeometryParameters",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newParameters"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newParameters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
+    }
+  }
+}

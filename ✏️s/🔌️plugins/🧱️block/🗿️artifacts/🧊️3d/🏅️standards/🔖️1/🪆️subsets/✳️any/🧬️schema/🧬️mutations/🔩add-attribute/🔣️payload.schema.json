@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddAttribute",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "attribute"
+  ],
+  "properties": {
+    "attribute": {
+      "title": "BlockAttribute",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

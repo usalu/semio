@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "requiredNodes": 1,
+  "maximumItems": 262144,
+  "maximumBytes": 67108864,
+  "cases": [
+    { "maximumNodes": 0, "patches": 0, "creditFault": true },
+    { "maximumNodes": 1, "patches": 1, "creditFault": false }
+  ]
+}

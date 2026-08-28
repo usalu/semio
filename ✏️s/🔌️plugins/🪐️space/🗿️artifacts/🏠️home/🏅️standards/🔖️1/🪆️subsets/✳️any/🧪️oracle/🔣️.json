@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. A mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.space.home`'s catalog and its no-oracle decision live here rather than in a shared manifest. The launcher artifact is semio-NATIVE and its entire mutable artifact-lane surface is one counter — see `noOracleDecisions` below for why no third party can be authoritative over it.",
   "oracles": [],
   "noOracleDecisions": [

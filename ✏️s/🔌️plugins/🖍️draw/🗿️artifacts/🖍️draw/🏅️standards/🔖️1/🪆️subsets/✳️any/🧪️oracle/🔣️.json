@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.draw.draw` is a semio-NATIVE artifact carried in `.dsl.semio`/`.pack.semio`, so no third party can serve as its reference — see the noOracleDecision below. ONE catalog covers this subset's two declared 🧬️mutations directories: `🧬️schema/🧬️mutations` holds the `DrawMutation` enum, and `🚪️io/🧬️mutations` holds that SAME enum's text and binary wire codecs (`encode_op`/`decode_op`), not a second vocabulary — the completeness gate keys a catalog to the subset, and the subset has exactly one.",
   "oracles": [],
   "noOracleDecisions": [

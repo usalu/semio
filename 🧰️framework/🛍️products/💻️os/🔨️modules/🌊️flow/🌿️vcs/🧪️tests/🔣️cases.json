@@ -1,0 +1,626 @@
+{
+  "roster": [
+    {
+      "folder": "➕️add-widget",
+      "name": "AddWidget",
+      "verb": "add",
+      "entity": "widget",
+      "record": "AddedWidget",
+      "required": [
+        "index",
+        "widget"
+      ],
+      "tag": 0,
+      "kind": "add-widget",
+      "operation": "addWidget"
+    },
+    {
+      "folder": "🗑️remove-widget",
+      "name": "RemoveWidget",
+      "verb": "remove",
+      "entity": "widget",
+      "record": "RemovedWidget",
+      "required": [
+        "id"
+      ],
+      "tag": 1,
+      "kind": "remove-widget",
+      "operation": "removeWidget"
+    },
+    {
+      "folder": "↔️move-widget",
+      "name": "MoveWidget",
+      "verb": "move",
+      "entity": "widget",
+      "record": "MovedWidget",
+      "required": [
+        "id",
+        "toIndex"
+      ],
+      "tag": 2,
+      "kind": "move-widget",
+      "operation": "moveWidget"
+    },
+    {
+      "folder": "🩹change-widget",
+      "name": "ChangeWidget",
+      "verb": "change",
+      "entity": "widget",
+      "record": "ChangedWidget",
+      "required": [
+        "id",
+        "widget"
+      ],
+      "tag": 3,
+      "kind": "change-widget",
+      "operation": "changeWidget"
+    },
+    {
+      "folder": "🔗️add-synapse",
+      "name": "AddSynapse",
+      "verb": "add",
+      "entity": "synapse",
+      "record": "AddedSynapse",
+      "required": [
+        "index",
+        "synapse"
+      ],
+      "tag": 4,
+      "kind": "add-synapse",
+      "operation": "addSynapse"
+    },
+    {
+      "folder": "✂️remove-synapse",
+      "name": "RemoveSynapse",
+      "verb": "remove",
+      "entity": "synapse",
+      "record": "RemovedSynapse",
+      "required": [
+        "id"
+      ],
+      "tag": 5,
+      "kind": "remove-synapse",
+      "operation": "removeSynapse"
+    },
+    {
+      "folder": "🔀️move-synapse",
+      "name": "MoveSynapse",
+      "verb": "move",
+      "entity": "synapse",
+      "record": "MovedSynapse",
+      "required": [
+        "id",
+        "toIndex"
+      ],
+      "tag": 6,
+      "kind": "move-synapse",
+      "operation": "moveSynapse"
+    },
+    {
+      "folder": "🔄change-synapse",
+      "name": "ChangeSynapse",
+      "verb": "change",
+      "entity": "synapse",
+      "record": "ChangedSynapse",
+      "required": [
+        "id",
+        "synapse"
+      ],
+      "tag": 7,
+      "kind": "change-synapse",
+      "operation": "changeSynapse"
+    },
+    {
+      "folder": "📐️change-layout",
+      "name": "ChangeLayout",
+      "verb": "change",
+      "entity": "layout",
+      "record": "ChangedLayout",
+      "required": [
+        "entries"
+      ],
+      "tag": 8,
+      "kind": "change-layout",
+      "operation": "changeLayout"
+    },
+    {
+      "folder": "♻️replace-flow-fixture",
+      "name": "ReplaceFlowFixture",
+      "verb": "replace",
+      "entity": "flow-fixture",
+      "record": "ReplacedFlowFixture",
+      "required": [
+        "fixture"
+      ],
+      "tag": 9,
+      "kind": "replace-flow-fixture",
+      "operation": "replaceFlowFixture"
+    }
+  ],
+  "fixture": {
+    "schema": "flow.fixture",
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "widgets": [
+      {
+        "kind": "inputNote",
+        "id": "a",
+        "text": "A"
+      },
+      {
+        "kind": "inputNote",
+        "id": "b",
+        "text": "B"
+      },
+      {
+        "kind": "inputNote",
+        "id": "c",
+        "text": "C"
+      }
+    ],
+    "synapses": [
+      {
+        "id": "s1",
+        "from": "a",
+        "to": "b",
+        "fromPort": "out",
+        "toPort": "in"
+      },
+      {
+        "id": "s2",
+        "from": "b",
+        "to": "c",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    ],
+    "layout": {
+      "a": {
+        "x": 1,
+        "y": 2
+      }
+    }
+  },
+  "widgets": [
+    {
+      "kind": "neuron",
+      "id": "n",
+      "neuronKind": "math.add",
+      "params": {
+        "n": 2,
+        "d": 1.5,
+        "b": true,
+        "s": "hello",
+        "nil": null,
+        "nested": {
+          "answer": 42
+        }
+      },
+      "input_ports": [
+        "a"
+      ],
+      "output_ports": [
+        "sum"
+      ],
+      "preview": true
+    },
+    {
+      "kind": "inputSlider",
+      "id": "slider",
+      "label": "N",
+      "value": 3,
+      "min": 0,
+      "max": 10,
+      "step": 1
+    },
+    {
+      "kind": "inputNote",
+      "id": "note",
+      "text": "hello"
+    },
+    {
+      "kind": "inputImage",
+      "id": "image",
+      "src": "data:image/png;base64,"
+    },
+    {
+      "kind": "variable",
+      "id": "var",
+      "name": "value",
+      "schema": "dictionary"
+    },
+    {
+      "kind": "outputPreview",
+      "id": "preview",
+      "preview": {
+        "value": 1.5
+      },
+      "expanded": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "kind": "outputAction",
+      "id": "action",
+      "action": "run"
+    },
+    {
+      "kind": "outputExport",
+      "id": "export",
+      "format": "svg"
+    },
+    {
+      "kind": "cluster",
+      "id": "cluster",
+      "name": "Nested",
+      "tree": {
+        "neurons": [
+          {
+            "id": "inner",
+            "kind": "core.number",
+            "params": {
+              "value": 2
+            },
+            "tree": {
+              "neurons": [],
+              "synapses": []
+            }
+          }
+        ],
+        "synapses": []
+      },
+      "flow": {
+        "camera": {
+          "x": 1,
+          "y": 2,
+          "zoom": 1
+        },
+        "nodes": {
+          "inner": {
+            "layout": {
+              "x": 0,
+              "y": 0
+            },
+            "chrome": {
+              "kind": "plain",
+              "preview": true
+            }
+          }
+        },
+        "previews": [
+          {
+            "id": "pv",
+            "source": {
+              "neuron": "inner",
+              "channel": "value"
+            },
+            "mode": "text",
+            "preview": {
+              "value": 3
+            },
+            "expanded": [],
+            "layout": null
+          }
+        ]
+      }
+    }
+  ],
+  "positives": [
+    {
+      "index": 1,
+      "widget": {
+        "kind": "inputNote",
+        "id": "x",
+        "text": "X"
+      }
+    },
+    {
+      "id": "b"
+    },
+    {
+      "id": "c",
+      "toIndex": 0
+    },
+    {
+      "id": "a",
+      "widget": {
+        "kind": "inputNote",
+        "id": "renamed",
+        "text": "Changed"
+      }
+    },
+    {
+      "index": 1,
+      "synapse": {
+        "id": "s3",
+        "from": "a",
+        "to": "c",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    },
+    {
+      "id": "s1"
+    },
+    {
+      "id": "s2",
+      "toIndex": 0
+    },
+    {
+      "id": "s1",
+      "synapse": {
+        "id": "s1-new",
+        "from": "c",
+        "to": "a",
+        "fromPort": "out",
+        "toPort": "in"
+      }
+    },
+    {
+      "entries": [
+        {
+          "id": "a",
+          "layout": {
+            "x": 3,
+            "y": 4
+          }
+        },
+        {
+          "id": "a",
+          "layout": null
+        },
+        {
+          "id": "a",
+          "layout": {
+            "x": 7,
+            "y": 8
+          }
+        }
+      ]
+    },
+    {
+      "fixture": {
+        "schema": "flow.import",
+        "camera": {
+          "x": 12,
+          "y": 34,
+          "zoom": 2
+        },
+        "widgets": [
+          {
+            "kind": "inputNote",
+            "id": "a",
+            "text": "A"
+          },
+          {
+            "kind": "inputNote",
+            "id": "b",
+            "text": "B"
+          },
+          {
+            "kind": "inputNote",
+            "id": "c",
+            "text": "C"
+          }
+        ],
+        "synapses": [
+          {
+            "id": "s1",
+            "from": "a",
+            "to": "b",
+            "fromPort": "out",
+            "toPort": "in"
+          },
+          {
+            "id": "s2",
+            "from": "b",
+            "to": "c",
+            "fromPort": "out",
+            "toPort": "in"
+          }
+        ],
+        "layout": {
+          "a": {
+            "x": 1,
+            "y": 2
+          }
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "insert-widget-middle",
+      "collection": "widgets",
+      "delta": {
+        "removed": [],
+        "inserted": [
+          [
+            1,
+            {
+              "kind": "inputNote",
+              "id": "x",
+              "text": "X"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "expected": [
+        "a",
+        "x",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "name": "move-widget-first",
+      "collection": "widgets",
+      "delta": {
+        "removed": [
+          "c"
+        ],
+        "inserted": [
+          [
+            0,
+            {
+              "kind": "inputNote",
+              "id": "c",
+              "text": "C"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "expected": [
+        "c",
+        "a",
+        "b"
+      ]
+    },
+    {
+      "name": "insert-synapse-middle",
+      "collection": "synapses",
+      "delta": {
+        "removed": [],
+        "inserted": [
+          [
+            1,
+            {
+              "id": "s3",
+              "from": "a",
+              "to": "c"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "expected": [
+        "s1",
+        "s3",
+        "s2"
+      ]
+    },
+    {
+      "name": "move-synapse-first",
+      "collection": "synapses",
+      "delta": {
+        "removed": [
+          "s2"
+        ],
+        "inserted": [
+          [
+            0,
+            {
+              "id": "s2",
+              "from": "b",
+              "to": "c",
+              "fromPort": "out",
+              "toPort": "in"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "expected": [
+        "s2",
+        "s1"
+      ]
+    },
+    {
+      "name": "rename-widget-identity",
+      "collection": "widgets",
+      "delta": {
+        "removed": [],
+        "inserted": [],
+        "replaced": [
+          [
+            "a",
+            {
+              "kind": "inputNote",
+              "id": "renamed",
+              "text": "A"
+            }
+          ]
+        ]
+      },
+      "expected": [
+        "renamed",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "name": "reject-index",
+      "collection": "widgets",
+      "delta": {
+        "removed": [],
+        "inserted": [
+          [
+            4,
+            {
+              "kind": "inputNote",
+              "id": "x"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "error": true
+    },
+    {
+      "name": "reject-negative",
+      "collection": "widgets",
+      "delta": {
+        "removed": [],
+        "inserted": [
+          [
+            -1,
+            {
+              "kind": "inputNote",
+              "id": "x"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "error": true
+    },
+    {
+      "name": "reject-duplicate",
+      "collection": "widgets",
+      "delta": {
+        "removed": [],
+        "inserted": [
+          [
+            0,
+            {
+              "kind": "inputNote",
+              "id": "a",
+              "text": "A"
+            }
+          ]
+        ],
+        "replaced": []
+      },
+      "error": true
+    },
+    {
+      "name": "reject-missing",
+      "collection": "widgets",
+      "delta": {
+        "removed": [
+          "missing"
+        ],
+        "inserted": [],
+        "replaced": []
+      },
+      "error": true
+    }
+  ]
+}
+

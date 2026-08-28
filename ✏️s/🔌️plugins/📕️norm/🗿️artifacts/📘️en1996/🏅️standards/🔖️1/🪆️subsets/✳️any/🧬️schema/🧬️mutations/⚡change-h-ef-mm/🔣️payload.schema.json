@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHEfMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newHEfMm"
+  ],
+  "properties": {
+    "newHEfMm": {
+      "type": "number"
+    }
+  }
+}

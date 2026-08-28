@@ -1,0 +1,288 @@
+{
+  "cases": [
+    {
+      "id": "duplicate-rows-union-all-four-origins-and-index-identity",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [{ "contractId": "generator", "rootPath": "generated", "inclusion": "ignored" }],
+        "candidates": [
+          { "sourcePath": "generated/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }], "unsafeAncestor": false },
+          { "sourcePath": "generated/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked", "explicit-ticket"], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [{ "sourcePath": "generated/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["tracked", "nonignored-untracked", "ignored-generator", "explicit-ticket"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }], "generatorOutputs": [{ "contractId": "generator", "rootPath": "generated", "inclusion": "ignored" }] }],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "duplicate-physical-kind-contradiction-rejects-without-selection",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "conflict/leaf", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }], "unsafeAncestor": false },
+          { "sourcePath": "conflict/leaf", "observedKind": "symlink", "worktreeMode": "120000", "explicitDirectory": false, "origins": ["explicit-ticket"], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [{ "sourcePath": "conflict/leaf", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["tracked", "explicit-ticket"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }], "generatorOutputs": [] }],
+        "diagnostics": [{ "code": "contradictory-physical-observation", "path": "conflict/leaf", "message": "Duplicate rows disagree on observed physical kind, mode, or directory status" }]
+      }
+    },
+    {
+      "id": "declared-ignored-root-validates-a-supplied-ignored-origin",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [{ "contractId": "generator", "rootPath": "generated", "inclusion": "ignored" }],
+        "candidates": [{ "sourcePath": "generated/leaf.rs", "observedKind": "file", "worktreeMode": "100755", "explicitDirectory": false, "origins": ["ignored-generator"], "indexEntries": [], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [{ "sourcePath": "generated/leaf.rs", "observedKind": "file", "worktreeMode": "100755", "explicitDirectory": false, "origins": ["ignored-generator"], "indexEntries": [], "generatorOutputs": [{ "contractId": "generator", "rootPath": "generated", "inclusion": "ignored" }] }],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "opaque-prefix-is-repository-rooted-and-compose-is-casefolded-at-any-segment",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": ["vendor/opaque", "compose"],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "nested/vendor/opaque/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "vendor/opaque/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "safe/CoMpOsE/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          { "sourcePath": "nested/vendor/opaque/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "generatorOutputs": [] },
+          { "sourcePath": "safe/CoMpOsE/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": [], "indexEntries": [], "generatorOutputs": [] },
+          { "sourcePath": "vendor/opaque/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": [], "indexEntries": [], "generatorOutputs": [] }
+        ],
+        "diagnostics": [
+          { "code": "opaque-path", "path": "safe/CoMpOsE/leaf.rs", "message": "Configured opaque prefix rejected before candidate projection" },
+          { "code": "opaque-path", "path": "vendor/opaque/leaf.rs", "message": "Configured opaque prefix rejected before candidate projection" }
+        ]
+      }
+    },
+    {
+      "id": "scope-includes-normalized-ancestor-and-descendant-without-physical-spelling-rewrite",
+      "input": {
+        "scope": "schema/café/leaf",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "schema/café", "observedKind": "directory", "worktreeMode": "040000", "explicitDirectory": true, "origins": ["explicit-ticket"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "schema/café/leaf/🦀️.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "schema/café-sibling/🦀️.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": "schema/café/leaf",
+        "status": "complete",
+        "observations": [
+          { "sourcePath": "schema/café", "observedKind": "directory", "worktreeMode": "040000", "explicitDirectory": true, "origins": ["explicit-ticket"], "indexEntries": [], "generatorOutputs": [] },
+          { "sourcePath": "schema/café/leaf/🦀️.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "generatorOutputs": [] }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "invalid-source-paths-reject-before-any-policy-projection",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "../escape.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "/absolute.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "windows\\escape.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "control\u0001name.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [
+          { "code": "invalid-source-path", "path": "../escape.rs", "message": "Candidate sourcePath is not a safe repository-relative slash path" },
+          { "code": "invalid-source-path", "path": "/absolute.rs", "message": "Candidate sourcePath is not a safe repository-relative slash path" },
+          { "code": "invalid-source-path", "path": "control\u0001name.rs", "message": "Candidate sourcePath is not a safe repository-relative slash path" },
+          { "code": "invalid-source-path", "path": "windows\\escape.rs", "message": "Candidate sourcePath is not a safe repository-relative slash path" }
+        ]
+      }
+    },
+    {
+      "id": "no-provenance-is-rejected-and-membership-delta-retains-old-absence",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "old/leaf.rs", "observedKind": "absent", "worktreeMode": null, "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "cccccccccccccccccccccccccccccccccccccccc" }], "unsafeAncestor": false },
+          { "sourcePath": "new/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "unowned/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          { "sourcePath": "new/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "generatorOutputs": [] },
+          { "sourcePath": "old/leaf.rs", "observedKind": "absent", "worktreeMode": null, "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "cccccccccccccccccccccccccccccccccccccccc" }], "generatorOutputs": [] },
+          { "sourcePath": "unowned/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [], "generatorOutputs": [] }
+        ],
+        "diagnostics": [
+          { "code": "tracked-path-absent", "path": "old/leaf.rs", "message": "Stage-zero index identity is retained although the worktree path is absent" },
+          { "code": "no-admission-origin", "path": "unowned/leaf.rs", "message": "Candidate has no admitted source authority" }
+        ]
+      }
+    },
+    {
+      "id": "all-nonzero-index-stages-retain-tuples-without-stage-zero-inference",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [{ "sourcePath": "conflicted/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": [], "indexEntries": [{ "stage": 3, "mode": "100644", "objectId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }, { "stage": 1, "mode": "100644", "objectId": "dddddddddddddddddddddddddddddddddddddddd" }, { "stage": 2, "mode": "100644", "objectId": "ffffffffffffffffffffffffffffffffffffffff" }], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [{ "sourcePath": "conflicted/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": [], "indexEntries": [{ "stage": 1, "mode": "100644", "objectId": "dddddddddddddddddddddddddddddddddddddddd" }, { "stage": 2, "mode": "100644", "objectId": "ffffffffffffffffffffffffffffffffffffffff" }, { "stage": 3, "mode": "100644", "objectId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }], "generatorOutputs": [] }],
+        "diagnostics": [{ "code": "conflicted-index", "path": "conflicted/leaf.rs", "message": "Nonzero Git index stages prevent unambiguous source admission" }]
+      }
+    },
+    {
+      "id": "unsafe-ancestor-rejects-and-cancellation-has-no-partial-observations",
+      "input": {
+        "scope": null,
+        "cancelledDuring": "ignored-generator-admission:walk:2",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [{ "sourcePath": "safe/link/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "9999999999999999999999999999999999999999" }], "unsafeAncestor": true }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [{ "code": "cancelled", "path": "ignored-generator-admission:walk:2", "message": "Cancellation prevents a partial-success admission result" }]
+      }
+    },
+    {
+      "id": "nfd-generator-root-matches-nfc-source-without-output-spelling-rewrite",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [{ "contractId": "generator", "rootPath": "generated/café", "inclusion": "ignored" }],
+        "candidates": [{ "sourcePath": "generated/café/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [{ "sourcePath": "generated/café/leaf.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["ignored-generator"], "indexEntries": [], "generatorOutputs": [{ "contractId": "generator", "rootPath": "generated/café", "inclusion": "ignored" }] }],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "stage-zero-index-without-tracked-provenance-is-rejected",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [{ "sourcePath": "index/orphan.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "1212121212121212121212121212121212121212" }], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [{ "sourcePath": "index/orphan.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "1212121212121212121212121212121212121212" }], "generatorOutputs": [] }],
+        "diagnostics": [{ "code": "index-without-tracked-origin", "path": "index/orphan.rs", "message": "Stage-zero index identity requires tracked admission provenance" }]
+      }
+    },
+    {
+      "id": "inconsistent-physical-facts-and-gitlink-are-both-rejected",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          { "sourcePath": "bad/file.rs", "observedKind": "file", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false },
+          { "sourcePath": "gitlink/module", "observedKind": "file", "worktreeMode": "160000", "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "160000", "objectId": "3434343434343434343434343434343434343434" }], "unsafeAncestor": false }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          { "sourcePath": "bad/file.rs", "observedKind": "file", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "generatorOutputs": [] },
+          { "sourcePath": "gitlink/module", "observedKind": "file", "worktreeMode": "160000", "explicitDirectory": false, "origins": ["tracked"], "indexEntries": [{ "stage": 0, "mode": "160000", "objectId": "3434343434343434343434343434343434343434" }], "generatorOutputs": [] }
+        ],
+        "diagnostics": [
+          { "code": "inconsistent-physical-observation", "path": "bad/file.rs", "message": "Observed kind, worktree mode, and explicit-directory status are inconsistent" },
+          { "code": "nonregular-node", "path": "gitlink/module", "message": "Gitlink and other nonregular nodes cannot be admitted as authored source" }
+        ]
+      }
+    },
+    {
+      "id": "unobserved-candidate-without-explicit-rejection-cause-is-rejected",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [{ "sourcePath": "unobserved/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [{ "sourcePath": "unobserved/leaf.rs", "observedKind": "unobserved", "worktreeMode": null, "explicitDirectory": false, "origins": ["nonignored-untracked"], "indexEntries": [], "generatorOutputs": [] }],
+        "diagnostics": [{ "code": "unobserved-without-error", "path": "unobserved/leaf.rs", "message": "Unobserved candidates require an explicit unsafe, opaque, conflict, or cancellation cause" }]
+      }
+    },
+    {
+      "id": "ignored-generator-claim-without-a-declared-ignored-root-is-rejected",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [{ "sourcePath": "unowned/generated.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": ["ignored-generator"], "indexEntries": [], "unsafeAncestor": false }]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [{ "sourcePath": "unowned/generated.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [], "generatorOutputs": [] }],
+        "diagnostics": [{ "code": "untrusted-generator-origin", "path": "unowned/generated.rs", "message": "Ignored-generator authority is derived only from declared ignored output roots" }]
+      }
+    }
+  ],
+  "schemaRejections": [
+    { "id": "rejects-non-git-mode", "candidate": { "sourcePath": "bad.rs", "observedKind": "file", "worktreeMode": "100600", "explicitDirectory": false, "origins": [], "indexEntries": [], "unsafeAncestor": false }, "expectedKeyword": "enum" },
+    { "id": "rejects-uppercase-object-id", "candidate": { "sourcePath": "bad.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [{ "stage": 0, "mode": "100644", "objectId": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }], "unsafeAncestor": false }, "expectedKeyword": "pattern" },
+    { "id": "rejects-missing-unsafe-fact", "candidate": { "sourcePath": "bad.rs", "observedKind": "file", "worktreeMode": "100644", "explicitDirectory": false, "origins": [], "indexEntries": [] }, "expectedKeyword": "required" }
+  ]
+}

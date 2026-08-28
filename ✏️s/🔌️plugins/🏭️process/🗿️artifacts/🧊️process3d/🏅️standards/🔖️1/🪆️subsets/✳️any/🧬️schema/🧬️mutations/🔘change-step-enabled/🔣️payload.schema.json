@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeStepEnabled",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEnabled"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newEnabled": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSfpRequiredClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSfpRequiredClass"
+  ],
+  "properties": {
+    "newSfpRequiredClass": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLiquidFCtEffMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLiquidFCtEffMpa"
+  ],
+  "properties": {
+    "newLiquidFCtEffMpa": {
+      "type": "number"
+    }
+  }
+}

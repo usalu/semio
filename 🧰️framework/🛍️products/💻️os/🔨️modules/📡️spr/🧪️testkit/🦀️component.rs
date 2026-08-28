@@ -893,6 +893,10 @@ pub use crate::os_pack::testkit::golden_hash_hex;
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🧬️mutation-laws/🦀️.rs"]
+mod mutation_law_fixture;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -1097,112 +1101,7 @@ mod tests {
     //#endregion 🏃️exhaustive
 
     //#region 🧸️Fixtures
-    // Dummy (P=i64, Op=AddOp) pair, the smallest possible Mutation/MutationDiff/OpText impl —
-    // mirrors the fixture pattern `protocol_command`/`protocol_causal`'s own inline tests use.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct AddDiff {
-        delta: i64,
-    }
-    impl crate::os_spr::MutationDiff<i64> for AddDiff {
-        fn apply(&self, base: &i64) -> crate::os_spr::MutationApplyResult<i64> {
-            Ok(base + self.delta)
-        }
-        fn absorb(&mut self, other: Self) {
-            self.delta += other.delta;
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct AddOp {
-        delta: i64,
-    }
-    impl crate::os_spr::Mutation<i64> for AddOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta })
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            vec![AddOp { delta: -self.delta }]
-        }
-    }
-    impl crate::os_spr::OpText for AddOp {
-        fn print_op(&self) -> String {
-            format!("add {}", self.delta)
-        }
-        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
-            let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
-            let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
-            Ok(AddOp { delta })
-        }
-    }
-
-    impl crate::os_spr::DiffAlgebra<i64> for AddDiff {
-        fn inverse(&self, _base: &i64) -> Self {
-            AddDiff { delta: -self.delta }
-        }
-        fn between(base: &i64, other: &i64) -> Self {
-            AddDiff { delta: other - base }
-        }
-        fn is_empty(&self) -> bool {
-            self.delta == 0
-        }
-    }
-
-    // 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 fixtures: correct and
-    // deliberately-buggy `Mutation<i64>` impls proving each `🔖️Outcome`/`🔖️Laws (continued)`
-    // self-test panics on a genuine violation, not just passes on a good input.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct MissingTargetOp;
-    impl crate::os_spr::Mutation<i64> for MissingTargetOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            Vec::new()
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct BuggyMissingTargetOp;
-    impl crate::os_spr::Mutation<i64> for BuggyMissingTargetOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 })
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            vec![BuggyMissingTargetOp]
-        }
-    }
-
-    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-    struct NondeterministicOp {
-        #[serde(skip)]
-        calls: std::rc::Rc<std::cell::Cell<i64>>,
-    }
-    impl crate::os_spr::Mutation<i64> for NondeterministicOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            let count = self.calls.get();
-            self.calls.set(count + 1);
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: count })
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            Vec::new()
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct RejectedForwardOp;
-    impl crate::os_spr::Mutation<i64> for RejectedForwardOp {
-        type Diff = AddDiff;
-        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
-        }
-        fn inverse(&self, _base: &i64) -> Vec<Self> {
-            Vec::new()
-        }
-    }
+    use super::mutation_law_fixture::{AddCounter, AddMissingCounter, AddObservedCounter, AddRejectedCounter, AddUncheckedCounter, CounterDiff, CounterMutation};
 
     async fn sample_conflict(id: &str, kind: crate::os_spr::ConflictKind) -> crate::os_spr::Conflict {
         crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100) }
@@ -1212,45 +1111,45 @@ mod tests {
     //#region 🔖️Laws (continued)
     #[semio_framework_async_macros::async_test]
     async fn op_text_round_trip_holds_and_rejects_a_broken_impl() {
-        assert_op_text_round_trip(&AddOp { delta: -7 }).await;
-        assert_op_text_round_trip(&AddOp { delta: 0 }).await;
+        assert_op_text_round_trip(&CounterMutation::AddCounter(AddCounter { delta: -7 })).await;
+        assert_op_text_round_trip(&CounterMutation::AddCounter(AddCounter { delta: 0 })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn operation_diff_apply_matches_backwards_inverse() {
         use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
-        let op = AddOp { delta: 5 };
+        let op = CounterMutation::AddCounter(AddCounter { delta: 5 });
         let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
+        let [undo] = <[CounterMutation; 1]>::try_from(op.inverse(&base)).unwrap();
         assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn mutation_diff_absorb_law_holds_for_add() {
-        assert_mutation_diff_absorb_law(&10i64, AddDiff { delta: 3 }, AddDiff { delta: 4 }).await;
+        assert_mutation_diff_absorb_law(&10i64, CounterDiff::delta(3), CounterDiff::delta(4)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn mutation_inverse_law_holds_for_add() {
-        assert_mutation_inverse_law(&10i64, &AddOp { delta: 5 }).await;
+        assert_mutation_inverse_law(&10i64, &CounterMutation::AddCounter(AddCounter { delta: 5 })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must not have been rejected")]
     async fn mutation_inverse_law_panics_when_forward_outcome_is_rejected() {
-        assert_mutation_inverse_law(&10i64, &RejectedForwardOp).await;
+        assert_mutation_inverse_law(&10i64, &CounterMutation::AddRejectedCounter(AddRejectedCounter {})).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn diff_algebra_between_law_holds_for_add() {
-        assert_diff_algebra_between_law::<i64, AddDiff>(&10, &17).await;
+        assert_diff_algebra_between_law::<i64, CounterDiff>(&10, &17).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn diff_algebra_inverse_law_holds_for_add() {
-        assert_diff_algebra_inverse_law(&10i64, &AddDiff { delta: 5 }).await;
+        assert_diff_algebra_inverse_law(&10i64, &CounterDiff::delta(5)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1295,37 +1194,37 @@ mod tests {
     //#region 🔖️Outcome
     #[semio_framework_async_macros::async_test]
     async fn missing_target_is_error_holds_for_a_correct_impl() {
-        assert_missing_target_is_error(&10i64, &MissingTargetOp).await;
+        assert_missing_target_is_error(&10i64, &CounterMutation::AddMissingCounter(AddMissingCounter {})).await;
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "mutation.target-missing")]
     async fn missing_target_is_error_panics_on_a_buggy_impl() {
-        assert_missing_target_is_error(&10i64, &BuggyMissingTargetOp).await;
+        assert_missing_target_is_error(&10i64, &CounterMutation::AddUncheckedCounter(AddUncheckedCounter {})).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fatal_never_applies_holds_for_a_correct_outcome() {
-        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
+        let outcome: crate::os_spr::MutationOutcome<CounterDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
         assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "Fatal outcome must carry diff == D::default()")]
     async fn fatal_never_applies_panics_on_a_non_empty_diff() {
-        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
+        let outcome = crate::os_spr::MutationOutcome::new(CounterDiff::delta(3)).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
         assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn outcome_deterministic_holds_for_add() {
-        assert_outcome_deterministic(&10i64, &AddOp { delta: 4 }).await;
+        assert_outcome_deterministic(&10i64, &CounterMutation::AddCounter(AddCounter { delta: 4 })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "must be deterministic")]
     async fn outcome_deterministic_panics_on_a_nondeterministic_impl() {
-        assert_outcome_deterministic(&10i64, &NondeterministicOp::default()).await;
+        assert_outcome_deterministic(&10i64, &CounterMutation::AddObservedCounter(AddObservedCounter::default())).await;
     }
     //#endregion 🔖️Outcome
 

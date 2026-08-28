@@ -348,9 +348,9 @@ mod tests {
     /// parses Rust, so this reads both files as text and fails the moment they drift apart.
     #[test]
     fn kinds_match_the_catalog_and_the_vocabulary() {
-        let manifest = include_str!("🔣️component.json");
+        let manifest = include_str!("🔣️.json");
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
-        let feature = include_str!("../../../../../🧪️tests/mutate-step-ap214-cc3/component.feature");
+        let feature = include_str!("../../../../../🧪️tests/mutate-step-ap214-cc3/🥒️.feature");
         for kind in KINDS {
             assert!(manifest.contains(&format!("\"{kind}\"")), "the catalog is missing kind {kind:?}");
             assert!(vocabulary.contains(&format!("\"{kind}\"")), "StepCc3Mutation::KINDS is missing {kind:?}");

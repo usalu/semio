@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePartKindLabel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLabel"
+  ],
+  "properties": {
+    "newLabel": {
+      "type": "string"
+    }
+  }
+}

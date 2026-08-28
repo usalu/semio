@@ -1,0 +1,8 @@
+{
+  "childBytes": 4096,
+  "surfaceReleaseBytes": 1152,
+  "inputTokenBytes": 128,
+  "wireOwners": ["patch", "instance"],
+  "lookupRefusals": ["blocked", "rejected"],
+  "earlyWitness": false
+}

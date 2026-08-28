@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceTextureBytes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBytes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newBytes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

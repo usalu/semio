@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateSynapseEndpoints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "from",
+    "fromPort",
+    "id",
+    "to",
+    "toPort"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "from": {
+      "type": "string"
+    },
+    "fromPort": {
+      "type": "string"
+    },
+    "to": {
+      "type": "string"
+    },
+    "toPort": {
+      "type": "string"
+    }
+  }
+}

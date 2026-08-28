@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/contributed-mutation-wire/mutations",
+  "type": "object",
+  "allOf": [
+    { "$ref": "https://semio.dev/schema/plugin/contributed-mutation-wire/add-value#/$defs/payload" },
+    {
+      "properties": { "operation": { "const": "addValue" } },
+      "required": ["operation"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

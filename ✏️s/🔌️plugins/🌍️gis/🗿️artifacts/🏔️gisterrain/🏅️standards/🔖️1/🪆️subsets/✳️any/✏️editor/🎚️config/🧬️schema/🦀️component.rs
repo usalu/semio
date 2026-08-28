@@ -3,7 +3,7 @@ use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.gis.gis3d.config")]
 pub struct Gis3dConfig {
     #[state(config)]

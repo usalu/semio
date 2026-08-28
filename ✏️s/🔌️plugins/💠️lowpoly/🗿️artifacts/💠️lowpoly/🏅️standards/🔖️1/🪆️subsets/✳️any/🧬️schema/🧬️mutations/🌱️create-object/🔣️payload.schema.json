@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "object"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "object": {
+      "title": "LowpolyObject",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "paintLayers",
+        "smoothShading",
+        "transform"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transform": {
+          "title": "LowpolyTransform",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position",
+            "rotation",
+            "scale"
+          ],
+          "properties": {
+            "position": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "rotation": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "scale": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          }
+        },
+        "smoothShading": {
+          "type": "boolean"
+        },
+        "paintLayers": {
+          "type": "array",
+          "items": {
+            "title": "LowpolyPaintLayer",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "blendMode",
+              "name",
+              "opacity",
+              "pixels",
+              "visible"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "opacity": {
+                "type": "number"
+              },
+              "blendMode": {
+                "type": "string"
+              },
+              "pixels": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

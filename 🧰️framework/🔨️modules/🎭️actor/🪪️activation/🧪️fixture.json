@@ -1,0 +1,18 @@
+{
+  "actorId": "extension-requester",
+  "instanceId": 7,
+  "disposals": [
+    { "route": "moved", "refuseFirst": false, "expected": { "originalPosts": 1, "otherPosts": 0, "sameGeneration": true, "routeReleased": true, "oldLeasePosts": 0, "replacementActive": true } },
+    { "route": "released", "refuseFirst": false, "expected": { "originalPosts": 1, "otherPosts": 0, "sameGeneration": true, "routeReleased": true, "oldLeasePosts": 0, "replacementActive": true } },
+    { "route": "moved", "refuseFirst": true, "expected": { "originalPosts": 1, "otherPosts": 0, "sameGeneration": true, "routeReleased": true, "oldLeasePosts": 0, "replacementActive": true } },
+    { "route": "released", "refuseFirst": true, "expected": { "originalPosts": 1, "otherPosts": 0, "sameGeneration": true, "routeReleased": true, "oldLeasePosts": 0, "replacementActive": true } }
+  ],
+  "revocations": [
+    { "action": "close", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } },
+    { "action": "close-refused", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } },
+    { "action": "dispose", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } },
+    { "action": "worker-error", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } },
+    { "action": "terminate", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } },
+    { "action": "dispose-all", "expected": { "activeBefore": true, "activeAfter": false, "newTurns": 0 } }
+  ]
+}

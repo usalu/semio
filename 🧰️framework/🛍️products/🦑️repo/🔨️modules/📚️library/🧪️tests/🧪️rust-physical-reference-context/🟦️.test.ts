@@ -1,12 +1,14 @@
 //#region Imports
 import { expect, test } from "bun:test";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, symlinkSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { dirname, join, parse, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import { parse as parseJsonc } from "jsonc-parser";
 import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustManifestPathReferences, inspectRustModuleGraph } from "../../🔍️discovery/🟦️component.ts";
+import * as rustDiscovery from "../../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph } from "../../🔍️discovery/🟦️component.ts";
 import { applyTaxonomyPlan, canonicalJson, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
 //#endregion Imports
 
@@ -17,10 +19,49 @@ const vectorPath = join(root, "🧰️framework/🛍️products/🦑️repo/🔨
 const golden = JSON.parse(readFileSync(vectorPath, "utf8"));
 const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const schemaBytes = readFileSync(join(root, schemaPath));
+const retainedRunParent = join(ticket, ...golden.joinArguments.retention.parentSegments);
+const retainedRuns = new Map<string, { dev: number; ino: number; reportHash: string }>();
+
+/** 🛡️ Validates every ancestor of the exact retained run parent without following links. */
+function verifyRetainedParent(create: boolean): void {
+  let current = parse(retainedRunParent).root;
+  for (const segment of relative(current, retainedRunParent).split(/[\\/]/u)) {
+    current = join(current, segment);
+    let stat;
+    try { stat = lstatSync(current); }
+    catch (error) {
+      const withinTicket = relative(ticket, current);
+      if (!create || (error as NodeJS.ErrnoException).code !== "ENOENT" || withinTicket === "" || withinTicket.startsWith("..") || resolve(ticket, withinTicket) !== current) throw error;
+      mkdirSync(current);
+      stat = lstatSync(current);
+    }
+    if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Rust retained run ancestor is not a no-follow directory: ${current}`);
+  }
+}
+
+/** 🧪️ Allocates one exact no-follow run owner without discarding authored or recovery evidence. */
+function retainedRun(name: string): string {
+  verifyRetainedParent(true);
+  const directory = mkdtempSync(join(retainedRunParent, `🧪️${name}-`)), stat = lstatSync(directory);
+  const report = `# Rust Physical Reference Run\n\nCase: ${name}.\n\nDisposition: retain all authored inputs, generated outputs and active or failed recovery evidence until exact review.\n\nThe run is allocated; the enclosing gate outcome is recorded in the parent report.\n`;
+  writeFileSync(join(directory, "📝️.md"), report, { flag: "wx" });
+  retainedRuns.set(directory, { dev: stat.dev, ino: stat.ino, reportHash: createHash("sha256").update(report).digest("hex") });
+  return directory;
+}
+
+/** 📓️ Records a terminal assertion outcome only in the unchanged uniquely owned run. */
+function retainRun(directory: string, passed: boolean): void {
+  verifyRetainedParent(false);
+  const ownership = retainedRuns.get(directory), stat = lstatSync(directory), reportPath = join(directory, "📝️.md"), reportStat = lstatSync(reportPath);
+  if (!ownership || dirname(directory) !== retainedRunParent || !stat.isDirectory() || stat.isSymbolicLink() || stat.dev !== ownership.dev || stat.ino !== ownership.ino || !reportStat.isFile() || reportStat.isSymbolicLink()) throw new Error("Rust retained run ownership changed");
+  const report = readFileSync(reportPath, "utf8");
+  if (createHash("sha256").update(report).digest("hex") !== ownership.reportHash) throw new Error("Rust retained run report changed");
+  writeFileSync(reportPath, `${report}\nAssertion outcome: ${passed ? "passed" : "failed or interrupted"}. No files were deleted.\n`);
+}
 
 /** 🧫️ Isolates Cargo ownership, a misleading sibling, and the exact normalized target. */
 function fixture(kind = "mounted") {
-  const directory = mkdtempSync(join(ticket, "🧪️rust-path-")), vector = golden.transaction;
+  const directory = retainedRun(`path-${kind}`), vector = golden.transaction;
   const put = (path: string, content: string | Buffer) => { mkdirSync(dirname(join(directory, path)), { recursive: true }); writeFileSync(join(directory, path), content); };
   const schema = JSON.parse(schemaBytes.toString());
   delete schema.generatorContracts["plugin-registry"].inputDiscovery;
@@ -44,6 +85,18 @@ function fixture(kind = "mounted") {
 //#endregion Authority
 
 //#region Cases
+test("string collection joins require exact standard receiver provenance", () => {
+  const oracle = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(dirname(vectorPath), "🧬️join-provenance/🔣️.json"), "utf8")));
+  expect(oracle(golden.joinArguments)).toBe(true);
+  for (const changed of [{ ...golden.joinArguments, ownership: "guessed" }, { ...golden.joinArguments, extra: true }, { ...golden.joinArguments, cases: [] }]) expect(oracle(changed)).toBe(false);
+  expect(new Set(golden.joinArguments.cases.map((row: { id: string }) => row.id)).size).toBe(golden.joinArguments.cases.length);
+  for (const row of golden.joinArguments.cases) {
+    const arguments_ = inspectRustJoinArgumentSpans(row.source);
+    expect(arguments_.map(({ value }) => value), row.id).toEqual(row.expected);
+    for (const argument of arguments_) expect(row.source.slice(argument.start, argument.end)).toBe(argument.value);
+  }
+});
+
 test("literal predicates keep identifier tokens reachable under strict TypeScript narrowing", () => {
   const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts");
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
@@ -81,11 +134,60 @@ test("registers the physical Rust reference gate through Nx and both launch cata
 });
 
 test("manifest-relative joins require immutable lexical bindings and exact loop ownership", () => {
+  expect(golden.manifestPaths.roots).toEqual(['std::path::Path::new(env!("CARGO_MANIFEST_DIR"))', 'std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))']);
+  expect(golden.manifestPaths.binding).toBe("immutable-lexical-local-only");
+  expect(golden.manifestPaths.literal).toBe("unescaped-normal-string-only");
+  expect(golden.manifestPaths.loop).toBe("literal-array-variable-used-only-as-one-proven-join-argument");
+  expect(new Set(golden.manifestPaths.cases.map((row: { id: string }) => row.id)).size).toBe(golden.manifestPaths.cases.length);
   for (const row of golden.manifestPaths.cases) {
     const references = inspectRustManifestPathReferences(row.source);
     expect({ id: row.id, references: references.map(({ value, base }) => ({ value, base })) }).toEqual({ id: row.id, references: row.expected });
     for (const reference of references) expect(row.source.slice(reference.start, reference.end)).toBe(reference.value);
   }
+});
+
+test("implicit format captures cannot widen the single-use manifest path law", () => {
+  const row = golden.manifestPaths.cases.find((row: { id: string }) => row.id === "path-loop-implicit-label");
+  expect(row.expected).toEqual([]);
+  expect(inspectRustManifestPathReferences(row.source)).toEqual([]);
+});
+
+test("finite manifest candidates prove complete correlated targets without editable loop authority", () => {
+  const contract = golden.manifestCandidates;
+  expect(contract.contract).toBe("rust-finite-manifest-path-candidates-v1");
+  expect(contract.authority).toBe("candidate-only-never-editable");
+  expect(contract.missingFact).toBe("unproven-never-complete-empty");
+  expect(contract.maxExpandedIterations).toBe(256);
+  expect(contract.maxTargetsPerSpan).toBe(256);
+  expect(contract.tupleCorrelation).toBe("per-row-environment");
+  expect(contract.coordinates).toBe("relative-component-chains-only");
+  expect(contract.environment).toBe("standard-env-macro-with-no-shadow-or-foreign-glob");
+  expect(contract.literal).toBe("unescaped-normal-string-only");
+  expect(contract.grammar).toEqual(["exact-standard-manifest-root", "immutable-literal-string-or-tuple-array", "literal-number-boolean-and-full-slice-metadata", "lexical-destructured-for", "exact-array-iter-enumerate", "immutable-join-chain", "known-standard-read-only-macro-use"]);
+  expect(new Set(contract.cases.map((row: { id: string }) => row.id)).size).toBe(contract.cases.length);
+  const inspect = rustDiscovery.inspectRustManifestPathCandidates;
+  expect(typeof inspect).toBe("function");
+  for (const row of contract.cases) {
+    const candidates = inspect(row.source).filter((candidate) => candidate.value === contract.selectedValue);
+    expect(candidates.map(({ value, targets }) => ({ value, targets })), row.id).toEqual(row.expected);
+    for (const candidate of candidates) expect(row.source.slice(candidate.start, candidate.end), row.id).toBe(candidate.value);
+    const files = { [contract.manifestPath]: '[package]\nname="candidate"\n[lib]\npath="lib.rs"\n', [contract.consumerPath]: row.source };
+    const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { strictManifests: true });
+    const manifests = [...new Set((graph.contexts.get(contract.consumerPath) ?? []).map((context) => context.manifestPath).filter(Boolean))];
+    expect(manifests).toEqual([contract.manifestPath]);
+    const targets = [...new Set(candidates.flatMap((candidate) => candidate.targets.map((parts) => oraclePathJoin("pkg", ...parts))))].sort();
+    expect(targets, row.id).toEqual(row.physicalTargets);
+    const relevance = candidates.length === 0 ? "unproven" : targets.some((target) => target === contract.affectedRoot || target.startsWith(contract.affectedRoot + "/")) ? "intersects" : "disjoint";
+    expect(relevance, row.id).toBe(row.relevance);
+    expect(inspectRustManifestPathReferences(row.source).filter((reference) => reference.value === contract.selectedValue), row.id).toEqual([]);
+  }
+  const row = contract.cases[0], files = {
+    [contract.manifestPath]: '[package]\nname="one"\n[lib]\npath="lib.rs"\n',
+    "second/Cargo.toml": '[package]\nname="two"\n[lib]\npath="../pkg/lib.rs"\n',
+    [contract.consumerPath]: row.source,
+  };
+  const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { strictManifests: true });
+  expect(new Set((graph.contexts.get(contract.consumerPath) ?? []).map((context) => context.manifestPath)).size).toBe(2);
 });
 
 test("Cargo manifest ownership requires an actual unique module-mount proof", () => {
@@ -98,6 +200,7 @@ test("Cargo manifest ownership requires an actual unique module-mount proof", ()
 
 test("scoped joins bind the real target instead of a sibling and survive rollback, retry, runtime and an empty replan", () => {
   const row = fixture(), vector = golden.transaction, plan = row.plan();
+  let passed = false;
   try {
   expect(plan.unresolved).toEqual([]);
   expect(plan.moves.map((move) => [move.sourcePath, move.destinationPath])).toEqual([[`${vector.scope}/${vector.source}`, `${vector.scope}/${vector.destination}`]]);
@@ -123,9 +226,9 @@ test("scoped joins bind the real target instead of a sibling and survive rollbac
   expect(lstatSync(join(row.directory, vector.scope, vector.destination)).mode & 0o777).toBe(0o644);
   const empty = row.plan();
   expect([empty.moves.length, empty.edits.length, empty.unresolved.length]).toEqual([0, 0, 0]);
+  passed = true;
   } finally {
-    rmSync(join(row.directory, "🧪️build"), { recursive: true, force: true });
-    rmSync(join(row.directory, "pkg/Cargo.lock"), { force: true });
+    retainRun(row.directory, passed);
   }
 }, 120_000);
 
@@ -230,10 +333,11 @@ test("Rust diagnostic references require exact unescaped assertion-message argum
   }
 });
 
-test("independent syn parsing reproduces assertion-message and manifest-path ownership facts", async () => {
-  const directory = mkdtempSync(join(ticket, "🧪️rust-syn-oracle-")), target = join(directory, "🧪️target");
+test("independent syn parsing reproduces assertion-message, manifest-path and join-provenance facts", async () => {
+  const directory = retainedRun("syn-oracle"), target = join(directory, "🧪️target");
   writeFileSync(join(directory, "Cargo.toml"), readFileSync(join(root, golden.oracle.manifestInput)));
   writeFileSync(join(directory, "🦀️.rs"), readFileSync(join(root, golden.oracle.sourceInput)));
+  let passed = false;
   try {
     const result = Bun.spawn(["cargo", "run", "--offline", "--quiet", "--manifest-path", join(directory, "Cargo.toml"), "--target-dir", target, "--", vectorPath], { cwd: directory, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, exitCode] = await Promise.all([new Response(result.stdout).text(), new Response(result.stderr).text(), result.exited]);
@@ -241,10 +345,127 @@ test("independent syn parsing reproduces assertion-message and manifest-path own
     expect(JSON.parse(stdout)).toEqual({
       assertionMessages: golden.assertionMessages.cases.map((row: any) => ({ id: row.id, messages: inspectRustAssertionMessageSpans(row.source).map(({ macroName, value }) => ({ macroName, value })) })),
       manifestPaths: golden.manifestPaths.cases.map((row: any) => ({ id: row.id, references: inspectRustManifestPathReferences(row.source).map(({ value, base }) => ({ value, base })) })),
+      manifestCandidates: [...golden.manifestCandidates.cases, ...golden.manifestCandidates.adversarial.cases].map((row: any) => ({ id: row.id, candidates: rustDiscovery.inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue) })),
+      joinArguments: golden.joinArguments.cases.map((row: any) => ({ id: row.id, candidates: inspectRustJoinArgumentSpans(row.source).map(({ value }) => value), allArguments: row.allArguments })),
     });
+    passed = true;
   } finally {
-    rmSync(target, { recursive: true, force: true });
-    rmSync(join(directory, "Cargo.lock"), { force: true });
+    retainRun(directory, passed);
   }
+}, 120_000);
+
+test("rustc independently confirms delimiter strings and actual custom or standard path joins", () => {
+  const directory = retainedRun("compiler-oracle");
+  let passed = false;
+  try {
+    for (const row of golden.joinArguments.cases.filter((row: { compiler?: string }) => row.compiler)) {
+      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      mkdirSync(owner);
+      writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "join_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      expect(compiled.exitCode, `${row.id}: ${compiled.stderr.toString()}`).toBe(0);
+      const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
+      expect(runtime.exitCode, `${row.id}: ${runtime.stderr.toString()}`).toBe(0);
+      expect(runtime.stdout.toString().trim(), row.id).toBe(row.compilerOutput);
+    }
+    passed = true;
+    console.log("Rust join compiler oracle confirmed six string/path runtime cases.");
+  } finally { retainRun(directory, passed); }
+}, 120_000);
+
+test("finite candidate helper compiles independently under strict TypeScript", () => {
+  const input = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts"), source = ts.createSourceFile(input, readFileSync(input, "utf8"), ts.ScriptTarget.Latest, true);
+  const names = new Set(["RustTokenKind", "RustToken", "RustManifestPathCandidate", "inspectRustManifestPathCandidates"]);
+  const declarations = source.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name && names.has(node.name.text));
+  expect(declarations).toHaveLength(4);
+  const text = declarations.map((node) => node.getText(source)).join("\n") + '\ndeclare function rustTokens(source: string): RustToken[]; declare function rustTokenPairs(tokens: readonly RustToken[]): Map<number, number>; declare function rustTokenSegments(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, delimiter: string): [number, number][]; declare function rustFindTopLevel(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>, start: number, end: number, values: ReadonlySet<string>): number;\n';
+  const virtualPath = join(ticket, "📓️energy-rust-reference-diagnostics/🧭️manifest-pathbuf/🧪️typescript/🟦️.ts"), options: ts.CompilerOptions = { strict: true, noEmit: true, types: [], target: ts.ScriptTarget.ES2022, skipLibCheck: true }, host = ts.createCompilerHost(options), original = host.getSourceFile.bind(host);
+  host.getSourceFile = (path, language, onError, create) => path === virtualPath ? ts.createSourceFile(path, text, language, true) : original(path, language, onError, create);
+  expect(ts.getPreEmitDiagnostics(ts.createProgram([virtualPath], options, host)).map((diagnostic) => ({ code: diagnostic.code, message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n") }))).toEqual([]);
+});
+
+test("rustc confirms correlated finite receiver targets and missing-target rejection", () => {
+  const directory = retainedRun("finite-candidate-compiler");
+  let passed = false;
+  try {
+    const cases = golden.manifestCandidates.cases.filter((row: { runtime?: boolean }) => row.runtime);
+    expect(cases).toHaveLength(5);
+    for (const row of cases) for (const missing of row.id === "tuple-row-correlation" ? [false, true] : [false]) {
+      const owner = join(directory, row.id + (missing ? "-missing" : "-present")), manifestDirectory = join(owner, "pkg"), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      mkdirSync(manifestDirectory, { recursive: true });
+      for (const path of row.physicalTargets.slice(missing ? 1 : 0)) { mkdirSync(dirname(join(owner, path)), { recursive: true }); writeFileSync(join(owner, path), "exact finite target\n", { flag: "wx" }); }
+      writeFileSync(input, row.source + '\nfn main() { inspect(); println!("finite-targets-confirmed"); }\n', { flag: "wx" });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "finite_candidate_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      expect(compiled.exitCode, row.id + ": " + compiled.stderr.toString()).toBe(0);
+      const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
+      if (missing) { expect(runtime.exitCode).not.toBe(0); expect(runtime.stderr.toString()).toContain("leaf.rs"); }
+      else { expect(runtime.exitCode, row.id + ": " + runtime.stderr.toString()).toBe(0); expect(runtime.stdout.toString().trim()).toBe("finite-targets-confirmed"); }
+    }
+    passed = true;
+    console.log("Rust finite receiver compiler oracle confirmed five exact-target cases and one missing-target rejection.");
+  } finally { retainRun(directory, passed); }
+}, 120_000);
+
+for (const row of golden.manifestCandidates.adversarial.cases) test(`finite candidate adversarial runtime: ${row.id}`, () => {
+  const contract = golden.manifestCandidates.adversarial;
+  expect(contract.contract).toBe("rust-finite-candidate-adversarial-v1");
+  expect(contract.unknownControlFlow).toBe("captured-bindings-remain-unproven");
+  expect(contract.namespace).toBe("standard-type-and-macro-identity-required");
+  const directory = retainedRun("finite-adversarial-" + row.id), manifestDirectory = join(directory, "pkg"), input = join(directory, "🦀️.rs"), executable = join(directory, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+  let passed = false;
+  try {
+    mkdirSync(manifestDirectory);
+    for (const [path, bytes] of Object.entries(row.runtimeProof.files ?? {})) writeFileSync(join(directory, path), bytes as string, { flag: "wx" });
+    writeFileSync(input, row.source + `\nfn main() { ${row.runtimeProof.call}; }\n`, { flag: "wx" });
+    const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "candidate_adversarial", input, "-o", executable], { cwd: directory, env: { ...process.env, CARGO_MANIFEST_DIR: manifestDirectory, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+    expect(compiled.exitCode, compiled.stderr.toString()).toBe(0);
+    const runtime = Bun.spawnSync([executable], { cwd: directory, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
+    expect(runtime.exitCode, runtime.stderr.toString()).toBe(0);
+    const observed = runtime.stdout.toString().trim().split(/\r?\n/u).map((path) => relative(directory, path).replaceAll("\\", "/"));
+    expect(observed).toEqual(row.runtimeProof.targets);
+    console.log(`Rust adversarial ${row.id}: ${JSON.stringify(observed)}`);
+    const candidates = rustDiscovery.inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue);
+    expect(candidates.map(({ value, targets }) => ({ value, targets }))).toEqual(row.expected);
+    expect(inspectRustManifestPathReferences(row.source).filter((reference) => reference.value === golden.manifestCandidates.selectedValue)).toEqual([]);
+    passed = true;
+  } finally { retainRun(directory, passed); }
+}, 120_000);
+
+test("finite candidate generic std namespace and expanded env ambiguities are rejected by Rust", () => {
+  const directory = retainedRun("finite-generic-namespace");
+  let passed = false;
+  try {
+    for (const row of golden.manifestCandidates.adversarial.namespaceReviews) {
+      const owner = join(directory, row.id), input = join(owner, "🦀️.rs");
+      mkdirSync(owner);
+      for (const [path, bytes] of Object.entries(row.files ?? {})) writeFileSync(join(owner, path), bytes as string, { flag: "wx" });
+      writeFileSync(input, row.source, { flag: "wx" });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "namespace_review", input, "-o", join(owner, "🧪️.bin")], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      expect(compiled.exitCode).not.toBe(0);
+      expect(compiled.stderr.toString()).toContain(row.errorCode);
+    }
+    passed = true;
+  } finally { retainRun(directory, passed); }
+}, 120_000);
+
+test("rustc independently confirms manifest-root PathBuf construction and format capture behavior", () => {
+  const directory = retainedRun("manifest-pathbuf-compiler");
+  let passed = false;
+  try {
+    const cases = golden.manifestPaths.cases.filter((row: { compiler?: string }) => row.compiler);
+    expect(cases).toHaveLength(5);
+    for (const row of cases) {
+      const owner = join(directory, `🧪️${row.id}`), input = join(owner, "🦀️.rs"), executable = join(owner, process.platform === "win32" ? "🧪️.exe" : "🧪️.bin");
+      mkdirSync(owner);
+      writeFileSync(input, `${row.source}\n${row.compiler}\n`, { flag: "wx" });
+      const compiled = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "manifest_pathbuf_oracle", input, "-o", executable], { cwd: owner, env: { ...process.env, CARGO_MANIFEST_DIR: owner, RUSTC_WRAPPER: "" }, stdout: "pipe", stderr: "pipe", timeout: 30_000 });
+      expect(compiled.exitCode, `${row.id}: ${compiled.stderr.toString()}`).toBe(0);
+      const runtime = Bun.spawnSync([executable], { cwd: owner, env: { ...process.env }, stdout: "pipe", stderr: "pipe", timeout: 5_000 });
+      expect(runtime.exitCode, `${row.id}: ${runtime.stderr.toString()}`).toBe(0);
+      expect(runtime.stdout.toString().trim().replaceAll("\r\n", "\n"), row.id).toBe(row.compilerOutput);
+    }
+    passed = true;
+    console.log("Rust manifest PathBuf compiler oracle confirmed five constructor/capture runtime cases.");
+  } finally { retainRun(directory, passed); }
 }, 120_000);
 //#endregion Cases

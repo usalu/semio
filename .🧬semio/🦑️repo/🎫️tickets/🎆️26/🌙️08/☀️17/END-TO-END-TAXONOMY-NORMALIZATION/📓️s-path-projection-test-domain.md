@@ -55,7 +55,7 @@ The correction is also appended to `📓️s-path-projection-design.md`.
 
 ### Test-domain schema and loader
 
-- Extended `🧪️test/🧬️schema/🔣️component.json` with strict `MutationVectorScenario`, `MutationVector`, and required catalog profile/vector fields.
+- Extended `🧪️test/🧬️schema/🔣️.json` with strict `MutationVectorScenario`, `MutationVector`, and required catalog profile/vector fields.
 - Extended `🧪️test/📦️packages/🟦️typescript/📦️index.ts` with:
   - exported strict record types;
   - `mutationCatalogProblems`, including unknown-field, NFC, profile-owner, unique mutation identity/directory, kebab-case scenario, and exact semantic-directory rendering validation;

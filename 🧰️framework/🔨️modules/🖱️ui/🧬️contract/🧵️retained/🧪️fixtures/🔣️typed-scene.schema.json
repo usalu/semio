@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,"required":["version","cases","hostile","lifecycle","laws"],
+  "properties":{
+    "version":{"const":1},
+    "cases":{"type":"array","minItems":15,"maxItems":15,"items":{"$ref":"#/definitions/case"}},
+    "hostile":{"type":"array","minItems":5,"items":{"$ref":"#/definitions/case"}},
+    "laws":{"type":"array","minItems":8,"uniqueItems":true,"items":{"type":"string"}},
+    "lifecycle":{"type":"object","additionalProperties":false,"required":["text","repeat","maxItems","maxBytes","maximumEmittedTextBytes","cancelEveryPrefix","independentReaders"],"properties":{"text":{"const":"Größe🧭"},"repeat":{"const":2000},"maxItems":{"const":1},"maxBytes":{"const":4096},"maximumEmittedTextBytes":{"const":131},"cancelEveryPrefix":{"const":true},"independentReaders":{"const":2}}}
+  },
+  "definitions":{"case":{"type":"object","additionalProperties":false,"required":["kind","schema","value"],"properties":{"kind":{"type":"string"},"schema":{"type":"string"},"value":{"type":"object"}}}}
+}

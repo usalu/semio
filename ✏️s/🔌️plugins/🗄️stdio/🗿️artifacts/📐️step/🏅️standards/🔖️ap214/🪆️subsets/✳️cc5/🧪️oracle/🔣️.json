@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution to the repository test platform. ISO 10303-214 CC5 (faceted B-Rep) is a validation-gated dialect over the SAME StepSnapshot the ✳️any subset owns, so it shares the snapshot type — but NOT the vocabulary: ✳️any declares the ISO 10303-21 grammar (insert-entity, set-entity-arg, …), while this catalog declares one kind per axis `check_cc5_conformance` actually reads. CC5's ceiling is FACETED_BREP_SHAPE_REPRESENTATION; exactly one classified type, ADVANCED_BREP_SHAPE_REPRESENTATION, is out of reach, and it is the type the real committed export carries at #13 — the narrowest miss on the ladder. The ladder classification the oracle uses is re-derived from ISO 10303-214 §4.3 in ../../../🧪️oracle/🦀️component.rs, shared by all seven ap214 subsets so no class copies it, and never called out of the production `engine::ladder` — an oracle that asked the code under test how to classify would compare an implementation with itself. This subset declares no comparisonProfiles of its own: `semantic-step-conformance-class-v1` is declared once, in ../../✳️cc1/🧪️oracle/🔣️.json, and the registry aggregator merges every discovered manifest repo-wide. 🧬️ This catalog's six kinds are identical to step-ap214-cc2, step-ap214-cc3, step-ap214-cc4's, and that is a consequence of ISO 10303-214 §4.3 rather than a copied list: every class whose ceiling sits STRICTLY INSIDE the ladder admits both ladder verbs (a ceiling type exists to write, and at least one rung sits above it to demote from) and reads the same three axes, because §4.3 varies only the ceiling. ✳️cc1 sits below the ladder (no representation at all, so deletion is its only ladder repair) and ✳️cc6 on top of it (nothing above it to demote), and each declares five kinds instead. The derivation is written out once in ../../../🧪️oracle/🦀️component.rs and machine-checked by its `the_four_interior_classes_share_one_vocabulary_because_their_ceilings_share_one_place` test.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "ruststep 0.4 is the real, independent ISO 10303-21 READER for this subset: `ast::Exchange::from_str` parses the real committed `📐️hexagonal-cut-concrete-forest-left-ap214.stp` (a genuine Rhino 8.31 / ST-Developer v19.2 export, 1,396 real entities) with zero errors, and it is what reads back every result this subset's oracle produces before `semantic-step-conformance-class-v1` compares it. It has NO writer at all (`ast::ser::to_record` only builds an in-memory `Record` from an already-typed struct; no `Display`/`fmt::Formatter` impl exists on `Exchange`/`DataSection`/`Record`/`Parameter`), so per the fleet brief's §6 nothing in this case is typed `@mode-differential` — ruststep cannot be a second PRODUCER of mutated bytes. The re-serializer is this standard's own from-scratch Part-21 writer in ../../../🧪️oracle/🦀️component.rs, deliberately independent of this repository's production `step::engine::part21` writer. What the evidence therefore is, stated plainly: a real third-party parse of the conformance-relevant STRUCTURE of every result — the ladder census, the declared schema and the product identity chain — plus the inverse and identity laws asserted in role, not a byte-level differential claim.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

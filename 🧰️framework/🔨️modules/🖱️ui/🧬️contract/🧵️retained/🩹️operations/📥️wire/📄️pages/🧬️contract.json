@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "identity": {
+    "field": "Peer-owned private field brand and direct exact instance/activation/native lifetime owner",
+    "resident": "Private resident payload owner must match the same exact instance/activation/native lifetime before field binding",
+    "builder": "Private mint, one bound field, strongly registered in the exact instance before exposure",
+    "fragment": "Exact private field, fragment object, u64 offset and fixed length; no structural byte provider",
+    "token": "Private copied/cancelled mint with exact fragment, field, builder, offset and length",
+    "release": "Peer-owned private receipt must bind the issued token and exact fragment"
+  },
+  "storage": {
+    "pageBytes": 256,
+    "admission": "Reserve full page bytes and owner slot in the composition-shared pool before fixed allocation",
+    "index": "One bounded linked cell per admitted page; no full field allocation or concatenation",
+    "reader": "Private sequential reader is strongly registered before exposure; it never exposes a page buffer",
+    "consumer": "Concrete typed decoder owns the issued reader; close drains issued readers before payload pages",
+    "arithmetic": "Validate all source offsets and declared lengths as u64, then use bigint for cumulative offsets; numeric page offsets remain within 256"
+  },
+  "phases": ["offer", "reserve-page", "allocate-page", "copy-byte", "seal-page", "detach-source", "issue-copied", "await-release", "source-continuation", "finish-field", "issue-reader", "close-reader", "close-pages", "release-owner"],
+  "rules": [
+    "Only one current fragment is accepted; failed offer leaves the source unchanged",
+    "Each step performs one child operation or one fixed transition, preserving refused/rejected child counts",
+    "Rejected or throwing copy/source children permanently fault the producer, including after partial mutation; bounded close remains serviceable",
+    "A throwing scalar read cannot advance its offset or silently resume; the registered reader remains owned until explicit close",
+    "The private constructor installs its builder in the reserved parent before finalization or binding; close checks actual private source binding rather than a lost success return",
+    "A raw fragment is copied to independently owned destination storage and released before the next raw page is required",
+    "Capacity refusal retains the exact current fragment and partial destination; it neither requests another raw page nor invents resident credit",
+    "Copy success requires all offered bytes written and all source byte readers detached",
+    "Cancellation detaches source readers and issues distinct cancelled evidence; partial destination remains owned until bounded retirement",
+    "Copied/cancelled evidence is retained until the exact peer release receipt, including retry after send refusal",
+    "Only the builder drives the original field continuation after copied receipt settlement, forwarding one child turn without wrapper charge",
+    "A consumed partial fragment with no actual next fragment remains blocked; no offset, page, fragment or InputAck is synthesized",
+    "Finish requires exact declared length and no outstanding input fragment or release receipt",
+    "An abandoned or throwing caller cannot erase the instance's strong builder/read ownership",
+    "Revocation rejects new admissions but does not revoke captured close or input-release authority",
+    "Final instance retirement requires source obligations, issued readers, destination pages and owner roster cells terminal",
+    "No capacity default, maxPatchBytes-derived allowance, physical-heap assertion or UI publication acknowledgement is introduced"
+  ]
+}

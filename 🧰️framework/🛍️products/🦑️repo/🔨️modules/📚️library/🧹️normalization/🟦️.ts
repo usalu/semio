@@ -30,11 +30,12 @@ import {
 import type { Stats } from "node:fs";
 import { registryCatalogInputPaths, registryCatalogInputView, registryCatalogPathMayAffect, semanticPackageAdapterPreview, semanticPackageGeneratedLeafPreview, semanticPackageIgnoredGeneratedOutputPaths, semanticPackageJoinedPathReferenceAuthority, semanticPackageAuthoredFragmentReferences, semanticPackageProjectionAuthority, semanticPackageProjectionCatalog, type GeneratorProjectionActivation, type RegistryCatalogInputDiscovery, type RegistryCatalogInputView, type SemanticPackageGeneration, type SemanticPackageProjectionCase } from "../🔍️discovery/🟦️component.ts";
 import { tmpdir } from "node:os";
-import { parseGeneratorInputProjection, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, type GeneratorInputProjection } from "../🔍️discovery/🟦️component.ts";
-import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
+import { parseGeneratorInputProjection, parseSemanticOwnedCurrentSourceRevisions, parseSemanticOwnedDocumentCorrections, semanticExactOwnedDocumentCorrectionAuthority, semanticOwnedInputFileSnapshot, type GeneratorInputProjection, type SemanticOwnedInputFileSnapshot } from "../🔍️discovery/🟦️component.ts";
+import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, validateFrozenCoordinateEvidenceContracts, type RustModuleGraph, type FrozenCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
+import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownCoordinateEvidenceContract } from "../🔍️discovery/🟦️component.ts";
 import { mutationPayloadSchemaRelativePath } from "../🔍️discovery/🟦️component.ts";
-import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
-import { artifactPathProjectionCatalogRoots, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, taxonomyPathPatternMatches, validateTaxonomy, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️component.ts";
+import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
+import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, validateTaxonomy, type TaxonomyPathMatcher, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode, type Taxonomy as DiscoveryTaxonomy } from "../🔍️discovery/🟦️component.ts";
 //#endregion 🔌️Adapters
 
 //#region 📜️Contracts
@@ -78,6 +79,13 @@ export interface ReferenceEdit {
   readonly preimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }>;
 }
 
+export interface TaxonomyMoveSourceAuthority {
+  readonly kind: "exact-owner-current-source-revision-v1";
+  readonly revisionId: "testing-readme-protocol-v2-reviewed";
+  readonly revisionDigest: string;
+  readonly inputs: readonly Readonly<{ role: "schema" | "catalog" | "expectation"; path: string; preimage: Extract<TaxonomyLeafPreimage, { nodeKind: "file" }> }>[];
+}
+
 export interface TaxonomyMove {
   readonly operationId: string;
   readonly sourcePath: string;
@@ -87,6 +95,7 @@ export interface TaxonomyMove {
   readonly ownerId: string;
   readonly collisionGroup?: string;
   readonly referenceEdits: readonly ReferenceEdit[];
+  readonly sourceAuthority?: TaxonomyMoveSourceAuthority;
 }
 
 export type TaxonomyGeneratorNodeRecord =
@@ -273,6 +282,64 @@ export interface TaxonomyInventoryOptions {
   readonly excludedTreeDigests?: readonly OpaqueTreeDigest[];
 }
 
+export type TaxonomySourceOrigin = "tracked" | "nonignored-untracked" | "ignored-generator" | "explicit-ticket";
+export type TaxonomySourceObservedKind = TaxonomyNodeKind | "absent" | "unobserved" | "other";
+
+export interface TaxonomySourceIndexEntry {
+  readonly stage: number;
+  readonly mode: string;
+  readonly objectId: string;
+}
+
+export interface TaxonomySourceGeneratorOutput {
+  readonly contractId: string;
+  readonly rootPath: string;
+  readonly inclusion: "tracked" | "ignored";
+}
+
+export interface TaxonomySourceCandidateObservation {
+  readonly sourcePath: string;
+  readonly observedKind: TaxonomySourceObservedKind;
+  readonly worktreeMode: string | null;
+  readonly explicitDirectory: boolean;
+  readonly origins: readonly TaxonomySourceOrigin[];
+  readonly indexEntries: readonly TaxonomySourceIndexEntry[];
+  readonly unsafeAncestor: boolean;
+}
+
+export interface TaxonomySourceAdmissionInput {
+  readonly scope: string | null;
+  readonly cancelledDuring?: string | null;
+  readonly opaquePrefixes: readonly string[];
+  readonly generatorOutputRoots: readonly TaxonomySourceGeneratorOutput[];
+  readonly candidates: readonly TaxonomySourceCandidateObservation[];
+}
+
+export interface TaxonomySourceObservation extends Omit<TaxonomySourceCandidateObservation, "unsafeAncestor"> {
+  readonly generatorOutputs: readonly TaxonomySourceGeneratorOutput[];
+}
+
+export interface TaxonomySourceAdmissionDiagnostic {
+  readonly code: string;
+  readonly path: string;
+  readonly message: string;
+}
+
+export interface TaxonomySourceAdmission {
+  readonly schemaVersion: 1;
+  readonly scope: string | null;
+  readonly status: "complete" | "rejected";
+  readonly observations: readonly TaxonomySourceObservation[];
+  readonly diagnostics: readonly TaxonomySourceAdmissionDiagnostic[];
+}
+
+export interface TaxonomySourceInventory extends TaxonomySourceAdmission {
+  readonly repoRoot: string;
+  readonly taxonomyPath: string;
+  readonly taxonomyContentHash: string;
+  readonly membershipDigest: string;
+}
+
 export interface TaxonomyPlanOptions {
   readonly baselineCommit: string;
   readonly excludedTreeDigests: readonly OpaqueTreeDigest[];
@@ -432,6 +499,7 @@ interface SemanticExactOwnedFileProjectionContract {
   readonly generatorOwnerIds: readonly ["assets-build"];
   readonly expectedCounts: Readonly<{ readonly fixed: 4; readonly license: 8; readonly projected: 36; readonly readme: 32; readonly referenceBindings: 62; readonly total: 40 }>;
   readonly authoredDocumentCorrections: ReturnType<typeof parseSemanticOwnedDocumentCorrections>;
+  readonly currentSourceRevisions?: ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions>;
   readonly rationaleRule: "readme-license-owner-projection-v1";
 }
 
@@ -774,6 +842,8 @@ interface TaxonomyV7 {
 
 interface LoadedTaxonomy {
   readonly path: string;
+  readonly pathMatcher: TaxonomyPathMatcher;
+  readonly input?: SemanticOwnedInputFileSnapshot;
   readonly schema: TaxonomyV7;
   readonly discoverySchema: DiscoveryTaxonomy;
   readonly exclusions: readonly { readonly id: string; readonly path: string }[];
@@ -815,21 +885,6 @@ function requireExactKeys(value: JsonRecord, keys: readonly string[], name: stri
   if (canonicalJson(actual) !== canonicalJson(expected)) throw new Error(`Taxonomy v7 field ${name} must contain exactly ${expected.join(", ")}`);
 }
 
-function validatedContractPattern(value: unknown, name: string, exactBasename: boolean): string {
-  const pattern = requiredString(value, name);
-  if (pattern !== pattern.normalize("NFC") || pattern.startsWith("/") || pattern.endsWith("/") || pattern.includes("\\") || pattern.includes("//") || pattern.includes("\u0000")) throw new Error(`Taxonomy v7 ${name} must be one NFC workspace-relative POSIX pattern`);
-  if (/[{}]/u.test(pattern) || /^!/u.test(pattern) || /[!@+?*]\(/u.test(pattern)) throw new Error(`Taxonomy v7 ${name} uses unsupported glob syntax`);
-  for (const segment of pattern.split("/")) {
-    if (segment.includes("**") && segment !== "**") throw new Error(`Taxonomy v7 ${name} may use ** only as a whole segment`);
-    for (const match of segment.matchAll(/\[([^\]]*)\]/gu)) if (!/^[A-Za-z0-9-]+$/u.test(match[1]) || /^[!^]/u.test(match[1])) throw new Error(`Taxonomy v7 ${name} has an invalid character class`);
-    if ((segment.match(/\[/gu)?.length ?? 0) !== (segment.match(/\]/gu)?.length ?? 0)) throw new Error(`Taxonomy v7 ${name} has an unclosed character class`);
-  }
-  const filename = pattern.slice(pattern.lastIndexOf("/") + 1);
-  if (exactBasename && /[*?\[\]]/u.test(filename)) throw new Error(`Taxonomy v7 ${name} must end in one exact literal basename`);
-  taxonomyPathPatternMatches("", pattern);
-  return pattern;
-}
-
 function fixedExpiry(value: unknown, name: string): string | null {
   if (value === null) return null;
   const expires = requiredString(value, name);
@@ -842,6 +897,21 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   if (root.schemaVersion !== 7) throw new Error(`Taxonomy schemaVersion must be 7 at ${path}`);
   const discoveryProblems = validateTaxonomy(root as unknown as DiscoveryTaxonomy);
   if (discoveryProblems.length > 0) throw new Error(`Taxonomy v7 discovery contract validation failed at ${path}: ${discoveryProblems.join(" | ")}`);
+  const pathMatcher = createTaxonomyPathMatcher();
+  function validatedContractPattern(value: unknown, name: string, exactBasename: boolean): string {
+    const pattern = requiredString(value, name);
+    if (pattern !== pattern.normalize("NFC") || pattern.startsWith("/") || pattern.endsWith("/") || pattern.includes("\\") || pattern.includes("//") || pattern.includes("\u0000")) throw new Error(`Taxonomy v7 ${name} must be one NFC workspace-relative POSIX pattern`);
+    if (/[{}]/u.test(pattern) || /^!/u.test(pattern) || /[!@+?*]\(/u.test(pattern)) throw new Error(`Taxonomy v7 ${name} uses unsupported glob syntax`);
+    for (const segment of pattern.split("/")) {
+      if (segment.includes("**") && segment !== "**") throw new Error(`Taxonomy v7 ${name} may use ** only as a whole segment`);
+      for (const match of segment.matchAll(/\[([^\]]*)\]/gu)) if (!/^[A-Za-z0-9-]+$/u.test(match[1]) || /^[!^]/u.test(match[1])) throw new Error(`Taxonomy v7 ${name} has an invalid character class`);
+      if ((segment.match(/\[/gu)?.length ?? 0) !== (segment.match(/\]/gu)?.length ?? 0)) throw new Error(`Taxonomy v7 ${name} has an unclosed character class`);
+    }
+    const filename = pattern.slice(pattern.lastIndexOf("/") + 1);
+    if (exactBasename && /[*?\[\]]/u.test(filename)) throw new Error(`Taxonomy v7 ${name} must end in one exact literal basename`);
+    pathMatcher.matches("", pattern);
+    return pattern;
+  }
   const fileKindRows = record(root.fileKinds, "fileKinds");
   const directoryKindRows = record(root.semanticDirectoryKinds, "semanticDirectoryKinds");
   const fixedRows = record(root.fixedFilenameContracts, "fixedFilenameContracts");
@@ -1270,7 +1340,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     const name = `semanticOwnedFileProjectionContracts.${id}`;
     const spec = record(value, name);
     if (spec.contractKind === "exact-owner-path-catalog") {
-      requireExactKeys(spec, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule"], name);
+      requireExactKeys(spec, ["contractKind", "authorityCatalogPath", "authorityCatalogSha256", "sourceFileKindId", "sourceBasenames", "destinationDirectoryKinds", "allowedDispositions", "ownerEvidenceKinds", "referenceOwnerIds", "generatorOwnerIds", "expectedCounts", "authoredDocumentCorrections", "rationaleRule", ...(Object.hasOwn(spec, "currentSourceRevisions") ? ["currentSourceRevisions"] : [])], name);
       const authorityCatalogPath = normalizeRelative(requiredString(spec.authorityCatalogPath, name + ".authorityCatalogPath"));
       const authorityCatalogSha256 = requiredString(spec.authorityCatalogSha256, name + ".authorityCatalogSha256");
       const sourceBasenames = stringArray(spec.sourceBasenames, name + ".sourceBasenames");
@@ -1317,6 +1387,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
         generatorOwnerIds: ["assets-build"],
         expectedCounts: { fixed: 4, license: 8, projected: 36, readme: 32, referenceBindings: 62, total: 40 },
         authoredDocumentCorrections: parseSemanticOwnedDocumentCorrections(spec.authoredDocumentCorrections),
+        ...(Object.hasOwn(spec, "currentSourceRevisions") ? { currentSourceRevisions: parseSemanticOwnedCurrentSourceRevisions(spec.currentSourceRevisions) } : {}),
         rationaleRule: "readme-license-owner-projection-v1",
       };
       continue;
@@ -1528,7 +1599,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   }
   for (const [id, contract] of Object.entries(generatorContracts)) {
     if (contract.ownerPath && crossesOpaque(contract.ownerPath)) throw new Error(`Taxonomy v7 generatorContracts.${id}.ownerPath crosses an opaque path`);
-    for (const pattern of contract.inputPatterns) if (opaquePaths.some((opaque) => taxonomyPathPatternMatches(opaque, pattern) || taxonomyPathPatternMatches(`${opaque}/probe`, pattern))) throw new Error(`Taxonomy v7 generatorContracts.${id} input pattern admits an opaque path`);
+    for (const pattern of contract.inputPatterns) if (opaquePaths.some((opaque) => pathMatcher.matches(opaque, pattern) || pathMatcher.matches(`${opaque}/probe`, pattern))) throw new Error(`Taxonomy v7 generatorContracts.${id} input pattern admits an opaque path`);
     for (const output of contract.outputRoots) if (crossesOpaque(output.path)) throw new Error(`Taxonomy v7 generatorContracts.${id} output root crosses an opaque path`);
   }
 
@@ -1572,6 +1643,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
   };
   return {
     path,
+    pathMatcher,
     schema,
     discoverySchema: root as unknown as DiscoveryTaxonomy,
     exclusions: exclusions.sort((a, b) => a.path.localeCompare(b.path)),
@@ -1582,7 +1654,11 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
 
 function loadTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): LoadedTaxonomy {
   const path = assertLexicalInputOutsideOpaque(options.repoRoot, options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath", true);
-  return parseTaxonomy(JSON.parse(readFileSync(path, "utf8")) as unknown, path);
+  const input = semanticOwnedInputFileSnapshot(options.repoRoot, relative(resolve(options.repoRoot), path).replaceAll("\\", "/"));
+  if (!input) throw new Error("Taxonomy schema is absent: " + path);
+  const bytes = Buffer.from(input.bytes), text = bytes.toString("utf8");
+  if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path);
+  return { ...parseTaxonomy(JSON.parse(text) as unknown, path), input };
 }
 //#endregion 🔣️Schema
 
@@ -1773,10 +1849,30 @@ function parseReferenceEdit(value: unknown, name: string): ReferenceEdit {
   return { path: planPath(row.path, `${name}.path`), adapter: row.adapter as TaxonomyReferenceAdapter, structuredLocation: planString(row.structuredLocation, `${name}.structuredLocation`), oldValue: planString(row.oldValue, `${name}.oldValue`), newValue: planString(row.newValue, `${name}.newValue`), preimage };
 }
 
+/** 🪪️ Parses exact role-labelled current-source evidence without authenticating its current bytes. */
+function parseMoveSourceAuthority(value: unknown, name: string): TaxonomyMoveSourceAuthority {
+  const row = planRecord(value, name, ["kind", "revisionId", "revisionDigest", "inputs"]);
+  if (row.kind !== "exact-owner-current-source-revision-v1" || row.revisionId !== "testing-readme-protocol-v2-reviewed") throw new Error(`${name} has an unsupported current-source revision`);
+  if (!Array.isArray(row.inputs) || row.inputs.length !== 3) throw new Error(`${name}.inputs must contain exactly three role-labelled files`);
+  const roles = new Set<string>(), paths = new Set<string>();
+  const inputs = row.inputs.map((value: unknown, index: number): TaxonomyMoveSourceAuthority["inputs"][number] => {
+    const label = `${name}.inputs[${index}]`, input = planRecord(value, label, ["role", "path", "preimage"]);
+    if (input.role !== "schema" && input.role !== "catalog" && input.role !== "expectation") throw new Error(`${label}.role is invalid`);
+    const path = planPath(input.path, `${label}.path`);
+    if (/[\\\u0000-\u001f:*?"<>|]/u.test(path) || Buffer.from(path).toString("utf8") !== path || /^(?:compose|temp\/compose)(?:\/|$)/u.test(path)) throw new Error(`${label}.path is unsafe`);
+    if (roles.has(input.role) || paths.has(path)) throw new Error(`${name}.inputs have duplicate roles or paths`);
+    roles.add(input.role); paths.add(path);
+    const preimage = parseLeafPreimage(input.preimage, `${label}.preimage`);
+    if (preimage.nodeKind !== "file") throw new Error(`${label}.preimage must be a regular file`);
+    return { role: input.role, path, preimage };
+  });
+  return { kind: row.kind, revisionId: row.revisionId, revisionDigest: planString(row.revisionDigest, `${name}.revisionDigest`, PLAN_HASH), inputs };
+}
+
 function parseMove(value: unknown, name: string): TaxonomyMove {
-  const row = planRecord(value, name, ["operationId", "sourcePath", "destinationPath", "sourcePreimage", "rationaleRule", "ownerId", "referenceEdits"], ["collisionGroup"]);
+  const row = planRecord(value, name, ["operationId", "sourcePath", "destinationPath", "sourcePreimage", "rationaleRule", "ownerId", "referenceEdits"], ["collisionGroup", "sourceAuthority"]);
   if (!Array.isArray(row.referenceEdits)) throw new Error(`${name}.referenceEdits must be an array`);
-  const result: TaxonomyMove = { operationId: planString(row.operationId, `${name}.operationId`, PLAN_OPERATION_ID), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), destinationPath: planPath(row.destinationPath, `${name}.destinationPath`), sourcePreimage: parseLeafPreimage(row.sourcePreimage, `${name}.sourcePreimage`), rationaleRule: planString(row.rationaleRule, `${name}.rationaleRule`), ownerId: planString(row.ownerId, `${name}.ownerId`), collisionGroup: row.collisionGroup === undefined ? undefined : planString(row.collisionGroup, `${name}.collisionGroup`), referenceEdits: row.referenceEdits.map((entry, index) => parseReferenceEdit(entry, `${name}.referenceEdits[${index}]`)) };
+  const result: TaxonomyMove = { operationId: planString(row.operationId, `${name}.operationId`, PLAN_OPERATION_ID), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), destinationPath: planPath(row.destinationPath, `${name}.destinationPath`), sourcePreimage: parseLeafPreimage(row.sourcePreimage, `${name}.sourcePreimage`), rationaleRule: planString(row.rationaleRule, `${name}.rationaleRule`), ownerId: planString(row.ownerId, `${name}.ownerId`), collisionGroup: row.collisionGroup === undefined ? undefined : planString(row.collisionGroup, `${name}.collisionGroup`), referenceEdits: row.referenceEdits.map((entry, index) => parseReferenceEdit(entry, `${name}.referenceEdits[${index}]`)), ...(row.sourceAuthority === undefined ? {} : { sourceAuthority: parseMoveSourceAuthority(row.sourceAuthority, `${name}.sourceAuthority`) }) };
   if (result.operationId !== dispositionOperationId("move-v2", { sourcePath: result.sourcePath, destinationPath: result.destinationPath, sourcePreimage: result.sourcePreimage })) throw new Error(`${name}.operationId does not match its fields`);
   return result;
 }
@@ -2100,9 +2196,9 @@ function isEmojiGrapheme(value: string): boolean {
 }
 
 function splitLeadingEmoji(value: string): { emoji: string; rest: string } {
-  const segments = graphemes(value);
-  if (segments.length === 0 || !isEmojiGrapheme(segments[0])) return { emoji: "", rest: value };
-  return { emoji: segments[0], rest: segments.slice(1).join("") };
+  const first = SEGMENTER.segment(value)[Symbol.iterator]().next().value?.segment;
+  if (!first || !isEmojiGrapheme(first)) return { emoji: "", rest: value };
+  return { emoji: first, rest: value.slice(first.length) };
 }
 
 function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId?: string, ancestorKindIds: readonly string[] = []): { kind: { readonly id: string; readonly emoji: string } | null; slug: string; ambiguous: readonly string[] } {
@@ -2152,7 +2248,7 @@ function resolveFileKind(
   const folded = normalized.toLocaleLowerCase("und");
   const scoped = Object.entries(taxonomy.schema.scopedFileKinds)
     .flatMap(([id, spec]) => {
-      if (!taxonomyPathPatternMatches(path, spec.pathPattern) || !new RegExp(spec.sourceFilenamePattern, "u").test(normalized)) return [];
+      if (!taxonomy.pathMatcher.matches(path, spec.pathPattern) || !new RegExp(spec.sourceFilenamePattern, "u").test(normalized)) return [];
       const extensions = spec.extensionChains.filter((chain) => folded.endsWith(chain.toLocaleLowerCase("und"))).sort((left, right) => right.length - left.length || left.localeCompare(right));
       return extensions.length > 0 ? [{ id, spec, extension: extensions[0] }] : [];
     })
@@ -2182,7 +2278,7 @@ function resolveFileKind(
   const candidates = extensionRows
     .filter(([, rule]) => rule.extensionChain.length === longest)
     .filter(([, rule]) => !rule.filenamePattern || new RegExp(rule.filenamePattern, "u").test(normalized))
-    .filter(([, rule]) => !rule.pathPattern || taxonomyPathPatternMatches(path, rule.pathPattern))
+    .filter(([, rule]) => !rule.pathPattern || taxonomy.pathMatcher.matches(path, rule.pathPattern))
     .filter(([, rule]) => !rule.parentKindIds || (parentKindId !== undefined && rule.parentKindIds.includes(parentKindId)))
     .filter(([, rule]) => !rule.ancestorKindIds || rule.ancestorKindIds.some((kindId) => ancestorKindIds.includes(kindId)))
     .map(([id, rule]) => ({ id, rule, predicates: Number(Boolean(rule.filenamePattern)) + Number(Boolean(rule.pathPattern)) + Number(Boolean(rule.parentKindIds)) + Number(Boolean(rule.ancestorKindIds)) }))
@@ -2301,6 +2397,112 @@ function cancellationRequested(repoRoot: string, cancelFile?: string): boolean {
 //#endregion 🧮️Canonicalization
 
 //#region 📚️Inventory
+//#region 🧾️Source Admission
+const SOURCE_ADMISSION_ORIGINS: readonly TaxonomySourceOrigin[] = ["tracked", "nonignored-untracked", "ignored-generator", "explicit-ticket"];
+const sourceAdmissionByteCompare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+
+function sourceAdmissionSafePath(path: string): boolean {
+  return path.length > 0 && !path.startsWith("/") && !/^[A-Za-z]:/u.test(path) && !path.includes("\\") && !/[\u0000-\u001f\u007f]/u.test(path) && Buffer.from(path).toString("utf8") === path && path.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
+}
+
+function sourceAdmissionOpaque(path: string, prefixes: readonly string[]): boolean {
+  const normalized = path.normalize("NFC");
+  return prefixes.some((prefix) => {
+    const expected = prefix.normalize("NFC");
+    return expected === "compose" ? normalized.split("/").some((part) => part.toLowerCase() === "compose") : normalized === expected || normalized.startsWith(expected + "/");
+  });
+}
+
+function sourceAdmissionRecord(value: unknown, required: readonly string[], optional: readonly string[] = []): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value) && required.every((key) => Object.hasOwn(value, key)) && Object.keys(value).every((key) => required.includes(key) || optional.includes(key));
+}
+
+function sourceAdmissionInputShape(value: unknown): value is TaxonomySourceAdmissionInput {
+  if (!sourceAdmissionRecord(value, ["scope", "opaquePrefixes", "generatorOutputRoots", "candidates"], ["cancelledDuring"])) return false;
+  if (value.scope !== null && typeof value.scope !== "string") return false;
+  if (value.cancelledDuring !== undefined && value.cancelledDuring !== null && typeof value.cancelledDuring !== "string") return false;
+  if (!Array.isArray(value.opaquePrefixes) || value.opaquePrefixes.some((prefix) => typeof prefix !== "string" || prefix.length === 0) || new Set(value.opaquePrefixes).size !== value.opaquePrefixes.length) return false;
+  if (!Array.isArray(value.generatorOutputRoots) || value.generatorOutputRoots.some((root) => !sourceAdmissionRecord(root, ["contractId", "rootPath", "inclusion"]) || typeof root.contractId !== "string" || !root.contractId || typeof root.rootPath !== "string" || !root.rootPath || (root.inclusion !== "tracked" && root.inclusion !== "ignored"))) return false;
+  if (!Array.isArray(value.candidates)) return false;
+  return value.candidates.every((row) => {
+    if (!sourceAdmissionRecord(row, ["sourcePath", "observedKind", "worktreeMode", "explicitDirectory", "origins", "indexEntries", "unsafeAncestor"])) return false;
+    if (typeof row.sourcePath !== "string" || !row.sourcePath || !["file", "directory", "symlink", "absent", "unobserved", "other"].includes(row.observedKind as string) || ![null, "100644", "100755", "120000", "160000", "040000"].includes(row.worktreeMode as string | null) || typeof row.explicitDirectory !== "boolean" || typeof row.unsafeAncestor !== "boolean") return false;
+    if (!Array.isArray(row.origins) || row.origins.some((origin) => !SOURCE_ADMISSION_ORIGINS.includes(origin)) || new Set(row.origins).size !== row.origins.length || !Array.isArray(row.indexEntries)) return false;
+    return row.indexEntries.every((entry) => sourceAdmissionRecord(entry, ["stage", "mode", "objectId"]) && Number.isInteger(entry.stage) && Number(entry.stage) >= 0 && Number(entry.stage) <= 3 && ["100644", "100755", "120000", "160000"].includes(entry.mode as string) && typeof entry.objectId === "string" && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(entry.objectId));
+  });
+}
+
+function sourceAdmissionPhysicalConsistent(row: TaxonomySourceCandidateObservation): boolean {
+  return (row.observedKind === "file" && (row.worktreeMode === "100644" || row.worktreeMode === "100755") && !row.explicitDirectory)
+    || (row.observedKind === "directory" && row.worktreeMode === "040000" && row.explicitDirectory)
+    || (row.observedKind === "symlink" && row.worktreeMode === "120000" && !row.explicitDirectory)
+    || (["absent", "unobserved", "other"].includes(row.observedKind) && row.worktreeMode === null && !row.explicitDirectory);
+}
+
+/** 🧾️ Projects supplied source observations; only inventoryTaxonomySources performs filesystem admission. */
+export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAdmission {
+  if (!sourceAdmissionInputShape(value)) return { schemaVersion: 1, scope: null, status: "rejected", observations: [], diagnostics: [{ code: "invalid-admission-input", path: "$", message: "Source admission input does not satisfy its closed schema" }] };
+  const input = value;
+  if (input.cancelledDuring !== undefined && input.cancelledDuring !== null) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "cancelled", path: input.cancelledDuring || "$", message: "Cancellation prevents a partial-success admission result" }] };
+  if (input.scope !== null && !sourceAdmissionSafePath(input.scope)) return { schemaVersion: 1, scope: input.scope, status: "rejected", observations: [], diagnostics: [{ code: "invalid-scope", path: input.scope || "$", message: "Scope is not a safe repository-relative slash path" }] };
+  const diagnostics: TaxonomySourceAdmissionDiagnostic[] = [];
+  const diagnose = (code: string, path: string, message: string): void => { diagnostics.push({ code, path, message }); };
+  for (const prefix of input.opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) diagnose("invalid-opaque-prefix", prefix, "Opaque prefix is not a safe repository-relative slash path");
+  for (const output of input.generatorOutputRoots) if (!sourceAdmissionSafePath(output.rootPath)) diagnose("invalid-generator-root", output.rootPath, "Generator output root is not a safe repository-relative slash path");
+  const generatorPolicies = new Map<string, TaxonomySourceGeneratorOutput[]>();
+  for (const output of input.generatorOutputRoots) {
+    const key = JSON.stringify([output.contractId, output.rootPath]);
+    const group = generatorPolicies.get(key) ?? [];
+    group.push(output);
+    generatorPolicies.set(key, group);
+  }
+  for (const group of generatorPolicies.values()) if (new Set(group.map((output) => output.inclusion)).size > 1) diagnose("contradictory-generator-output", group[0].rootPath, "One generator contract/root identity declares conflicting inclusion policies");
+  const groups = new Map<string, TaxonomySourceCandidateObservation[]>();
+  for (const row of input.candidates) {
+    if (!sourceAdmissionSafePath(row.sourcePath)) { diagnose("invalid-source-path", row.sourcePath, "Candidate sourcePath is not a safe repository-relative slash path"); continue; }
+    if (!inScope(row.sourcePath, input.scope ?? undefined)) continue;
+    const group = groups.get(row.sourcePath) ?? [];
+    group.push(row);
+    groups.set(row.sourcePath, group);
+  }
+  const observations = [...groups].map(([sourcePath, rows]): TaxonomySourceObservation => {
+    const first = rows[0], normalized = sourcePath.normalize("NFC");
+    const physical = new Set(rows.map((row) => JSON.stringify([row.observedKind, row.worktreeMode, row.explicitDirectory])));
+    const indexEntries = [...new Map(rows.flatMap((row) => row.indexEntries).map((entry) => [JSON.stringify([entry.stage, entry.mode, entry.objectId]), entry])).values()].sort((left, right) => left.stage - right.stage || sourceAdmissionByteCompare(left.mode, right.mode) || sourceAdmissionByteCompare(left.objectId, right.objectId));
+    const generatorOutputs = [...new Map(input.generatorOutputRoots.filter((root) => normalized === root.rootPath.normalize("NFC") || normalized.startsWith(root.rootPath.normalize("NFC") + "/")).map((root) => [JSON.stringify([root.contractId, root.rootPath, root.inclusion]), root])).values()].sort((left, right) => sourceAdmissionByteCompare(left.contractId, right.contractId) || sourceAdmissionByteCompare(left.rootPath, right.rootPath) || sourceAdmissionByteCompare(left.inclusion, right.inclusion));
+    const supplied = new Set(rows.flatMap((row) => row.origins)), hasIgnored = generatorOutputs.some((root) => root.inclusion === "ignored");
+    const opaque = sourceAdmissionOpaque(sourcePath, input.opaquePrefixes), unsafe = rows.some((row) => row.unsafeAncestor);
+    const stageZero = indexEntries.some((entry) => entry.stage === 0), conflicted = indexEntries.some((entry) => entry.stage !== 0);
+    if (physical.size > 1) diagnose("contradictory-physical-observation", sourcePath, "Duplicate rows disagree on observed physical kind, mode, or directory status");
+    if (new Set(indexEntries.map((entry) => entry.stage)).size !== indexEntries.length) diagnose("contradictory-index-entry", sourcePath, "Duplicate rows disagree on an exact Git index stage identity");
+    if (supplied.has("ignored-generator") && !hasIgnored) diagnose("untrusted-generator-origin", sourcePath, "Ignored-generator authority is derived only from declared ignored output roots");
+    if (opaque) diagnose("opaque-path", sourcePath, "Configured opaque prefix rejected before candidate projection");
+    if (unsafe) diagnose("unsafe-ancestor", sourcePath, "A symlink or non-directory ancestor prevented observation");
+    if (rows.some((row) => !sourceAdmissionPhysicalConsistent(row) && row.worktreeMode !== "160000")) diagnose("inconsistent-physical-observation", sourcePath, "Observed kind, worktree mode, and explicit-directory status are inconsistent");
+    if (rows.some((row) => row.observedKind === "other" || row.worktreeMode === "160000") || indexEntries.some((entry) => entry.mode === "160000")) diagnose("nonregular-node", sourcePath, "Gitlink and other nonregular nodes cannot be admitted as authored source");
+    if (stageZero && !supplied.has("tracked")) diagnose("index-without-tracked-origin", sourcePath, "Stage-zero index identity requires tracked admission provenance");
+    if (supplied.has("tracked") && !stageZero && !conflicted) diagnose("tracked-origin-without-stage-zero", sourcePath, "Tracked admission requires an exact stage-zero index identity");
+    if (conflicted) diagnose("conflicted-index", sourcePath, "Nonzero Git index stages prevent unambiguous source admission");
+    if (rows.some((row) => row.observedKind === "unobserved") && !opaque && !unsafe && !conflicted) diagnose("unobserved-without-error", sourcePath, "Unobserved candidates require an explicit unsafe, opaque, conflict, or cancellation cause");
+    if (rows.some((row) => row.observedKind === "absent") && stageZero) diagnose("tracked-path-absent", sourcePath, "Stage-zero index identity is retained although the worktree path is absent");
+    if (hasIgnored) supplied.add("ignored-generator");
+    const origins = opaque ? [] : SOURCE_ADMISSION_ORIGINS.filter((origin) => supplied.has(origin) && (origin !== "ignored-generator" || hasIgnored));
+    if (!opaque && origins.length === 0 && !conflicted && !stageZero && !supplied.has("ignored-generator")) diagnose("no-admission-origin", sourcePath, "Candidate has no admitted source authority");
+    return {
+      sourcePath,
+      observedKind: physical.size === 1 && !opaque && !unsafe ? first.observedKind : "unobserved",
+      worktreeMode: physical.size === 1 && !opaque && !unsafe ? first.worktreeMode : null,
+      explicitDirectory: physical.size === 1 && !opaque && !unsafe && first.explicitDirectory,
+      origins,
+      indexEntries: opaque ? [] : indexEntries,
+      generatorOutputs: opaque ? [] : generatorOutputs,
+    };
+  }).sort((left, right) => sourceAdmissionByteCompare(left.sourcePath, right.sourcePath));
+  diagnostics.sort((left, right) => sourceAdmissionByteCompare(left.path, right.path) || sourceAdmissionByteCompare(left.code, right.code) || sourceAdmissionByteCompare(left.message, right.message));
+  return { schemaVersion: 1, scope: input.scope, status: diagnostics.some((row) => row.code !== "tracked-path-absent") ? "rejected" : "complete", observations, diagnostics };
+}
+//#endregion 🧾️Source Admission
+
 interface CandidatePath {
   readonly path: string;
   readonly mode: string;
@@ -2422,7 +2624,7 @@ function explicitTicketRows(repoRoot: string, ticketDir: string | undefined, tax
     }
     rows.push({ path: currentRel, mode: "040000", explicitDirectory: true });
     const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
-    if (nestedGit && basename(currentRel) === ".git" && taxonomyPathPatternMatches(currentRel, nestedGit.pathPattern)) return;
+    if (nestedGit && basename(currentRel) === ".git" && taxonomy.pathMatcher.matches(currentRel, nestedGit.pathPattern)) return;
     const children = readdirSync(currentAbs).sort((a, b) => Buffer.from(a).compare(Buffer.from(b)));
     for (const child of children) {
       const childRel = sourceRelative(`${currentRel}/${child}`);
@@ -2462,6 +2664,200 @@ function ignoredGeneratorRows(repoRoot: string, taxonomy: LoadedTaxonomy, scope?
   for (const contract of Object.values(taxonomy.schema.generatorContracts)) for (const root of contract.outputRoots) if (root.inclusion === "ignored") walk(root.path);
   return [...rows.values()].sort((left, right) => Buffer.from(left.path).compare(Buffer.from(right.path)));
 }
+
+//#region 🔐️Source Admission IO
+class SourceAdmissionUnsafeAncestorError extends Error {}
+
+function sourceAdmissionAssertLexical(value: string, label: string, allowAbsolute: boolean): void {
+  if (typeof value !== "string" || !value || /[\u0000-\u001f\u007f]/u.test(value) || Buffer.from(value).toString("utf8") !== value) throw new Error(`${label} is not a lossless path`);
+  if (value.replaceAll("\\", "/").split("/").some((segment) => segment.toLowerCase() === "compose")) throw new Error(`${label} is opaque`);
+  if (!allowAbsolute && !sourceAdmissionSafePath(value)) throw new Error(`${label} is not a safe repository-relative path`);
+  if (!allowAbsolute) return;
+  const nativeRoot = isAbsolute(value) ? parse(value).root : "";
+  const tail = value.slice(nativeRoot.length).split(sep).join("/");
+  if ((tail && !sourceAdmissionSafePath(tail)) || (!nativeRoot && !tail)) throw new Error(`${label} has ambiguous or escaping path segments`);
+}
+
+function sourceAdmissionDirectoryChain(repoRoot: string): readonly { readonly path: string; readonly stat: Stats }[] {
+  const root = parse(repoRoot).root;
+  const paths = [root];
+  for (const segment of repoRoot.slice(root.length).split(sep).filter(Boolean)) paths.push(join(paths[paths.length - 1], segment));
+  return paths.map((path) => {
+    const stat = lstatSync(path);
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new SourceAdmissionUnsafeAncestorError(`Source admission root has unsafe ancestry: ${path}`);
+    return { path, stat };
+  });
+}
+
+function sourceAdmissionLstat(repoRoot: string, path: string): Stats | null {
+  sourceAdmissionAssertLexical(path, "Source admission candidate", false);
+  const ancestors = [...sourceAdmissionDirectoryChain(repoRoot)];
+  const segments = path.split("/");
+  let absolute = repoRoot;
+  for (let index = 0; index + 1 < segments.length; index++) {
+    absolute = join(absolute, segments[index]);
+    const stat = lstatOrNull(absolute);
+    if (!stat) return null;
+    if (stat.isSymbolicLink() || !stat.isDirectory()) throw new SourceAdmissionUnsafeAncestorError(`Source admission candidate has unsafe ancestry: ${path}`);
+    ancestors.push({ path: absolute, stat });
+  }
+  const observed = lstatOrNull(join(absolute, segments[segments.length - 1]));
+  for (const ancestor of ancestors) {
+    const current = lstatOrNull(ancestor.path);
+    if (!current || current.isSymbolicLink() || !current.isDirectory() || current.dev !== ancestor.stat.dev || current.ino !== ancestor.stat.ino || current.mode !== ancestor.stat.mode) throw new Error(`Source admission ancestry changed during observation: ${path}`);
+  }
+  return observed;
+}
+
+function sourceAdmissionPrepareOptions(options: TaxonomyInventoryOptions): { readonly repoRoot: string; readonly scope?: string; readonly taxonomyPath: string; readonly ticketDir?: string; readonly cancelFile?: string } {
+  if (options.repoRoot !== ".") sourceAdmissionAssertLexical(options.repoRoot, "repoRoot", true);
+  if (options.scope !== undefined) sourceAdmissionAssertLexical(options.scope, "scope", false);
+  for (const [label, value] of [["ticketDir", options.ticketDir], ["taxonomyPath", options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH], ["cancelFile", options.cancelFile]] as const) if (value !== undefined) sourceAdmissionAssertLexical(value, label, true);
+  const repoRoot = resolve(options.repoRoot);
+  sourceAdmissionAssertLexical(repoRoot, "repoRoot", true);
+  const local = (value: string, label: string): string => {
+    const path = relative(repoRoot, isAbsolute(value) ? value : join(repoRoot, value)).split(sep).join("/");
+    sourceAdmissionAssertLexical(path, label, false);
+    return path;
+  };
+  const taxonomyPath = local(options.taxonomyPath ?? TAXONOMY_RELATIVE_PATH, "taxonomyPath");
+  const ticketDir = options.ticketDir === undefined ? undefined : local(options.ticketDir, "ticketDir");
+  const cancelFile = options.cancelFile === undefined ? undefined : local(options.cancelFile, "cancelFile");
+  sourceAdmissionDirectoryChain(repoRoot);
+  const schema = sourceAdmissionLstat(repoRoot, taxonomyPath);
+  if (!schema?.isFile() || schema.isSymbolicLink()) throw new Error("Taxonomy schema is not a no-follow regular file");
+  return { repoRoot, scope: options.scope?.normalize("NFC"), taxonomyPath: join(repoRoot, ...taxonomyPath.split("/")), ticketDir, cancelFile };
+}
+
+function sourceAdmissionCheckCancellation(repoRoot: string, cancelFile?: string): void {
+  if (!cancelFile) return;
+  const stat = sourceAdmissionLstat(repoRoot, cancelFile);
+  if (stat?.isSymbolicLink()) throw new Error("Source admission cancellation path is a symlink");
+  if (stat) throw new TaxonomyCancellationError();
+}
+
+function sourceAdmissionGitRecords(bytes: Uint8Array, label: string): readonly string[] {
+  if (bytes.length === 0) return [];
+  if (bytes[bytes.length - 1] !== 0) throw new Error(`${label} is missing its terminal NUL`);
+  const rows = new TextDecoder("utf-8", { fatal: true }).decode(bytes).slice(0, -1).split("\0");
+  if (rows.some((row) => !row)) throw new Error(`${label} contains an empty record`);
+  return rows;
+}
+
+function sourceAdmissionGitExclusions(pathspec: TaxonomyScopedGitPathspec): readonly string[] {
+  return [...pathspec.exclusionPathspecs, ":(exclude,icase,glob)**/compose", ":(exclude,icase,glob)**/compose/**"];
+}
+
+function sourceAdmissionGitRows(repoRoot: string, taxonomy: LoadedTaxonomy, pathspec: TaxonomyScopedGitPathspec): readonly { readonly path: string; readonly entry: TaxonomySourceIndexEntry }[] {
+  const bytes = execFileSync("git", ["ls-files", "--stage", "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  return sourceAdmissionGitRecords(bytes, "Git stage output").map((row) => {
+    const tab = row.indexOf("\t"), match = /^(100644|100755|120000|160000) ([0-9a-f]{40}|[0-9a-f]{64}) ([0-3])$/u.exec(row.slice(0, tab));
+    const path = row.slice(tab + 1);
+    if (tab < 1 || !match || !sourceAdmissionSafePath(path)) throw new Error("Git stage output has an invalid header or source path");
+    return { path, entry: { mode: match[1], objectId: match[2], stage: Number(match[3]) } };
+  });
+}
+
+function sourceAdmissionUntrackedPaths(repoRoot: string, pathspec: TaxonomyScopedGitPathspec, taxonomy: LoadedTaxonomy): readonly string[] {
+  const literal = (path: string): string => path.replace(/[\\*?\[\]#! ]/gu, "\\$&");
+  const exclusions = taxonomy.exclusions.map((entry) => `--exclude=/${literal(entry.path)}`);
+  const bytes = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "--exclude=[cC][oO][mM][pP][oO][sS][eE]", ...exclusions, "-z", "--", pathspec.positivePathspec, ...sourceAdmissionGitExclusions(pathspec)], { cwd: repoRoot, encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+  const rows = sourceAdmissionGitRecords(bytes, "Git untracked output");
+  if (rows.some((path) => !sourceAdmissionSafePath(path))) throw new Error("Git untracked output has an invalid source path");
+  return [...rows].sort(sourceAdmissionByteCompare);
+}
+
+function sourceAdmissionWalk(repoRoot: string, root: string, taxonomy: LoadedTaxonomy, scope: string | undefined, cancelFile: string | undefined): readonly string[] {
+  const rows: string[] = [];
+  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
+  const visit = (path: string): void => {
+    if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission walk has an invalid path: ${path}`);
+    if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+    let stat: Stats | null;
+    try { stat = sourceAdmissionLstat(repoRoot, path); }
+    catch (error) {
+      if (!(error instanceof SourceAdmissionUnsafeAncestorError)) throw error;
+      rows.push(path);
+      return;
+    }
+    if (!stat) return;
+    rows.push(path);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) return;
+    const nestedGit = taxonomy.schema.fixedDirectoryContracts["nested-git-metadata"];
+    if (nestedGit && basename(path) === ".git" && taxonomy.pathMatcher.matches(path, nestedGit.pathPattern)) return;
+    const children = readdirSync(join(repoRoot, ...path.split("/")), { encoding: "buffer" }).map((name) => new TextDecoder("utf-8", { fatal: true }).decode(name));
+    const current = sourceAdmissionLstat(repoRoot, path);
+    if (!current?.isDirectory() || current.isSymbolicLink() || current.dev !== stat.dev || current.ino !== stat.ino || current.mode !== stat.mode || current.mtimeMs !== stat.mtimeMs || current.ctimeMs !== stat.ctimeMs) throw new Error(`Source admission directory changed during enumeration: ${path}`);
+    for (const child of children.sort(sourceAdmissionByteCompare)) visit(`${path}/${child}`);
+  };
+  visit(root);
+  return rows.sort(sourceAdmissionByteCompare);
+}
+
+function sourceAdmissionObservation(repoRoot: string, path: string, origins: readonly TaxonomySourceOrigin[], indexEntries: readonly TaxonomySourceIndexEntry[]): TaxonomySourceCandidateObservation {
+  try {
+    const stat = sourceAdmissionLstat(repoRoot, path);
+    if (!stat) return { sourcePath: path, observedKind: "absent", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
+    if (stat.isSymbolicLink()) return { sourcePath: path, observedKind: "symlink", worktreeMode: "120000", explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
+    if (stat.isDirectory()) return { sourcePath: path, observedKind: "directory", worktreeMode: "040000", explicitDirectory: true, origins, indexEntries, unsafeAncestor: false };
+    if (stat.isFile()) return { sourcePath: path, observedKind: "file", worktreeMode: (stat.mode & 0o111) !== 0 ? "100755" : "100644", explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
+    return { sourcePath: path, observedKind: "other", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
+  } catch (error) {
+    if (!(error instanceof SourceAdmissionUnsafeAncestorError)) throw error;
+    return { sourcePath: path, observedKind: "unobserved", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: true };
+  }
+}
+
+/** 🧭️ Collects source admission without reading admitted leaf content. */
+function collectTaxonomySourceAdmission(options: TaxonomyInventoryOptions, taxonomy: LoadedTaxonomy, repoRoot: string): TaxonomySourceInventory {
+  const prepared = sourceAdmissionPrepareOptions(options), { scope, cancelFile } = prepared;
+  if (prepared.repoRoot !== repoRoot || taxonomy.path !== prepared.taxonomyPath || !taxonomy.input) throw new Error("Source admission requires the exact loaded taxonomy input");
+  const opaquePrefixes = ["compose", ...taxonomy.exclusions.map((entry) => entry.path)];
+  if (scope && sourceAdmissionOpaque(scope, opaquePrefixes)) throw new Error(`Source admission scope is opaque: ${scope}`);
+  for (const prefix of opaquePrefixes) if (!sourceAdmissionSafePath(prefix)) throw new Error("Source admission has an invalid opaque prefix");
+  const pathspec = taxonomyScopedGitPathspec(scope, opaquePrefixes);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+  const rows = new Map<string, { origins: Set<TaxonomySourceOrigin>; indexEntries: TaxonomySourceIndexEntry[] }>();
+  const add = (path: string, origin: TaxonomySourceOrigin, entry?: TaxonomySourceIndexEntry): void => {
+    if (!sourceAdmissionSafePath(path)) throw new Error(`Source admission has an invalid candidate: ${path}`);
+    if (sourceAdmissionOpaque(path, opaquePrefixes) || !inScope(path, scope)) return;
+    const row = rows.get(path) ?? { origins: new Set<TaxonomySourceOrigin>(), indexEntries: [] };
+    row.origins.add(origin); if (entry) row.indexEntries.push(entry); rows.set(path, row);
+  };
+  report(options.progress, "inventory", "tracked-enumeration", 0, 1, scope);
+  for (const row of sourceAdmissionGitRows(repoRoot, taxonomy, taxonomyScopedGitPathspec(undefined, opaquePrefixes))) add(row.path, "tracked", row.entry);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "tracked-enumeration", 1, 1, scope);
+  report(options.progress, "inventory", "untracked-enumeration", 0, 1, scope);
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+  for (const path of sourceAdmissionUntrackedPaths(repoRoot, pathspec, taxonomy)) add(path, "nonignored-untracked");
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
+  report(options.progress, "inventory", "ignored-generator-admission", 0, 1, scope);
+  for (const contract of Object.values(taxonomy.schema.generatorContracts)) for (const output of contract.outputRoots) if (output.inclusion === "ignored") for (const path of sourceAdmissionWalk(repoRoot, output.path, taxonomy, scope, cancelFile)) add(path, "ignored-generator");
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);
+  report(options.progress, "inventory", "explicit-ticket-admission", 0, 1, scope);
+  if (prepared.ticketDir) for (const path of sourceAdmissionWalk(repoRoot, prepared.ticketDir, taxonomy, scope, cancelFile)) add(path, "explicit-ticket");
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile); report(options.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
+  const generatorOutputRoots = Object.entries(taxonomy.schema.generatorContracts).flatMap(([contractId, contract]) => contract.outputRoots.map((root) => ({ contractId, rootPath: root.path, inclusion: root.inclusion === "ignored" ? "ignored" as const : "tracked" as const })));
+  const candidates: TaxonomySourceCandidateObservation[] = [];
+  report(options.progress, "inventory", "source-observation", 0, rows.size, scope);
+  for (const [path, row] of rows) {
+    sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+    candidates.push(sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries));
+    report(options.progress, "inventory", "source-observation", candidates.length, rows.size, path);
+  }
+  sourceAdmissionCheckCancellation(repoRoot, cancelFile);
+  const admission = projectTaxonomySourceAdmission({ scope: scope ?? null, opaquePrefixes: [...new Set(opaquePrefixes)], generatorOutputRoots, candidates });
+  return { ...admission, repoRoot, taxonomyPath: relative(repoRoot, prepared.taxonomyPath).split(sep).join("/"), taxonomyContentHash: taxonomy.input.contentHash, membershipDigest: sha256(canonicalJson(admission)) };
+}
+
+/** 🧭️ Enumerates source admission without reading admitted leaf content. */
+export function inventoryTaxonomySources(options: TaxonomyInventoryOptions): TaxonomySourceInventory {
+  const prepared = sourceAdmissionPrepareOptions(options);
+  const taxonomy = loadTaxonomy({ repoRoot: prepared.repoRoot, taxonomyPath: prepared.taxonomyPath });
+  return collectTaxonomySourceAdmission(options, taxonomy, prepared.repoRoot);
+}
+//#endregion 🔐️Source Admission IO
 
 function contentOf(repoRoot: string, row: CandidatePath): { readonly kind: TaxonomyNodeKind; readonly hash: string; readonly mode: number; readonly size: number; readonly symlinkTarget?: string; readonly bytes?: Uint8Array; readonly violation?: TaxonomyViolation } {
   if (row.mode === "040000") return { kind: "directory", hash: "", mode: 0, size: 0 };
@@ -2524,9 +2920,9 @@ function fixedScopeMatches(contract: FixedContract, path: string, packageInfo: R
   return true;
 }
 
-function matchingFixedContracts<T extends FixedContract>(path: string, contracts: Readonly<Record<string, T>>, packageInfo: ReturnType<typeof packageLocation>, parentKindId?: string, parentFixedDirectoryContractId?: string, siblingFixedFilenameContractIds: readonly string[] = []): { readonly selected: readonly [string, T] | null; readonly ambiguous: readonly string[] } {
+function matchingFixedContracts<T extends FixedContract>(path: string, contracts: Readonly<Record<string, T>>, taxonomy: LoadedTaxonomy, packageInfo: ReturnType<typeof packageLocation>, parentKindId?: string, parentFixedDirectoryContractId?: string, siblingFixedFilenameContractIds: readonly string[] = []): { readonly selected: readonly [string, T] | null; readonly ambiguous: readonly string[] } {
   const matches = Object.entries(contracts)
-    .filter(([, contract]) => taxonomyPathPatternMatches(path, contract.pathPattern) && fixedScopeMatches(contract, path, packageInfo, parentKindId, parentFixedDirectoryContractId, siblingFixedFilenameContractIds))
+    .filter(([, contract]) => taxonomy.pathMatcher.matches(path, contract.pathPattern) && fixedScopeMatches(contract, path, packageInfo, parentKindId, parentFixedDirectoryContractId, siblingFixedFilenameContractIds))
     .map(([id, contract]) => ({ id, contract, specificity: fixedSpecificity(contract) }))
     .sort((left, right) => compareFixedSpecificity(left.specificity, right.specificity) || left.id.localeCompare(right.id));
   if (matches.length === 0) return { selected: null, ambiguous: [] };
@@ -2606,7 +3002,7 @@ function classifyPackageRole(path: string, kindId: string | null, fixedId: strin
 
 function canonicalDirectory(path: string, parentCanonical: string, parentKindId: string | undefined, ancestorKindIds: readonly string[], taxonomy: LoadedTaxonomy): { readonly path: string; readonly kindId: string | null; readonly fixedId?: string; readonly violations: readonly TaxonomyViolation[] } {
   const name = basename(path).normalize("NFC");
-  const fixed = matchingFixedContracts(path, taxonomy.schema.fixedDirectoryContracts, packageLocation(path, taxonomy), parentKindId);
+  const fixed = matchingFixedContracts(path, taxonomy.schema.fixedDirectoryContracts, taxonomy, packageLocation(path, taxonomy), parentKindId);
   if (fixed.ambiguous.length > 0) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("fixed-directory-contract-ambiguous", path, `Equal-specificity fixed directory contracts match: ${fixed.ambiguous.join(", ")}`)] };
   if (fixed.selected) {
     const context = matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
@@ -2614,7 +3010,6 @@ function canonicalDirectory(path: string, parentCanonical: string, parentKindId:
   }
   if (parentKindId === "packages") {
     const packageKinds = Object.keys(taxonomy.schema.packageBoundaryRules).filter((id) => emojiFold(id) === emojiFold(name));
-    if (packageKinds.length === 1) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: `package-language:${packageKinds[0]}`, violations: [] };
     if (packageKinds.length > 1) return { path: parentCanonical ? `${parentCanonical}/${name}` : name, kindId: null, violations: [violation("package-language-ambiguous", path, `Package language boundary is ambiguous: ${packageKinds.join(", ")}`)] };
   }
   const match = matchDirectoryKind(name, taxonomy, parentKindId, ancestorKindIds);
@@ -2640,11 +3035,11 @@ function canonicalFile(
   const packageInfo = packageLocation(path, taxonomy);
   let fixedName = basename(path);
   const parent = dirname(path);
-  let fixed = matchingFixedContracts(path, taxonomy.schema.fixedFilenameContracts, packageInfo, directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
+  let fixed = matchingFixedContracts(path, taxonomy.schema.fixedFilenameContracts, taxonomy, packageInfo, directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
   const decoratedFixedName = splitLeadingEmoji(fixedName);
   if (!fixed.selected && fixed.ambiguous.length === 0 && decoratedFixedName.emoji && decoratedFixedName.rest) {
     const candidatePath = dirname(path) === "." ? decoratedFixedName.rest : `${dirname(path)}/${decoratedFixedName.rest}`;
-    const candidate = matchingFixedContracts(candidatePath, taxonomy.schema.fixedFilenameContracts, packageLocation(candidatePath, taxonomy), directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
+    const candidate = matchingFixedContracts(candidatePath, taxonomy.schema.fixedFilenameContracts, taxonomy, packageLocation(candidatePath, taxonomy), directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent), siblingFixedFilenameContractIdsByParent.get(parent));
     if (candidate.selected || candidate.ambiguous.length > 0) {
       fixed = candidate;
       fixedName = decoratedFixedName.rest;
@@ -2745,28 +3140,40 @@ function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTax
   return [...paths].sort(generatorPathCompare);
 }
 
-function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, taxonomy: LoadedTaxonomy, cancelFile?: string): readonly string[] {
+function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, taxonomy: LoadedTaxonomy, cancelFile?: string, observe?: (path: string, stat: Stats | null, bytes?: Uint8Array) => void, progress?: TaxonomyPlanOptions["progress"], operation: TaxonomyProgress["operation"] = "plan"): readonly string[] {
+  checkCancellation(repoRoot, cancelFile);
   const directories = new Set<string>(), roots = new Set<string>();
   let callingGitDirectory: string | undefined;
   for (const path of paths) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) directories.add(parent);
-  for (const path of [...directories].sort((left, right) => left.split("/").length - right.split("/").length || generatorPathCompare(left, right))) {
+  const ordered = [...directories].sort((left, right) => left.split("/").length - right.split("/").length || generatorPathCompare(left, right));
+  if (ordered.length === 0) report(progress, operation, "incoming-coordinate-roots", 0, 0);
+  for (const [index, path] of ordered.entries()) {
+    report(progress, operation, "incoming-coordinate-roots", index, ordered.length, path);
     checkCancellation(repoRoot, cancelFile);
     if (isExcluded(path, taxonomy) || path.split("/").includes(".git") || ancestorReferenceCoordinateRoot(path, roots)) continue;
     const marker = assertLexicalInputOutsideOpaque(repoRoot, `${path}/.git`, "Reference repository marker"), stat = lstatOrNull(marker);
-    if (!stat) continue;
+    if (!stat) { observe?.(`${path}/.git`, null); continue; }
     if (stat.isSymbolicLink()) throw new Error(`Reference repository marker is a symlink: ${path}/.git`);
     if (stat.isFile()) {
-      const content = readFileSync(marker, "utf8"), target = content.match(/^gitdir:\s*([^\r\n]+)\r?\n?$/u)?.[1];
+      const bytes = readFileSync(marker), content = bytes.toString("utf8"), target = content.match(/^gitdir:\s*([^\r\n]+)\r?\n?$/u)?.[1];
+      observe?.(`${path}/.git`, stat, bytes);
       if (!target) continue;
       const gitdir = assertLexicalInputOutsideOpaque(repoRoot, resolve(dirname(marker), target), "Reference repository gitdir", true);
-      if (!lstatOrNull(gitdir)?.isDirectory()) throw new Error(`Reference repository gitdir is not a local directory: ${path}/.git`);
+      const gitdirStat = lstatOrNull(gitdir);
+      observe?.(relative(repoRoot, gitdir).replaceAll("\\", "/"), gitdirStat);
+      if (!gitdirStat?.isDirectory()) throw new Error(`Reference repository gitdir is not a local directory: ${path}/.git`);
       callingGitDirectory ??= resolve(repoRoot, execFileSync("git", ["rev-parse", "--absolute-git-dir"], { cwd: repoRoot, encoding: "utf8" }).trim());
       if (resolve(gitdir) === callingGitDirectory) continue;
-    } else if (!stat.isDirectory()) continue;
+    } else {
+      observe?.(`${path}/.git`, stat);
+      if (!stat.isDirectory()) continue;
+    }
     const parent = assertLexicalInputOutsideOpaque(repoRoot, path, "Reference repository owner", true);
     const result = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: parent, encoding: "utf8" });
     if (result.status === 0 && resolve(result.stdout.trim()) === resolve(parent)) roots.add(path);
   }
+  checkCancellation(repoRoot, cancelFile);
+  if (ordered.length > 0) report(progress, operation, "incoming-coordinate-roots", ordered.length, ordered.length);
   return [...roots].sort((left, right) => right.split("/").length - left.split("/").length || generatorPathCompare(left, right));
 }
 
@@ -2824,7 +3231,7 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
   const knownPaths = new Set([...paths, ...inventory.entries.map((entry) => entry.sourcePath)]);
   for (const path of paths) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) knownPaths.add(parent);
   validateObservedFrozenEvidenceNodes(inventory.repoRoot, knownPaths, taxonomy);
-  const coordinateRoots = referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile);
+  const coordinateRoots = referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
   const known = referencePathIndex(knownPaths, inventory.repoRoot, coordinateRoots, undefined, options.cancelFile, changing), admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
   const admitsText = incomingReferenceLexicalAdmission(changing);
   const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>();
@@ -2868,6 +3275,7 @@ interface ReferenceToken {
   readonly value: string;
   readonly targetValues?: readonly string[];
   readonly physicalTargets?: readonly string[];
+  readonly physicalInterpretation?: "rust-finite-manifest-targets";
   readonly rewriteKind?: "rust-mod" | "rust-path-join" | "python-entrypoint" | "artifact-uri" | "projection-prose" | "structural-projection" | "path-prefix" | "artifact-catalog-glob" | "artifact-catalog-prose" | "exact-owner-reference";
   readonly rewriteData?: Readonly<Record<string, string>>;
   readonly unsupportedReason?: string;
@@ -2992,6 +3400,20 @@ function canonicalProjectionSuffix(suffix: string): string {
 
 function projectionKey(artifactRoot: string, standard: string, subset: string): string {
   return `${artifactRoot}\u0000${standard}\u0000${subset}`;
+}
+
+/** 🧭️ Limits structural fallback to complete, exact active owners; physical references use their destination map. */
+function mutationReferenceProjectionState(token: ReferenceToken, target: string | null, activeKeys: ReadonlySet<string>, scope?: string): "active" | "inactive" | "unproven" {
+  if (target !== null) return "inactive";
+  const owner = token.rewriteData?.artifactRoot, profile = token.rewriteData?.projectionProfile;
+  if (!owner || !profile) return "inactive";
+  const active = profile === "*" ? [...activeKeys].some((key) => key.startsWith(`${owner}\u0000`)) : activeKeys.has(`${owner}\u0000${profile}`);
+  if (!active) return "inactive";
+  if (token.targetValues?.length) return "unproven";
+  const parts = profile.split("\u0000");
+  if (profile !== "*" && (parts.length !== 2 || parts.some((part) => !part || part.includes("/")))) return "unproven";
+  const required = profile === "*" ? owner : `${owner}/🏅️standards/🔖️${parts[0]}/🪆️subsets/✳️${parts[1]}/🧬️schema/🧬️mutations`;
+  return !scope || required === scope || required.startsWith(`${scope}/`) ? "active" : "unproven";
 }
 
 function projectedStructuralValue(row: MutationStructuralPath): string {
@@ -3178,6 +3600,275 @@ export function typescriptLeadingDocumentationReferenceAuthority(content: string
   return rows;
 }
 
+interface TypeScriptCollectionToken {
+  readonly text: string;
+  readonly start: number;
+  readonly end: number;
+  readonly kind: "identifier" | "string" | "template" | "number" | "punctuation" | "regex";
+  readonly group: number;
+  readonly scope: number;
+}
+
+interface TypeScriptCollectionSyntax {
+  readonly tokens: readonly TypeScriptCollectionToken[];
+  readonly pairs: ReadonlyMap<number, number>;
+}
+
+/** 🔬️ Reads bounded source tokens and balanced delimiters without evaluating code or decoding editable spans. */
+function typescriptCollectionSyntax(content: string): TypeScriptCollectionSyntax | null {
+  const tokens: TypeScriptCollectionToken[] = [], pairs = new Map<number, number>(), stack: number[] = [];
+  let cursor = 0;
+  while (cursor < content.length) {
+    if (/\s/u.test(content[cursor])) { cursor++; continue; }
+    if (content.startsWith("//", cursor)) { const end = content.indexOf("\n", cursor + 2); cursor = end < 0 ? content.length : end + 1; continue; }
+    if (content.startsWith("/*", cursor)) { const end = content.indexOf("*/", cursor + 2); if (end < 0) return null; cursor = end + 2; continue; }
+    const start = cursor, first = content[cursor];
+    let kind: TypeScriptCollectionToken["kind"] = "punctuation";
+    if (first === '"' || first === "'" || first === "\u0060") {
+      kind = first === "\u0060" ? "template" : "string";
+      cursor++;
+      while (cursor < content.length && content[cursor] !== first) {
+        if (content[cursor] === "\\") { cursor += 2; continue; }
+        if (kind === "string" && /[\r\n]/u.test(content[cursor])) return null;
+        cursor++;
+      }
+      if (cursor >= content.length) return null;
+      cursor++;
+    } else if (/[A-Za-z_$]/u.test(first)) {
+      kind = "identifier";
+      while (cursor < content.length && /[A-Za-z0-9_$]/u.test(content[cursor])) cursor++;
+    } else if (/[0-9]/u.test(first)) {
+      kind = "number";
+      while (cursor < content.length && /[A-Za-z0-9_.]/u.test(content[cursor])) cursor++;
+    } else if (first === "/" && (!tokens.length || /^(?:[([{=:;,!?]|=>|&&|\|\||return|throw|case)$/u.test(tokens.at(-1)!.text))) {
+      kind = "regex";
+      let characterClass = false;
+      cursor++;
+      while (cursor < content.length) {
+        if (content[cursor] === "\\") { cursor += 2; continue; }
+        if (/[\r\n]/u.test(content[cursor])) return null;
+        if (content[cursor] === "[") characterClass = true;
+        if (content[cursor] === "]") characterClass = false;
+        if (content[cursor] === "/" && !characterClass) break;
+        cursor++;
+      }
+      if (cursor >= content.length) return null;
+      cursor++;
+      while (/[A-Za-z]/u.test(content[cursor] ?? "")) cursor++;
+    } else {
+      const operator = /^(?:\.\.\.|===|!==|>>>=|>>>|>>=|<<=|\*\*=|&&=|\|\|=|\?\?=|=>|==|!=|<=|>=|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&|\|\||\?\?|\?\.|\*\*|<<|>>)/u.exec(content.slice(cursor))?.[0];
+      if (!operator && !/[{}()[\].,;:?~!+\-*/%<>=&|^]/u.test(first)) return null;
+      cursor += operator?.length ?? 1;
+    }
+    const text = content.slice(start, cursor), group = stack.at(-1) ?? -1, scope = [...stack].reverse().find((index) => tokens[index].text === "{") ?? -1;
+    const index = tokens.length;
+    tokens.push({ text, start, end: cursor, kind, group, scope });
+    if (kind !== "punctuation") continue;
+    if (["(", "[", "{"].includes(text)) stack.push(index);
+    else if ([")", "]", "}"].includes(text)) {
+      const open = stack.pop();
+      if (open === undefined || "([{".indexOf(tokens[open].text) !== ")]}".indexOf(text)) return null;
+      pairs.set(open, index);
+      pairs.set(index, open);
+    }
+  }
+  return stack.length ? null : { tokens, pairs };
+}
+
+/** 🧩️ Splits only top-level token segments, keeping nested calls, arrays, and blocks opaque. */
+function typescriptCollectionSegments(syntax: TypeScriptCollectionSyntax, start: number, end: number): readonly (readonly [number, number])[] {
+  const rows: [number, number][] = [];
+  let left = start;
+  for (let cursor = start; cursor < end; cursor++) {
+    const close = syntax.pairs.get(cursor);
+    if (close !== undefined && close > cursor) { cursor = close; continue; }
+    if (syntax.tokens[cursor].text === ",") { rows.push([left, cursor]); left = cursor + 1; }
+  }
+  if (left < end) rows.push([left, end]);
+  return rows;
+}
+
+/** 🪆️ Exposes simple template expressions for binding checks and rejects unparsed nested expression syntax. */
+function typescriptCollectionEmbeddedExpressions(syntax: TypeScriptCollectionSyntax): readonly TypeScriptCollectionSyntax[] | null {
+  const expressions: TypeScriptCollectionSyntax[] = [];
+  for (const token of syntax.tokens) if (token.kind === "template") {
+    for (let cursor = 1; cursor < token.text.length - 1; cursor++) {
+      if (token.text[cursor] === "\\") { cursor++; continue; }
+      if (!token.text.startsWith("$" + "{", cursor)) continue;
+      const end = token.text.indexOf("}", cursor + 2), source = token.text.slice(cursor + 2, end);
+      if (end < 0 || /[{}\u0060]/u.test(source)) return null;
+      const expression = typescriptCollectionSyntax(source);
+      if (!expression) return null;
+      expressions.push(expression);
+      cursor = end;
+    }
+  }
+  return expressions;
+}
+
+/** 🧷️ Detects direct, property, computed-property, and destructuring writes to a proven binding. */
+function typescriptCollectionChangedBinding(syntax: TypeScriptCollectionSyntax, name: string, declaration = -1): boolean {
+  const { tokens, pairs } = syntax;
+  const assignment = (text?: string): boolean => /^(?:=|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&=|\|\|=|\?\?=|\*\*=|<<=|>>=|>>>=|\+\+|--)$/u.test(text ?? "");
+  return tokens.some((token, index) => {
+    if (token.kind !== "identifier" || token.text !== name || index === declaration) return false;
+    if (assignment(tokens[index + 1]?.text) || ["++", "--"].includes(tokens[index - 1]?.text)) return true;
+    let cursor = index + 1;
+    while (tokens[cursor]?.text === "." && tokens[cursor + 1]?.kind === "identifier" || tokens[cursor]?.text === "[" && pairs.has(cursor)) cursor = tokens[cursor].text === "[" ? pairs.get(cursor)! + 1 : cursor + 2;
+    if (cursor > index + 1 && assignment(tokens[cursor]?.text)) return true;
+    for (let group = token.group; group >= 0; group = tokens[group].group) if (assignment(tokens[(pairs.get(group) ?? -2) + 1]?.text)) return true;
+    return false;
+  });
+}
+
+/** 🚧️ Prevents a rejected for-of proof from falling through the independent map-only authority. */
+function typescriptCollectionHasForOf(content: string): boolean {
+  const firstFor = content.search(/\bfor\b/u);
+  if (firstFor < 0 || !/\bof\b/u.test(content.slice(firstFor + 3))) return false;
+  const syntax = typescriptCollectionSyntax(content);
+  if (!syntax) return true;
+  const { tokens, pairs } = syntax;
+  return tokens.some((token, index) => {
+    if (token.text !== "for") return false;
+    const open = index + (tokens[index + 1]?.text === "await" ? 2 : 1), close = pairs.get(open);
+    return tokens[open]?.text === "(" && close !== undefined && tokens.slice(open + 1, close).some((part) => part.kind === "identifier" && part.text === "of" && part.group === open);
+  });
+}
+
+/** 🛡️ Proves immutable for-of reader bindings and emits only exact unescaped physical leaf spans. */
+function typescriptPathCollectionReferenceAuthority(content: string): ReferenceToken[] {
+  if (!content.includes("for") || !content.includes("readFileSync") || !content.includes("node:path") || !content.includes("node:fs")) return [];
+  const syntax = typescriptCollectionSyntax(content);
+  if (!syntax) return [];
+  const embedded = typescriptCollectionEmbeddedExpressions(syntax);
+  if (!embedded) return [];
+  const { tokens, pairs } = syntax;
+  type Declaration = { name: string; index: number; kind: string; start: number; end: number; scope: number; exported: boolean };
+  const declarations = new Map<string, Declaration[]>(), bindings = new Map<string, number[]>(), imports = new Map<string, { index: number; module: string; name: string }>(), functions: [number, number][] = [];
+  const bind = (index: number): void => { if (tokens[index]?.kind === "identifier") bindings.set(tokens[index].text, [...(bindings.get(tokens[index].text) ?? []), index]); };
+  const endOf = (start: number, stops: readonly string[]): number => {
+    for (let cursor = start; cursor < tokens.length; cursor++) {
+      if (stops.includes(tokens[cursor].text)) return cursor;
+      const close = pairs.get(cursor);
+      if (close !== undefined && close > cursor) cursor = close;
+    }
+    return tokens.length;
+  };
+  for (let index = 0; index < tokens.length; index++) {
+    const token = tokens[index];
+    if (["const", "let", "var"].includes(token.text)) {
+      let cursor = index + 1;
+      while (cursor < tokens.length) {
+        const name = tokens[cursor];
+        if (name.kind !== "identifier") { const close = pairs.get(cursor); if (close !== undefined) for (let part = cursor + 1; part < close; part++) bind(part); break; }
+        bind(cursor);
+        const equal = endOf(cursor + 1, ["=", ",", ";", "of", "in", ")"]);
+        const end = tokens[equal]?.text === "=" ? endOf(equal + 1, [",", ";", ")"]) : equal;
+        const row = { name: name.text, index: cursor, kind: token.text, start: tokens[equal]?.text === "=" ? equal + 1 : end, end, scope: token.scope, exported: tokens[index - 1]?.text === "export" };
+        declarations.set(name.text, [...(declarations.get(name.text) ?? []), row]);
+        if (tokens[end]?.text !== ",") break;
+        cursor = end + 1;
+      }
+    }
+    let importOpen = token.text === "import" ? index + 1 : -1;
+    if (tokens[importOpen]?.kind === "identifier") { bind(importOpen); importOpen = tokens[importOpen + 1]?.text === "," ? importOpen + 2 : -1; }
+    if (tokens[importOpen]?.text === "*" && tokens[importOpen + 1]?.text === "as") bind(importOpen + 2);
+    if (tokens[importOpen]?.text === "{") {
+      const close = pairs.get(importOpen), module = close === undefined ? undefined : tokens[close + 2];
+      if (close !== undefined && tokens[close + 1]?.text === "from" && module?.kind === "string" && !module.text.includes("\\")) {
+        for (const [start, end] of typescriptCollectionSegments(syntax, importOpen + 1, close)) {
+          const local = end - start === 3 && tokens[start + 1].text === "as" ? start + 2 : end - start === 1 ? start : -1;
+          if (local >= 0) { bind(local); imports.set(tokens[local].text, { index: local, module: module.text.slice(1, -1), name: tokens[start].text }); }
+        }
+      }
+    }
+    if (["function", "class"].includes(token.text)) bind(index + 1);
+    if (token.text === "(") {
+      const close = pairs.get(index), previous = tokens[index - 1]?.text, next = close === undefined ? undefined : tokens[close + 1]?.text;
+      if (close !== undefined && (next === "=>" || ["{", ":"].includes(next) && !["for", "if", "while", "switch", "with"].includes(previous))) {
+        for (const [start, end] of typescriptCollectionSegments(syntax, index + 1, close)) {
+          const limit = Math.min(endOf(start, [":", "="]), end);
+          for (let cursor = start; cursor < limit; cursor++) bind(cursor);
+        }
+        if (next === "{") functions.push([close + 1, pairs.get(close + 1)!]);
+      }
+    }
+    if (token.text === "=>") {
+      if (tokens[index - 1]?.kind === "identifier") bind(index - 1);
+      functions.push([index + 1, tokens[index + 1]?.text === "{" ? pairs.get(index + 1)! : endOf(index + 1, [";", ",", ")", "]"])]);
+    }
+  }
+  const changed = (name: string, declaration = -1): boolean => typescriptCollectionChangedBinding(syntax, name, declaration) || embedded.some((expression) => typescriptCollectionChangedBinding(expression, name));
+  const immutable = (row?: Declaration): row is Declaration => Boolean(row && row.kind === "const" && bindings.get(row.name)?.length === 1 && !changed(row.name, row.index));
+  const unique = (name: string): Declaration | undefined => declarations.get(name)?.length === 1 ? declarations.get(name)![0] : undefined;
+  const ancestor = (outer: number, inner: number): boolean => { for (let scope = inner; scope >= 0; scope = tokens[scope].scope) if (scope === outer) return true; return outer === -1; };
+  const staticValue = (start: number, end: number, scope: number, seen = new Set<string>()): string | null => {
+    if (end - start !== 1) return null;
+    const token = tokens[start];
+    if (token.kind === "string") return token.text.includes("\\") ? null : token.text.slice(1, -1);
+    if (token.kind === "identifier") {
+      const row = unique(token.text);
+      return immutable(row) && row.end < start && ancestor(row.scope, scope) && !seen.has(row.name) ? staticValue(row.start, row.end, row.scope, new Set([...seen, row.name])) : null;
+    }
+    if (token.kind !== "template" || token.text.includes("\\")) return null;
+    let valid = true;
+    const value = token.text.slice(1, -1).replace(/\$\{([A-Za-z_$][\w$]*)\}/gu, (_match, name: string) => {
+      const row = unique(name);
+      const part = immutable(row) && row.end < start && ancestor(row.scope, scope) && !seen.has(name) ? staticValue(row.start, row.end, row.scope, new Set([...seen, name])) : null;
+      if (part === null) valid = false;
+      return part ?? "";
+    });
+    return valid && !value.includes("$" + "{") ? value : null;
+  };
+  const imported = (index: number, module: string, name: string): boolean => {
+    const token = tokens[index], owner = imports.get(token?.text);
+    return Boolean(token?.kind === "identifier" && ![".", "?."].includes(tokens[index - 1]?.text) && owner?.module === module && owner.name === name && bindings.get(token.text)?.length === 1 && !changed(token.text, owner.index));
+  };
+  const rootValue = (index: number): boolean => {
+    const row = unique(tokens[index]?.text);
+    return immutable(row) && row.end < index && ancestor(row.scope, tokens[index].scope) && tokens.slice(row.start, row.end).map((token) => token.text).join(" ") === "process . cwd ( )" && !bindings.has("process") && !changed("process");
+  };
+  const loops: { index: number; item: number; collection: number; body: number; end: number }[] = [];
+  for (let index = 0; index < tokens.length; index++) if (tokens[index].text === "for" && tokens[index + 1]?.text === "(" && tokens[index + 2]?.text === "const" && tokens[index + 3]?.kind === "identifier" && tokens[index + 4]?.text === "of" && tokens[index + 5]?.kind === "identifier" && pairs.get(index + 1) === index + 6 && tokens[index + 7]?.text === "{") loops.push({ index, item: index + 3, collection: index + 5, body: index + 7, end: pairs.get(index + 7)! });
+  const relativeLeaf = (value: string): boolean => Boolean(value) && !value.startsWith("/") && !/^[A-Za-z]:/u.test(value) && !/[\\\u0000]/u.test(value) && !value.split("/").some((part) => !part || part === "." || part === "..");
+  const rows: ReferenceToken[] = [];
+  for (const entries of declarations.values()) {
+    const row = entries.length === 1 ? entries[0] : undefined;
+    if (!immutable(row) || row.exported || tokens[row.start]?.text !== "[") continue;
+    const close = pairs.get(row.start);
+    if (close === undefined || close !== row.end - 1 && !(close === row.end - 3 && tokens[close + 1]?.text === "as" && tokens[close + 2]?.text === "const")) continue;
+    const elements = typescriptCollectionSegments(syntax, row.start + 1, close);
+    if (!elements.length || elements.some(([start, end]) => { const value = staticValue(start, end, row.scope); return value === null || !relativeLeaf(value); })) continue;
+    const uses = tokens.flatMap((token, index) => token.kind === "identifier" && token.text === row.name && index !== row.index ? [index] : []);
+    if (embedded.some((expression) => expression.tokens.some((token) => token.kind === "identifier" && token.text === row.name))) continue;
+    if (uses.some((index) => !loops.some((loop) => loop.collection === index) && !(tokens[index - 1]?.text === "..." && tokens[tokens[index].group]?.text === "[" && [",", "]"].includes(tokens[index + 1]?.text)))) continue;
+    const reader = loops.some((loop) => {
+      const item = unique(tokens[loop.item].text);
+      if (tokens[loop.collection].text !== row.name || row.end >= loop.index || row.scope !== tokens[loop.index].scope || !immutable(item) || item.index !== loop.item) return false;
+      const joined = (start: number, end: number): boolean => {
+        if (!imported(start, "node:path", "join") || tokens[start + 1]?.text !== "(" || pairs.get(start + 1) !== end - 1) return false;
+        const arguments_ = typescriptCollectionSegments(syntax, start + 2, end - 1);
+        return arguments_.length === 2 && arguments_.every(([left, right]) => right - left === 1) && rootValue(arguments_[0][0]) && tokens[arguments_[1][0]].kind === "identifier" && tokens[arguments_[1][0]].text === item.name;
+      };
+      for (let index = loop.body + 1; index < loop.end; index++) {
+        if (tokens[index].scope !== loop.body || !imported(index, "node:fs", "readFileSync") || tokens[index + 1]?.text !== "(" || functions.some(([start, end]) => start > loop.body && start <= index && index < end)) continue;
+        const close = pairs.get(index + 1), arguments_ = close === undefined ? [] : typescriptCollectionSegments(syntax, index + 2, close);
+        if (!arguments_.length) continue;
+        const [start, end] = arguments_[0];
+        if (joined(start, end)) return true;
+        const alias = end - start === 1 && tokens[start].kind === "identifier" ? unique(tokens[start].text) : undefined;
+        if (immutable(alias) && alias.end < index && alias.scope === loop.body && joined(alias.start, alias.end)) return true;
+      }
+      return false;
+    });
+    if (reader) for (const [index] of elements) if (tokens[index].kind === "string") {
+      const token = tokens[index], value = token.text.slice(1, -1), start = token.start + 1;
+      rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, start, "path-collection-for-of"), start, end: token.end - 1, value, physicalTargets: [value] });
+    }
+  }
+  return rows.sort((left, right) => left.start - right.start);
+}
+
 function typescriptTokens(path: string, content: string): ReferenceToken[] {
   const rows = regexTokens(content, "typescript", "typescript-path", [
     /(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\(|\bimport\s+)["'\s]*([^"'\s)]+)["']/gu,
@@ -3210,7 +3901,10 @@ function typescriptTokens(path: string, content: string): ReferenceToken[] {
     if (match.index === undefined || rows.some((token) => token.start <= match.index! && token.end >= match.index! + match[1].length)) continue;
     rows.push({ adapter: "typescript", structuredLocation: lineLocation(content, match.index, "artifact-catalog-marker"), start: match.index, end: match.index + match[1].length, value: match[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "root-marker" } });
   }
+  rows.push(...typescriptPathCollectionReferenceAuthority(content));
+  const hasForOfCollection = typescriptCollectionHasForOf(content);
   for (const declaration of content.matchAll(/\bconst\s+([A-Za-z_$][\w$]*(?:Sources|Paths|Files))\s*=\s*\[([\s\S]*?)\]\s*(?:\.map\b|;)/gu)) {
+    if (hasForOfCollection) continue;
     if (declaration.index === undefined || !new RegExp(`\\b${declaration[1]}\\b[\\s\\S]*?\\.map\\([\\s\\S]*?\\b(?:policyReadFileSafe|readFileSync|Bun\\.file)\\b`, "u").test(content.slice(declaration.index))) continue;
     const fragmentStart = declaration.index + declaration[0].indexOf(declaration[2]);
     for (const token of regexTokens(declaration[2], "typescript", "path-collection", [/["']([^"']+)["']/gu])) rows.push({ ...token, start: fragmentStart + token.start, end: fragmentStart + token.end, structuredLocation: lineLocation(content, fragmentStart + token.start, "path-collection") });
@@ -3282,6 +3976,7 @@ interface ReferencePathIndex {
   readonly coordinateRootSet: ReadonlySet<string>;
   readonly coordinateRootByReference: Map<string, string | undefined>;
   readonly contextPaths: readonly string[];
+  readonly contextPathSet: ReadonlySet<string>;
   readonly affectedPaths: ReadonlySet<string>;
   readonly cancelFile?: string;
 }
@@ -3320,7 +4015,7 @@ function unprovenRustReferenceTargets(referencePath: string, value: string, inde
   return targets;
 }
 
-function rustReferenceNeedsOwnership(path: string, references: ReturnType<typeof inspectRustManifestPathReferences>, index: ReferencePathIndex): boolean {
+function rustReferenceNeedsOwnership(path: string, references: ReturnType<typeof inspectRustManifestPathReferences>, index: ReferencePathIndex, candidates: ReturnType<typeof inspectRustManifestPathCandidates> = []): boolean {
   if (index.affectedPaths.has(path)) return true;
   const affected = (candidate: string): boolean => index.affectedPaths.has(candidate) || index.affectedPaths.has(index.nfc.get(candidate.normalize("NFC")) ?? "");
   const manifests = rustContextFiles(path, index).filter((candidate) => basename(candidate) === "Cargo.toml");
@@ -3328,6 +4023,12 @@ function rustReferenceNeedsOwnership(path: string, references: ReturnType<typeof
     if (unprovenRustReferenceTargets(path, reference.value, index).some(affected)) return true;
     for (const manifest of manifests) {
       try { if (affected(normalizeRelative(posix.join(posix.dirname(manifest), ...reference.base, reference.value)))) return true; } catch {}
+    }
+  }
+  for (const candidate of candidates) {
+    if (unprovenRustReferenceTargets(path, candidate.value, index).some(affected)) return true;
+    for (const manifest of manifests) for (const parts of candidate.targets) {
+      try { if (affected(normalizeRelative(posix.join(posix.dirname(manifest), ...parts)))) return true; } catch {}
     }
   }
   return false;
@@ -3363,36 +4064,137 @@ function rustReferenceGraph(path: string, index: ReferencePathIndex): RustRefere
   return view;
 }
 
+/** 🧮️ Admits a complete finite interpretation only through one unchanged physical Cargo source chain. */
+function rustFiniteManifestTargets(path: string, content: string, candidates: ReturnType<typeof inspectRustManifestPathCandidates>, index: ReferencePathIndex, view: RustReferenceGraphView | null): ReadonlyMap<number, readonly string[]> {
+  const result = new Map<number, readonly string[]>(), contexts = view?.graph.contexts.get(path) ?? [];
+  if (!index.repoRoot || !view || !contexts.length || contexts.some((context) => context.manifestPath === null)) return result;
+  const manifests = [...new Set(contexts.map((context) => context.manifestPath!))];
+  if (manifests.length !== 1 || view.hashes.get(path) !== sha256(content)) return result;
+  const coordinateRoot = ancestorReferenceCoordinateRoot(path, index.coordinateRootSet) ?? "";
+  const sameRoot = (target: string): boolean => (index.coordinateRootSet.has(target) ? target : ancestorReferenceCoordinateRoot(target, index.coordinateRootSet) ?? "") === coordinateRoot;
+  const proofPaths = [...new Set(contexts.flatMap((context) => [context.manifestPath!, ...context.sourceChain]))];
+  if (!proofPaths.includes(path)) return result;
+  const physicalPath = (base: string, parts: readonly string[], requireDirectory = false): string => {
+    if (parts.length === 0 || parts.some((part) => posix.isAbsolute(part) || /^[A-Za-z]:/u.test(part) || part.includes("\\") || part.includes("\u0000"))) throw new Error("Rust finite path has no local physical identity");
+    let current = normalizeRelative(base);
+    if (!sameRoot(current) || !lstatOrNull(assertLexicalInputOutsideOpaque(index.repoRoot!, current, "Rust finite physical base", true))?.isDirectory()) throw new Error("Rust finite path has no coordinate-local physical base");
+    const segments = parts.join("/").split("/");
+    for (let step = 0; step < segments.length; step++) {
+      checkCancellation(index.repoRoot!, index.cancelFile);
+      current = normalizeRelative(posix.join(current, segments[step]!));
+      if (!sameRoot(current)) throw new Error("Rust finite path step escapes its coordinate root");
+      const absolute = assertLexicalInputOutsideOpaque(index.repoRoot!, current, "Rust finite path step", true), stat = lstatOrNull(absolute);
+      const directory = requireDirectory || step + 1 < segments.length || ["", ".", ".."].includes(segments[step]!);
+      if (!stat || (directory ? !stat.isDirectory() : !stat.isFile() && !stat.isDirectory())) throw new Error("Rust finite path step is not a physical file or directory");
+    }
+    return current;
+  };
+  const contents = new Map<string, string>();
+  try {
+    for (const source of proofPaths) {
+      checkCancellation(index.repoRoot, index.cancelFile);
+      if (!index.contextPathSet.has(source) || !sameRoot(source) || !view.hashes.has(source)) return result;
+      const absolute = assertLexicalInputOutsideOpaque(index.repoRoot, source, "Rust finite source authority", true), before = lstatOrNull(absolute);
+      if (!before?.isFile()) return result;
+      const bytes = readFileSync(absolute), after = lstatSync(absolute);
+      if (after.mode !== before.mode || after.size !== before.size || after.mtimeMs !== before.mtimeMs || bytes.byteLength !== before.size || sha256(bytes) !== view.hashes.get(source)) return result;
+      contents.set(source, bytes.toString("utf8"));
+    }
+    const manifest = inspectRustCargoManifest(contents.get(manifests[0]!)!, true);
+    if (!manifest.valid || manifest.dependencies.includes("std")) return result;
+    const facts = new Map(proofPaths.filter((source) => source.endsWith(".rs")).map((source) => [source, inspectRustModuleGraphFacts(contents.get(source)!)]));
+    const parentImports = facts.get(path)?.uses.some((use) => /^(?:super::)+\*$/u.test(use.specifier)) ?? false;
+    for (const source of proofPaths.filter((source) => source.endsWith(".rs") && source !== path)) {
+      const text = contents.get(source)!;
+      const withoutPathAttributes = text.replace(/#\s*\[\s*path\s*=\s*"[^"\\]*"\s*\]/gu, "");
+      if (/[#!]/u.test(withoutPathAttributes) || /\bmacro\b/u.test(text) || parentImports && (/\b(?:std|env)\b/u.test(text) || facts.get(source)!.uses.some((use) => use.specifier.includes("*")))) return result;
+    }
+    for (const context of contexts) {
+      if (physicalPath(posix.dirname(manifests[0]!), [manifest.libPath ?? "src/lib.rs"]) !== context.crateRoot) return result;
+      for (let chain = 0; chain + 1 < context.sourceChain.length; chain++) {
+        const source = context.sourceChain[chain]!, next = context.sourceChain[chain + 1]!;
+        const owners = (view.graph.contexts.get(source) ?? []).filter((owner) => owner.manifestPath === context.manifestPath && owner.crateRoot === context.crateRoot && owner.sourceChain.length === chain + 1 && owner.sourceChain.every((item, index) => item === context.sourceChain[index]) && owner.modulePath.every((item, index) => item === context.modulePath[index]));
+        let proven = 0;
+        for (const owner of owners) for (const module of facts.get(source)?.modules ?? []) {
+          if (module.modulePath.length !== owner.sourceScope.length + 1 || !owner.sourceScope.every((item, index) => item === module.modulePath[index])) continue;
+          const modulePath = [...owner.modulePath, module.name];
+          if (!modulePath.every((item, index) => item === context.modulePath[index])) continue;
+          if (module.inline) { if (module.pathTarget !== null) physicalPath(owner.moduleBase, [module.pathTarget], true); continue; }
+          if (view.graph.targets.get(`${context.crateRoot}\0${modulePath.join("::")}`) !== next) continue;
+          const base = module.pathTarget !== null && owner.sourceScope.length === 0 ? posix.dirname(source) : owner.moduleBase;
+          const raw = module.pathTarget ?? (next === posix.join(base, `${module.name}.rs`) ? `${module.name}.rs` : `${module.name}/mod.rs`);
+          if (physicalPath(base, [raw]) !== next) return result;
+          proven++;
+        }
+        if (proven !== 1) return result;
+      }
+    }
+  } catch (error) {
+    if (error instanceof TaxonomyCancellationError) throw error;
+    return result;
+  }
+  for (const candidate of candidates) {
+    if (!Number.isInteger(candidate.start) || !Number.isInteger(candidate.end) || candidate.start < 0 || candidate.end <= candidate.start || content.slice(candidate.start, candidate.end) !== candidate.value || candidate.targets.length === 0 || candidate.targets.length > 256) continue;
+    try {
+      const targets = new Set<string>();
+      for (const parts of candidate.targets) {
+        checkCancellation(index.repoRoot, index.cancelFile);
+        const target = normalizeRelative(posix.join(posix.dirname(manifests[0]!), ...parts));
+        if (!index.contextPathSet.has(target) || !sameRoot(target)) throw new Error("Rust finite target lacks coordinate-local admission");
+        if (physicalPath(posix.dirname(manifests[0]!), parts) !== target) throw new Error("Rust finite target identity changed");
+        targets.add(target);
+      }
+      result.set(candidate.start, [...targets].sort(generatorPathCompare));
+    } catch (error) {
+      if (error instanceof TaxonomyCancellationError) throw error;
+    }
+  }
+  return result;
+}
+
 function rustManifestReferenceTokens(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
   const references = inspectRustManifestPathReferences(content);
   const arguments_ = inspectRustJoinArgumentSpans(content);
-  if (references.length === 0 && arguments_.length === 0) return [];
-  const view = references.length === 0 || !rustReferenceNeedsOwnership(path, references, index) ? null : rustReferenceGraph(path, index), contexts = view?.graph.contexts.get(path) ?? [];
+  const candidates = inspectRustManifestPathCandidates(content);
+  if (references.length === 0 && arguments_.length === 0 && candidates.length === 0) return [];
+  const view = !rustReferenceNeedsOwnership(path, references, index, candidates) ? null : rustReferenceGraph(path, index), contexts = view?.graph.contexts.get(path) ?? [];
   for (const [candidate, error] of view?.unreadableInputs ?? []) if (candidate === path || basename(candidate) === "Cargo.toml" && (posix.dirname(candidate) === "." || path.startsWith(`${posix.dirname(candidate)}/`))) throw error;
   if (view?.hashes.has(path) && view.hashes.get(path) !== sha256(content)) throw new Error(`Rust reference source changed during ownership resolution: ${path}`);
   const manifests = [...new Set(contexts.map((context) => context.manifestPath).filter((manifest): manifest is string => manifest !== null))];
   const proofPaths = [...new Set(contexts.flatMap((context) => [context.manifestPath!, ...context.sourceChain]))].sort(generatorPathCompare);
   const digest = sha256(canonicalJson(proofPaths.map((source) => ({ path: source, sha256: view?.hashes.get(source) }))));
+  const conflicts = (left: Pick<ReferenceToken, "start" | "end">, right: Pick<ReferenceToken, "start" | "end">): boolean => left.start === right.start || left.start < right.end && right.start < left.end;
+  const writableInputs = new Set(references.filter((reference, index) => !references.some((other, otherIndex) => index !== otherIndex && conflicts(reference, other))));
+  const finiteInputs = new Set(candidates.filter((candidate, index) => !references.some((reference) => conflicts(candidate, reference)) && !candidates.some((other, otherIndex) => index !== otherIndex && conflicts(candidate, other))));
+  const finite = rustFiniteManifestTargets(path, content, [...Array.from(writableInputs, (reference) => ({ start: reference.start, end: reference.end, value: reference.value, targets: [[...reference.base, reference.value]] })), ...finiteInputs], index, view);
   const rows: ReferenceToken[] = references.map((reference) => {
     let sourceBase: string | undefined, physicalTargets: string[] = [], unsupportedReason: string | undefined;
+    const targets = writableInputs.has(reference) ? finite.get(reference.start) : undefined;
     try {
-      if ([...reference.base, reference.value].some((segment) => posix.isAbsolute(segment) || /^[A-Za-z]:/u.test(segment))) throw new Error("Rust joined path is not repository-relative");
-      physicalTargets = manifests.map((manifest) => normalizeRelative(posix.join(dirname(manifest), ...reference.base, reference.value)));
-      if (manifests.length === 1) sourceBase = normalizeRelative(posix.join(dirname(manifests[0]!), ...reference.base));
-      else unsupportedReason = `Rust manifest-relative path requires one proven Cargo owner, found ${manifests.length}`;
+      if (manifests.length !== 1) unsupportedReason = `Rust manifest-relative path requires one proven Cargo owner, found ${manifests.length}`;
+      else if (targets?.length !== 1) unsupportedReason = "Rust manifest-relative path lacks complete physical source authority";
+      else { physicalTargets = [...targets]; sourceBase = normalizeRelative(posix.join(dirname(manifests[0]!), ...reference.base)); }
     } catch (error) { unsupportedReason = error instanceof Error ? error.message : String(error); }
-    if (unsupportedReason && physicalTargets.length === 0) {
-      physicalTargets = [...unprovenRustReferenceTargets(path, reference.value, index)];
-    }
+    if (unsupportedReason) physicalTargets = [...unprovenRustReferenceTargets(path, reference.value, index)];
     return { adapter: "rust" as const, structuredLocation: lineLocation(content, reference.start, `rust-path-join:${digest}`), start: reference.start, end: reference.end, value: reference.value, physicalTargets, ...(unsupportedReason ? { unsupportedReason } : { rewriteKind: "rust-path-join" as const, rewriteData: { sourceBase: sourceBase! } }) };
   });
-  for (const argument of arguments_) if (!references.some((reference) => reference.start === argument.start && reference.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
+  for (const candidate of candidates) if (!rows.some((row) => row.start === candidate.start && row.end === candidate.end)) {
+    const physicalTargets = finiteInputs.has(candidate) ? finite.get(candidate.start) : undefined;
+    rows.push({ adapter: "rust", structuredLocation: lineLocation(content, candidate.start, physicalTargets ? `rust-finite-manifest-targets:${digest}` : "rust-path-join-unproven"), start: candidate.start, end: candidate.end, value: candidate.value, physicalTargets: physicalTargets ?? unprovenRustReferenceTargets(path, candidate.value, index), ...(physicalTargets ? { physicalInterpretation: "rust-finite-manifest-targets" as const } : {}), unsupportedReason: "Rust finite candidate has no writable literal authority" });
+  }
+  for (const argument of arguments_) if (!rows.some((row) => row.start === argument.start && row.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
   return rows;
+}
+
+function rustReferenceInterpretationCovers(token: ReferenceToken, candidate: ReferenceToken): boolean {
+  if (token.adapter !== "rust" || candidate.adapter !== "rust") return false;
+  if (token.rewriteKind === "rust-path-join") return token.start <= candidate.start && token.end >= candidate.end;
+  return token.physicalInterpretation === "rust-finite-manifest-targets" && token.rewriteKind === undefined && Boolean(token.unsupportedReason) && (token.physicalTargets?.length ?? 0) > 0 && token.start === candidate.start && token.end === candidate.end && token.value === candidate.value;
 }
 
 function referenceTokensIncludingUnsupported(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
   const supported = referenceTokens(path, content, index);
-  return [...supported, ...unsupportedReferenceTokens(content, referenceAdapter(path)).filter((candidate) => !supported.some((token) => token.rewriteKind === "rust-path-join" && token.start <= candidate.start && token.end >= candidate.end))];
+  return [...supported, ...unsupportedReferenceTokens(content, referenceAdapter(path)).filter((candidate) => candidate.adapter !== "rust" || !supported.some((token) => rustReferenceInterpretationCovers(token, candidate)))];
 }
 
 function addUniqueIndex(index: Map<string, string | null>, key: string, value: string): void {
@@ -3416,7 +4218,8 @@ function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordina
     const moduleSegments = (normalized.endsWith("/__init__.py") ? dirname(normalized) : normalized.slice(0, -3)).split("/").filter(Boolean);
     for (let index = 0; index < moduleSegments.length; index++) addUniqueIndex(pythonModule, moduleSegments.slice(index).join("."), path);
   }
-  return { exact, nfc, extensionless, pythonModule, repoRoot, coordinateRoots, coordinateRootSet: new Set(coordinateRoots), coordinateRootByReference: new Map(), contextPaths: [...(contextPaths ?? exact)], affectedPaths: affectedPaths ?? exact, cancelFile };
+  const contexts = [...(contextPaths ?? exact)];
+  return { exact, nfc, extensionless, pythonModule, repoRoot, coordinateRoots, coordinateRootSet: new Set(coordinateRoots), coordinateRootByReference: new Map(), contextPaths: contexts, contextPathSet: new Set(contexts), affectedPaths: affectedPaths ?? exact, cancelFile };
 }
 
 function resolveReferencePath(referencePath: string, token: string, index: ReferencePathIndex): string | null {
@@ -3703,6 +4506,7 @@ function renderCatalogGlob(referencePath: string, token: ReferenceToken, context
   if (context.catalog.contractKind !== "distributed-json-manifest-catalog") return { problem: `${context.id} has no distributed catalog grammar` };
   const selectors = JSON.parse(token.rewriteData?.selectors ?? "[]") as string[];
   if (selectors.length === 0 || selectors.some((selector) => typeof selector !== "string")) return { problem: "Artifact catalog glob has no exact literal selectors" };
+  const pathMatcher = createTaxonomyPathMatcher();
   const sourceTail = artifactProjectionTail(context.sourceRoot);
   const baseRelative = posix.relative(dirname(referencePath), context.destinationRoot);
   const base = baseRelative.startsWith(".") ? baseRelative : `./${baseRelative}`;
@@ -3713,7 +4517,7 @@ function renderCatalogGlob(referencePath: string, token: ReferenceToken, context
     if (tailIndex < 0) return { problem: `Artifact selector does not contain its registered source owner: ${selector}` };
     const suffix = selector.slice(tailIndex + sourceTail.length);
     const sourcePattern = `${context.sourceRoot}${suffix}`;
-    const admitted = context.mappings.filter((mapping) => taxonomyPathPatternMatches(mapping.sourcePath, sourcePattern));
+    const admitted = context.mappings.filter((mapping) => pathMatcher.matches(mapping.sourcePath, sourcePattern));
     if (admitted.length === 0) {
       if (zeroSource.some((pattern) => pattern.test(suffix))) continue;
       return { problem: `Nonempty artifact selector has no exact authority mapping: ${selector}` };
@@ -4041,13 +4845,11 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
   const artifactContexts = artifactReferenceProjections(inventory, moves, taxonomy);
   for (const context of artifactContexts) for (const problem of context.authorityProblems) unresolved.push(violation("projection-reference-authority-invalid", context.sourceRoot, `${context.id}: ${problem}`));
   const activeProjectionKeys = new Set<string>();
-  const activeProjectionProfiles = new Set<string>();
   for (const move of moves.filter((entry) => entry.rationaleRule === "artifact-mutation-test-projection-v1")) {
     const structural = mutationStructuralPaths(move.sourcePath)[0];
     const artifactRoot = artifactRootForPath(move.sourcePath);
     if (!structural || !artifactRoot) continue;
     activeProjectionKeys.add(projectionKey(artifactRoot, structural.standard, structural.subset));
-    activeProjectionProfiles.add(`${structural.standard}\u0000${structural.subset}`);
   }
   const generatedOwnerSources = new Set(ownerCatalog?.cases.filter((entry) => entry.generatorOwnerId !== null).map((entry) => entry.sourcePath) ?? []);
   for (const removal of removals) if (removal.authority.kind === "nested-cargo-generated-source") {
@@ -4098,8 +4900,12 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
         unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${artifactRewrite.problem}`));
         continue;
       }
-      const projectionProfile = token.rewriteData?.projectionProfile;
-      const projectionActive = activeProjectionKeys.has(token.rewriteData?.projectionKey ?? "") || projectionProfile === "*" && activeProjectionProfiles.size > 0 || projectionProfile !== undefined && activeProjectionProfiles.has(projectionProfile);
+      const projectionState = mutationReferenceProjectionState(token, oldTarget, activeProjectionKeys, inventory.scope);
+      if (projectionState === "unproven") {
+        unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: Structural projection requires an exact physical target or complete declared artifact-profile scope`));
+        continue;
+      }
+      const projectionActive = projectionState === "active";
       const artifactProjectionActive = artifactContexts.length > 0 && (token.rewriteKind === "path-prefix" || token.rewriteKind === "artifact-catalog-glob" || token.rewriteKind === "artifact-catalog-prose");
       if (token.unsupportedReason && (projectionActive || artifactProjectionActive)) {
         unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${token.unsupportedReason}`));
@@ -4133,7 +4939,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       if (oldTarget) fileTargets.set(referenceEditIdentity(edit), oldTarget);
     }
     for (const candidate of unsupportedReferenceTokens(content, referenceAdapter(entry.sourcePath))) {
-      if (supported.some(({ token }) => token.rewriteKind === "rust-path-join" && token.start <= candidate.start && token.end >= candidate.end)) continue;
+      if (supported.some(({ token }) => rustReferenceInterpretationCovers(token, candidate))) continue;
       const oldTarget = resolveReferenceTokenPath(entry.sourcePath, candidate, known);
       if (!oldTarget || !destinationBySource.has(oldTarget) && finalReferencePath === entry.sourcePath || isFrozenSourceCoordinateToken(entry.sourcePath, contentBytes, candidate, oldTarget, taxonomy, inventory.repoRoot)) continue;
       if (frozenEvidence !== null) {
@@ -4845,7 +5651,7 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
             continue;
           }
           const relativePath = path.slice(row.sourceRoot.length + 1);
-          if (!destination && row.ignoredSourcePatterns.some((pattern) => taxonomyPathPatternMatches(relativePath, pattern) || pattern.endsWith("/**") && relativePath === pattern.slice(0, -3))) continue;
+          if (!destination && row.ignoredSourcePatterns.some((pattern) => taxonomy.pathMatcher.matches(relativePath, pattern) || pattern.endsWith("/**") && relativePath === pattern.slice(0, -3))) continue;
           throw new Error("Nested Cargo has an unadmitted physical child: " + path);
         }
       }
@@ -4876,6 +5682,48 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
 //#region 📃️Exact Owner Leaves
 function exactOwnedFileCatalog(repoRoot: string, taxonomy: LoadedTaxonomy): SemanticExactOwnedFileCatalog | null {
   return semanticExactOwnedFileCatalog(repoRoot, taxonomy.discoverySchema);
+}
+
+interface ExactOwnedCatalogSnapshot {
+  readonly catalog: SemanticExactOwnedFileCatalog | null;
+  readonly input: SemanticOwnedInputFileSnapshot | null;
+}
+
+function exactOwnedCatalogSnapshot(repoRoot: string, taxonomy: LoadedTaxonomy): ExactOwnedCatalogSnapshot {
+  let input: SemanticOwnedInputFileSnapshot | null = null;
+  const catalog = semanticExactOwnedFileCatalog(repoRoot, taxonomy.discoverySchema, (snapshot) => { input = snapshot; });
+  return { catalog, input };
+}
+
+function exactOwnedCurrentRevisions(taxonomy: LoadedTaxonomy): ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions> | undefined {
+  const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
+  return contract?.contractKind === "exact-owner-path-catalog" ? contract.currentSourceRevisions : undefined;
+}
+
+function exactOwnedCurrentRawPath(path: string, snapshot: ExactOwnedCatalogSnapshot, taxonomy: LoadedTaxonomy): boolean {
+  return Object.values(exactOwnedCurrentRevisions(taxonomy) ?? {}).some((row) => row.sourcePath === path || snapshot.catalog?.cases[row.catalogCaseIndex]?.sourcePath === path);
+}
+
+function exactOwnedFileResolution(repoRoot: string, entry: TaxonomyInventoryEntry, snapshot: ExactOwnedCatalogSnapshot, taxonomy: LoadedTaxonomy): Readonly<{ result: ReturnType<typeof semanticExactOwnedFileProjectionAuthority>; sourceAuthority?: TaxonomyMoveSourceAuthority }> {
+  const catalog = snapshot.catalog, owner = catalog?.cases.find((row) => row.sourcePath === entry.sourcePath || row.destinationPath === entry.sourcePath);
+  if (!catalog || !owner) throw new Error("Exact owner catalog is absent or does not govern this source: " + entry.sourcePath);
+  const source = assertLexicalInputOutsideOpaque(repoRoot, owner.sourcePath, "Exact owner source", true), destination = assertLexicalInputOutsideOpaque(repoRoot, owner.destinationPath, "Exact owner destination", true);
+  const destinationPreimage = lstatOrNull(destination)?.isFile() ? leafPreimage(destination) : undefined;
+  const facts = { path: entry.sourcePath, nodeKind: entry.nodeKind, contentHash: entry.contentHash, mode: entry.mode, size: entry.size, sourcePresent: lstatOrNull(source) !== null, destinationPresent: lstatOrNull(destination) !== null, destinationPreimage, occupiedPaths: exactOwnedDestinationOccupancy(repoRoot, owner.destinationPath) };
+  if (!exactOwnedCurrentRawPath(entry.sourcePath, snapshot, taxonomy)) return { result: semanticExactOwnedFileProjectionAuthority(catalog, facts) };
+  const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
+  if (contract?.contractKind !== "exact-owner-path-catalog" || !contract.currentSourceRevisions || !taxonomy.input || !snapshot.input) throw new Error("Current source is missing its exact parsed schema or catalog snapshot");
+  const selected = Object.values(contract.currentSourceRevisions).find((row) => row.catalogCaseIndex === catalog.cases.indexOf(owner));
+  if (!selected || selected.sourcePath !== owner.sourcePath || entry.sourcePath !== owner.sourcePath) throw new Error("Current source coordinate does not match its original catalog row");
+  const sourceInput = semanticOwnedInputFileSnapshot(repoRoot, entry.sourcePath);
+  if (!sourceInput || canonicalJson(inventoryLeafPreimage(entry)) !== canonicalJson({ nodeKind: "file", contentHash: sourceInput.contentHash, mode: sourceInput.mode, size: sourceInput.size })) throw new Error("Current source changed since inventory: " + entry.sourcePath);
+  const expectation = semanticOwnedInputFileSnapshot(repoRoot, selected.expectationsPath);
+  if (!expectation) throw new Error("Current source expectation is absent: " + selected.expectationsPath);
+  const result = semanticExactOwnedFileProjectionAuthority(catalog, facts, { contract, revisions: contract.currentSourceRevisions, expectations: [expectation] });
+  const authority = result.currentSource;
+  if (result.disposition !== "project" || result.problems.length || authority?.disposition !== "revised" || authority.revisionId !== "testing-readme-protocol-v2-reviewed" || !authority.revisionDigest) return { result };
+  const inputs: TaxonomyMoveSourceAuthority["inputs"] = ([{ role: "schema", input: taxonomy.input }, { role: "catalog", input: snapshot.input }, { role: "expectation", input: expectation }] as const).map(({ role, input }) => ({ role, path: input.path, preimage: { nodeKind: "file" as const, contentHash: input.contentHash, mode: input.mode, size: input.size } })).sort((left, right) => generatorPathCompare(left.path, right.path));
+  return { result, sourceAuthority: { kind: "exact-owner-current-source-revision-v1", revisionId: authority.revisionId, revisionDigest: authority.revisionDigest, inputs } };
 }
 
 function exactOwnedDestinationOccupancy(repoRoot: string, path: string): readonly string[] {
@@ -4920,18 +5768,23 @@ function exactOwnedEvidenceProblems(repoRoot: string, entry: SemanticExactOwnedF
 }
 
 function projectExactOwnedFiles(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
-  const catalog = exactOwnedFileCatalog(repoRoot, taxonomy);
-  if (!catalog) return;
+  const snapshot = exactOwnedCatalogSnapshot(repoRoot, taxonomy), catalog = snapshot.catalog;
+  if (!catalog) {
+    for (const row of Object.values(exactOwnedCurrentRevisions(taxonomy) ?? {})) {
+      const entry = entries.get(row.sourcePath);
+      if (!entry) continue;
+      entry.normalizedPath = entry.sourcePath;
+      entry.violations.push(violation("owner-leaf-authority-invalid", entry.sourcePath, "Current source requires its exact original catalog"));
+    }
+    return;
+  }
   const governed = new Map(catalog.cases.flatMap((entry) => [[entry.sourcePath, entry], [entry.destinationPath, entry]] as const));
   for (const entry of entries.values()) {
     const owner = governed.get(entry.sourcePath);
     if (!owner || entry.nodeKind === "directory") continue;
     let problems: readonly string[] = [], disposition = "problem";
     try {
-      const source = assertLexicalInputOutsideOpaque(repoRoot, owner.sourcePath, "Exact owner source", true);
-      const destination = assertLexicalInputOutsideOpaque(repoRoot, owner.destinationPath, "Exact owner destination", true);
-      const destinationPreimage = lstatOrNull(destination)?.isFile() ? leafPreimage(destination) : undefined;
-      const result = semanticExactOwnedFileProjectionAuthority(catalog, { path: entry.sourcePath, nodeKind: entry.nodeKind, contentHash: entry.contentHash, mode: entry.mode, size: entry.size, sourcePresent: lstatOrNull(source) !== null, destinationPresent: lstatOrNull(destination) !== null, destinationPreimage, occupiedPaths: exactOwnedDestinationOccupancy(repoRoot, owner.destinationPath) });
+      const { result } = exactOwnedFileResolution(repoRoot, entry, snapshot, taxonomy);
       problems = [...result.problems, ...exactOwnedEvidenceProblems(repoRoot, owner, catalog)];
       disposition = result.disposition;
     } catch (error) { problems = [error instanceof Error ? error.message : String(error)]; }
@@ -5101,7 +5954,7 @@ function validateTicketImportantDirectories(repoRoot: string, entries: Map<strin
 //#region 🧬️Mutation Payload Schema Projection
 function mutationPayloadSchemaOwner(path: string, taxonomy: LoadedTaxonomy): string | null {
   const contract = taxonomy.discoverySchema.mutationPayloadSchemaProjection, owner = dirname(path);
-  return basename(path) === contract.sourceFilename && taxonomyPathPatternMatches(owner, contract.ownerPathPattern) && new RegExp(taxonomy.discoverySchema.mutationDirectoryPattern, "u").test(basename(owner)) ? owner : null;
+  return basename(path) === contract.sourceFilename && taxonomy.pathMatcher.matches(owner, contract.ownerPathPattern) && new RegExp(taxonomy.discoverySchema.mutationDirectoryPattern, "u").test(basename(owner)) ? owner : null;
 }
 
 function projectMutationPayloadSchemas(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
@@ -5151,50 +6004,22 @@ export function inventoryTaxonomy(options: TaxonomyInventoryOptions): TaxonomyIn
 
 /** 🪵️ Projects only transaction-proven empty source parents into package authority before final classification. */
 function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>): TaxonomyInventory {
-  const repoRoot = resolve(options.repoRoot);
-  report(options.progress, "inventory", "setup", 0, 1, options.scope === undefined ? undefined : normalizeRelative(options.scope));
+  const prepared = sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
+  report(options.progress, "inventory", "setup", 0, 1, scope);
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
-  const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: options.taxonomyPath });
-  const scope = options.scope === undefined ? undefined : normalizeRelative(options.scope);
+  const taxonomy = loadTaxonomy({ repoRoot, taxonomyPath: prepared.taxonomyPath });
   if (scope && isExcluded(scope, taxonomy)) throw new Error(`Inventory scope is opaque: ${scope}`);
-  checkCancellation(repoRoot, options.cancelFile);
-  const pathspec = scopedGitPathspec(repoRoot, scope, taxonomy);
-  checkCancellation(repoRoot, options.cancelFile);
+  sourceAdmissionCheckCancellation(repoRoot, prepared.cancelFile);
   report(options.progress, "inventory", "setup", 1, 1, scope);
-  const admitted = new Map<string, CandidatePath>();
-  report(options.progress, "inventory", "tracked-enumeration", 0, 1, scope);
-  const trackedRows = gitRows(repoRoot, taxonomy, pathspec);
-  checkCancellation(repoRoot, options.cancelFile);
-  report(options.progress, "inventory", "tracked-enumeration", 1, 1, scope);
   const activeExclusions: string[] = [];
-  for (const row of trackedRows) {
-    if (isExcluded(row.path, taxonomy) || !inScope(row.path, scope)) continue;
-    if (lstatOrNull(absolutePath(repoRoot, row.path))) admitted.set(row.path, row);
-  }
-  report(options.progress, "inventory", "untracked-enumeration", 0, 1, scope);
-  const untrackedPaths = untrackedGitPaths(repoRoot, taxonomy, pathspec);
-  checkCancellation(repoRoot, options.cancelFile);
-  report(options.progress, "inventory", "untracked-enumeration", 1, 1, scope);
-  for (const path of untrackedPaths) {
-    if (isExcluded(path, taxonomy) || !inScope(path, scope) || admitted.has(path)) continue;
-    const row = worktreeCandidate(repoRoot, path);
-    if (row) admitted.set(path, row);
-  }
-  report(options.progress, "inventory", "ignored-generator-admission", 0, 1, scope);
-  const generatedRows = ignoredGeneratorRows(repoRoot, taxonomy, scope);
-  checkCancellation(repoRoot, options.cancelFile);
-  report(options.progress, "inventory", "ignored-generator-admission", 1, 1, scope);
-  for (const row of generatedRows) {
-    if (isExcluded(row.path, taxonomy) || !inScope(row.path, scope)) continue;
-    if (!admitted.has(row.path) || row.explicitDirectory) admitted.set(row.path, row);
-  }
-  report(options.progress, "inventory", "explicit-ticket-admission", 0, 1, scope);
-  const ticketRows = explicitTicketRows(repoRoot, options.ticketDir, taxonomy, scope);
-  checkCancellation(repoRoot, options.cancelFile);
-  report(options.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
-  for (const row of ticketRows) {
-    if (isExcluded(row.path, taxonomy) || !inScope(row.path, scope)) continue;
-    if (!admitted.has(row.path) || row.explicitDirectory) admitted.set(row.path, row);
+  const sourceAdmission = collectTaxonomySourceAdmission(options, taxonomy, repoRoot);
+  const blockingAdmission = sourceAdmission.diagnostics.filter((row) => row.code !== "tracked-path-absent");
+  if (blockingAdmission.length > 0) throw new Error(`Source admission rejected: ${blockingAdmission.map((row) => `${row.code}:${row.path}`).join(", ")}`);
+  const admitted = new Map<string, CandidatePath>();
+  for (const row of sourceAdmission.observations) {
+    if (!["file", "directory", "symlink"].includes(row.observedKind)) continue;
+    const stageZero = row.indexEntries.find((entry) => entry.stage === 0);
+    admitted.set(row.sourcePath, { path: row.sourcePath, mode: row.worktreeMode ?? (row.observedKind === "directory" ? "040000" : row.observedKind === "symlink" ? "120000" : "100644"), objectId: stageZero?.objectId, explicitDirectory: row.explicitDirectory });
   }
   const directoryPaths = new Set<string>();
   for (const row of admitted.values()) {
@@ -5245,7 +6070,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   const siblingIds = new Map<string, Set<string>>();
   for (const row of leaves) {
     const parent = dirname(row.path);
-    const fixed = matchingFixedContracts(row.path, taxonomy.schema.fixedFilenameContracts, packageLocation(row.path, taxonomy), directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent));
+    const fixed = matchingFixedContracts(row.path, taxonomy.schema.fixedFilenameContracts, taxonomy, packageLocation(row.path, taxonomy), directoryKindByPath.get(parent), fixedDirectoryContractByPath.get(parent));
     if (!fixed.selected) continue;
     const ids = siblingIds.get(parent) ?? new Set<string>();
     ids.add(fixed.selected[0]);
@@ -5489,7 +6314,7 @@ export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot
     }
     for (const candidate of candidates) {
       checkCancellation(inventory.repoRoot, cancelFile);
-      if (taxonomyPathPatternMatches(candidate, pattern)) paths.add(candidate);
+      if (taxonomy.pathMatcher.matches(candidate, pattern)) paths.add(candidate);
     }
   }
   return [...paths].filter((path) => !isExcluded(path, taxonomy) && !contract.outputRoots.some((output) => path === output.path || path.startsWith(output.path + "/"))).sort(generatorPathCompare).filter((path) => {
@@ -5656,9 +6481,9 @@ function incomingEmbeddedReferences(inventory: TaxonomyInventory, root: string):
   return [...rows].sort(generatorPathCompare);
 }
 
-interface JsonStringCoordinate { readonly pointer: string; readonly start: number; readonly end: number; readonly value: string }
+interface JsonStringCoordinate { readonly pointer: string; readonly start: number; readonly end: number; readonly value: string; readonly rawValue?: string }
 
-function jsonStringCoordinates(content: string): readonly JsonStringCoordinate[] {
+function jsonStringCoordinates(content: string, includeEscaped = false): readonly JsonStringCoordinate[] {
   try { JSON.parse(content); } catch { return []; }
   const lexemes = [...content.matchAll(/"(?:\\.|[^"\\])*"|[{}\[\]:,]|true|false|null|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?/gu)];
   const rows: JsonStringCoordinate[] = [];
@@ -5689,7 +6514,8 @@ function jsonStringCoordinates(content: string): readonly JsonStringCoordinate[]
       require("]");
     } else if (token[0].startsWith('"')) {
       const value = JSON.parse(token[0]) as string;
-      if (token[0].slice(1, -1) === value) rows.push({ pointer, start: token.index! + 1, end: token.index! + token[0].length - 1, value });
+      const rawValue = token[0].slice(1, -1);
+      if (rawValue === value || includeEscaped) rows.push({ pointer, start: token.index! + 1, end: token.index! + token[0].length - 1, value, ...(rawValue === value ? {} : { rawValue }) });
     }
   };
   try { visit(""); return cursor === lexemes.length ? rows : []; } catch { return []; }
@@ -5710,9 +6536,9 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
   if (!Buffer.from(content, "utf8").equals(bytes)) fail("document is not exact UTF-8");
   let document: unknown;
   try { document = JSON.parse(content); } catch { fail("document is not valid JSON"); }
-  if (document === null || typeof document !== "object" || Array.isArray(document)) fail("document must be one JSON object");
+  if (document === null || typeof document !== "object" || Array.isArray(document) !== (contract.rootKind === "array")) fail("document differs from its exact JSON root authority");
   if (contract.schemaVersion === null ? Object.hasOwn(document!, "schemaVersion") : !Object.hasOwn(document!, "schemaVersion") || (document as Record<string, unknown>).schemaVersion !== contract.schemaVersion) fail("document schemaVersion differs from registered presence/value authority");
-  const spans = new Map(jsonStringCoordinates(content).map((row) => [row.pointer, row])), rows: FrozenEvidenceCoordinate[] = [], seen = new Set<string>();
+  const spans = new Map(jsonStringCoordinates(content, true).map((row) => [row.pointer, row])), rows: FrozenEvidenceCoordinate[] = [], seen = new Set<string>();
   for (const declaration of contract.coordinates) {
     const segments = declaration.pointer.slice(1).split("/").map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"));
     const before = rows.length;
@@ -5720,16 +6546,18 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
       if (index === segments.length) {
         if (typeof value !== "string" || !value || /[\u0000-\u001f]/u.test(value)) fail(`coordinate ${pointer} must be a physical repository-relative path string`);
         const ownerIdentity = "representation" in declaration && declaration.representation === "recorded-package-owner-identity";
-        const prefix = "representation" in declaration ? declaration.representation === "recorded-package-owner-identity" ? declaration.identityPrefix : declaration.recordedRepositoryRoot + "/" : "";
+        const escapedSource = "representation" in declaration && declaration.representation === "json-escaped-source-path";
+        const prefix = "representation" in declaration ? declaration.representation === "recorded-package-owner-identity" ? declaration.identityPrefix : declaration.representation === "recorded-repository-absolute" ? declaration.recordedRepositoryRoot + "/" : "" : "";
         if (prefix && !(value as string).startsWith(prefix)) fail(`coordinate ${pointer} does not match its exact recorded prefix`);
         const relativeValue = prefix ? (value as string).slice(prefix.length) : value as string;
         if (!relativeValue || /^[A-Za-z]:/u.test(relativeValue) || ownerIdentity && relativeValue.includes(":")) fail(`coordinate ${pointer} must have a nonempty repository-relative suffix`);
+        if (escapedSource && (Buffer.from(relativeValue, "utf8").toString("utf8") !== relativeValue || /[\\:*?"<>|\u007f]/u.test(relativeValue) || LEXICAL_OPAQUE_ROOTS.some((root) => relativeValue === root || relativeValue.startsWith(root + "/")))) fail(`coordinate ${pointer} must decode once to an exact non-opaque physical path`);
         try { if (normalizeRelative(relativeValue) !== relativeValue) fail(`coordinate ${pointer} is not repository-relative`); } catch { fail(`coordinate ${pointer} is not repository-relative`); }
         const span = spans.get(pointer);
-        if (!span || span.value !== value) fail(`coordinate ${pointer} has no exact unescaped JSON value span`);
+        if (!span || span.value !== value || escapedSource !== (span.rawValue !== undefined)) fail(`coordinate ${pointer} has no exact declared JSON value encoding`);
         if (seen.has(pointer)) fail(`coordinate selectors overlap at ${pointer}`);
         seen.add(pointer);
-        rows.push({ ...span!, start: span!.start + (ownerIdentity ? prefix.length : 0), value: ownerIdentity ? relativeValue : span!.value, kind: declaration.kind });
+        rows.push({ pointer, start: span!.start + (ownerIdentity ? prefix.length : 0), end: span!.end, value: escapedSource ? span!.rawValue! : ownerIdentity ? relativeValue : span!.value, kind: declaration.kind });
         return;
       }
       const segment = segments[index];
@@ -5747,13 +6575,68 @@ export function frozenCoordinateEvidenceCoordinates(path: string, bytes: Uint8Ar
   return rows.sort((left, right) => left.start - right.start);
 }
 
-const frozenEvidenceContractIndexes = new WeakMap<LoadedTaxonomy, ReadonlyMap<string, FrozenCoordinateEvidenceContract>>();
+/** 📝️ Finds only plain single-backtick or path-only-list coordinates outside opaque Markdown blocks. */
+function markdownSourceCoordinateSpans(content: string): readonly Readonly<{ start: number; end: number; form: "inline-code" | "path-list-item" }>[] {
+  const rows: { start: number; end: number; form: "inline-code" | "path-list-item" }[] = [];
+  let fence = "", html = "", inline = 0;
+  for (const match of content.matchAll(/[^\r\n]*(?:\r\n|\r|\n|$)/gu)) {
+    const line = match[0].replace(/(?:\r\n|\r|\n)$/u, ""), offset = match.index!;
+    if (!line.trim()) { inline = 0; if (html === "block") html = ""; continue; }
+    const prefix = line.replace(/^ {0,3}(?:[-+*][ \t]+|\d+[.)][ \t]+)/u, ""), marker = prefix.match(/^ {0,3}(`{3,}|~{3,})(.*)$/u);
+    if (fence) { if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) fence = ""; continue; }
+    if (marker && !(marker[1][0] === "`" && marker[2].includes("`"))) { fence = marker[1]; inline = 0; continue; }
+    if (html) { if (html === "comment" && line.includes("-->")) html = ""; continue; }
+    if (line.includes("<!--")) { if (!line.slice(line.indexOf("<!--") + 4).includes("-->")) html = "comment"; inline = 0; continue; }
+    if (/^ {0,3}</u.test(line)) { html = "block"; inline = 0; continue; }
+    if (/^(?: {4}| *\t| {0,3}[>#])/u.test(line)) { inline = 0; continue; }
+    const first = rows.length;
+    let visible = line;
+    const list = line.match(/^ {0,3}[-+*][ \t]+([^\s]+)[ \t]*$/u);
+    if (list && !inline) { const start = offset + line.indexOf(list[1]); rows.push({ start, end: start + list[1].length, form: "path-list-item" }); }
+    const runs = [...line.matchAll(/`+/gu)];
+    for (let index = 0; index < runs.length; index++) {
+      const run = runs[index], start = run.index!;
+      if (inline) { if (run[0].length === inline) { inline = 0; visible = " ".repeat(start + run[0].length) + visible.slice(start + run[0].length); } continue; }
+      if ((line.slice(0, start).match(/\\+$/u)?.[0].length ?? 0) % 2) continue;
+      const close = runs.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate[0].length === run[0].length);
+      if (close < 0) { inline = run[0].length; continue; }
+      const end = runs[close].index! + runs[close][0].length;
+      visible = visible.slice(0, start) + " ".repeat(end - start) + visible.slice(end);
+      if (run[0].length === 1) rows.push({ start: offset + start + 1, end: offset + runs[close].index!, form: "inline-code" });
+      index = close;
+    }
+    if (/[\[\]<>]/u.test(visible)) rows.splice(first);
+  }
+  return rows;
+}
+
+/** 🔏️ Resolves declared historical Markdown source spans without filesystem access or prose rewriting. */
+export function frozenMarkdownCoordinateEvidenceCoordinates(path: string, bytes: Uint8Array, contracts: Readonly<Record<string, FrozenMarkdownCoordinateEvidenceContract>>): readonly FrozenEvidenceCoordinate[] | null {
+  const fail = (message: string): never => { throw new Error(`frozen-coordinate-evidence-invalid: ${path}: ${message}`); };
+  const problems = validateFrozenMarkdownCoordinateEvidenceContracts(contracts);
+  if (problems.length) fail(problems.join("; "));
+  const contract = Object.values(contracts).find((row) => row.path === path);
+  if (!contract) return null;
+  if (sha256(bytes) !== contract.sha256) fail("document digest does not match registered bytes");
+  const content = Buffer.from(bytes).toString("utf8");
+  if (!Buffer.from(content, "utf8").equals(bytes)) fail("document is not exact UTF-8");
+  const spans = new Set(markdownSourceCoordinateSpans(content).map((row) => `${row.form}\0${row.start}\0${row.end}`));
+  return contract.coordinates.map((coordinate): FrozenEvidenceCoordinate => {
+    const value = content.slice(coordinate.start, coordinate.end);
+    if (!spans.has(`${coordinate.form}\0${coordinate.start}\0${coordinate.end}`)) fail("coordinate has no exact admitted Markdown source span");
+    if (!value || /[\\:*?"<>|`\u0000-\u0020]/u.test(value) || /^(?:compose|temp\/compose)(?:\/|$)/u.test(value) || value.split("/").some((part) => !part || part === "." || part === "..")) fail("coordinate is not one non-opaque repository-relative source path");
+    if (sha256(value) !== coordinate.valueSha256) fail("coordinate value digest differs from its exact source authority");
+    return { pointer: `markdown:${coordinate.form}@${coordinate.start}`, start: coordinate.start, end: coordinate.end, value, kind: "source" };
+  }).sort((left, right) => left.start - right.start);
+}
+
+const frozenEvidenceContractIndexes = new WeakMap<LoadedTaxonomy, ReadonlyMap<string, Readonly<{ path: string }>>>();
 const frozenEvidenceCoordinateCache = new WeakMap<Uint8Array, { readonly path: string; readonly taxonomy: LoadedTaxonomy; readonly coordinates: ReadonlySet<string> }>();
 
-function frozenEvidenceContractIndex(taxonomy: LoadedTaxonomy): ReadonlyMap<string, FrozenCoordinateEvidenceContract> {
+function frozenEvidenceContractIndex(taxonomy: LoadedTaxonomy): ReadonlyMap<string, Readonly<{ path: string }>> {
   const cached = frozenEvidenceContractIndexes.get(taxonomy);
   if (cached) return cached;
-  const index = new Map(Object.values(taxonomy.discoverySchema.frozenCoordinateEvidenceContracts).map((contract) => [contract.path, contract]));
+  const index = new Map([...Object.values(taxonomy.discoverySchema.frozenCoordinateEvidenceContracts), ...Object.values(taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts)].map((contract) => [contract.path, contract]));
   frozenEvidenceContractIndexes.set(taxonomy, index);
   return index;
 }
@@ -5770,7 +6653,7 @@ function frozenEvidenceCoordinateAuthority(path: string, bytes: Uint8Array, taxo
   if (!frozenEvidenceContractIndex(taxonomy).has(path)) return null;
   const cached = frozenEvidenceCoordinateCache.get(bytes);
   if (cached?.path === path && cached.taxonomy === taxonomy) return cached.coordinates;
-  const rows = frozenCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenCoordinateEvidenceContracts)!;
+  const rows = (frozenCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenCoordinateEvidenceContracts) ?? frozenMarkdownCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts))!;
   const coordinates = new Set(rows.map((row) => `${row.start}\0${row.end}\0${row.value}`));
   frozenEvidenceCoordinateCache.set(bytes, { path, taxonomy, coordinates });
   return coordinates;
@@ -5840,6 +6723,17 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
             if (owner) add(`/semanticOwnedFileProjectionContracts/readme-license-owner-leaves-v1/authoredDocumentCorrections/${pointer(id)}/sourcePath`, row.sourcePath);
           }
         }
+        if (ownerContract.currentSourceRevisions && taxonomy.input?.path === taxonomyPath && taxonomy.input.contentHash === sha256(bytes) && taxonomy.input.size === bytes.byteLength && Buffer.from(taxonomy.input.bytes).equals(bytes)) {
+          let revisions: ReturnType<typeof parseSemanticOwnedCurrentSourceRevisions> | undefined;
+          try { revisions = parseSemanticOwnedCurrentSourceRevisions(JSON.parse(content).semanticOwnedFileProjectionContracts?.["readme-license-owner-leaves-v1"]?.currentSourceRevisions); } catch {}
+          if (revisions && canonicalJson(revisions) === canonicalJson(ownerContract.currentSourceRevisions)) {
+            const owners = exactOwnedFileCatalog(repoRoot, taxonomy);
+            for (const [id, row] of Object.entries(revisions)) {
+              const owner = owners?.cases[row.catalogCaseIndex];
+              if (owner?.sourcePath === row.sourcePath && owner.disposition === "owner-documentation-relocate" && owner.fixedContractId === null && owner.generatorOwnerId === null && owner.ownerEvidenceId === "nx-project-owner-documentation" && canonicalJson(owner.preimage) === canonicalJson(row.baselinePreimage)) add(`/semanticOwnedFileProjectionContracts/readme-license-owner-leaves-v1/currentSourceRevisions/${pointer(id)}/sourcePath`, row.sourcePath);
+            }
+          }
+        }
       }
       const catalog = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema);
       for (const [id, contract] of Object.entries(taxonomy.schema.generatorContracts)) {
@@ -5860,15 +6754,74 @@ function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: R
   return cached.targets.has(target) && cached.coordinates.has(`${token.start}\0${token.end}\0${token.value}`);
 }
 
-function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: ReadonlySet<string>, ignoredSourceRoots: readonly string[], taxonomy: LoadedTaxonomy, ticketDir?: string, planAuthority?: Readonly<{ path: string; bytes: Uint8Array }>, transactionRoot?: string, authorityPlan?: TaxonomyPlan, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"], projectReference?: ReturnType<typeof removalReferenceProjection>): readonly string[] {
+interface PreflightReferenceBasis {
+  readonly repoRoot: string;
+  readonly taxonomy: LoadedTaxonomy;
+  readonly ticketDir?: string;
+  readonly transactionRoot?: string;
+  readonly authorityPlan?: TaxonomyPlan;
+  readonly candidates: readonly string[];
+  readonly knownPaths: ReadonlySet<string>;
+  readonly coordinateRoots: readonly string[];
+  readonly markers: ReadonlyMap<string, string>;
+  readonly observed: Map<string, { readonly witness: string; readonly content: boolean }>;
+  readonly changedNodes: Set<string>;
+}
+
+function preflightReferenceNodeWitness(stat: Stats | null, bytes?: string | Uint8Array, identity = false): string {
+  if (!stat) return "absent";
+  const kind = stat.isSymbolicLink() ? "symlink" : stat.isFile() ? "file" : stat.isDirectory() ? "directory" : "other";
+  return canonicalJson({ kind, mode: stat.mode & 0o7777, ...(kind === "file" || kind === "symlink" ? { size: stat.size } : {}), ...(bytes === undefined ? {} : { hash: sha256(bytes) }), ...(identity ? { dev: stat.dev, ino: stat.ino } : {}) });
+}
+
+function observePreflightReferenceNode(basis: PreflightReferenceBasis | undefined, path: string, stat: Stats | null, bytes?: string | Uint8Array): void {
+  if (!basis) return;
+  const witness = preflightReferenceNodeWitness(stat, bytes), prior = basis.observed.get(path);
+  if (!prior) basis.observed.set(path, { witness, content: bytes !== undefined });
+  else if (prior.witness !== witness) basis.changedNodes.add(path);
+}
+
+function capturePreflightReferenceBasis(repoRoot: string, taxonomy: LoadedTaxonomy, ticketDir?: string, transactionRoot?: string, authorityPlan?: TaxonomyPlan, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"]): PreflightReferenceBasis {
   checkCancellation(repoRoot, cancelFile);
-  if (targetPaths.size === 0) return [];
   const context = { ticketDir, transactionRoots: transactionRoot ? [transactionRoot] : [], exactEvidencePaths: [] };
-  const candidates = new Set<string>([...repositoryReferenceCandidatePaths(repoRoot, taxonomy, context, cancelFile), ...(authorityPlan ? planVerificationCandidatePaths(repoRoot, authorityPlan, taxonomy, ticketDir) : [])]);
-  const knownPaths = new Set(candidates);
+  const candidates = [...new Set([...repositoryReferenceCandidatePaths(repoRoot, taxonomy, context, cancelFile), ...(authorityPlan ? planVerificationCandidatePaths(repoRoot, authorityPlan, taxonomy, ticketDir) : [])])].sort(generatorPathCompare);
+  const knownPaths = new Set(candidates), markers = new Map<string, string>();
   for (const path of candidates) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) knownPaths.add(parent);
   validateObservedFrozenEvidenceNodes(repoRoot, knownPaths, taxonomy);
-  const targetIndex = referencePathIndex(targetPaths, repoRoot, referenceCoordinateRoots(repoRoot, candidates, taxonomy, cancelFile), knownPaths, cancelFile);
+  const coordinateRoots = referenceCoordinateRoots(repoRoot, candidates, taxonomy, cancelFile, (path, stat, bytes) => {
+    const witness = preflightReferenceNodeWitness(stat, bytes, true), prior = markers.get(path);
+    if (prior !== undefined && prior !== witness) throw new Error(`Preflight incoming reference marker witness changed: ${path}`);
+    markers.set(path, witness);
+  }, progress, "apply");
+  return { repoRoot, taxonomy, ticketDir, transactionRoot, authorityPlan, candidates, knownPaths, coordinateRoots, markers, observed: new Map(), changedNodes: new Set() };
+}
+
+function validatePreflightReferenceBasis(basis: PreflightReferenceBasis, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"]): void {
+  checkCancellation(basis.repoRoot, cancelFile);
+  const fresh = capturePreflightReferenceBasis(basis.repoRoot, basis.taxonomy, basis.ticketDir, basis.transactionRoot, basis.authorityPlan, cancelFile, progress);
+  const unowned = (path: string): boolean => !basis.transactionRoot || path !== basis.transactionRoot && !path.startsWith(`${basis.transactionRoot}/`);
+  if (canonicalJson(basis.candidates.filter(unowned)) !== canonicalJson(fresh.candidates.filter(unowned))) throw new Error("Preflight incoming reference candidate membership changed");
+  const markerRows = (value: PreflightReferenceBasis) => [...value.markers].filter(([path]) => unowned(path)).sort(([left], [right]) => generatorPathCompare(left, right));
+  if (canonicalJson(markerRows(basis)) !== canonicalJson(markerRows(fresh)) || canonicalJson(basis.coordinateRoots.filter(unowned)) !== canonicalJson(fresh.coordinateRoots.filter(unowned))) throw new Error("Preflight incoming reference marker witness changed");
+  for (const [, path] of referenceCandidatesWithProgress([...basis.observed.keys()], "apply", progress)) {
+    checkCancellation(basis.repoRoot, cancelFile);
+    const expected = basis.observed.get(path)!;
+    const absolute = assertLexicalInputOutsideOpaque(basis.repoRoot, path, "Preflight incoming reference freshness"), stat = lstatOrNull(absolute);
+    const bytes = stat?.isSymbolicLink() ? readlinkSync(absolute) : expected.content && stat?.isFile() ? readFileSync(absolute) : undefined;
+    if (basis.changedNodes.has(path) || expected.witness !== preflightReferenceNodeWitness(stat, bytes)) throw new Error(`Preflight incoming reference node changed: ${path}`);
+  }
+}
+
+function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: ReadonlySet<string>, ignoredSourceRoots: readonly string[], taxonomy: LoadedTaxonomy, ticketDir?: string, planAuthority?: Readonly<{ path: string; bytes: Uint8Array }>, transactionRoot?: string, authorityPlan?: TaxonomyPlan, cancelFile?: string, progress?: TaxonomyApplyOptions["progress"], projectReference?: ReturnType<typeof removalReferenceProjection>, basis?: PreflightReferenceBasis): readonly string[] {
+  checkCancellation(repoRoot, cancelFile);
+  if (targetPaths.size === 0) return [];
+  if (basis && (basis.repoRoot !== repoRoot || basis.taxonomy !== taxonomy || basis.ticketDir !== ticketDir || basis.transactionRoot !== transactionRoot || basis.authorityPlan !== authorityPlan)) throw new Error("Preflight incoming reference basis context changed");
+  const context = { ticketDir, transactionRoots: transactionRoot ? [transactionRoot] : [], exactEvidencePaths: [] };
+  const candidates = basis ? new Set(basis.candidates) : new Set<string>([...repositoryReferenceCandidatePaths(repoRoot, taxonomy, context, cancelFile), ...(authorityPlan ? planVerificationCandidatePaths(repoRoot, authorityPlan, taxonomy, ticketDir) : [])]);
+  const knownPaths = basis?.knownPaths ?? new Set(candidates);
+  if (!basis) for (const path of candidates) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) (knownPaths as Set<string>).add(parent);
+  validateObservedFrozenEvidenceNodes(repoRoot, knownPaths, taxonomy);
+  const targetIndex = referencePathIndex(targetPaths, repoRoot, basis?.coordinateRoots ?? referenceCoordinateRoots(repoRoot, candidates, taxonomy, cancelFile, undefined, progress, "apply"), knownPaths, cancelFile);
   const admitsText = incomingReferenceLexicalAdmission(targetPaths);
   const rows: string[] = [];
   for (const [, path] of referenceCandidatesWithProgress([...candidates].sort(generatorPathCompare), "apply", progress)) {
@@ -5876,17 +6829,19 @@ function lexicalTargetIncomingReferences(repoRoot: string, targetPaths: Readonly
     if (isExcluded(path, taxonomy) || ignoredSourceRoots.some((root) => path === root || path.startsWith(`${root}/`)) || (transactionRoot && (path === transactionRoot || path.startsWith(`${transactionRoot}/`)))) continue;
     const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Terminal incoming reference");
     const stat = lstatOrNull(absolute);
-    if (!stat || stat.isDirectory()) continue;
+    if (!stat || stat.isDirectory()) { observePreflightReferenceNode(basis, path, stat); continue; }
     if (stat.isSymbolicLink()) {
       const raw = readlinkSync(absolute);
+      observePreflightReferenceNode(basis, path, stat, raw);
       let target: string | null = null;
       if (raw.startsWith("/") || /^[A-Za-z]:[\\/]/u.test(raw) || /^(?:\\\\|\/\/)/u.test(raw)) target = repositoryLocalSymlinkTargetPath(repoRoot, raw);
       else try { target = normalizeRelative(posix.join(posix.dirname(path), raw.replaceAll("\\", "/"))); } catch { target = null; }
       if (target && targetPaths.has(target)) rows.push(`symlink\u0000${path}\u0000${target}`);
       continue;
     }
-    if (!stat.isFile() || !textualPath(path)) continue;
+    if (!stat.isFile() || !textualPath(path)) { observePreflightReferenceNode(basis, path, stat); continue; }
     const physicalBytes = readFileSync(absolute);
+    observePreflightReferenceNode(basis, path, stat, physicalBytes);
     if (planAuthority?.path === path && physicalBytes.equals(planAuthority.bytes)) continue;
     const projected = projectReference?.(path, physicalBytes, stat.mode & 0o7777) ?? { path, bytes: physicalBytes }, bytes = projected.bytes;
     frozenEvidenceCoordinateAuthority(projected.path, bytes, taxonomy);
@@ -5933,9 +6888,9 @@ function planEmbeddedTicketRoots(inventory: TaxonomyInventory, taxonomy: LoadedT
       const suffix = parts.slice(index + 3, index + 7);
       if (!/^🎆️[0-9]{2}$/u.test(suffix[0] ?? "") || !/^🌙️[0-9]{2}$/u.test(suffix[1] ?? "") || !/^☀️[0-9]{2}$/u.test(suffix[2] ?? "") || !suffix[3]) { violations.push(violation("embedded-ticket-root-identity-invalid", entry.sourcePath, "Nested metadata path has no exact ticket identity")); continue; }
       const canonicalTicketRoot = [".🧬semio", "🦑️repo", "🎫️tickets", ...suffix].join("/");
-      const rootContract = matchingFixedContracts(canonicalTicketRoot, taxonomy.schema.fixedDirectoryContracts, null).selected;
+      const rootContract = matchingFixedContracts(canonicalTicketRoot, taxonomy.schema.fixedDirectoryContracts, taxonomy, null).selected;
       const manifestPath = `${canonicalTicketRoot}/🎫️ticket.json`;
-      const manifestContract = matchingFixedContracts(manifestPath, taxonomy.schema.fixedFilenameContracts, null).selected;
+      const manifestContract = matchingFixedContracts(manifestPath, taxonomy.schema.fixedFilenameContracts, taxonomy, null).selected;
       const manifestStat = lstatOrNull(absolutePath(inventory.repoRoot, manifestPath));
       if (rootContract?.[0] !== "ticket-slug" || manifestContract?.[0] !== "ticket-manifest" || !manifestStat?.isFile() || manifestStat.isSymbolicLink()) { violations.push(violation("embedded-ticket-root-authority-missing", entry.sourcePath, "Canonical ticket root and exact ticket manifest authority must exist")); continue; }
       nested.set(sourceMetadataRoot, { sourceTicketRoot: parts.slice(0, index + 7).join("/"), canonicalTicketRoot, ticketId: `${splitLeadingEmoji(suffix[0]).rest}/${splitLeadingEmoji(suffix[1]).rest}/${splitLeadingEmoji(suffix[2]).rest}/${suffix[3]}` });
@@ -6151,7 +7106,8 @@ interface MoveReferenceAuthority {
 }
 
 function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, embeddedRoots: readonly TaxonomyEmbeddedTicketRootDisposition[], evidenceRemovals: readonly TaxonomyEvidenceRemoval[]): MoveReferenceAuthority {
-  const ownerMappings = new Map(exactOwnedFileCatalog(inventory.repoRoot, taxonomy)?.cases.filter((entry) => entry.disposition !== "fixed").map((entry) => [entry.sourcePath, entry.destinationPath]) ?? []);
+  const ownerSnapshot = exactOwnedCatalogSnapshot(inventory.repoRoot, taxonomy);
+  const ownerMappings = new Map(ownerSnapshot.catalog?.cases.filter((entry) => entry.disposition !== "fixed").map((entry) => [entry.sourcePath, entry.destinationPath]) ?? []);
   const packageMappings = new Map(semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema)?.packages.flatMap((row) => row.mappings.map((mapping) => [mapping.sourcePath, mapping.destinationPath] as const)) ?? []);
   const embeddedPrefixes = embeddedRoots.map((root) => root.sourceMetadataRoot);
   const removalSources = new Set(evidenceRemovals.map((entry) => entry.sourcePath));
@@ -6165,6 +7121,12 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
       const sourcePreimage = inventoryLeafPreimage(entry);
       const exactTicketImportant = ticketImportantExactMutationAuthority(inventory.repoRoot, entry.sourcePath, sourcePreimage);
       const emptyFacet = basename(entry.sourcePath) === "📌️empty.md" ? semanticArtifactEmptyFacetProjectionAuthority({ sourcePath: entry.sourcePath, sourceFileKindId: entry.fileKind ?? "" }, taxonomy.discoverySchema) : undefined;
+      let sourceAuthority: TaxonomyMoveSourceAuthority | undefined;
+      if (exactOwnedCurrentRawPath(entry.sourcePath, ownerSnapshot, taxonomy)) {
+        const fresh = exactOwnedFileResolution(inventory.repoRoot, entry, ownerSnapshot, taxonomy);
+        if (!fresh.sourceAuthority || fresh.result.disposition !== "project" || fresh.result.problems.length || fresh.result.entry?.destinationPath !== entry.normalizedPath) throw new Error("owner-leaf-authority-invalid: " + entry.sourcePath + ": " + fresh.result.problems.join(" | "));
+        sourceAuthority = fresh.sourceAuthority;
+      }
       return ({
       operationId: dispositionOperationId("move-v2", { sourcePath: entry.sourcePath, destinationPath: entry.normalizedPath, sourcePreimage }),
       sourcePath: entry.sourcePath,
@@ -6174,6 +7136,7 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
       ownerId: entry.ownerId,
       collisionGroup: groupBySource.get(entry.sourcePath),
       referenceEdits: [],
+      ...(sourceAuthority ? { sourceAuthority } : {}),
     }); })
     .sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath) || generatorPathCompare(left.destinationPath, right.destinationPath));
   const generatedReferenceMoves = evidenceRemovals.flatMap((entry): TaxonomyMove[] => entry.authority.kind === "exact-owner-generated-source" || entry.authority.kind === "nested-cargo-generated-source" ? [{ operationId: entry.operationId, sourcePath: entry.sourcePath, destinationPath: entry.authority.destinationPath, sourcePreimage: entry.preimage, rationaleRule: entry.authority.kind === "nested-cargo-generated-source" ? "nested-cargo-package-projection-v1" : "readme-license-owner-projection-v1", ownerId: entry.ownerId, referenceEdits: [] }] : []);
@@ -6234,7 +7197,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const outputProblem = outputEntries.some((entry) => !roots.includes(entry.sourcePath) && (entry.sourcePath !== entry.normalizedPath || entry.violations.some((entry) => entry.severity === "error")));
     const outputMutation = [...mutations].some((path) => roots.some((root) => pathsOverlap(path, root)) && !(id === "external-cargo-locks" && preservedLocks.has(path)));
     const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
-    const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomyPathPatternMatches(path, pattern))) || Boolean(catalogInputs && (edits.some((edit) => catalogInputs.some((input) => input.path === edit.path)) || moves.some((move) => catalogInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
+    const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern))) || Boolean(catalogInputs && (edits.some((edit) => catalogInputs.some((input) => input.path === edit.path)) || moves.some((move) => catalogInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
     const packageOwner = contract.packageGeneration ? packageCatalog?.packages.find((row) => row.id === contract.projectionActivation?.packageId) : undefined;
     const packageOutputVerification = packageOwner && (!inventory.scope || pathsOverlap(inventory.scope, packageOwner.semanticOwnerRoot));
     if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification) continue;
@@ -7045,7 +8008,7 @@ function reconcileJournalWal(repoRoot: string, path: string, current: MutableJou
     assertJournalPhaseMembership(plan, candidate);
     assertJournalBackupAuthority(plan, candidate);
     assertActiveTransactionEvidence(repoRoot, plan, candidate, false, true);
-    const changed = candidate.state === "rolling-back" || candidate.state === "rolled-back" ? reconcileRollbackTuples(repoRoot, plan, candidate, taxonomy) : validateResumeTuples(repoRoot, plan, candidate, taxonomy);
+    const changed = candidate.state === "rolling-back" || candidate.state === "rolled-back" ? reconcileRollbackTuples(repoRoot, plan, candidate, taxonomy) : reconcileTransactionOwnedTuples(repoRoot, plan, candidate, taxonomy);
     if (changed) throw new Error("Taxonomy journal WAL candidate does not exactly match its durable filesystem tuples");
   };
   const prospectiveWal = recoverCanonicalJsonCandidates(walRoot, basename(path), current.jsonPreviousName, current.jsonWritePreparationName, validateCandidate, true, validateOnly, path);
@@ -7067,7 +8030,7 @@ function reconcileJournalWal(repoRoot: string, path: string, current: MutableJou
   assertJournalPhaseMembership(plan, next);
   assertJournalBackupAuthority(plan, next);
   assertActiveTransactionEvidence(repoRoot, plan, next, false, true);
-  const tupleChanged = next.state === "rolling-back" || next.state === "rolled-back" ? reconcileRollbackTuples(repoRoot, plan, next, taxonomy) : validateResumeTuples(repoRoot, plan, next, taxonomy);
+  const tupleChanged = next.state === "rolling-back" || next.state === "rolled-back" ? reconcileRollbackTuples(repoRoot, plan, next, taxonomy) : reconcileTransactionOwnedTuples(repoRoot, plan, next, taxonomy);
   if (tupleChanged) throw new Error("Taxonomy journal WAL does not exactly match its durable filesystem tuples");
   if (!validateOnly) {
     durableRemove(walRoot, true);
@@ -7206,7 +8169,7 @@ function assertRegenerationContract(regeneration: TaxonomyRegeneration, taxonomy
   assertGeneratorNodeRecords(regeneration.preOutputs, roots, `Regeneration ${regeneration.id} preOutputs`);
   assertGeneratorNodeRecords(regeneration.outputs, roots, `Regeneration ${regeneration.id} outputs`);
   assertGeneratorNodeRecords(regeneration.inputs, regeneration.inputs.map((input) => input.path), `Regeneration ${regeneration.id} inputs`);
-  for (const input of regeneration.inputs) if (!contract.inputDiscovery && !contract.inputPatterns.some((pattern) => taxonomyPathPatternMatches(input.path, pattern))) throw new Error(`Regeneration ${regeneration.id} input is not schema-owned: ${input.path}`);
+  for (const input of regeneration.inputs) if (!contract.inputDiscovery && !contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(input.path, pattern))) throw new Error(`Regeneration ${regeneration.id} input is not schema-owned: ${input.path}`);
   const preview = parseGeneratorPreviewManifest(`${generatorPreviewJson(regeneration.preview)}\n`, regeneration.contractId, roots, taxonomy.exclusions.map((entry) => entry.path));
   if (regeneration.previewManifestDigest !== sha256(`${generatorPreviewJson(preview)}\n`) || canonicalJson(regeneration.staleRemovals) !== canonicalJson(preview.staleRemovals) || canonicalJson(regeneration.outputs) !== canonicalJson(previewNodeRecords(preview))) throw new Error(`Regeneration ${regeneration.id} does not match its frozen preview manifest`);
   validatePreviewPreState(preview, regeneration.preOutputs);
@@ -7286,7 +8249,7 @@ function assertTicketImportantRemovalAuthority(repoRoot: string, removal: Taxono
   if (removal.authority.kind !== "owner-manifest-status") return;
   const authority = removal.authority;
   if (dirname(removal.sourcePath) !== authority.ownerPath || basename(removal.sourcePath) !== "📌️important.md" || authority.manifestPath !== `${authority.ownerPath}/🎫️ticket.json`) throw new Error(`Ticket important removal escapes its owner: ${removal.sourcePath}`);
-  if (!taxonomyPathPatternMatches(authority.ownerPath, taxonomy.schema.fixedDirectoryContracts["ticket-slug"].pathPattern) || !taxonomyPathPatternMatches(authority.manifestPath, taxonomy.schema.fixedFilenameContracts["ticket-manifest"].pathPattern)) throw new Error(`Ticket important removal owner contracts changed: ${removal.sourcePath}`);
+  if (!taxonomy.pathMatcher.matches(authority.ownerPath, taxonomy.schema.fixedDirectoryContracts["ticket-slug"].pathPattern) || !taxonomy.pathMatcher.matches(authority.manifestPath, taxonomy.schema.fixedFilenameContracts["ticket-manifest"].pathPattern)) throw new Error(`Ticket important removal owner contracts changed: ${removal.sourcePath}`);
   assertLeafPreimage(repoRoot, authority.manifestPath, authority.manifestPreimage);
   if (ticketManifestState(readFileSync(absolutePath(repoRoot, authority.manifestPath), "utf8")) !== "closed") throw new Error(`Ticket important removal manifest status changed: ${authority.manifestPath}`);
   const { authorityDigest: _digest, ...digestible } = authority;
@@ -7522,6 +8485,22 @@ class TaxonomyStartedRegenerationPartialError extends Error {
   }
 }
 
+class TaxonomyGeneratorInputDriftError extends Error {
+  readonly regenerationId: string;
+  constructor(regenerationId: string, cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.regenerationId = regenerationId;
+  }
+}
+
+class TaxonomyMoveSourceInputDriftError extends Error {
+  readonly operationId: string;
+  constructor(operationId: string, cause: unknown) {
+    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    this.operationId = operationId;
+  }
+}
+
 function resumeGeneratorInputAuthority(plan: TaxonomyPlan, journal: MutableJournalRecord) {
   return {
     moves: new Map(plan.moves.map((entry) => [entry.sourcePath, entry])),
@@ -7610,7 +8589,8 @@ function resumeGeneratorInputView(repoRoot: string, plan: TaxonomyPlan, regenera
   };
 }
 
-function validateResumeTuples(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, taxonomy: LoadedTaxonomy): boolean {
+/** 🔐️ Reconciles only authenticated transaction writes and output tuples, independently of forward read inputs. */
+function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, taxonomy: LoadedTaxonomy): boolean {
   let reconciled = false;
   const present = (...paths: string[]): boolean[] => paths.map((path) => Boolean(lstatOrNull(path)));
   const backupRoot = absolutePath(repoRoot, journal.backupRoot);
@@ -7743,18 +8723,7 @@ function validateResumeTuples(repoRoot: string, plan: TaxonomyPlan, journal: Mut
     const current = lstatOrNull(absolutePath(repoRoot, path));
     if ((backup.kind === "absent" && current) || (backup.kind === "symlink" && (!current?.isSymbolicLink() || canonicalJson(leafPreimage(absolutePath(repoRoot, path))) !== canonicalJson({ nodeKind: "symlink", contentHash: backup.targetHash, mode: backup.mode, size: backup.size, target: backup.target })))) throw new Error(`resume-state-drift: typed backup source ${path}`);
   }
-  const inputAuthority = resumeGeneratorInputAuthority(plan, journal);
   for (const regeneration of plan.regenerations) {
-    const inputs = regeneration.inputs.map((input) => resumeGeneratorInputRecord(repoRoot, inputAuthority, journal, input, taxonomy));
-    if (canonicalJson(inputs) !== canonicalJson(regeneration.inputs)) throw new Error(`resume-state-drift: regeneration inputs ${regeneration.id}`);
-    const contract = taxonomy.schema.generatorContracts[regeneration.contractId];
-    const view = resumeGeneratorInputView(repoRoot, plan, regeneration, inputAuthority, journal, taxonomy);
-    const paths = generatorInputPaths({ repoRoot }, contract, taxonomy, undefined, view);
-    if (canonicalJson(paths) !== canonicalJson(regeneration.inputs.map(input => input.path))) {
-      const expected = new Set(regeneration.inputs.map(input => input.path)), actual = new Set(paths);
-      const missing = [...expected].filter(path => !actual.has(path)), added = paths.filter(path => !expected.has(path));
-      throw new Error(`resume-state-drift: regeneration input membership ${regeneration.id}; missing(${missing.length})=${JSON.stringify(missing.slice(0, 8))}; added(${added.length})=${JSON.stringify(added.slice(0, 8))}`);
-    }
     const outputs = generatorTreeInventory(repoRoot, regeneration.outputRoots, taxonomy);
     const pre = canonicalJson(outputs) === canonicalJson(regeneration.preOutputs);
     const post = canonicalJson(outputs) === canonicalJson(regeneration.outputs);
@@ -7766,6 +8735,47 @@ function validateResumeTuples(repoRoot: string, plan: TaxonomyPlan, journal: Mut
       reconciled = true;
     }
   }
+  return reconciled;
+}
+
+/** 🪪️ Requires every exact current-source input at its journal-proven logical preimage location. */
+function validateForwardMoveSourceInputs(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, taxonomy: LoadedTaxonomy): void {
+  const inputAuthority = resumeGeneratorInputAuthority(plan, journal);
+  for (const move of plan.moves) {
+    if (!move.sourceAuthority) continue;
+    try {
+      for (const input of move.sourceAuthority.inputs) {
+        const frozen = { path: input.path, ...input.preimage };
+        const current = resumeGeneratorInputRecord(repoRoot, inputAuthority, journal, frozen, taxonomy);
+        if (canonicalJson(current) !== canonicalJson(frozen)) throw new Error(`resume-state-drift: move source authority input ${move.operationId} ${input.role} ${input.path}`);
+      }
+    } catch (cause) { throw new TaxonomyMoveSourceInputDriftError(move.operationId, cause); }
+  }
+}
+
+/** 📥️ Requires the complete current logical generator read set before any forward continuation. */
+function validateForwardGeneratorInputs(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, taxonomy: LoadedTaxonomy): void {
+  const inputAuthority = resumeGeneratorInputAuthority(plan, journal);
+  for (const regeneration of plan.regenerations) {
+    try {
+      const inputs = regeneration.inputs.map((input) => resumeGeneratorInputRecord(repoRoot, inputAuthority, journal, input, taxonomy));
+      if (canonicalJson(inputs) !== canonicalJson(regeneration.inputs)) throw new Error(`resume-state-drift: regeneration inputs ${regeneration.id}`);
+      const contract = taxonomy.schema.generatorContracts[regeneration.contractId];
+      const view = resumeGeneratorInputView(repoRoot, plan, regeneration, inputAuthority, journal, taxonomy);
+      const paths = generatorInputPaths({ repoRoot }, contract, taxonomy, undefined, view);
+      if (canonicalJson(paths) !== canonicalJson(regeneration.inputs.map(input => input.path))) {
+        const expected = new Set(regeneration.inputs.map(input => input.path)), actual = new Set(paths);
+        const missing = [...expected].filter(path => !actual.has(path)), added = paths.filter(path => !expected.has(path));
+        throw new Error(`resume-state-drift: regeneration input membership ${regeneration.id}; missing(${missing.length})=${JSON.stringify(missing.slice(0, 8))}; added(${added.length})=${JSON.stringify(added.slice(0, 8))}`);
+      }
+    } catch (cause) { throw new TaxonomyGeneratorInputDriftError(regeneration.id, cause); }
+  }
+}
+
+function validateResumeTuples(repoRoot: string, plan: TaxonomyPlan, journal: MutableJournalRecord, taxonomy: LoadedTaxonomy): boolean {
+  const reconciled = reconcileTransactionOwnedTuples(repoRoot, plan, journal, taxonomy);
+  validateForwardMoveSourceInputs(repoRoot, plan, journal, taxonomy);
+  validateForwardGeneratorInputs(repoRoot, plan, journal, taxonomy);
   return reconciled;
 }
 
@@ -9279,6 +10289,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
   execFileSync("git", ["cat-file", "-e", `${plan.baselineCommit}^{commit}`], { cwd: repoRoot, stdio: "ignore" });
   if (plan.excludedTreeDigests.length > 0) throw new Error("Opaque digest filesystem access is disabled; replan with empty excludedTreeDigests");
   if (!options.resumeJournal) checkCancellation(repoRoot, options.cancelFile);
+  let preflightReferenceBasis: PreflightReferenceBasis | undefined;
   if (!options.resumeJournal) {
     if (actualAffectedPreDigest(repoRoot, plan) !== plan.expectedAffectedPreStateDigest) throw new Error("Affected pre-state digest does not match plan expectation");
     for (const path of [...plan.moves.map((entry) => entry.destinationPath), ...plan.embeddedTicketRootRelocations.map((entry) => entry.destinationPath), ...plan.symlinkTargetEdits.map((entry) => entry.finalPath), ...plan.edits.map((entry) => entry.path), ...plan.regenerations.flatMap((entry) => entry.outputRoots)]) assertWritableAncestors(repoRoot, path);
@@ -9323,11 +10334,14 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
         return !stat?.isFile() || stat.isSymbolicLink() || !readFileSync(absolutePath(repoRoot, source)).equals(planAuthority.bytes);
       });
       if (sha256(`sha256-taxonomy-reference-set-v1\u0000${canonicalJson(incoming)}`) !== root.incomingReferenceDigest || incoming.length > 0) throw new Error(`Embedded root incoming reference set changed: ${root.sourceMetadataRoot}`);
-      const lexicalIncoming = lexicalEmbeddedIncomingReferences(repoRoot, plan, root, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, options.cancelFile, options.progress);
+      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.ticketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
+      const lexicalIncoming = lexicalTargetIncomingReferences(repoRoot, embeddedTargetPaths(plan, root), [root.sourceMetadataRoot], taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, undefined, preflightReferenceBasis);
       if (lexicalIncoming.length > 0) throw new Error(`Embedded root structured incoming reference set changed: ${root.sourceMetadataRoot}`);
     }
     for (const removal of plan.evidenceRemovals) {
-      const incoming = evidenceRemovalIncomingReferences(repoRoot, removal, plan, taxonomy, options.ticketDir, planAuthority, transactionRootRelative, undefined, options.cancelFile, options.progress);
+      preflightReferenceBasis ??= capturePreflightReferenceBasis(repoRoot, taxonomy, options.ticketDir, transactionRootRelative, plan, options.cancelFile, options.progress);
+      const project = removal.authority.kind === "nested-cargo-generated-source" || removal.authority.kind === "exact-owner-generated-source" ? removalReferenceProjection(repoRoot, plan) : undefined;
+      const incoming = lexicalTargetIncomingReferences(repoRoot, new Set([removal.sourcePath]), removalIncomingIgnoredSourceRoots(removal), taxonomy, options.ticketDir, planAuthority, transactionRootRelative, plan, options.cancelFile, options.progress, project, preflightReferenceBasis);
       if (incoming.length > 0) throw new Error(`Evidence-removal structured incoming reference set changed: ${removal.sourcePath}`);
     }
     for (const regeneration of plan.regenerations) {
@@ -9385,7 +10399,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     const tupleProbe: MutableJournalRecord = { ...durable, ...Object.fromEntries(JOURNAL_OPERATION_ARRAYS.map((key) => [key, [...durable[key]]])), backups: { ...durable.backups } } as MutableJournalRecord;
     try {
       if (durable.state === "rolling-back") reconcileRollbackTuples(repoRoot, plan, tupleProbe, taxonomy);
-      else validateResumeTuples(repoRoot, plan, tupleProbe, taxonomy);
+      else reconcileTransactionOwnedTuples(repoRoot, plan, tupleProbe, taxonomy);
     } catch (error) {
       if (!(error instanceof TaxonomyStartedRegenerationPartialError)) throw error;
     }
@@ -9461,7 +10475,18 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       try { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); } finally { releaseLease(); }
       return { planDigest: digest, journalPath, state: "rolled-back", appliedMoves: 0, appliedEmbeddedTicketRootRelocations: 0, appliedSymlinkTargetEdits: 0, appliedEvidenceRemovals: 0, appliedEdits: 0, appliedRegenerations: 0 };
     }
-    if (cancellationRequested(repoRoot, options.cancelFile)) {
+    let partialOutput: TaxonomyStartedRegenerationPartialError | undefined;
+    try { if (reconcileTransactionOwnedTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal); }
+    catch (error) {
+      if (!(error instanceof TaxonomyStartedRegenerationPartialError)) throw error;
+      partialOutput = error;
+    }
+    if (partialOutput || cancellationRequested(repoRoot, options.cancelFile)) {
+      if (partialOutput) {
+        journal.state = "rolling-back";
+        journal.error = partialOutput.message;
+        persistJournal(repoRoot, journalPath, journal);
+      }
       try { rollbackTransaction(repoRoot, plan, journalPath, journal, taxonomy, options); } finally { releaseLease(); }
       return { planDigest: digest, journalPath, state: "rolled-back", appliedMoves: 0, appliedEmbeddedTicketRootRelocations: 0, appliedSymlinkTargetEdits: 0, appliedEvidenceRemovals: 0, appliedEdits: 0, appliedRegenerations: 0 };
     }
@@ -9476,7 +10501,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     try {
       if (validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
     } catch (error) {
-      if (!(error instanceof TaxonomyStartedRegenerationPartialError)) throw error;
+      if (!(error instanceof TaxonomyStartedRegenerationPartialError) && !(error instanceof TaxonomyGeneratorInputDriftError) && !(error instanceof TaxonomyMoveSourceInputDriftError)) throw error;
       journal.state = "rolling-back";
       journal.error = error.message;
       persistJournal(repoRoot, journalPath, journal);
@@ -9561,6 +10586,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (canonicalJson(leafPreimage(source)) !== canonicalJson(move.sourcePreimage)) throw new Error(`Move source preimage changed: ${move.sourcePath}`);
       if (lstatOrNull(destination) && !sourceSet.has(move.destinationPath)) throw new Error(`Move destination is occupied: ${move.destinationPath}`);
     }
+    if (preflightReferenceBasis) validatePreflightReferenceBasis(preflightReferenceBasis, options.cancelFile, options.progress);
     journal.state = "staging";
     persistJournal(repoRoot, journalPath, journal);
     for (let index = 0; index < plan.moves.length; index++) {
@@ -9716,7 +10742,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     }
     injectFailure(options, "after-regenerations");
     checkCancellation(repoRoot, options.cancelFile);
-    if (plan.regenerations.length > 0 && validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
+    if ((plan.regenerations.length > 0 || plan.moves.some((move) => move.sourceAuthority !== undefined)) && validateResumeTuples(repoRoot, plan, journal, taxonomy)) persistJournal(repoRoot, journalPath, journal);
     journal.state = "verifying";
     persistJournal(repoRoot, journalPath, journal);
     injectFailure(options, "before-verify");
@@ -9787,7 +10813,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       recoverRestorePreparations(repoRoot, plan, recovered, restorePreparationName);
       recoverReferenceEditPreparations(repoRoot, plan, recovered, editPreparationName, editWritePreparationName, editWriteCandidateName);
       let recoveredTuples = false;
-      try { recoveredTuples = validateResumeTuples(repoRoot, plan, recovered, taxonomy); }
+      try { recoveredTuples = reconcileTransactionOwnedTuples(repoRoot, plan, recovered, taxonomy); }
       catch (resumeError) { if (!(resumeError instanceof TaxonomyStartedRegenerationPartialError)) throw resumeError; }
       if (recoveredBackups || recoveredTuples || canonicalJson(journalSnapshot(durable)) !== canonicalJson(journalSnapshot(recovered))) {
         durable = recovered;

@@ -34,7 +34,7 @@ export default defineConfig({
     environment: "jsdom",
     include: [],
     coverage: { include: ["*.ts"] },
-    includeSource: ["*.ts"],
+    includeSource: ["*.ts", "📤️return/📦️content/🟦️component.ts"],
     passWithNoTests: false,
   },
 });

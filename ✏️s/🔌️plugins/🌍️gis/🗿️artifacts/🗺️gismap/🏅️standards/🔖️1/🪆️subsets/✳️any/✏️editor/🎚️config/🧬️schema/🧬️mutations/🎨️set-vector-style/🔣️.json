@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️set-vector-style",
+  "semanticKind": "set-vector-style",
+  "displayName": "Set Vector Style",
+  "emoji": "🎨️",
+  "aggregateVariant": "SetVectorStyle",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-vector-style",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

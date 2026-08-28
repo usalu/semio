@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBb2DetailsConform",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBb2DetailsConform"
+  ],
+  "properties": {
+    "newBb2DetailsConform": {
+      "type": "boolean"
+    }
+  }
+}

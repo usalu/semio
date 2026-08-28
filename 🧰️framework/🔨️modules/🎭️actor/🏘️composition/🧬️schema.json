@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.actor.resident-composition.v1",
+  "title": "Exact Actor Resident Composition Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capacity", "binding", "refusals", "boundaries", "poolPreparation", "poolLifecycle", "rejectedPreparation", "parentClose", "parentFault"],
+  "properties": {
+    "capacity": { "$ref": "semio.value.resident.capacity.v1" },
+    "poolLifecycle": { "const": { "publicCapabilityKeys": [], "releaseBytes": [64,64,64,256,64], "releaseKinds": ["pending","pending","pending","pending","complete"], "replay": "rejected", "premature": "rejected", "foreign": "rejected", "structural": "rejected", "postConstructionRepeat": "rejected", "originalFaultRetained": true, "refundWithUnknownFault": false } },
+    "poolPreparation": { "const": { "controllerFields": ["uiResidentRecord", "uiResidentPool", "uiResidentPhase", "uiResidentWitness", "uiResidentFault"], "controllerEnvelope": { "bytes": 144, "slots": 1, "owners": 1 }, "uiEnvelope": { "bytes": 192, "slots": 4, "owners": 4 }, "intrinsicEnvelope": { "bytes": 256, "slots": 3, "owners": 3 }, "total": { "bytes": 592, "slots": 8, "owners": 8 }, "prepareBytes": 256, "samePreparedBytes": 0, "secondRecord": false, "foreignLedgerBeforeAllocation": true } },
+    "rejectedPreparation": { "const": { "finalizerFault": "null", "step": "rejected", "retry": "rejected", "pool": null, "recordsAfterRefusal": 2, "releaseBytes": [64,256,64], "releaseKinds": ["pending","pending","complete"], "survivingRecords": 1, "ledgerStillOpen": true, "arbitraryExceptionRetirement": false, "outerWrapperRecovery": false } },
+    "parentClose": { "const": { "releaseBytes": [64,64,64,64,64,64,256,64], "releaseKinds": ["pending","pending","pending","pending","pending","pending","pending","complete"], "maxChildCallsPerTurn": 1, "observeAfterChild": true, "retryBytes": 0, "poolCallerRequired": false } },
+    "parentFault": { "const": { "values": ["null","undefined","false","zero","object"], "afterActualBeginClose": true, "first": "rejected", "retry": "blocked", "phase": "actor-resident.pool-fault-retirement", "getterReads": 0, "refund": false, "independentPeer": true, "arbitraryFaultRetirement": false } },
+    "binding": { "const": { "requiredOption": "residentLedger", "sameLedger": true, "foreignLedger": false, "structuralClient": false, "publicLedgerProperty": false } },
+    "refusals": { "const": ["missing-ledger", "structural-ledger", "prototype-ledger", "proxy-ledger"] },
+    "boundaries": { "const": { "workersBeforeValidLedger": 0, "createdLedgers": 0, "constructorFallback": false, "liveResponseAdmission": false, "uiPoolInstalled": false } }
+  }
+}

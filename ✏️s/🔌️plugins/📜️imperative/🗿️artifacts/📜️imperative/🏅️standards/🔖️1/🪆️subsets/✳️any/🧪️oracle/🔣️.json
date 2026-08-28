@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `imperative.document` is a semio-NATIVE program document composed over an `s.stdio.semio.flow` child and an `s.stdio.semio.text` child, so no oracle is registered and the evidence rests on the four committed per-kind vectors plus the inverse law (see noOracleDecisions).",
   "oracles": [],
   "noOracleDecisions": [

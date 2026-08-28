@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeTankRadiusM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTankRadiusM"
+  ],
+  "properties": {
+    "newTankRadiusM": {
+      "type": "number"
+    }
+  }
+}

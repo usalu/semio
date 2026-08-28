@@ -1,0 +1,26 @@
+{
+  "capacitySchema": "🧬️schema.json",
+  "pageBytes": 256,
+  "allocation": { "requiresExactReservation": true, "partialPageCharge": 256, "copyBytesPerStep": 1, "metadataReleaseIsSeparate": true },
+  "identity": { "instance": ["exactPrivateOwner", "exactActivationObject", "activationGenerationU64", "instanceIdU32", "guestLifetimeU64"], "oneScopePerInstanceOwner": true, "hostPoolSharedAcrossInstances": true },
+  "ownership": {
+    "pool": "Strong intrusive roster of admitted lifetime scopes",
+    "instance": "Strong intrusive roster of admitted payload scopes",
+    "payload": "Strong intrusive roster of page roots and primary writer handles",
+    "page": "Strong intrusive roster of captured reader handles; fixed array remains owned until the final handle retires",
+    "consumer": "A live reader must be registered with an exact retained consumer owner before exposure; producer retention alone is not consumer adoption"
+  },
+  "transitions": [
+    { "from": "unreserved", "operation": "reservePage", "to": "reserved", "guard": "Exact active payload; safe integer length 1..256; shared byte, page and handle capacity available", "effect": "Atomically charge 256 bytes, one page root and one writer handle before allocation" },
+    { "from": "reserved", "operation": "allocate", "to": "writing", "guard": "Exact retained reservation; active admission; work grant covers 256 bytes", "effect": "Allocate only one fixed 256-byte array; refusal retains the reservation" },
+    { "from": "writing", "operation": "writeByte", "to": "writing", "guard": "Sequential initialized prefix, byte in 0..255 and one-byte work grant", "effect": "Copy exactly one byte" },
+    { "from": "writing", "operation": "seal", "to": "sealed", "guard": "Initialized prefix equals declared logical page length", "effect": "Forbid further writes" },
+    { "from": "sealed", "operation": "capture", "to": "sealed", "guard": "Active admission and shared handle capacity; live exposure also requires exact consumer registration", "effect": "Retain an immutable read handle without releasing byte or page charge" },
+    { "from": "reserved|writing|sealed", "operation": "beginClose", "to": "closing", "guard": "Exact retained owner; activation may already be revoked", "effect": "Stop new allocation, writes and captures; preserve already issued reader bytes" },
+    { "from": "closing", "operation": "closeWriter", "to": "closing", "guard": "Exact strong parent roster or writer handle", "effect": "Recover an abandoned writer through bounded retirement, without invalidating independent read aliases" },
+    { "from": "closing", "operation": "closeFinalHandle", "to": "retired", "guard": "All exact handles retired; array scrubbed and detached; separate metadata-release step admitted", "effect": "Unlink the page and return its byte/page/handle reservation once" }
+  ],
+  "close": { "activationRequired": false, "oneChildPerStep": true, "callerThrowRetainsWriter": true, "liveAliasesRemainReadable": true, "rawInputAckReleasesCredit": false, "publicationReleasesCredit": false, "garbageCollectionIsDischarge": false },
+  "finalInstanceWitness": { "requiresEmptyUiDescendants": true, "requiresEmptyResidentRosters": true, "requiresAllIssuedReadersRetired": true, "requiresSeparateScopeRelease": true, "counterOnlyAuthorityAccepted": false },
+  "composition": { "defaultCapacity": null, "deriveFromMaxPatchBytes": false, "deriveFromStepBudget": false, "physicalHeapCertification": false }
+}

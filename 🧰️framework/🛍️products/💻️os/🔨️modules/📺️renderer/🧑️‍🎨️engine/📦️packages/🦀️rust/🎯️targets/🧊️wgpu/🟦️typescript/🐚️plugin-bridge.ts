@@ -60,6 +60,7 @@ import {
   ActivationRegistry,
   type ActivationReason,
   createTurnOutcomeBroadcast,
+  fetchDescriptorManifest,
   type Effect,
   type InvocationResponse,
   type PluginManifest,
@@ -70,6 +71,7 @@ import {
 import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, encodePackValue, faultDisplayMessage } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-runtime.ts";
+import { rendererResidentLedger } from "../../../../../💾️resident/🟦️component.ts";
 import {
   applyUiPatchToRetained,
   coerceTurnResult,
@@ -87,6 +89,7 @@ import {
 let pooledRuntime: PooledActorRuntime | null = null;
 function getShardClient(): ShardClient {
   pooledRuntime ??= createPooledActorRuntime({
+    residentLedger: rendererResidentLedger(),
     onActorTrap: (actorId, message) => console.error(`[DEBUG] wgpu plugin-bridge: actor ${actorId} trapped: ${message}`),
     onShardLost: (shardIndex, actorIds) => {
       console.error(`[DEBUG] wgpu plugin-bridge: shard ${shardIndex} lost, restoring actors: ${actorIds.join(", ")}`);
@@ -184,28 +187,6 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
 }
 //#endregion 🔖️Invocation
 
-//#region 🔖️DescriptorManifest
-/** 📇️ Reads the build-time `🔣️descriptor.json` siblinged next to `moduleUrl`'s directory — an honest
- * EMPTY manifest (zero apps), not a fabricated one, whenever no descriptor exists yet. Never
- * instantiates wasm to ask. Mirrors `PluginRuntime/🟦️component.tsx`'s `fetchDescriptorManifest`
- * (small enough — one `fetch` + fallback — that lifting it into a shared module wasn't worth a new
- * cross-target dependency for two nearly-identical ~15-line copies). */
-async function fetchDescriptorManifest(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<PluginManifest> {
-  const descriptorUrl = moduleUrl.replace(/\/[^/]+$/, "/🔣️descriptor.json");
-  try {
-    const response = await fetch(descriptorUrl, signal ? { signal } : undefined);
-    const contentType = response.headers?.get?.("content-type") ?? "";
-    if (response.ok && !contentType.includes("text/html")) {
-      const descriptor = (await response.json()) as { readonly manifest?: PluginManifest };
-      if (descriptor.manifest) return descriptor.manifest;
-    }
-  } catch (error) {
-    if (signal?.aborted) throw error;
-  }
-  return { pluginId, label: pluginId, version: "", apps: [], workflows: [], examples: [] };
-}
-//#endregion 🔖️DescriptorManifest
-
 //#region 🔖️WgpuPluginHandle
 /** 🐚️ The typed handle this file hands to a `bootFrameworkOsWgpu`/`🟦️boot.ts` caller — narrower than
  * `PluginRuntime`'s wide `PluginWasmHandle` (no transactions/merge/conflicts/backbone/presence): only
@@ -228,9 +209,9 @@ export interface WgpuPluginHandle {
  * `ShardClient.dispose` — no shared module lease to refcount any more, one actor belongs to exactly
  * one instance. */
 export async function loadPluginModule(pluginId: string, moduleUrl: string, signal?: AbortSignal): Promise<WgpuPluginHandle> {
+  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
   const registry = getActivationRegistry();
   registry.registerManifest({ pluginId, moduleUrl, caps: [] });
-  const manifest = await fetchDescriptorManifest(pluginId, moduleUrl, signal);
   const shardClient = getShardClient();
   const actorIdByInstance = new Map<number, string>();
   const channelByInstance = new Map<number, AppChannelClient>();

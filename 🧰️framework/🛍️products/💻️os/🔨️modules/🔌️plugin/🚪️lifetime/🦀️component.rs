@@ -9,6 +9,8 @@ pub struct PluginInstanceCloseLease<PA: PluginApp> {
 }
 
 impl<PA: PluginApp + 'static> PluginInstanceCloseLease<PA> {
+    pub(crate) fn allocation_identity(&self) -> (u32, usize) { (self.instance_id, self.cell.as_ptr().cast::<()>() as usize) }
+
     /// 🚪️ Admits at most one close for the captured allocation without retaining an app payload alias.
     pub fn begin_close(&mut self, runtime: &PluginRuntime<PA>) -> Result<(), Fault> {
         if self.admitted.is_some() { return Ok(()); }

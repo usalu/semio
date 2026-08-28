@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBedrooms",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBedrooms"
+  ],
+  "properties": {
+    "newBedrooms": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

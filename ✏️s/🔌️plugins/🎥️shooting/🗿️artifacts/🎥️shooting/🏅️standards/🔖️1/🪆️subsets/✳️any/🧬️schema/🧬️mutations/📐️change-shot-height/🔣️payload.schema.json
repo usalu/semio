@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeShotHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeight"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newHeight": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

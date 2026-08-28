@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.dev/schema/plugin/reactor/job-test-mutations/operations","type":"object","additionalProperties":false,"required":["AddValue"],"properties":{"AddValue":{"$ref":"https://semio.dev/schema/plugin/reactor/job-test-mutations/add-value"}}}

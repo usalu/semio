@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHandleKindLabel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLabel"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newLabel": {
+      "type": "string"
+    }
+  }
+}

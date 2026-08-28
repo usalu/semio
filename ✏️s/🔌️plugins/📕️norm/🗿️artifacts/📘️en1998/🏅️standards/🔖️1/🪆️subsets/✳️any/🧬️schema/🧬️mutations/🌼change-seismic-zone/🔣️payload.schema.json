@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSeismicZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSeismicZone"
+  ],
+  "properties": {
+    "newSeismicZone": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

@@ -3,7 +3,7 @@
 use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::schema::{default_document, positions_operations, regions_operations, routes_operations};
 use crate::artifacts::gismap::GisMapSnapshot;
-use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
+use crate::editor::gis2d::config::{mutations as config_mutations, Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::maphost::map_host_from;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ pub mod set_active_example {
         if !payload.example_id.is_empty() {
             let mut host = map_host_from(&next, cfg.snapshot);
             host.fit_world_camera();
-            config_mutations.push(Gis2dConfigMutation::SetCamera { camera_json: host.camera_json() });
+            config_mutations.push(Gis2dConfigMutation::SetCamera(config_mutations::SetCamera { camera_json: host.camera_json() }));
         }
         let document = doc.snapshot;
         let mut artifact_mutations = positions_operations(&document.positions, &next.positions);

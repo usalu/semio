@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "id",
+        "newKind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "newKind": {
+          "$ref": "../../../🔣️.json#/$defs/DagNodeKind"
+        }
+      },
+      "description": "Actual intrinsic DagNodeKind payload; the shared intrinsic DslField lowering provides text and binary codecs."
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateColdFormedInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCfBBarMm",
+    "newCfGrossResistanceKn",
+    "newCfKSigma",
+    "newCfNEdKn",
+    "newCfPsi",
+    "newCfTMm"
+  ],
+  "properties": {
+    "newCfBBarMm": {
+      "type": "number"
+    },
+    "newCfTMm": {
+      "type": "number"
+    },
+    "newCfKSigma": {
+      "type": "number"
+    },
+    "newCfPsi": {
+      "type": "number"
+    },
+    "newCfNEdKn": {
+      "type": "number"
+    },
+    "newCfGrossResistanceKn": {
+      "type": "number"
+    }
+  }
+}

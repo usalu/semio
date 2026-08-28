@@ -1,12 +1,12 @@
 //#region Imports
-import { expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { createHash, webcrypto } from "node:crypto";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { clearDiscoveryCache, discoverPackageProblems, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️component.ts";
+import { clearDiscoveryCache, discoverPackageProblems, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract } from "../../🔍️discovery/🟦️component.ts";
 import { applyTaxonomyPlan, frozenCoordinateEvidenceCoordinates, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
 //#endregion Imports
 
@@ -176,3 +176,122 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   expect(existsSync(options.ticketDir)).toBe(false);
 }, 120_000);
 //#endregion Tests
+
+describe("Energy historical source coordinates", () => {
+  const input = JSON.parse(readFileSync(join(import.meta.dir, "🧬️energy-source-coordinates/🔣️.json"), "utf8"));
+  const expected = Object.fromEntries(input.documents.map((row: { id: string; registration: FrozenCoordinateEvidenceContract; energy: { declaration: FrozenCoordinateEvidenceContract["coordinates"][number] }[] }) => [row.id, { ...row.registration, coordinates: [...row.registration.coordinates, ...row.energy.map((entry) => entry.declaration)] }])) as Record<string, FrozenCoordinateEvidenceContract>;
+  const schema = loadCatalogTaxonomy();
+  const contracts = Object.fromEntries(Object.keys(expected).map((id) => [id, schema.frozenCoordinateEvidenceContracts[id]!]));
+  const valuePin = ({ value, ...coordinate }: { pointer: string; kind: string; start: number; end: number; value: string }) => ({ ...coordinate, valueSha256: sha(value), valueUtf8Bytes: Buffer.byteLength(value, "utf8") });
+  const pointerParts = (pointer: string) => pointer.slice(1).split("/").map((part) => /^(?:0|[1-9][0-9]*)$/u.test(part) ? Number(part) : part.replaceAll("~1", "/").replaceAll("~0", "~"));
+  const oracle = (content: string, pointer: string) => {
+    const errors: import("jsonc-parser").ParseError[] = [];
+    const tree = parseTree(content, errors, { allowTrailingComma: false, disallowComments: true })!;
+    expect(errors).toEqual([]);
+    expect(getNodeValue(tree)).toEqual(JSON.parse(content));
+    const node = findNodeAtLocation(tree, pointerParts(pointer))!;
+    expect(node.type).toBe("string");
+    expect(content.slice(node.offset + 1, node.offset + node.length - 1)).toBe(node.value);
+    return { pointer, kind: "source", start: node.offset + 1, end: node.offset + node.length - 1, value: node.value };
+  };
+  const document = (row: { registration: FrozenCoordinateEvidenceContract; size: number; mode: number }) => {
+    const parts = row.registration.path.split("/");
+    expect(parts.every((part) => part && part !== "." && part !== "..")).toBe(true);
+    expect(/^(?:compose|temp\/compose)(?:\/|$)/u.test(row.registration.path)).toBe(false);
+    let path = repoRoot;
+    for (const [index, part] of parts.entries()) {
+      path = join(path, part);
+      const stat = lstatSync(path);
+      expect(stat.isSymbolicLink()).toBe(false);
+      expect(index === parts.length - 1 ? stat.isFile() : stat.isDirectory()).toBe(true);
+    }
+    const fd = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+    try {
+      const before = fstatSync(fd), bytes = readFileSync(fd), after = fstatSync(fd), linked = lstatSync(path);
+      expect(before.isFile()).toBe(true);
+      expect({ size: before.size, mode: before.mode & 0o777, sha256: sha(bytes) }).toEqual({ size: row.size, mode: row.mode, sha256: row.registration.sha256 });
+      expect([after.dev, after.ino, after.size, after.mode, after.mtimeMs, after.ctimeMs]).toEqual([before.dev, before.ino, before.size, before.mode, before.mtimeMs, before.ctimeMs]);
+      expect([linked.dev, linked.ino, linked.isSymbolicLink()]).toEqual([before.dev, before.ino, false]);
+      return bytes;
+    } finally { closeSync(fd); }
+  };
+
+  test("register exactly ten additions without changing the eight historical authorities", () => {
+    expect(input.counts).toEqual({ documents: 8, existingDraw: 23, addedEnergy: 10, total: 33 });
+    expect(input.coordinateValueEncoding).toEqual({ algorithm: "sha256", lengthUnit: "utf8-byte", spanUnit: "utf16-code-unit", endExclusive: true });
+    expect(input.negativeCases).toHaveLength(16);
+    expect(new Set(input.negativeCases.map((row: { id: string }) => row.id)).size).toBe(16);
+    expect(input.documents.reduce((count: number, row: { registration: FrozenCoordinateEvidenceContract }) => count + row.registration.coordinates.length, 0)).toBe(23);
+    expect(input.documents.reduce((count: number, row: { energy: unknown[] }) => count + row.energy.length, 0)).toBe(10);
+    expect(contracts).toEqual(expected);
+    expect(validateFrozenCoordinateEvidenceContracts(contracts)).toEqual([]);
+    for (const contract of Object.values(contracts)) {
+      expect(contract.schemaVersion).toBeNull();
+      expect(contract.coordinates.every((coordinate) => coordinate.kind === "source" && !coordinate.pointer.includes("*"))).toBe(true);
+    }
+  });
+
+  test("public helper preserves all 33 exact spans with independent JSON oracle parity", () => {
+    let count = 0;
+    for (const row of input.documents) {
+      const bytes = document(row), content = bytes.toString(), actual = frozenCoordinateEvidenceCoordinates(row.registration.path, bytes, contracts)!;
+      const prior = frozenCoordinateEvidenceCoordinates(row.registration.path, bytes, { historical: row.registration })!;
+      const coordinates = expected[row.id]!.coordinates.map((declaration) => oracle(content, declaration.pointer)).sort((left, right) => left.start - right.start);
+      expect(actual, row.id).toEqual(coordinates);
+      expect(prior).toEqual(coordinates.filter((coordinate) => row.registration.coordinates.some((declaration: { pointer: string }) => declaration.pointer === coordinate.pointer)));
+      for (const addition of row.energy) {
+        expect(valuePin(oracle(content, addition.declaration.pointer))).toEqual(addition.coordinate);
+        expect(valuePin(actual.find((coordinate) => coordinate.pointer === addition.declaration.pointer)!)).toEqual(addition.coordinate);
+      }
+      expect(document(row)).toEqual(bytes);
+      count += actual.length;
+    }
+    expect(count).toBe(33);
+  });
+
+  test("closed approval rejects wider selectors and any changed historical identity", () => {
+    const ajv = new Ajv({ strict: true });
+    for (const row of input.documents) {
+      const approved = expected[row.id]!, validate = ajv.compile({ const: approved });
+      expect(validate(approved)).toBe(true);
+      const first = row.energy[0].declaration;
+      const variants = [
+        { ...approved, sha256: "0".repeat(64) },
+        { ...approved, schemaVersion: 1 },
+        { ...approved, path: "🧪️neighbor/🔣️.json" },
+        { ...approved, coordinates: approved.coordinates.slice(1) },
+        { ...approved, coordinates: [...approved.coordinates, first] },
+        { ...approved, coordinates: [{ ...first, pointer: first.pointer.replace(/\/[0-9]+\//u, "/*/") }] },
+        { ...approved, coordinates: [...approved.coordinates, { ...first, pointer: "/neighbor" }] },
+        { ...approved, coordinates: approved.coordinates.map((coordinate) => "representation" in coordinate ? { ...coordinate, recordedRepositoryRoot: "/recorded/foreign" } : { ...coordinate, representation: "recorded-repository-absolute", recordedRepositoryRoot: "/recorded/foreign" }) },
+      ];
+      for (const variant of variants) expect(validate(variant), row.id).toBe(false);
+    }
+  });
+
+  test("neighboring undeclared Energy values do not gain coordinate authority", () => {
+    for (const neighbor of input.undeclaredNeighbors) {
+      const row = input.documents.find((entry: { id: string }) => entry.id === neighbor.contractId)!;
+      const bytes = document(row), actual = frozenCoordinateEvidenceCoordinates(row.registration.path, bytes, contracts)!;
+      const { contractId, ...coordinate } = neighbor;
+      expect(valuePin(oracle(bytes.toString(), neighbor.pointer))).toEqual({ ...coordinate, kind: "source" });
+      expect(actual.some((coordinate) => coordinate.pointer === neighbor.pointer || coordinate.start === neighbor.start)).toBe(false);
+    }
+    const scenario = input.duplicateValueCase, source = input.documents.find((row: { id: string }) => row.id === scenario.valueFrom.contractId)!;
+    const value = oracle(document(source).toString(), scenario.valueFrom.pointer).value;
+    const content = JSON.stringify({ selected: value, neighbor: value }), bytes = Buffer.from(content);
+    const contract = { path: "🧪️history/🔣️.json", sha256: sha(bytes), schemaVersion: null, coordinates: scenario.coordinates };
+    const selected = oracle(content, scenario.selectedPointer), neighbor = oracle(content, scenario.unownedPointer);
+    expect(selected.value).toBe(neighbor.value);
+    expect(selected.start).not.toBe(neighbor.start);
+    expect(frozenCoordinateEvidenceCoordinates(contract.path, bytes, { exact: contract })).toEqual([selected]);
+    expect(frozenCoordinateEvidenceCoordinates("🧪️neighbor/🔣️.json", bytes, { exact: contract })).toBeNull();
+  });
+
+  for (const row of input.negativeCases) test("rejects " + row.id, () => {
+    const bytes = Buffer.from(row.document), contract = { path: "🧪️history/🔣️.json", sha256: sha(row.registeredDocument ?? bytes), schemaVersion: row.schemaVersion, coordinates: row.coordinates };
+    const registry: Record<string, FrozenCoordinateEvidenceContract> = { exact: contract };
+    if (row.duplicateOwner) registry.duplicate = contract;
+    expect(() => frozenCoordinateEvidenceCoordinates(contract.path, bytes, registry)).toThrow(row.error);
+  });
+});

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsertPaintLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "layer",
+    "objectId"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layer": {
+      "title": "LowpolyPaintLayer",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blendMode",
+        "name",
+        "opacity",
+        "pixels",
+        "visible"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "opacity": {
+          "type": "number"
+        },
+        "blendMode": {
+          "type": "string"
+        },
+        "pixels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

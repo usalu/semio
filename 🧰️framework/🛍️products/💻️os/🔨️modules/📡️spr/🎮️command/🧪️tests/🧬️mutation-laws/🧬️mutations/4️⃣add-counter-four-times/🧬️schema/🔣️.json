@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "delta"
+      ],
+      "properties": {
+        "delta": {
+          "$ref": "../../../🧬️schema/🔣️.json#/$defs/I64"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false
+}

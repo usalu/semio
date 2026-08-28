@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeObjectLocked",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLocked"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newLocked": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["layers", "refusals", "childBytes", "overGrantBytes", "releaseBytes", "transferBytes", "terminalLayers", "throwReason", "failureKeepsOwner", "zeroGrantChangesState"],
+  "properties": {
+    "layers": { "type": "array", "minItems": 7, "maxItems": 7, "uniqueItems": true, "items": { "enum": ["operation-decode", "payload-retirement", "decoder-close", "operation-retirement", "stream-decode", "stream-input-close", "stream-operation-retirement"] } },
+    "refusals": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["blocked", "rejected"] } },
+    "childBytes": { "const": 4096 }, "overGrantBytes": { "const": 4097 }, "releaseBytes": { "const": 64 }, "transferBytes": { "const": 128 },
+    "terminalLayers": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["decoder-close", "stream-input-close"] } }, "throwReason": { "type": "string", "minLength": 1 },
+    "failureKeepsOwner": { "const": true }, "zeroGrantChangesState": { "const": false }
+  }
+}

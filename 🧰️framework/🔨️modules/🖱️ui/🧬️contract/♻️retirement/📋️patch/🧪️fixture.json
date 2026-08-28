@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "logicalCapacity": 1153,
+  "native64": {"operationBytes": 6416, "descriptorBytes": 24, "directoryBytes": 27672, "firstPayloadBytes": 6416, "firstBackingBytes": 34088},
+  "physicalGrant": 32768,
+  "semanticGrants": [0, 1, 64, 4096],
+  "placementGrants": [0, 4096, 6415, 6416, 32768],
+  "placedBytes": [0, 0, 0, 6416, 6416],
+  "operations": [{"type": "setRoot", "id": 7}, {"type": "remove", "id": 9}, {"type": "setRoot", "id": 11}],
+  "pageLengths": [1, 1, 1],
+  "retirementOrder": [11, 9, 7],
+  "sourceAfterHandoffBytes": 0,
+  "allocationBeforeAdmission": false,
+  "failedPlacementKeepsSource": true,
+  "emptyPageStillCharged": true,
+  "cancelMovesPayload": false,
+  "unplaced": {"allocationBytes": 0, "semanticBytes": 512, "readsAfterClose": false, "sourceReplacementAfterClose": false}
+}

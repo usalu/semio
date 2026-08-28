@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeApplicationType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newApplicationType"
+  ],
+  "properties": {
+    "newApplicationType": {
+      "type": "string"
+    }
+  }
+}

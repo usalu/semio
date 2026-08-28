@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/builder/dependency-contribution/diff",
+  "type": "object",
+  "required": [
+    "deltas"
+  ],
+  "properties": {
+    "deltas": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": -2147483648,
+        "maximum": 2147483647
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

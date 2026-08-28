@@ -1,0 +1,1 @@
+{"version":1,"slots":64,"surfaceBytes":8388608,"aggregateBytes":33554432,"surfaceItems":4097,"aggregateItems":131076,"smallReservations":9,"smallBytes":65536,"physicalGrant":32768,"rootOwner":1,"outputOwner":2,"returnOrder":[1,2],"returnedBytes":[0,65536],"dropWaits":false,"reusesBeforeFinalOwner":false,"duplicateReturnAfterExplicitClose":false,"crossWorkerRounds":32}

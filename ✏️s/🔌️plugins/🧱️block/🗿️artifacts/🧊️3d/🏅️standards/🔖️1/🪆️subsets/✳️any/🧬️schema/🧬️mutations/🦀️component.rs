@@ -372,7 +372,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
-        register_block3d_mutation_descriptors();
+        register_block3d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
         for kind in Block3dMutation::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         }

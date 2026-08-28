@@ -12,6 +12,8 @@ import { spawn } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import ts from "typescript";
+import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts";
+import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️component.ts";
 import { buildBudgetMs, resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 export const PLUGIN_HOST_SHIM_FILE = "🟨️host-shim.js";
@@ -108,7 +110,7 @@ Error.stackTraceLimit = 200;
 // is a worker-wide sentinel, not a real actor, since no actor has activated yet at this point.
 if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") {
   const message = "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
-  self.postMessage({ kind: "trap", actorId: "*", message });
+  self.postMessage({ kind: "trap", actorId: "*", activationGeneration: null, message });
   throw new Error(message);
 }
 
@@ -202,9 +204,9 @@ async function loadActor(actorId, activationGeneration, moduleUrl) {
 // (\`envelope.payload.payload.requestId\`, \`.value\` on complete / \`.message\` on error). A missing actor
 // (already disposed, or the envelope arrived before \`activate\`) is silently dropped rather than
 // thrown, matching \`cancelJob\`'s own \`actor?.\` defensiveness above.
-function deliverEffectResult(actorId, envelope) {
+function deliverEffectResult(actorId, activationGeneration, envelope) {
   const actor = actors.get(actorId);
-  if (!actor) return;
+  if (!actor || actor.activationGeneration !== activationGeneration || envelope.to !== actorId || envelope.from?.kind !== "kernel") return;
   const { kind, payload } = envelope.payload;
   if (kind === "effect-complete") actor.api.resolveEffect(payload.requestId, payload.value);
   else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
@@ -252,7 +254,7 @@ self.addEventListener("message", async (event) => {
   // own — settled directly, before the generic requestId/actorId-gated dispatch below (which always
   // posts a \`"result"\` back, wrong for a message that is itself already an answer).
   if (kind === "frame" && msg.frame && msg.frame.kind === "Envelope" && msg.frame.envelope && msg.frame.envelope.payload && (msg.frame.envelope.payload.kind === "effect-complete" || msg.frame.envelope.payload.kind === "effect-error")) {
-    deliverEffectResult(msg.actorId, msg.frame.envelope);
+    deliverEffectResult(msg.actorId, msg.activationGeneration, msg.frame.envelope);
     return;
   }
   const { requestId, actorId } = msg;
@@ -269,6 +271,7 @@ self.addEventListener("message", async (event) => {
     if (!actor) throw new Error(\`shard worker: actor \${actorId} not activated\`);
     switch (kind) {
       case "turn": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
         if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
         inFlightTurnActors.add(actorId);
         try {
@@ -365,18 +368,53 @@ self.addEventListener("message", async (event) => {
  *
  * 🧪️ terra-web-bridges: every destructured method now returns a Promise (every WIT function in the
  * target world is `async func`) — made EXPLICITLY `async` here rather than relying on bare pass-
- * through, so the shape is self-documenting and robust even if a future jco version wraps a export in
- * something that ISN'T already a thenable. Also now takes `actorId` and binds it into the shim
- * (`__bindHostBridge`) BEFORE returning the api object — see `🟨️host-shim.js` (`hostShimSource`)'s own
- * header doc for why this binding is safe as per-module state and why it's needed at all (every
- * `host-async` import must tag its outbound `effect-request` envelope with the actor it belongs to).
- * `🟨️shard-worker.js`'s `loadActor` is the one caller, updated to pass `actorId` alongside this change.
+ * through. The component and its host imports use matching actor/activation/version URLs; a static
+ * relative shim import would otherwise be shared across same-package activations. Each returned API
+ * retains that immutable shim module for replies, including while other actors are interleaved.
  */
 export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
   return `/** @generated semio actor jco component bridge */
-import * as hostShim from "./${PLUGIN_HOST_SHIM_FILE}";
 
+const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = ${ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES};
+const encodeActorInstanceLifecycle = ${encodeActorInstanceLifecycle.toString()};
+const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = ${ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES};
+const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
+const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
 const commandIngressKinds = new Map([[0, "idle"], [1, "page-accepted"], [2, "backpressure"], [3, "command-pending"], [4, "command-complete"], [5, "fault"]]);
+
+function lifecycleBody(value) {
+  return { lifetime: value.lifetime, requestSequence: BigInt(value.requestSequence), ...("closeGeneration" in value ? { closeGeneration: value.closeGeneration } : {}) };
+}
+
+function lifecycleEvent(kind, payload, activationGeneration) {
+  if (kind === "patch-ack" || kind === "patch-rejected") {
+    encodeActorUiPatchReceipt(payload.receipt);
+    if (payload.receipt.lifetime.activationGeneration !== activationGeneration || payload.surface?.instance !== payload.receipt.lifetime.instanceId) throw new Error("actor-ui-patch.activation-mismatch");
+    return { tag: kind, val: payload };
+  }
+  if (kind === "instance-open") {
+    encodeActorInstanceLifecycle({ kind: "open", activationGeneration: payload.activationGeneration, instanceId: payload.instance, requestSequence: payload.requestSequence });
+    if (payload.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+    return { tag: kind, val: { ...payload, requestSequence: BigInt(payload.requestSequence) } };
+  }
+  if (kind === "instance-close" || kind === "instance-lifecycle-ack") {
+    if (payload?.kind !== (kind === "instance-close" ? "close" : "ack")) throw new Error("actor-lifecycle.event-kind");
+    encodeActorInstanceLifecycle(payload);
+    const receipt = kind === "instance-close" ? payload : payload.receipt;
+    if (receipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+    return { tag: kind, val: kind === "instance-close" ? lifecycleBody(receipt) : { tag: receipt.kind, val: lifecycleBody(receipt) } };
+  }
+  return kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload });
+}
+
+function lifecycleReceipt(value, activationGeneration) {
+  if (value === undefined || value === null) return undefined;
+  if (value.tag !== "captured" && value.tag !== "accepted" && value.tag !== "retired") throw new Error("actor-lifecycle.receipt-required");
+  const body = value.val;
+  if (typeof body?.requestSequence !== "bigint" || body.requestSequence <= 0n || body.requestSequence > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("actor-lifecycle.request-sequence");
+  if (body.lifetime?.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+  return encodeActorInstanceLifecycle({ kind: value.tag, lifetime: body.lifetime, requestSequence: Number(body.requestSequence), ...(value.tag === "captured" ? {} : { closeGeneration: body.closeGeneration }) });
+}
 
 function normalizeCommandIngress(status) {
   const tag = commandIngressKinds.get(status.kind);
@@ -386,6 +424,14 @@ function normalizeCommandIngress(status) {
   return { tag, val: status.cursor };
 }
 
+function uiPatchReceipt(result, activationGeneration) {
+  if (!Array.isArray(result.uiPatches)) throw new Error("actor-ui-patch.envelope");
+  validateActorUiPatchPairing(result.uiPatches.length, result.uiPatchReceipt);
+  if (result.uiPatchReceipt === undefined || result.uiPatchReceipt === null) return undefined;
+  if (result.uiPatchReceipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-ui-patch.activation-mismatch");
+  return encodeActorUiPatchReceipt(result.uiPatchReceipt);
+}
+
 export async function createActorApi(actorId, activationGeneration) {
   if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
   const componentUrl = new URL("./${componentBase}.js", import.meta.url);
@@ -393,12 +439,14 @@ export async function createActorApi(actorId, activationGeneration) {
   componentUrl.searchParams.set("actor", actorId);
   componentUrl.searchParams.set("activation", activationGeneration.toString());
   if (rebuildVersion) componentUrl.searchParams.set("v", rebuildVersion);
+  const hostUrl = new URL("./${PLUGIN_HOST_SHIM_FILE}", import.meta.url);
+  hostUrl.search = componentUrl.search;
+  const hostShim = await import(hostUrl.href);
   const { reactor, jobs, checkpoint, describe } = await import(componentUrl.href);
-  hostShim.__bindHostBridge(actorId);
   return {
     poll: async (events, commandPage, budget) => {
-      const result = await reactor.poll(events.map(({ kind, payload }) => kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload })), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
-      return { ...result, commandIngress: normalizeCommandIngress(result.commandIngress) };
+      const result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), commandPage, { fuel: BigInt(budget.fuel), deadlineMs: budget.wallMs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: 8 });
+      return { ...result, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
     },
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),
@@ -540,6 +588,30 @@ function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
 //#endregion 🧬️JcoAsyncResultLifting
 
 //#region 🧊️JcoComponentAssetVersioning
+const JCO_HOST_SHIM_URL_HELPER = `function __semioActivationHostUrl() {
+  const url = new URL("./🟨️host-shim.js", import.meta.url);
+  const source = new URL(import.meta.url);
+  for (const key of ["actor", "activation", "v"]) {
+    const value = source.searchParams.get(key);
+    if (value !== null) url.searchParams.set(key, value);
+  }
+  return url;
+}`;
+
+function rewriteJcoHostShimImports(source: string): string {
+  const parsed = ts.createSourceFile("component.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const edits: { start: number; end: number; value: string }[] = [];
+  for (const statement of parsed.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== `./${PLUGIN_HOST_SHIM_FILE}`) continue;
+    const bindings = statement.importClause?.namedBindings;
+    if (statement.importClause?.name || !bindings || !ts.isNamedImports(bindings)) throw new Error("unsupported jco host shim import shape");
+    const fields = bindings.elements.map((field) => field.propertyName ? `${field.propertyName.getText(parsed)}: ${field.name.text}` : field.name.text).join(", ");
+    edits.push({ start: statement.getStart(parsed), end: statement.end, value: `const { ${fields} } = await import(__semioActivationHostUrl().href);` });
+  }
+  for (const edit of edits.reverse()) source = source.slice(0, edit.start) + edit.value + source.slice(edit.end);
+  return edits.length === 0 ? source : `${JCO_HOST_SHIM_URL_HELPER}\n\n${source}`;
+}
+
 const JCO_COMPONENT_ASSET_URL = /new URL\((['"])(\.\/[^'"]+\.core\d*\.wasm)\1,\s*import\.meta\.url\)/g;
 const JCO_COMPONENT_ASSET_URL_HELPER = `function __semioVersionedComponentAssetUrl(path) {
   const url = new URL(path, import.meta.url);
@@ -548,8 +620,9 @@ const JCO_COMPONENT_ASSET_URL_HELPER = `function __semioVersionedComponentAssetU
   return url;
 }`;
 
-/** @emoji 🧊️ Carries the component-module rebuild version into every jco-generated core Wasm fetch. */
+/** 🪪️ Preserves activation identity for host imports and rebuild identity for extracted core Wasm. */
 export function rewriteJcoComponentAssetUrls(source: string): string {
+  source = rewriteJcoHostShimImports(source);
   if (source.includes("function __semioVersionedComponentAssetUrl(path)")) return source;
   const rewritten = source.replace(JCO_COMPONENT_ASSET_URL, (_match, quote, assetPath) => `__semioVersionedComponentAssetUrl(${quote}${assetPath}${quote})`);
   return rewritten === source ? source : `${JCO_COMPONENT_ASSET_URL_HELPER}\n\n${rewritten}`;
@@ -687,17 +760,14 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
  * `transpilePluginComponent`'s `--map` pair. Every async import posts an `effect-request` and returns
  * a Promise settled by a later `effect-complete`/`effect-error` — see `effectRequest`'s own doc below
  * for the exact `ShardFrame`/`ShardEnvelope` shape it rides (reused verbatim from
- * `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`, never a second wire) and `__bindHostBridge`'s
- * doc for why per-actor correlation is safe as this module's own top-level state.
+ * `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`, never a second wire). Host state belongs to
+ * an immutable actor/activation/version module URL shared by the component and its returned API.
  *
  * 🚧 UNPROVEN beyond the jcoprobe fixture (📓️terra-jco-spike-report.md): (a) whether jco expects a
  * `result<T, pack>`-returning host-async import to signal `Err` by throwing — jcoprobe's own
  * `probe-host` never used a `result<>` return, so `effectRequest` rejecting on `effect-error` follows
- * jco's documented host-import convention, not a spike-confirmed one; (b) the kernel-side responder
- * for `effect-request`/`effect-complete` does not exist yet — `ShardClient`'s `InboundMessage` union
- * (`🧵️shard-client.ts`) only recognizes `result`/`heartbeat`/`trap` today, so a real round trip through
- * a live `ShardClient` has not been exercised; only the SHAPE this shim emits/expects is fixed here,
- * for a sibling packet owning that file to start answering.
+ * jco's documented host-import convention, not a spike-confirmed one; (b) generated JavaScript and
+ * ShardClient ownership tests do not establish a fresh guest round trip through every host import.
  */
 export function hostShimSource(): string {
   return `/** @generated semio actor host shim — implements the pure AND host-async import interfaces
@@ -720,18 +790,15 @@ export function traceSpan(name) {
 //#endregion 🧬️pure
 
 //#region 🌉️host-async
-let boundActorId = null;
+const bindingUrl = new URL(import.meta.url);
+const boundActorId = bindingUrl.searchParams.get("actor");
+const generationText = bindingUrl.searchParams.get("activation");
+const boundActivationGeneration = generationText && /^[1-9][0-9]*$/.test(generationText) && generationText.length <= 20 ? BigInt(generationText) : null;
 let effectSeq = 0;
 const pendingEffects = new Map();
 
-// 🌉️ Called once by \`createActorApi(actorId)\` (\`pluginComponentBridgeSource\`), right after this
-// module is imported for that actor — every subsequent \`effectRequest\` in THIS module instance is
-// tagged with \`actorId\`. Safe as module-scoped (not global) state ONLY because \`🟨️shard-worker.js\`
-// dynamically \`import()\`s a distinct moduleUrl per actor (\`loadActor\`'s own doc), so each actor gets
-// its own copy of this file's top-level state — never shared across actors, even under the
-// cross-actor interleaving this worker's header doc describes.
-export function __bindHostBridge(actorId) {
-  boundActorId = actorId;
+function assertHostActivation() {
+  if (!boundActorId || boundActivationGeneration === null || boundActivationGeneration > 0xffffffffffffffffn) throw new Error("actor-activation.host-unbound");
 }
 
 // 🌉️ Settles the Promise \`effectRequest\` handed back for \`requestId\` — called by \`🟨️shard-worker.js\`
@@ -783,12 +850,14 @@ async function* streamToByteGenerator(body) {
 // \`ShardEventEnvelope\` already uses for turn events, reused rather than inventing a new one. Resolves
 // or rejects once \`__resolveEffect\`/\`__rejectEffect\` fires for the matching \`requestId\`.
 function effectRequest(effect, params) {
-  const requestId = \`\${boundActorId}:\${effect}:\${++effectSeq}\`;
+  assertHostActivation();
+  const requestId = \`\${boundActorId}:\${boundActivationGeneration}:\${effect}:\${++effectSeq}\`;
   return new Promise((resolve, reject) => {
     pendingEffects.set(requestId, { resolve, reject });
     self.postMessage({
       kind: "frame",
       actorId: boundActorId,
+      activationGeneration: boundActivationGeneration,
       frame: {
         kind: "Envelope",
         envelope: {
@@ -810,9 +879,11 @@ function effectRequest(effect, params) {
 // ~24 one-way \`effect\` variants (plus \`respond\`) and for UI patches. No \`requestId\`/Promise: posts
 // and returns immediately, same envelope shape as \`effectRequest\` above minus the correlation.
 function postFireAndForget(kind, payload) {
+  assertHostActivation();
   self.postMessage({
     kind: "frame",
     actorId: boundActorId,
+    activationGeneration: boundActivationGeneration,
     frame: {
       kind: "Envelope",
       envelope: { to: "kernel", from: { kind: "actor", id: boundActorId }, lane: "Background", seq: ++effectSeq, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind, payload } },

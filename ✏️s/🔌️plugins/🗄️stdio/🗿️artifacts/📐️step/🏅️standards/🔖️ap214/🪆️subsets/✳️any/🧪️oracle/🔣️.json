@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution to the repository test platform: `ruststep` 0.4 registered as the real ISO 10303-21 reader for stdio.step ap214/✳️any's exhaustive StepMutation vocabulary, the mutation catalog it is measured against, and the tolerant structural comparison profile a re-serialized STEP exchange structure needs against an independently parsed one.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "ruststep",
       "version": "0.4",
-      "capabilities": ["step-ap214-any-mutate"],
-      "comparisonProfiles": ["semantic-step-v1"],
+      "capabilities": [
+        "step-ap214-any-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-step-v1"
+      ],
       "license": "Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/ricosjp/ruststep",
       "rationale": "ruststep 0.4 (newly linked this wave) is a real, actively-maintained ISO 10303-21/-11 (EXPRESS) parser for Rust -- confirmed by reading its own source (~/.cargo/registry/src/.../ruststep-0.4.0): `ast::Exchange`/`ast::DataSection`/`ast::Record`/`ast::Parameter`/`ast::EntityInstance` all implement `FromStr` over the real Part-21 clear-text grammar (multi-line records, nested lists, typed/complex instances, `$`/`*`/`.ENUM.`/`#ref` tokens), verified against this subset's own real fixture (1396 real entities parsed with zero errors). It has NO writer at all: `ast::ser::to_record` only builds a `Record` from an already-typed Rust struct (schema-generated ap201/ap203 tables this crate does not even compile, since AP214 has no generated schema module in ruststep at all), and grepping the whole crate source for `Display`/`fmt::Formatter` impls on `Exchange`/`DataSection`/`Record`/`Parameter` finds none -- there is no `to_string`/serialize path back to Part-21 text anywhere in the crate. Per the fleet brief's §6, this rules out `@mode-differential`: ruststep cannot be a second PRODUCER of mutated bytes to diff against. It is registered here strictly as the INDEPENDENT READER role instead -- every real mutation this subset's own oracle dispatcher (`../🧪️oracle/🦀️component.rs`) performs (via ruststep's real parse plus this module's own from-scratch Part-21 writer, since none exists to reuse) is read back through a FRESH, independent `ruststep::ast::Exchange::from_str` call before being projected onto `semantic-step-v1`, and the identity round trip is checked the same way. This is real third-party evidence about the STRUCTURE of the result (entity graph shape, header schema, argument values as ruststep's own parser sees them), even though it cannot discharge a byte-level differential claim.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stepcode-independent",
+        "implementation": "ruststep pure-Rust EXPRESS/Part-21 reader",
+        "version": "0.4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -57,7 +69,14 @@
       "id": "semantic-step-v1",
       "description": "STEP (ISO 10303-21) exchange structures compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface `StepDiff`/`StepMutation` themselves operate over.",
       "tolerance": 1e-06,
-      "ignoreKeys": ["timestamp", "preprocessorVersion", "originatingSystem", "authorization", "byteLength", "fileSize"]
+      "ignoreKeys": [
+        "timestamp",
+        "preprocessorVersion",
+        "originatingSystem",
+        "authorization",
+        "byteLength",
+        "fileSize"
+      ]
     }
   ]
 }

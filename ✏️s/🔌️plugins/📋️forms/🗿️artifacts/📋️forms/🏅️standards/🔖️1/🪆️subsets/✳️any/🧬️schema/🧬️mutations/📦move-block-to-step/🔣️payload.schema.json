@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveBlockToStep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "blockId",
+    "index",
+    "stepId",
+    "toStepId"
+  ],
+  "properties": {
+    "stepId": {
+      "type": "string"
+    },
+    "blockId": {
+      "type": "string"
+    },
+    "toStepId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

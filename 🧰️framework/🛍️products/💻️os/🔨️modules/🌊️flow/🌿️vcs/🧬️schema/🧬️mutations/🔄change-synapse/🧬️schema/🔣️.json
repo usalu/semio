@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/change-synapse",
+  "title": "ChangeSynapse",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false,
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "synapse": {
+          "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/synapse"
+        }
+      },
+      "required": [
+        "id",
+        "synapse"
+      ]
+    }
+  }
+}
+

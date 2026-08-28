@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeTowerMassT",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTowerMassT"
+  ],
+  "properties": {
+    "newTowerMassT": {
+      "type": "number"
+    }
+  }
+}

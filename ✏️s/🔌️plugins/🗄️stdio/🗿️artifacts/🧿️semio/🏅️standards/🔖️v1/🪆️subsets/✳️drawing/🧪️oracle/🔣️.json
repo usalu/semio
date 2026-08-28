@@ -1,17 +1,134 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is an independent Python implementation of the semio-native carrier and the seventeen verbs, written from this subset's own committed grammar and protocol documents.",
   "oracles": [
     {
       "id": "semio-drawing-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-drawing-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-drawing-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️any/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate."
+      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-drawing-mutation-semantics` decision's survey still stands on its merits: `usvg`/`resvg` model SVG, which has no counterpart for this subset's anonymous recursive `DrawNode` tree addressed by a structural `NodePath` and none at all for the four hierarchy verbs, while `lyon`/`kurbo` model path geometry alone and could adjudicate at most `replace-path`. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-drawing/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, the recursive node tree and all seventeen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️any/📚️examples/🖍️sketch` artifact byte for byte in both encodings — one document that exhibits every node tag and every segment tag including the arc — and it reaches all seventeen committed after-snapshots. The SVG fixtures are still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `mouse.svg` and `qr-code.svg` were read once by an independent `xml.etree` reader plus a path-data scanner written from the SVG 1.1 §8.3 grammar — never our own svg bridge — to derive the real three-layer, 1 006-node drawing both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-drawing-mutate`'s external-oracle requirement for its 17-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "quick-xml-drawing-svg-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "source": {
+        "repository": "https://github.com/tafia/quick-xml",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "semio-v1-drawing-mutate",
+        "drawing.carrier.svg",
+        "drawing.paint",
+        "drawing.hierarchy",
+        "drawing.transform"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/quick-xml",
+      "rationale": "🎨️ THE UNIVERSAL CARRIER READER FOR THIS SUBSET, AND THE ONLY ONE THAT SEES PAINT OR HIERARCHY.\n\nWhat makes it qualify at all is that this subset's svg export is REAL, established by reading the serializer body rather than the directory tree — and it had to be, because an earlier mechanical pass flagged it a STUB. That flag was wrong. The only `print_dsl`/`parse_dsl` calls in `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️component.rs` are at lines 196–197, inside the `#[cfg(test)] mod tests` block that opens at line 164 — that is the file PROVING its own round trip, not faking an export. The real export is lines 138–159 and builds a genuine SVG document: one `<g id=\"layer-<id>\">` per layer, `<path>` from a one-for-one `PathSegment`→command lowering (lines 27–38), `<text>` with a child text node, `<g transform=\"matrix(...)\">` from a real quaternion-to-matrix composition (lines 43–47), and a real base64 data-URI convention for embedded images (lines 114–124). Real bytes land on disk through `SvgSnapshot::export_utf8` → `write_svg_xml` → `xml_document_to_text`.\n\nWHAT IT DISCHARGES: all seventeen kinds. SVG is the only exported carrier of this subset that encodes a group's transform, a group's existence, and a style's fill/stroke/stroke-width. DXF and DWG walk THROUGH a group without applying its matrix and without recording that the group was there (`…🖊️dxf/🔖️r12/✳️any/🦀️component.rs:152,157–170`), so `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` produce byte-identical DXF before and after — six kinds that only this reader can witness. Neither DXF nor PDF nor DWG has a colour or stroke-width field at all, which is the other three (`replace-fill`, `change-stroke-color`, `change-stroke-width`).\n\nWHAT IT IS NOT ASKED TO DO, and this is what keeps the registration on the right side of the `reimplementation-registered-as-third-party` gate: it is never asked what a mutation SHOULD produce. quick-xml parses two carriers and reports what each contains; the pipeline compares. No expected drawing state is computed anywhere in this subset's oracle path.\n\nMEASURED, and this is what qualifies the registration rather than merely motivating it: two byte-different encodings of the same drawing — attribute order swapped, `10` against `10.00`, `5` against `5.000` — compare `equal: true` with maxPathPointDeviation 0.000e+00 and maxColorChannelDeviation 0.000e+00, while one path endpoint moved from 10 to 10.05 separates at maxPathPointDeviation 5.000e-02 and one stroke channel changed from 0 to 5 separates at maxColorChannelDeviation 5.000e+00. The gate therefore accepts producer freedom in formatting and rejects a real difference, which is the both-ways proof the playbook requires."
+    },
+    {
+      "id": "ixmilia-dxf-drawing-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "source": {
+        "repository": "https://github.com/IxMilia/dxf-rs",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "ixmilia-dxf",
+        "implementation": "IxMilia.Dxf rust port",
+        "version": "0.6.1"
+      },
+      "capabilities": [
+        "semio-v1-drawing-mutate",
+        "drawing.carrier.dxf",
+        "drawing.entities",
+        "drawing.layers"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/dxf",
+      "rationale": "🖊️ A SECOND, INDEPENDENT CARRIER READER FOR EIGHT OF THE SEVENTEEN KINDS, AND THE SCOPE IS THE WHOLE POINT OF THE REGISTRATION.\n\nThe dxf export is REAL: `…🖊️dxf/🔖️r12/✳️any/🦀️component.rs` recognizes the exact closed two-arc circle shape for an EXACT `CIRCLE` round trip (lines 31–40), flattens every other path into a real 32-sample `POLYLINE` (lines 47–117), and writes a real layer table keyed on `layer.id` (line 186). Its own test round-trips through the ASCII writer/reader (lines 240–258).\n\nWHAT IT DISCHARGES: `create-layer`, `delete-layer` (layer table rows), `create-node`, `delete-node`, `move-node` (TEXT entities and their positions), `reorder-nodes` (the DXF entity SEQUENCE), `replace-path` (POLYLINE vertices) and `drag-nodes`. It is a genuinely independent producer of those facts: the IxMilia parser re-derives the entity list from bytes without consulting our snapshot type, so a bug in our mutation surfaces as an entity disagreement rather than as two halves of this repository agreeing.\n\nWHAT IT CANNOT DISCHARGE, STATED AS A LIMIT AND NOT PAPERED OVER. `dxf_entity_from_node` returns `None` for a `Group` (line 152) and `collect_entities` recurses THROUGH a group emitting its leaves in DFS order with no matrix applied (lines 157–170). So `rotate`, `scale`, `group`, `ungroup`, `flatten` and `unflatten` leave the DXF byte stream IDENTICAL — a green dxf comparison on any of them would prove nothing, and none of the six carries a requirement discharged by this entry. `style` is bound and never read (line 140) and `DxfLayer.color` is the literal `7`, so `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible here too. `drag-nodes` is registered as a PARTIAL witness and documented as one: this reader sees the text node move and cannot see the sibling group's translation change, which is the other half of the same mutation.\n\nMEASURED: two independently written encodings of the same drawing compare `equal: true` at maxVertexDeviation 0.000e+00; one polyline vertex moved from 10 to 10.05 separates at maxVertexDeviation 5.000e-02, and a TEXT value changed from \"Hello\" to \"Hallo\" separates at textValuesEqual false."
+    },
+    {
+      "id": "lopdf-drawing-pdf-reader",
+      "kind": "third-party-library",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44.0",
+      "source": {
+        "repository": "https://github.com/J-F-Liu/lopdf",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf document reader",
+        "version": "0.44.0"
+      },
+      "capabilities": [
+        "semio-v1-drawing-mutate",
+        "drawing.carrier.pdf",
+        "drawing.text"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "homepage": "https://docs.rs/lopdf",
+      "rationale": "📄️ A THIRD READER, DELIBERATELY NARROW: FOUR OF THE SEVENTEEN KINDS.\n\nThe pdf export is REAL and its own module doc states its boundary honestly: one `PdfPage` per `DrawLayer`, `media_box` from the canvas, page text = every `DrawNode::Text.value` in that layer's tree joined by newlines (`…📄️pdf/🔖️1.7/✳️any/🦀️component.rs:17–32,43–57`); `Path`, `Group` and `Image` are explicitly dropped (line 30). Its own test proves real bytes through `encode_pdf`/`decode_pdf` (lines 99–102).\n\nWHAT IT DISCHARGES: `create-layer` and `delete-layer`, because a layer IS a page here and `lopdf` counts pages independently; `create-node` and `delete-node`, when the node is a `Text`, because the page's extracted text gains or loses a line.\n\nWHAT IT CANNOT DISCHARGE. PDF carries no geometry, no position and no colour for this subset, so `move-node`, `drag-nodes`, `rotate`, `scale`, `replace-path`, `replace-fill`, `change-stroke-color` and `change-stroke-width` are invisible in it by construction. `reorder-nodes`, `group`, `ungroup`, `flatten` and `unflatten` do not change the DFS order of the text values in this subset's committed scenarios, so the page text is byte-identical before and after. The `pdf-compare` probe returns `unsupported` rather than an empty `ok` when handed a carrier that cannot encode what is being asked about, because an empty result read as ok would let a mutation pass against evidence that was never in the file."
     }
   ],
   "mutationCatalogs": [
@@ -209,7 +326,1220 @@
           ]
         }
       ],
-      "kinds": ["create-layer", "delete-layer", "create-node", "delete-node", "move-node", "drag-nodes", "rotate", "scale", "reorder-nodes", "group", "ungroup", "flatten", "unflatten", "replace-path", "replace-fill", "change-stroke-color", "change-stroke-width"]
+      "kinds": [
+        "create-layer",
+        "delete-layer",
+        "create-node",
+        "delete-node",
+        "move-node",
+        "drag-nodes",
+        "rotate",
+        "scale",
+        "reorder-nodes",
+        "group",
+        "ungroup",
+        "flatten",
+        "unflatten",
+        "replace-path",
+        "replace-fill",
+        "change-stroke-color",
+        "change-stroke-width"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-drawing-carrier-v1",
+      "description": "⚖️ A drawing compared as an ARTIFACT BUNDLE — the SVG structure, the DXF entity list and the PDF page text — through the semantic-drawing-carrier-v1 pipeline, rather than as one JSON projection under one absolute tolerance.",
+      "pipeline": "semantic-drawing-carrier-v1"
+    }
+  ],
+  "probes": [
+    {
+      "id": "drawing-svg-structure",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "drawing.carrier.svg"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "svg-structure"
+      ],
+      "rationale": "An independent XML reader recovers the element tree, its ids, transforms, path data, text origins and paint. Nothing downstream means anything if the exported SVG does not parse.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-svg-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "drawing.carrier.svg",
+        "drawing.hierarchy",
+        "drawing.transform"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "svg-compare"
+      ],
+      "rationale": "The operative equality for this subset. Gated NEAR-EXACT, not in a tessellation tolerance: there is no legitimate re-tessellation of an SVG path, because the `d` attribute IS the curve and this subset lowers a PathSegment to a command one-for-one. Producer freedom is allowed only in number FORMATTING and attribute ORDER, which is why the comparison is on parsed values rather than bytes.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-style-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42.0",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml pull reader",
+        "version": "0.42.0"
+      },
+      "capabilities": [
+        "drawing.paint"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "style-compare"
+      ],
+      "rationale": "Paint and stroke width, measured as a channel distance rather than a string inequality. Returns `unsupported` for any carrier that is not SVG, because DXF binds a node's style and never reads it and PDF carries text alone — an empty paint set reported as ok would let a recolour pass against a file that never carried a colour.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-dxf-entities",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "engine": {
+        "family": "ixmilia-dxf",
+        "implementation": "IxMilia.Dxf rust port",
+        "version": "0.6.1"
+      },
+      "capabilities": [
+        "drawing.carrier.dxf",
+        "drawing.layers"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "dxf-entities"
+      ],
+      "rationale": "An independent DXF parser recovers the layer table and the entity list in file order.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-dxf-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "dxf",
+      "version": "0.6.1",
+      "engine": {
+        "family": "ixmilia-dxf",
+        "implementation": "IxMilia.Dxf rust port",
+        "version": "0.6.1"
+      },
+      "capabilities": [
+        "drawing.carrier.dxf",
+        "drawing.entities"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "dxf-compare"
+      ],
+      "rationale": "Layer names, entity SEQUENCE, vertex coordinates and TEXT values. A different engine family from the SVG reader on purpose: the two share no parser, so a defect in one cannot be confirmed by the other.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-pdf-text",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44.0",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf document reader",
+        "version": "0.44.0"
+      },
+      "capabilities": [
+        "drawing.carrier.pdf",
+        "drawing.text"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "pdf-text"
+      ],
+      "rationale": "Page count and per-page extracted text — the whole of what this subset's PDF export carries.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    },
+    {
+      "id": "drawing-pdf-compare",
+      "kind": "external-process",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44.0",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf document reader",
+        "version": "0.44.0"
+      },
+      "capabilities": [
+        "drawing.carrier.pdf",
+        "drawing.text"
+      ],
+      "outputSchema": "semio.repository-test.probe-report/v2",
+      "deterministic": true,
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "platforms": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-x64",
+        "linux-arm64",
+        "win32-x64"
+      ],
+      "command": [
+        "bun",
+        "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🔬️probes/📜️script.ts",
+        "pdf-compare"
+      ],
+      "rationale": "Page count and per-page text equality. Returns `unsupported` for a non-PDF carrier.",
+      "qualification": {
+        "status": "qualified",
+        "evidence": "📓️drawing-subset-oracle.md — run against the committed gate inputs: the accept pair reports equal true with every deviation 0.000e+00, the geometry counterexample reports 5.000e-02 and the paint counterexample 5.000e+00, and every wrong-carrier invocation reports `unsupported` rather than an empty `ok`.",
+        "criteria": [
+          {
+            "id": "accepts-formatting-freedom",
+            "met": true,
+            "detail": "attribute order swapped and 10 against 10.00 compare equal"
+          },
+          {
+            "id": "rejects-a-real-difference",
+            "met": true,
+            "detail": "one endpoint 10 -> 10.05 reports maxPathPointDeviation 5.000e-02"
+          },
+          {
+            "id": "refuses-a-carrier-it-cannot-read",
+            "met": true,
+            "detail": "handed a .dxf, style-compare returns unsupported"
+          },
+          {
+            "id": "offline",
+            "met": true,
+            "detail": "crates are vendored in the cargo registry cache; cargo runs with --offline"
+          }
+        ]
+      }
+    }
+  ],
+  "toleranceProfiles": [
+    {
+      "id": "drawing-exact",
+      "description": "📏️ Near-exact, because a 2D vector carrier has no tessellation freedom. An SVG `d` attribute IS the curve and this subset lowers one PathSegment to one command, so unlike a BRep there is no 'different but equally valid' re-encoding of the same path — only number formatting and attribute order, and the comparison already normalizes both by parsing. The floors here admit IEEE-754 round-tripping of a decimal literal and nothing else.",
+      "absoluteLength": 1e-09,
+      "relativeLength": 1e-12,
+      "absoluteArea": 1e-09,
+      "relativeArea": 1e-11,
+      "absoluteVolume": 1e-09,
+      "relativeVolume": 1e-11,
+      "normalizedHausdorffMax": 1e-09,
+      "normalizedCentroidDistanceMax": 1e-10,
+      "maxOverrideFactor": 1
+    }
+  ],
+  "comparisonPipelines": [
+    {
+      "id": "semantic-drawing-carrier-v1",
+      "description": "⚖️ The operative drawing gate. Stage order is deliberate: parse first, because nothing downstream means anything if a carrier does not parse; then the SVG comparison, which is the only stage that can see hierarchy, transforms and paint; then the DXF and PDF stages, which corroborate on the subset of kinds those carriers actually encode. Every stage names the carrier it reads, and a stage handed a carrier that cannot encode the property under test reports `unsupported` rather than an empty pass.",
+      "toleranceProfile": "drawing-exact",
+      "referenceScale": "declared",
+      "stages": [
+        {
+          "probe": "drawing-svg-structure",
+          "description": "An independent XML reader accepts both SVG carriers.",
+          "inputs": [
+            "expected-svg",
+            "actual-svg"
+          ],
+          "assertions": {
+            "parsed": true
+          }
+        },
+        {
+          "probe": "drawing-svg-compare",
+          "description": "Structure, path geometry, transforms and text origins — the operative equality. MEASURED separation: 0.000e+00 for a legitimate re-encoding against 5.000e-02 for one moved endpoint.",
+          "inputs": [
+            "expected-svg",
+            "actual-svg"
+          ],
+          "assertions": {
+            "equal": true,
+            "structureEqual": true,
+            "maxPathPointDeviation": 0,
+            "maxTransformComponentDeviation": 0,
+            "maxTextOriginDeviation": 0,
+            "pathCommandSequenceDiffers": false,
+            "textValuesEqual": true
+          }
+        },
+        {
+          "probe": "drawing-style-compare",
+          "description": "Fill, stroke and stroke width. SVG only — the other three carriers have no colour field at all. MEASURED separation: 0.000e+00 against 5.000e+00 for one changed channel.",
+          "inputs": [
+            "expected-svg",
+            "actual-svg"
+          ],
+          "assertions": {
+            "maxColorChannelDeviation": 0,
+            "maxStrokeWidthDeviation": 0
+          }
+        },
+        {
+          "probe": "drawing-dxf-compare",
+          "description": "Layer table, entity sequence and vertex coordinates, from a DIFFERENT engine family. Corroborates the eight kinds DXF encodes; the six group-shaped kinds are deliberately absent because DXF is byte-identical across them.",
+          "inputs": [
+            "expected-dxf",
+            "actual-dxf"
+          ],
+          "assertions": {
+            "equal": true,
+            "layerNamesEqual": true,
+            "entitySequenceEqual": true,
+            "maxVertexDeviation": 0,
+            "textValuesEqual": true
+          }
+        },
+        {
+          "probe": "drawing-pdf-compare",
+          "description": "Page count and per-page text — the whole of what PDF carries here. Corroborates the four layer- and text-shaped kinds.",
+          "inputs": [
+            "expected-pdf",
+            "actual-pdf"
+          ],
+          "assertions": {
+            "equal": true,
+            "pageCountEqual": true
+          }
+        }
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.semio",
+      "standard": "v1",
+      "subset": "drawing",
+      "standardDirectoryName": "🔖️v1",
+      "subsetDirectoryName": "✳️drawing",
+      "mutations": [
+        {
+          "id": "create-layer",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🌱create-layer/🦠️mutation/🦀️component.rs#CreateLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-layer",
+            "bridgeVersion": 1,
+            "variant": "CreateLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-drawing-pdf-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf",
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "layer-group-set-agrees-with-quick-xml",
+              "layer-table-agrees-with-ixmilia-dxf",
+              "page-count-agrees-with-lopdf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "delete-layer",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-layer/🦠️mutation/🦀️component.rs#DeleteLayer",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-layer",
+            "bridgeVersion": 1,
+            "variant": "DeleteLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-drawing-pdf-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf",
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "layer-group-set-agrees-with-quick-xml",
+              "layer-table-agrees-with-ixmilia-dxf",
+              "page-count-agrees-with-lopdf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "create-node",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➕create-node/🦠️mutation/🦀️component.rs#CreateNode",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-node",
+            "bridgeVersion": 1,
+            "variant": "CreateNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-drawing-pdf-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf",
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "element-tree-agrees-with-quick-xml",
+              "entity-sequence-agrees-with-ixmilia-dxf",
+              "page-text-agrees-with-lopdf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "delete-node",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/➖delete-node/🦠️mutation/🦀️component.rs#DeleteNode",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-node",
+            "bridgeVersion": 1,
+            "variant": "DeleteNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lopdf-drawing-pdf-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf",
+            "pdf"
+          ],
+          "invariants": {
+            "local": [
+              "element-tree-agrees-with-quick-xml",
+              "entity-sequence-agrees-with-ixmilia-dxf",
+              "page-text-agrees-with-lopdf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "move-node",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📍move-node/🦠️mutation/🦀️component.rs#MoveNode",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-node",
+            "bridgeVersion": 1,
+            "variant": "MoveNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "text-origin-agrees-with-quick-xml",
+              "entity-position-agrees-with-ixmilia-dxf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "drag-nodes",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖐️drag-nodes/🦠️mutation/🦀️component.rs#DragNodes",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "drag-nodes",
+            "bridgeVersion": 1,
+            "variant": "DragNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "text-origin-and-group-matrix-agree-with-quick-xml",
+              "entity-position-agrees-with-ixmilia-dxf-for-the-non-group-half"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "rotate",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔄rotate/🦠️mutation/🦀️component.rs#Rotate",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate",
+            "bridgeVersion": 1,
+            "variant": "Rotate"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-matrix-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "scale",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📏scale/🦠️mutation/🦀️component.rs#Scale",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale",
+            "bridgeVersion": 1,
+            "variant": "Scale"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-matrix-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "reorder-nodes",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🔀reorder-nodes/🦠️mutation/🦀️component.rs#ReorderNodes",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-nodes",
+            "bridgeVersion": 1,
+            "variant": "ReorderNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "child-order-agrees-with-quick-xml",
+              "entity-sequence-agrees-with-ixmilia-dxf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "group",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🧷group/🦠️mutation/🦀️component.rs#Group",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "group",
+            "bridgeVersion": 1,
+            "variant": "Group"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-nesting-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "ungroup",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/💫ungroup/🦠️mutation/🦀️component.rs#Ungroup",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "ungroup",
+            "bridgeVersion": 1,
+            "variant": "Ungroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-nesting-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "flatten",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🫓flatten/🦠️mutation/🦀️component.rs#Flatten",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "flatten",
+            "bridgeVersion": 1,
+            "variant": "Flatten"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-nesting-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "unflatten",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🎈unflatten/🦠️mutation/🦀️component.rs#Unflatten",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "unflatten",
+            "bridgeVersion": 1,
+            "variant": "Unflatten"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "group-nesting-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "replace-path",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🛤️replace-path/🦠️mutation/🦀️component.rs#ReplacePath",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-path",
+            "bridgeVersion": 1,
+            "variant": "ReplacePath"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            },
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "ixmilia-dxf-drawing-reader"
+            }
+          ],
+          "carriers": [
+            "svg",
+            "dxf"
+          ],
+          "invariants": {
+            "local": [
+              "path-data-agrees-with-quick-xml",
+              "polyline-vertices-agree-with-ixmilia-dxf"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "replace-fill",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪣replace-fill/🦠️mutation/🦀️component.rs#ReplaceFill",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-fill",
+            "bridgeVersion": 1,
+            "variant": "ReplaceFill"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "fill-channels-agree-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "change-stroke-color",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖌️change-stroke-color/🦠️mutation/🦀️component.rs#ChangeStrokeColor",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-stroke-color",
+            "bridgeVersion": 1,
+            "variant": "ChangeStrokeColor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "stroke-channels-agree-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
+        {
+          "id": "change-stroke-width",
+          "capability": "semio-v1-drawing-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📐change-stroke-width/🦠️mutation/🦀️component.rs#ChangeStrokeWidth",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-stroke-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeStrokeWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "semio-v1-drawing-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "quick-xml-drawing-svg-reader"
+            }
+          ],
+          "carriers": [
+            "svg"
+          ],
+          "invariants": {
+            "local": [
+              "stroke-width-agrees-with-quick-xml"
+            ],
+            "enclosing": [
+              "layer-order-preserved",
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

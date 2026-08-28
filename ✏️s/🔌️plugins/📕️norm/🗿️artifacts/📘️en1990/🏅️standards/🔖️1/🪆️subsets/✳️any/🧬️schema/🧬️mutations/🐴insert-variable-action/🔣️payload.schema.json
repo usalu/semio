@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InsertVariableAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "index",
+    "value"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "category": {
+      "type": "string"
+    },
+    "value": {
+      "type": "number"
+    }
+  }
+}

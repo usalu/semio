@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "🔢️set-value/🧬️schema/🔣️.json#/$defs/payload"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "setValue"
+            }
+          },
+          "required": [
+            "operation"
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    }
+  ]
+}

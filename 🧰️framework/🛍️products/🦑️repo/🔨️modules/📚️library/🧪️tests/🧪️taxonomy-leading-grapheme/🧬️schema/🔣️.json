@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "helper", "segmenter", "semantics", "rounds", "oracle", "cases", "scalingCases", "oracleDivergences"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "taxonomy-leading-grapheme-v1" },
+    "helper": { "const": "splitLeadingEmoji" },
+    "segmenter": { "const": { "locale": "und", "granularity": "grapheme" } },
+    "semantics": { "const": { "normalization": "none", "eligibility": "existing-isEmojiGrapheme", "suffix": "original-utf16-slice", "iteratorAdvancesPerRequest": 1 } },
+    "rounds": { "const": 3 },
+    "oracle": { "const": { "library": "lodash/toArray", "scope": "explicit-overlap-not-complete-uax29", "emojiLibrary": "emoji-regex", "emojiScope": "explicit-recognized-sequences" } },
+    "cases": {
+      "type": "array", "minItems": 37, "maxItems": 37,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "input", "first", "emoji", "rest", "segmentationOracle", "emojiOracle"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]+$" },
+          "input": { "type": "string" }, "first": { "type": "string" }, "emoji": { "type": "string" }, "rest": { "type": "string" },
+          "segmentationOracle": { "type": "boolean" }, "emojiOracle": { "type": "boolean" }
+        }
+      }
+    },
+    "scalingCases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "prefix", "suffixUnit", "repetitions", "emoji", "rest"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^long-[a-z-]+$" },
+          "prefix": { "type": "string", "minLength": 1 }, "suffixUnit": { "type": "string", "minLength": 1 },
+          "repetitions": { "const": 8192 }, "emoji": { "type": "string" }, "rest": { "enum": ["suffix", "whole-input"] }
+        }
+      }
+    },
+    "oracleDivergences": { "const": ["prepend-emoji", "crlf-before-emoji", "repeated-vs16", "hangul-jamo"] }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "command",
+    "target",
+    "source",
+    "runner",
+    "budget",
+    "launchName",
+    "launchGroup",
+    "launchOrder"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "const": "artifact-empty-facet-authoring-registration-v1"
+    },
+    "command": {
+      "const": "artifact-empty-facet-authoring"
+    },
+    "target": {
+      "const": "test-artifact-empty-facet-authoring"
+    },
+    "source": {
+      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️artifact-empty-facet-authoring/🟦️.ts"
+    },
+    "runner": {
+      "const": "runTestBudgeted"
+    },
+    "budget": {
+      "const": "default"
+    },
+    "launchName": {
+      "const": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authoring"
+    },
+    "launchGroup": {
+      "const": "4_gate"
+    },
+    "launchOrder": {
+      "const": 410.205
+    }
+  }
+}

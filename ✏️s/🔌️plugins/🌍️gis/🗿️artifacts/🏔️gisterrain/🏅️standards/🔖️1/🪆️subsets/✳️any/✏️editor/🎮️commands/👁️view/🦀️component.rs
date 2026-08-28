@@ -3,7 +3,7 @@
 
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera as SetCameraMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_camera {
     }
 
     pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Gis3dConfigMutation::SetCamera { camera_json: payload.camera_json.clone() }]))
+        Ok(Emit::config(vec![Gis3dConfigMutation::SetCamera(SetCameraMutation { camera_json: payload.camera_json.clone() })]))
     }
 }
 //#endregion 🔖️SetCamera

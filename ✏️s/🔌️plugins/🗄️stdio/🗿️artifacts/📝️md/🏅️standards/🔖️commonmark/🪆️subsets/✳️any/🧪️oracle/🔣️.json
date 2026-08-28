@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest. `comrak` parses AND renders CommonMark, so it can be BOTH the independent parser and the independent mutation performer — no shared entry in the manifest declares a `-mutate` capability, so this is a distinct id.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/kivikakk/comrak",
       "rationale": "The reference CommonMark implementation of the Rust ecosystem (100% CommonMark/GFM spec compliant), parsed with `Options::default()` (no GFM extensions enabled, matching this subset's own honest CommonMark-only scope) so reference-style links, setext headings and pipe tables parse the same way this subset's own hand-rolled parser treats them. Used here both as the independent AST the block/inline-path mutations are performed against and as the independent reader every projection (of oracle output and of re-parsed subject output alike) goes through — never the producer's own reading of what it wrote. Deterministic, no network, no system dependencies, cross-platform.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "comrak",
+        "implementation": "comrak CommonMark/GFM implementation",
+        "version": "0.54"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

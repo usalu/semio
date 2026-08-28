@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "semio://framework/plugin/artifact-command-checkpoint/v2",
+  "$id": "semio://framework/plugin/artifact-command-checkpoint/v3",
   "type": "object",
   "required": ["$schema", "format", "version", "maximumBytes", "headerBytes", "cases"],
   "additionalProperties": false,
@@ -35,7 +35,7 @@
                 "properties": {
                   "bytes": {
                     "type": "array",
-                    "maxItems": 473,
+                    "maxItems": 465,
                     "items": { "type": "integer", "minimum": 0, "maximum": 255 }
                   }
                 }
@@ -46,7 +46,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "fill": { "type": "integer", "minimum": 0, "maximum": 255 },
-                  "length": { "type": "integer", "minimum": 0, "maximum": 473 }
+                  "length": { "type": "integer", "minimum": 0, "maximum": 465 }
                 }
               }
             ]
@@ -66,14 +66,14 @@
                     {
                       "type": "object",
                       "required": ["bytes"],
-                      "properties": { "bytes": { "type": "array", "maxItems": 472 } }
+                      "properties": { "bytes": { "type": "array", "maxItems": 464 } }
                     },
                     {
                       "type": "object",
                       "required": ["fill", "length"],
                       "properties": {
                         "fill": {},
-                        "length": { "type": "integer", "maximum": 472 }
+                        "length": { "type": "integer", "maximum": 464 }
                       }
                     }
                   ]
@@ -87,14 +87,14 @@
                     {
                       "type": "object",
                       "required": ["bytes"],
-                      "properties": { "bytes": { "type": "array", "minItems": 473, "maxItems": 473 } }
+                      "properties": { "bytes": { "type": "array", "minItems": 465, "maxItems": 465 } }
                     },
                     {
                       "type": "object",
                       "required": ["fill", "length"],
                       "properties": {
                         "fill": {},
-                        "length": { "const": 473 }
+                        "length": { "const": 465 }
                       }
                     }
                   ]

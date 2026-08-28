@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFCk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFCk"
+  ],
+  "properties": {
+    "newFCk": {
+      "type": "number"
+    }
+  }
+}

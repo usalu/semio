@@ -42,7 +42,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn dispatch_registers_semantic_descriptors() {
-        register_s_space_mutation_descriptors();
+        register_s_space_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
         for kind in <SSpaceMutation as protocol::SemanticMutation<SSpaceSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         }

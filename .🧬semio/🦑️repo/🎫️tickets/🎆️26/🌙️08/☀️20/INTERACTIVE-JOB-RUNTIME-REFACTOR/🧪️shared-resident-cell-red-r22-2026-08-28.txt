@@ -1,0 +1,51 @@
+
+> nx run @semio-tech/value-resident:test
+
+> bun ./📜️script.ts test
+
+
+
+
+ NX   Running target test for project @semio-tech/value-resident failed
+
+Failed tasks:
+
+- @semio-tech/value-resident:test
+
+Hint: run the command with --verbose for more details.
+
+[0m[33mWarning[0m[2m:[0m [1mThe 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.[0m
+[0m      [2mat [0m[0m[1m[3mwarnOnDeactivatedColors[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m33[0m[2m:[33m24[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mgetColorDepth[0m[2m ([0m[0m[36minternal:tty[0m[2m:[0m[33m42[0m[2m:[33m39[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mshouldColorize[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m14[0m[2m:[33m109[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mrefresh[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m18[0m[2m:[33m31[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:util/colors[0m[2m ([0m[0m[36minternal:util/colors[0m[2m:[0m[33m24[0m[2m:[33m16[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3minternal:assert/assertion_error[0m[2m ([0m[0m[36minternal:assert/assertion_error[0m[2m:[0m[33m2[0m[2m:[33m187[0m[2m)[0m
+[0m      [2mat [0m[0m[1m[3mloadAssertionError[0m[2m ([0m[0m[36mnode:assert[0m[2m:[0m[33m28[0m[2m:[33m96[0m[2m)[0m
+
+[0m[1m19 |[0m   [0m[35masync[0m run(): Promise[0m<[0m[0m[35mvoid[0m> {
+[0m[1m20 |[0m     [0m[35mconst[0m ajv = [0m[35mnew[0m [0m[1mAjv[0m({ strict: [0m[33mtrue[0m, allErrors: [0m[33mtrue[0m })[0m[2m;[0m ajv[0m[3m[1m.addSchema[0m(capacitySchema)[0m[2m;[0m
+[0m[1m21 |[0m     assert(ajv[0m[3m[1m.compile[0m(fixtureSchema)(fixture), JSON[0m[3m[1m.stringify[0m(ajv.errors))[0m[2m;[0m
+[0m[1m22 |[0m     assert(ajv[0m[3m[1m.compile[0m(admissionContractSchema)(admissionContract), JSON[0m[3m[1m.stringify[0m(ajv.errors))[0m[2m;[0m assert(ajv[0m[3m[1m.compile[0m(admissionFixtureSchema)(admissionFixture), JSON[0m[3m[1m.stringify[0m(ajv.errors))[0m[2m;[0m
+[0m[1m23 |[0m     [0m[35mconst[0m bootstrap = [0m[35mnew[0m [0m[1mOwnedResidentLedger[0m(fixture.capacity)[0m[2m;[0m [0m[35mconst[0m bootstrapConsumer = Object[0m[3m[1m.freeze[0m({ name: [0m[32m"original"[0m })[0m[2m;[0m [0m[35mconst[0m foreignConsumer = Object[0m[3m[1m.freeze[0m({ name: [0m[32m"foreign"[0m })[0m[2m;[0m [0m[35mconst[0m bootstrapGrant = admissionFixture.grants[[0m[33m2[0m]![0m[2m;[0m
+[0m[1m24 |[0m     assert[0m[3m[1m.equal[0m([0m[35mtypeof[0m Reflect[0m[3m[1m.get[0m(bootstrap, [0m[32m"prepareAdmission"[0m), [0m[32m"function"[0m, [0m[32m"Original admission cells must survive a wrapper throwing after preparation"[0m)[0m[2m;[0m
+                [31m[1m^[0m
+[0m[31mAssertionError[0m[2m:[0m [1mOriginal admission cells must survive a wrapper throwing after preparation
+[32mactual[39m [31mexpected[39m
+
+[39m'[39m[31mf[39m[39mu[39m[39mn[39m[32md[39m[32me[39m[32mf[39m[31mc[39m[31mt[39m[39mi[39m[31mo[39m[39mn[39m[32me[39m[32md[39m[39m'[39m
+[0m
+ generatedMessage[0m[2m:[0m [0m[33mfalse[0m[0m[2m,[0m
+     actual[0m[2m:[0m [0m[32m"undefined"[0m[0m[2m,[0m
+   expected[0m[2m:[0m [0m[32m"function"[0m[0m[2m,[0m
+   operator[0m[2m:[0m [0m[32m"strictEqual"[0m[0m[2m,[0m
+       code[0m[2m:[0m [32m"ERR_ASSERTION"[0m
+
+[0m      [2mat [0mrun[2m ([0m[0m[36m[2m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/💾️resident/[0m[36m📜️script.ts[0m[2m:[0m[33m24[0m[2m:[33m12[0m[2m)[0m
+[0m      [2mat [0mrun[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1452[0m[2m:[33m27[0m[2m)[0m
+[0m      [2mat [0mrunBundleScriptMain[2m ([0m[0m[36m/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts[0m[2m:[0m[33m1498[0m[2m:[33m17[0m[2m)[0m
+[0m      [2mat [0mprocessTicksAndRejections[2m ([0m[0m[36mnative[0m[2m:[0m[33m7[0m[2m:[33m39[0m[2m)[0m
+[0m
+[2mBun v1.3.14 (macOS arm64)[0m
+Warning: command "bun ./📜️script.ts test" exited with non-zero status code
+[DEBUG] exit=1

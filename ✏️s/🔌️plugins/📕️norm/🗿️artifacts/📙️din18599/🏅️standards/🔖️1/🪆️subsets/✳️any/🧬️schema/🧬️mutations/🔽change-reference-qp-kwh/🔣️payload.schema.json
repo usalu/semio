@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeReferenceQPKwh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newReferenceQPKwh"
+  ],
+  "properties": {
+    "newReferenceQPKwh": {
+      "type": "number"
+    }
+  }
+}

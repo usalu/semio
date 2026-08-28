@@ -24,20 +24,20 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
 /** 👪️ The fixture families the corpus is sharded and reported by — never at artifact level. */
-type Family = "spatial-relationship" | "shape-complexity" | "robustness" | "mechanical" | "failure";
+export type Family = "spatial-relationship" | "shape-complexity" | "robustness" | "mechanical" | "failure";
 
 /**
  * 🧪️ One corpus entry. `outcome` is the DECLARED semantic class: a fixture that accepts any
  * non-crash result measures nothing, and different kernels legitimately classify exact contact
  * differently, so every entry says which answer it expects rather than discovering it.
  */
-type Recipe = Readonly<{
+export type Recipe = Readonly<{
   id: string;
   family: Family;
   outcome: "applied" | "no-op" | "empty" | "disjoint" | "rejected";
@@ -46,15 +46,35 @@ type Recipe = Readonly<{
   build: (b: Kernel) => { operands: { role: string; shape: unknown }[]; result: unknown };
 }>;
 
-type Kernel = Record<string, (...args: never[]) => unknown>;
+export type Kernel = Record<string, (...args: never[]) => unknown>;
 
 const ENGINE_FAMILY = "opencascade";
 const ENGINE_VERSION = "0.15.6";
 const ORACLE = "brepjs-occt";
 const PACKAGE_VERSION = "18.119.8";
 const SEED = 4815162342;
-const TESSELLATION_TOLERANCE = 1e-3;
+/**
+ * 🔺️ Tessellation tolerance, resolved SCALE-RELATIVE — `max(absolute, relative × bounding-box diagonal)`,
+ * the same rule every dimensional tolerance in this protocol uses.
+ *
+ * A fixed absolute 1e-3 was the original, and it is exactly the mistake the protocol exists to prevent.
+ * On a part translated to 1e6 units that is a RELATIVE tolerance of 5e-11, and the meshing stage did
+ * not merely produce a large mesh — it ran for over twelve minutes and climbed past 2.4 GB before being
+ * killed, while the underlying exact Boolean had completed in under a second. The measuring tool was
+ * consumed by the boundary it existed to measure.
+ *
+ * The relative term is what makes one setting serve a 0.02 mm bore and a 10 m building; the absolute
+ * floor is what stops a tiny part being tessellated more finely than the kernel's own 1e-7 tolerance
+ * can even represent.
+ */
+const TESSELLATION_RELATIVE = 3e-5;
+const TESSELLATION_ABSOLUTE_FLOOR = 1e-6;
 const ANGULAR_TOLERANCE = 0.1;
+
+/** 🔺️ The tessellation tolerance for one shape, from its own measured size. */
+function tessellationToleranceFor(diagonal: number): number {
+  return Math.max(TESSELLATION_ABSOLUTE_FLOOR, TESSELLATION_RELATIVE * Math.abs(diagonal));
+}
 //#endregion 🧬️Contract
 
 //#region 🧰️Kernel
@@ -79,318 +99,78 @@ function unwrap(value: unknown, what: string): unknown {
 
 /** 📐️ `box(dx, dy, dz)` sits CORNER-at-origin; `cylinder(r, h)` sits AXIS-at-origin; `rotate(shape,
  * angleDegrees, {at, axis})` takes ONE options object. Every one of these was measured, not assumed. */
-const call = (b: Kernel, name: string, ...args: unknown[]): unknown => unwrap((b[name] as unknown as (...a: unknown[]) => unknown)(...args), name);
+export const call = (b: Kernel, name: string, ...args: unknown[]): unknown => unwrap((b[name] as unknown as (...a: unknown[]) => unknown)(...args), name);
 //#endregion 🧰️Kernel
 
 //#region 🧪️Corpus
 /**
- * 🧪️ The corpus. It covers the spatial-relationship, shape-complexity, robustness, mechanical and
- * failure families of the exhaustive Boolean matrix. Each robustness triple deliberately brackets a
- * contact case — epsilon below, exact, epsilon above — because that is where two valid kernels most
- * often classify differently and where a single absolute tolerance silently hides the disagreement.
+ * 🧪️ The corpus, assembled from one module per FAMILY. Splitting it this way is not cosmetic: the
+ * families are the sharding key CI uses and the axis the exhaustive Boolean matrix is organised by, so
+ * a family is the unit somebody extends, reviews or runs in isolation. It also means two people can
+ * grow two families at once without touching the same file.
  */
 const RECIPES: readonly Recipe[] = [
-  {
-    id: "cut-bored-box-through",
-    family: "spatial-relationship",
-    outcome: "applied",
-    tolerance: "analytic-strict",
-    notes: "Partial volumetric overlap: a cylinder bored clean through a box. The analytic answer 20³ − π·5²·20 is known in closed form, so this fixture also pins the kernel's own exactness.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const bore = call(b, "translate", call(b, "cylinder", 5, 40), [10, 10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: bore }], result: call(b, "cut", box, bore) };
-    },
-  },
-  {
-    id: "cut-disjoint-operands",
-    family: "spatial-relationship",
-    outcome: "no-op",
-    tolerance: "analytic-strict",
-    notes: "Completely disjoint operands. The declared outcome is a NO-OP: subtracting something that touches nothing must return the base unchanged, not merely 'something that does not crash'.",
-    build: (b) => {
-      const box = call(b, "box", 10, 10, 10);
-      const away = call(b, "translate", call(b, "box", 10, 10, 10), [100, 0, 0]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: away }], result: call(b, "cut", box, away) };
-    },
-  },
-  {
-    id: "cut-contained-operand",
-    family: "spatial-relationship",
-    outcome: "applied",
-    tolerance: "analytic-strict",
-    notes: "One operand fully contained in the other, producing an internal cavity. A cavity is exactly what mesh similarity alone cannot see, which is why volume and validity are asserted beside it.",
-    build: (b) => {
-      const outer = call(b, "box", 20, 20, 20);
-      const inner = call(b, "translate", call(b, "box", 6, 6, 6), [7, 7, 7]);
-      return { operands: [{ role: "operand-a-step", shape: outer }, { role: "operand-b-step", shape: inner }], result: call(b, "cut", outer, inner) };
-    },
-  },
-  {
-    id: "cut-full-subtraction",
-    family: "spatial-relationship",
-    outcome: "empty",
-    tolerance: "analytic-strict",
-    notes: "The tool completely swallows the base. The declared outcome is EMPTY, so a kernel that returned the base unchanged would fail rather than pass quietly.",
-    build: (b) => {
-      const small = call(b, "translate", call(b, "box", 5, 5, 5), [5, 5, 5]);
-      const large = call(b, "box", 20, 20, 20);
-      return { operands: [{ role: "operand-a-step", shape: small }, { role: "operand-b-step", shape: large }], result: call(b, "cut", small, large) };
-    },
-  },
-  {
-    id: "fuse-face-touching-boxes",
-    family: "spatial-relationship",
-    outcome: "applied",
-    tolerance: "contact-sensitive",
-    notes: "Exact face contact. Two boxes sharing a whole face must fuse into ONE solid; a kernel that left two components would be caught by the component-count assertion, not by the volume, which is identical either way.",
-    build: (b) => {
-      const left = call(b, "box", 10, 10, 10);
-      const right = call(b, "translate", call(b, "box", 10, 10, 10), [10, 0, 0]);
-      return { operands: [{ role: "operand-a-step", shape: left }, { role: "operand-b-step", shape: right }], result: call(b, "fuse", left, right) };
-    },
-  },
-  {
-    id: "fuse-edge-touching-boxes",
-    family: "robustness",
-    outcome: "disjoint",
-    tolerance: "contact-sensitive",
-    notes: "Edge contact only — the degenerate case between 'joined' and 'two bodies'. MEASURED: this kernel leaves TWO solids (12 faces, 23 edges, total volume 2000), so the declared class is DISJOINT, not applied. The volume is identical either way; only the component count separates the two answers, which is why component count is asserted and face count is not.",
-    build: (b) => {
-      const left = call(b, "box", 10, 10, 10);
-      const diagonal = call(b, "translate", call(b, "box", 10, 10, 10), [10, 10, 0]);
-      return { operands: [{ role: "operand-a-step", shape: left }, { role: "operand-b-step", shape: diagonal }], result: call(b, "fuse", left, diagonal) };
-    },
-  },
-  {
-    id: "intersect-overlapping-boxes",
-    family: "spatial-relationship",
-    outcome: "applied",
-    tolerance: "analytic-strict",
-    notes: "Partial overlap intersection with the closed-form answer 5³. Supplies the A∩B term of the Boolean volume identity V(A∪B) + V(A∩B) = V(A) + V(B).",
-    build: (b) => {
-      const left = call(b, "box", 10, 10, 10);
-      const right = call(b, "translate", call(b, "box", 10, 10, 10), [5, 5, 5]);
-      return { operands: [{ role: "operand-a-step", shape: left }, { role: "operand-b-step", shape: right }], result: call(b, "intersect", left, right) };
-    },
-  },
-  {
-    id: "intersect-disjoint-operands",
-    family: "failure",
-    outcome: "empty",
-    tolerance: "analytic-strict",
-    notes: "Empty intersection. The declared outcome is EMPTY, distinguishing 'correctly nothing' from 'the operation failed and produced nothing'.",
-    build: (b) => {
-      const left = call(b, "box", 10, 10, 10);
-      const away = call(b, "translate", call(b, "box", 10, 10, 10), [50, 0, 0]);
-      return { operands: [{ role: "operand-a-step", shape: left }, { role: "operand-b-step", shape: away }], result: call(b, "intersect", left, away) };
-    },
-  },
-  {
-    id: "cut-tangent-cylinder-epsilon-below",
-    family: "robustness",
-    outcome: "no-op",
-    tolerance: "epsilon-degenerate",
-    notes: "Epsilon BELOW contact: the cutter misses by 1e-6. Declared no-op. The lower rung of the three-rung contact bracket.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const cutter = call(b, "translate", call(b, "cylinder", 5, 40), [-5 - 1e-6, 10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: cutter }], result: call(b, "cut", box, cutter) };
-    },
-  },
-  {
-    id: "cut-tangent-cylinder-exact",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "epsilon-degenerate",
-    notes: "EXACT tangency, the middle rung of the contact bracket. MEASURED: the kernel removes ZERO volume (8000 to within 1.8e-12) but IMPRINTS the tangent line, taking the shape from 6 faces / 12 edges to 7 / 15. So the class is APPLIED, not no-op: a volume-only comparison cannot tell this apart from the epsilon-below rung, and the epsilon-below rung genuinely leaves 6 faces untouched.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const cutter = call(b, "translate", call(b, "cylinder", 5, 40), [-5, 10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: cutter }], result: call(b, "cut", box, cutter) };
-    },
-  },
-  {
-    id: "cut-tangent-cylinder-epsilon-above",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "epsilon-degenerate",
-    notes: "Epsilon ABOVE contact: the cutter bites 1e-6 into the face. MEASURED: a sliver of 8.44e-8 is removed and the shape reaches 9 faces / 21 edges — the upper rung of the contact bracket, and the one a tolerance sized in millimetres would swallow whole.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const cutter = call(b, "translate", call(b, "cylinder", 5, 40), [-5 + 1e-6, 10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: cutter }], result: call(b, "cut", box, cutter) };
-    },
-  },
-  {
-    id: "cut-coplanar-face-cutter",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "contact-sensitive",
-    notes: "Coplanar faces: the cutter's top face lies exactly on the box's mid-plane. Coplanarity is the classic source of kernel-dependent face splitting, which is why face counts are NOT asserted here.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const cutter = call(b, "translate", call(b, "box", 30, 30, 10), [-5, -5, 0]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: cutter }], result: call(b, "cut", box, cutter) };
-    },
-  },
-  {
-    id: "cut-identical-operands",
-    family: "failure",
-    outcome: "empty",
-    tolerance: "analytic-strict",
-    notes: "Identical operands. A − A is empty; a kernel that returned a zero-volume shell instead of nothing would fail the declared outcome.",
-    build: (b) => {
-      const box = call(b, "box", 12, 12, 12);
-      const same = call(b, "box", 12, 12, 12);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: same }], result: call(b, "cut", box, same) };
-    },
-  },
-  {
-    id: "cut-skewed-bore",
-    family: "shape-complexity",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "A non-axis-aligned cutter through a box. Rotating the tool takes the operation off every analytic shortcut and onto the kernel's real surface–surface intersection.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const bore = call(b, "translate", call(b, "rotate", call(b, "cylinder", 4, 60), 35, { at: [0, 0, 0], axis: [1, 0, 0] }), [10, 10, -20]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: bore }], result: call(b, "cut", box, bore) };
-    },
-  },
-  {
-    id: "cut-sphere-from-box",
-    family: "shape-complexity",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "Sphere/box: a doubly-curved cutter against planar faces, and a periodic surface whose seam placement is a kernel decision rather than a semantic one.",
-    build: (b) => {
-      const box = call(b, "box", 20, 20, 20);
-      const ball = call(b, "translate", call(b, "sphere", 7), [10, 10, 20]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: ball }], result: call(b, "cut", box, ball) };
-    },
-  },
-  {
-    id: "fuse-cylinder-cross",
-    family: "shape-complexity",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "Cylinder/cylinder at right angles: two periodic surfaces meeting in a genuine 3-D intersection curve, the case where seam-crossing splits differ between kernels.",
-    build: (b) => {
-      const upright = call(b, "cylinder", 5, 40);
-      const across = call(b, "translate", call(b, "rotate", call(b, "cylinder", 5, 40), 90, { at: [0, 0, 0], axis: [1, 0, 0] }), [0, 20, 20]);
-      return { operands: [{ role: "operand-a-step", shape: upright }, { role: "operand-b-step", shape: across }], result: call(b, "fuse", upright, across) };
-    },
-  },
-  {
-    id: "cut-thin-wall-shell",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "epsilon-degenerate",
-    notes: "A 0.2 mm wall left behind by a nested cut. Thin walls are where tessellation-only comparison passes while the exact shape is wrong.",
-    build: (b) => {
-      const outer = call(b, "box", 20, 20, 20);
-      const inner = call(b, "translate", call(b, "box", 19.6, 19.6, 19.6), [0.2, 0.2, 0.2]);
-      return { operands: [{ role: "operand-a-step", shape: outer }, { role: "operand-b-step", shape: inner }], result: call(b, "cut", outer, inner) };
-    },
-  },
-  {
-    id: "cut-micro-scale-bore",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "micro-scale",
-    notes: "Sub-millimetre geometry. An absolute tolerance sized for millimetres would swallow the whole model, which is precisely what the scale-relative resolution rule exists to prevent.",
-    build: (b) => {
-      const box = call(b, "box", 0.02, 0.02, 0.02);
-      const bore = call(b, "translate", call(b, "cylinder", 0.005, 0.04), [0.01, 0.01, -0.01]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: bore }], result: call(b, "cut", box, bore) };
-    },
-  },
-  {
-    id: "cut-large-coordinate-bore",
-    family: "robustness",
-    outcome: "applied",
-    tolerance: "large-coordinate",
-    notes: "The same bored box translated a kilometre from the origin. Absolute error grows with the coordinate, so only the relative term is meaningful here.",
-    build: (b) => {
-      const box = call(b, "translate", call(b, "box", 20, 20, 20), [1000000, 0, 0]);
-      const bore = call(b, "translate", call(b, "cylinder", 5, 40), [1000010, 10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: box }, { role: "operand-b-step", shape: bore }], result: call(b, "cut", box, bore) };
-    },
-  },
-  {
-    id: "cut-disconnected-result",
-    family: "spatial-relationship",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "A cut that splits the base into TWO bodies. The component count is the assertion; volume alone cannot tell one body from two.",
-    build: (b) => {
-      const bar = call(b, "box", 40, 10, 10);
-      const chop = call(b, "translate", call(b, "box", 6, 30, 30), [17, -10, -10]);
-      return { operands: [{ role: "operand-a-step", shape: bar }, { role: "operand-b-step", shape: chop }], result: call(b, "cut", bar, chop) };
-    },
-  },
-  {
-    id: "mechanical-fixture-plate",
-    family: "mechanical",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "A fixture plate: four patterned through-holes and a central pocket, produced by a subtractive sequence rather than a single operation. Repeated Boolean chains are where intermediate-state defects accumulate.",
-    build: (b) => {
-      let plate = call(b, "box", 60, 40, 8);
-      for (const [x, y] of [[8, 8], [52, 8], [8, 32], [52, 32]] as const) plate = call(b, "cut", plate, call(b, "translate", call(b, "cylinder", 2.5, 20), [x, y, -6]));
-      plate = call(b, "cut", plate, call(b, "translate", call(b, "box", 24, 16, 4), [18, 12, 4]));
-      return { operands: [{ role: "operand-a-step", shape: call(b, "box", 60, 40, 8) }], result: plate };
-    },
-  },
-  {
-    id: "mechanical-pipe-manifold",
-    family: "mechanical",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "A manifold: a main bore with a branch bore meeting it at right angles inside the body. Intersecting internal passages are the case where a lost cavity leaves the outer surface — and therefore the Hausdorff distance — untouched.",
-    build: (b) => {
-      const body = call(b, "box", 60, 30, 30);
-      let manifold = call(b, "cut", body, call(b, "translate", call(b, "rotate", call(b, "cylinder", 8, 80), 90, { at: [0, 0, 0], axis: [0, 1, 0] }), [-10, 15, 15]));
-      manifold = call(b, "cut", manifold, call(b, "translate", call(b, "cylinder", 5, 60), [30, 15, -10]));
-      return { operands: [{ role: "operand-a-step", shape: body }], result: manifold };
-    },
-  },
-  {
-    id: "mechanical-ribbed-enclosure",
-    family: "mechanical",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "A shelled enclosure with internal ribs and vent slots — a nested cavity crossed by thin partitions, and the closest this corpus comes to a real housing.",
-    build: (b) => {
-      const outer = call(b, "box", 50, 30, 20);
-      let enclosure = call(b, "cut", outer, call(b, "translate", call(b, "box", 46, 26, 18), [2, 2, 2]));
-      for (const x of [12, 24, 36]) enclosure = call(b, "fuse", enclosure, call(b, "translate", call(b, "box", 2, 26, 14), [x, 2, 2]));
-      for (const y of [8, 16, 24]) enclosure = call(b, "cut", enclosure, call(b, "translate", call(b, "box", 60, 2, 3), [-5, y, 17]));
-      return { operands: [{ role: "operand-a-step", shape: outer }], result: enclosure };
-    },
-  },
-  {
-    id: "mechanical-filleted-bracket",
-    family: "mechanical",
-    outcome: "applied",
-    tolerance: "mechanical-standard",
-    notes: "An angled bracket with a gusset and two angled cutters. Filleting is deliberately left out where the kernel refuses it, because a fixture that quietly skipped its own defining feature would be worse than none.",
-    build: (b) => {
-      const upright = call(b, "box", 8, 40, 50);
-      const foot = call(b, "box", 40, 40, 8);
-      let bracket = call(b, "fuse", upright, foot);
-      bracket = call(b, "cut", bracket, call(b, "translate", call(b, "rotate", call(b, "cylinder", 4, 60), 25, { at: [0, 0, 0], axis: [0, 1, 0] }), [20, 20, -10]));
-      bracket = call(b, "cut", bracket, call(b, "translate", call(b, "cylinder", 3, 30), [4, 30, 20]));
-      return { operands: [{ role: "operand-a-step", shape: upright }, { role: "operand-b-step", shape: foot }], result: bracket };
-    },
-  },
+  ...(await import("./🧪️spatial-relationship/📜️script.ts")).RECIPES,
+  ...(await import("./🧪️shape-complexity/📜️script.ts")).RECIPES,
+  ...(await import("./🧪️robustness/📜️script.ts")).RECIPES,
+  ...(await import("./🧪️mechanical/📜️script.ts")).RECIPES,
+  ...(await import("./🧪️failure/📜️script.ts")).RECIPES,
 ];
+//#endregion 🧪️Corpus
+
 //#endregion 🧪️Corpus
 
 //#region 🏭️Generate
 async function blobText(value: unknown): Promise<string> {
   return typeof value === "string" ? value : await (value as Blob).text();
+}
+
+/**
+ * 🕰️ Strips the two fields OCCT's STEP writer draws from PROCESS STATE rather than from the shape:
+ * the `FILE_NAME` wall-clock timestamp, and the incrementing translator counter it stamps into the
+ * root `PRODUCT`'s name and description (`'Open CASCADE STEP translator 8.0 <n>'`, `<n>` counting
+ * every `exportSTEP` call this kernel instance has ever made — so it depends on how many fixtures
+ * were exported before this one in the same process, not on this shape at all).
+ *
+ * MEASURED, not assumed: two independent full-corpus regenerations of all 121 fixtures in this
+ * subset produced byte-identical output on every entity line once exactly these two fields were
+ * normalised — see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/.
+ * Entity ordering, ids, coordinates and topology are untouched by this function; it never fires on
+ * `handcrafted-tetrahedron`, whose own `FILE_NAME` timestamp is already a fixed constant.
+ */
+function canonicalizeStep(text: string): string {
+  // 🧼️OCCT stamps three PROCESS-GLOBAL values into every export: a wall-clock timestamp, a translator
+  // counter on PRODUCT, and an occurrence counter on NEXT_ASSEMBLY_USAGE_OCCURRENCE. All three depend on
+  // how many exports ran earlier in the same process, never on the shape, so two byte-identical solids
+  // exported at different points in a batch differ in them and nowhere else.
+  //
+  // The third one is why generating the whole corpus twice is NOT a sufficient reproducibility test:
+  // both runs export in the same order, so the counters agree and the corpus looks stable. Regenerating
+  // ONE fixture on its own — which is what `test fixture reproduce` does — starts the counter from a
+  // different place and exposes it. That check found 23 of 119 fixtures still differing after the first
+  // two were normalized, every difference confined to these counters and none to geometry.
+  return text
+    .replace(/(FILE_NAME\('[^']*',')[^']*(',)/, "$11970-01-01T00:00:00$2")
+    .replace(/(Open CASCADE STEP translator [0-9.]+) \d+/g, "$1")
+    .replace(/(NEXT_ASSEMBLY_USAGE_OCCURRENCE\(')\d+(')/g, "$10$2");
+}
+
+/**
+ * 📥️ Reads back what was actually WRITTEN. Every measurement a fixture records must describe the
+ * committed `expected.step`, not the in-memory shape it was exported from, because the committed file
+ * is the only thing a consumer can re-measure.
+ *
+ * The difference is real and was found by re-measuring: `fuse-edge-touching-boxes` holds two solids
+ * that SHARE the contact edge in memory (23 edges, 14 vertices), and STEP export separates them into
+ * two independent solids (24 edges, 16 vertices). Recording the in-memory numbers put a topology count
+ * in the manifest that nobody could reproduce from the file it claims to describe.
+ */
+async function reimport(b: Kernel, stepText: string): Promise<unknown> {
+  const imported = unwrap(await (b.importSTEP as unknown as (blob: Blob) => unknown)(new Blob([stepText])), "importSTEP");
+  const resolved = imported instanceof Promise ? unwrap(await imported, "importSTEP await") : imported;
+  if (Array.isArray(resolved)) return resolved[0];
+  const record = resolved as { shape?: unknown };
+  return record.shape ?? resolved;
 }
 
 async function contentDigest(bytes: Uint8Array | string): Promise<string> {
@@ -412,7 +192,7 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
   const files: { role: string; path: string; mediaType: string; sha256: string; bytes: number }[] = [];
 
   const emitStep = async (role: string, shape: unknown, filename: string): Promise<void> => {
-    const text = await blobText(call(b, "exportSTEP", shape));
+    const text = canonicalizeStep(await blobText(call(b, "exportSTEP", shape)));
     write(join(dir, filename), text);
     files.push({ role, path: `${recipe.id}/${filename}`, mediaType: "model/step", sha256: await contentDigest(text), bytes: Buffer.byteLength(text) });
   };
@@ -422,28 +202,36 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
 
   const solids = (b.getSolids as unknown as (s: unknown) => unknown[])(result) ?? [];
   const empty = solids.length === 0;
+  // 📥️Export FIRST, then measure what was written — see `reimport` above.
+  const exportedText = empty ? "" : canonicalizeStep(await blobText(call(b, "exportSTEP", result)));
+  const measured = empty ? null : await reimport(b, exportedText);
 
   // 🫙️An EMPTY result has no STEP body to export and no volume to measure. Writing a placeholder shape
   // would turn "correctly nothing" into "something", so the bundle records emptiness as the fact it is.
   const measurements: Record<string, unknown> = { declaredOutcome: recipe.outcome, solids: solids.length, empty };
-  if (!empty) {
-    await emitStep("expected-step", result, "expected.step");
-    const bounds = call(b, "getBounds", result) as Record<string, number>;
-    measurements.volume = call(b, "measureVolume", result);
-    measurements.area = call(b, "measureArea", result);
+  if (!empty && measured !== null) {
+    write(join(dir, "expected.step"), exportedText);
+    files.push({ role: "expected-step", path: `${recipe.id}/expected.step`, mediaType: "model/step", sha256: await contentDigest(exportedText), bytes: Buffer.byteLength(exportedText) });
+    const bounds = call(b, "getBounds", measured) as Record<string, number>;
+    measurements.measuredFrom = "expected.step, re-imported";
+    measurements.solids = ((b.getSolids as unknown as (s: unknown) => unknown[])(measured) ?? []).length;
+    measurements.volume = call(b, "measureVolume", measured);
+    measurements.area = call(b, "measureArea", measured);
     measurements.boundingBox = bounds;
     measurements.boundingBoxDiagonal = Math.hypot(bounds.xMax! - bounds.xMin!, bounds.yMax! - bounds.yMin!, bounds.zMax! - bounds.zMin!);
-    measurements.faces = ((b.getFaces as unknown as (s: unknown) => unknown[])(result) ?? []).length;
-    measurements.edges = ((b.getEdges as unknown as (s: unknown) => unknown[])(result) ?? []).length;
-    measurements.vertices = ((b.getVertices as unknown as (s: unknown) => unknown[])(result) ?? []).length;
-    measurements.validSolid = (b.isValidSolid as unknown as (s: unknown) => boolean)(result);
+    measurements.faces = ((b.getFaces as unknown as (s: unknown) => unknown[])(measured) ?? []).length;
+    measurements.edges = ((b.getEdges as unknown as (s: unknown) => unknown[])(measured) ?? []).length;
+    measurements.vertices = ((b.getVertices as unknown as (s: unknown) => unknown[])(measured) ?? []).length;
+    measurements.validSolid = (b.isValidSolid as unknown as (s: unknown) => boolean)(measured);
 
-    const meshed = call(b, "mesh", result, { tolerance: TESSELLATION_TOLERANCE, angularTolerance: ANGULAR_TOLERANCE }) as Record<string, ArrayLike<number>>;
+    const tessellationTolerance = tessellationToleranceFor(measurements.boundingBoxDiagonal as number);
+    const meshed = call(b, "mesh", measured, { tolerance: tessellationTolerance, angularTolerance: ANGULAR_TOLERANCE }) as Record<string, ArrayLike<number>>;
     const vertices = Array.from(meshed.vertices ?? meshed.positions!);
     const triangles = Array.from(meshed.triangles ?? meshed.indices!);
-    const meshBody = `${JSON.stringify({ vertices, triangles, tolerance: TESSELLATION_TOLERANCE, angularTolerance: ANGULAR_TOLERANCE })}\n`;
+    const meshBody = `${JSON.stringify({ vertices, triangles, tolerance: tessellationTolerance, angularTolerance: ANGULAR_TOLERANCE })}\n`;
     write(join(dir, "expected.mesh.json"), meshBody);
     files.push({ role: "expected-mesh", path: `${recipe.id}/expected.mesh.json`, mediaType: "application/json", sha256: await contentDigest(meshBody), bytes: Buffer.byteLength(meshBody) });
+    measurements.tessellationTolerance = tessellationTolerance;
     measurements.meshVertexCount = vertices.length / 3;
     measurements.meshTriangleCount = triangles.length / 3;
   }
@@ -473,11 +261,13 @@ async function generateOne(b: Kernel, recipe: Recipe, outDir: string): Promise<R
     provenance: { source: "generated", license: "Apache-2.0", attribution: "Generated with brepjs (Apache-2.0) over brepjs-opencascade (LGPL-2.1-only, OpenCASCADE 8.0 WASM)", security: "scanned-clean", privacy: "no-personal-data" },
     comparisonProfile: "semantic-brep-solid-v1",
     toleranceProfile: recipe.tolerance,
-    // 🏭️`reproducible: false` is a MEASURED fact, not a shrug: the qualification spike showed OCCT
-    // stamping an incrementing translator counter and a wall-clock timestamp into every export, so the
-    // STEP bytes are not byte-reproducible and no external canonicalizer is qualified yet to normalise
-    // them. `test fixture reproduce` therefore reports these, and the report says which ones and why.
-    reproducible: false,
+    // 🏭️`reproducible: true` is a MEASURED fact, not a shrug: the qualification spike found exactly two
+    // fields OCCT's STEP writer draws from process state rather than from the shape — the `FILE_NAME`
+    // wall-clock timestamp and an incrementing translator counter stamped into the root `PRODUCT` — and
+    // `canonicalizeStep` above strips both before this bundle is written or hashed. Two independent
+    // full-corpus regenerations produced byte-identical output on every fixture once that ran; nothing
+    // here reorders entities or renumbers ids.
+    reproducible: true,
     family: recipe.family,
     notes: recipe.notes,
   };
@@ -515,7 +305,26 @@ async function main(argv: readonly string[]): Promise<number> {
       }
     }
     if (command === "manifests") process.stdout.write(`${JSON.stringify(manifests, null, 2)}\n`);
-    else write(join(outDir, "🧫️manifests.json"), `${JSON.stringify(manifests, null, 2)}\n`);
+    else {
+      // 🧬️A NARROWED run MERGES into the manifest index; it does not replace it. Writing only what this
+      // invocation produced meant `generate --only <one>` silently reduced the index to that single
+      // entry, so a sequence of narrowed runs — the natural way to develop a recipe — destroyed every
+      // other fixture's record while leaving its files on disk. The bug was invisible from the command
+      // itself: it reported success for exactly the fixture asked for.
+      const indexPath = join(outDir, "🧫️manifests.json");
+      const previous = (() => {
+        if (only === null || !existsSync(indexPath)) return [];
+        try {
+          return JSON.parse(readFileSync(indexPath, "utf8")) as Record<string, unknown>[];
+        } catch {
+          return [];
+        }
+      })();
+      const produced = new Set(manifests.map((entry) => entry.id as string));
+      const merged = [...previous.filter((entry) => !produced.has(entry.id as string)), ...manifests].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+      write(indexPath, `${JSON.stringify(merged, null, 2)}\n`);
+      if (only !== null) console.error(`[generator] merged ${manifests.length} regenerated entr(ies) into ${merged.length} total`);
+    }
     console.error(`[generator] ${manifests.length}/${recipes.length} bundle(s) generated into ${outDir}${failed > 0 ? `, ${failed} failed` : ""}`);
     return failed > 0 ? 1 : 0;
   }

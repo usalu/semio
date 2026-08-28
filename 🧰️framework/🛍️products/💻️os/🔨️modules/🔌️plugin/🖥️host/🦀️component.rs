@@ -895,7 +895,7 @@ impl MockGuestRuntime {
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
+        TurnResult { ui_patches: semio_framework::kernel::UiTurnPatches::default(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, lifecycle_receipt: None, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -1156,7 +1156,6 @@ struct OwnedPollInput<'a> {
     events: &'a [Event],
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     budget: Budget,
-    close_instances: Vec<u32>,
 }
 
 #[derive(serde::Serialize)]
@@ -1219,7 +1218,6 @@ impl OwnedRuntime {
 
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
-        let close_instances = events.iter().filter(|event| matches!(event, Event::InstanceClose)).map(|_| state.instance_id).collect();
         let mut ordinary_events = Vec::with_capacity(events.len());
         let mut command_page = None;
         for event in events {
@@ -1231,7 +1229,7 @@ impl OwnedRuntime {
                 event => ordinary_events.push(event.clone()),
             }
         }
-        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget, close_instances }).map_err(PluginHostError::from)?;
+        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget }).map_err(PluginHostError::from)?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
@@ -1658,7 +1656,7 @@ pub(crate) mod actor_bindings {
     });
 }
 
-use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, types as wit_types, ui as wit_ui};
+use actor_bindings::semio::framework::{capabilities as wit_capabilities, effects as wit_effects, events as wit_events, host_async as wit_host_async, instance_lifetime as wit_lifetime, types as wit_types, ui as wit_ui};
 use wasmtime::component::Accessor;
 // 🧬️ `reactor`/`jobs` are `export`s of `world actor` (design-runtime.md §2's `execute_turn`/`step_job`
 // exports), not `import`s, so their generated bindings live under `exports::` — unlike `pure`'s
@@ -1995,7 +1993,7 @@ impl GuestRuntime for WasmtimeRuntime {
                 if wit_command_page.is_some() || bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES || (bytes.is_empty() && !(cursor.kind == 28 && cursor.item_count == 0)) {
                     return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string()));
                 }
-                wit_command_page = Some(kernel_command_page_to_wit(cursor, bytes.as_slice()));
+                wit_command_page = Some(kernel_command_page_to_wit(cursor, bytes));
             } else {
                 wit_events.push(kernel_event_to_wit(event, *instance_id).await);
             }
@@ -2067,6 +2065,7 @@ impl GuestRuntime for WasmtimeRuntime {
             status: wit_turn_status_to_kernel(wit_turn_result.status).await,
             fuel_used: wit_turn_result.fuel_used,
             command_ingress: wit_command_ingress_to_kernel(wit_turn_result.command_ingress),
+            lifecycle_receipt: wit_turn_result.lifecycle_receipt.map(wit_lifecycle_receipt_to_kernel),
         })
     }
 
@@ -2370,7 +2369,7 @@ async fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatu
     }
 }
 
-fn wit_command_page_block(bytes: &[u8], block: usize) -> wit_reactor::CommandPageBlock {
+fn wit_actor_byte_page_block(bytes: &[u8], block: usize) -> wit_reactor::Block {
     let mut words = [0u64; 8];
     for (index, word) in words.iter_mut().enumerate() {
         let start = block * 64 + index * 8;
@@ -2381,77 +2380,80 @@ fn wit_command_page_block(bytes: &[u8], block: usize) -> wit_reactor::CommandPag
             *word = u64::from_le_bytes(fixed);
         }
     }
-    wit_reactor::CommandPageBlock { word_0: words[0], word_1: words[1], word_2: words[2], word_3: words[3], word_4: words[4], word_5: words[5], word_6: words[6], word_7: words[7] }
+    wit_reactor::Block { word_0: words[0], word_1: words[1], word_2: words[2], word_3: words[3], word_4: words[4], word_5: words[5], word_6: words[6], word_7: words[7] }
 }
 
-fn kernel_command_page_to_wit(cursor: &semio_framework::kernel::CommandPageCursor, bytes: &[u8]) -> wit_reactor::CommandIngressPage {
+fn kernel_command_page_to_wit(cursor: &semio_framework::kernel::CommandPageCursor, page: &semio_framework::kernel::FixedCommandPage) -> wit_reactor::CommandIngressPage {
+    let bytes = page.as_slice();
     wit_reactor::CommandIngressPage {
         cursor: kernel_command_cursor_to_wit(cursor),
-        length: bytes.len() as u32,
-        block_00: wit_command_page_block(bytes, 0),
-        block_01: wit_command_page_block(bytes, 1),
-        block_02: wit_command_page_block(bytes, 2),
-        block_03: wit_command_page_block(bytes, 3),
-        block_04: wit_command_page_block(bytes, 4),
-        block_05: wit_command_page_block(bytes, 5),
-        block_06: wit_command_page_block(bytes, 6),
-        block_07: wit_command_page_block(bytes, 7),
-        block_08: wit_command_page_block(bytes, 8),
-        block_09: wit_command_page_block(bytes, 9),
-        block_10: wit_command_page_block(bytes, 10),
-        block_11: wit_command_page_block(bytes, 11),
-        block_12: wit_command_page_block(bytes, 12),
-        block_13: wit_command_page_block(bytes, 13),
-        block_14: wit_command_page_block(bytes, 14),
-        block_15: wit_command_page_block(bytes, 15),
-        block_16: wit_command_page_block(bytes, 16),
-        block_17: wit_command_page_block(bytes, 17),
-        block_18: wit_command_page_block(bytes, 18),
-        block_19: wit_command_page_block(bytes, 19),
-        block_20: wit_command_page_block(bytes, 20),
-        block_21: wit_command_page_block(bytes, 21),
-        block_22: wit_command_page_block(bytes, 22),
-        block_23: wit_command_page_block(bytes, 23),
-        block_24: wit_command_page_block(bytes, 24),
-        block_25: wit_command_page_block(bytes, 25),
-        block_26: wit_command_page_block(bytes, 26),
-        block_27: wit_command_page_block(bytes, 27),
-        block_28: wit_command_page_block(bytes, 28),
-        block_29: wit_command_page_block(bytes, 29),
-        block_30: wit_command_page_block(bytes, 30),
-        block_31: wit_command_page_block(bytes, 31),
-        block_32: wit_command_page_block(bytes, 32),
-        block_33: wit_command_page_block(bytes, 33),
-        block_34: wit_command_page_block(bytes, 34),
-        block_35: wit_command_page_block(bytes, 35),
-        block_36: wit_command_page_block(bytes, 36),
-        block_37: wit_command_page_block(bytes, 37),
-        block_38: wit_command_page_block(bytes, 38),
-        block_39: wit_command_page_block(bytes, 39),
-        block_40: wit_command_page_block(bytes, 40),
-        block_41: wit_command_page_block(bytes, 41),
-        block_42: wit_command_page_block(bytes, 42),
-        block_43: wit_command_page_block(bytes, 43),
-        block_44: wit_command_page_block(bytes, 44),
-        block_45: wit_command_page_block(bytes, 45),
-        block_46: wit_command_page_block(bytes, 46),
-        block_47: wit_command_page_block(bytes, 47),
-        block_48: wit_command_page_block(bytes, 48),
-        block_49: wit_command_page_block(bytes, 49),
-        block_50: wit_command_page_block(bytes, 50),
-        block_51: wit_command_page_block(bytes, 51),
-        block_52: wit_command_page_block(bytes, 52),
-        block_53: wit_command_page_block(bytes, 53),
-        block_54: wit_command_page_block(bytes, 54),
-        block_55: wit_command_page_block(bytes, 55),
-        block_56: wit_command_page_block(bytes, 56),
-        block_57: wit_command_page_block(bytes, 57),
-        block_58: wit_command_page_block(bytes, 58),
-        block_59: wit_command_page_block(bytes, 59),
-        block_60: wit_command_page_block(bytes, 60),
-        block_61: wit_command_page_block(bytes, 61),
-        block_62: wit_command_page_block(bytes, 62),
-        block_63: wit_command_page_block(bytes, 63),
+        page: wit_reactor::Page {
+            length: bytes.len() as u32,
+            block_00: wit_actor_byte_page_block(bytes, 0),
+            block_01: wit_actor_byte_page_block(bytes, 1),
+            block_02: wit_actor_byte_page_block(bytes, 2),
+            block_03: wit_actor_byte_page_block(bytes, 3),
+            block_04: wit_actor_byte_page_block(bytes, 4),
+            block_05: wit_actor_byte_page_block(bytes, 5),
+            block_06: wit_actor_byte_page_block(bytes, 6),
+            block_07: wit_actor_byte_page_block(bytes, 7),
+            block_08: wit_actor_byte_page_block(bytes, 8),
+            block_09: wit_actor_byte_page_block(bytes, 9),
+            block_10: wit_actor_byte_page_block(bytes, 10),
+            block_11: wit_actor_byte_page_block(bytes, 11),
+            block_12: wit_actor_byte_page_block(bytes, 12),
+            block_13: wit_actor_byte_page_block(bytes, 13),
+            block_14: wit_actor_byte_page_block(bytes, 14),
+            block_15: wit_actor_byte_page_block(bytes, 15),
+            block_16: wit_actor_byte_page_block(bytes, 16),
+            block_17: wit_actor_byte_page_block(bytes, 17),
+            block_18: wit_actor_byte_page_block(bytes, 18),
+            block_19: wit_actor_byte_page_block(bytes, 19),
+            block_20: wit_actor_byte_page_block(bytes, 20),
+            block_21: wit_actor_byte_page_block(bytes, 21),
+            block_22: wit_actor_byte_page_block(bytes, 22),
+            block_23: wit_actor_byte_page_block(bytes, 23),
+            block_24: wit_actor_byte_page_block(bytes, 24),
+            block_25: wit_actor_byte_page_block(bytes, 25),
+            block_26: wit_actor_byte_page_block(bytes, 26),
+            block_27: wit_actor_byte_page_block(bytes, 27),
+            block_28: wit_actor_byte_page_block(bytes, 28),
+            block_29: wit_actor_byte_page_block(bytes, 29),
+            block_30: wit_actor_byte_page_block(bytes, 30),
+            block_31: wit_actor_byte_page_block(bytes, 31),
+            block_32: wit_actor_byte_page_block(bytes, 32),
+            block_33: wit_actor_byte_page_block(bytes, 33),
+            block_34: wit_actor_byte_page_block(bytes, 34),
+            block_35: wit_actor_byte_page_block(bytes, 35),
+            block_36: wit_actor_byte_page_block(bytes, 36),
+            block_37: wit_actor_byte_page_block(bytes, 37),
+            block_38: wit_actor_byte_page_block(bytes, 38),
+            block_39: wit_actor_byte_page_block(bytes, 39),
+            block_40: wit_actor_byte_page_block(bytes, 40),
+            block_41: wit_actor_byte_page_block(bytes, 41),
+            block_42: wit_actor_byte_page_block(bytes, 42),
+            block_43: wit_actor_byte_page_block(bytes, 43),
+            block_44: wit_actor_byte_page_block(bytes, 44),
+            block_45: wit_actor_byte_page_block(bytes, 45),
+            block_46: wit_actor_byte_page_block(bytes, 46),
+            block_47: wit_actor_byte_page_block(bytes, 47),
+            block_48: wit_actor_byte_page_block(bytes, 48),
+            block_49: wit_actor_byte_page_block(bytes, 49),
+            block_50: wit_actor_byte_page_block(bytes, 50),
+            block_51: wit_actor_byte_page_block(bytes, 51),
+            block_52: wit_actor_byte_page_block(bytes, 52),
+            block_53: wit_actor_byte_page_block(bytes, 53),
+            block_54: wit_actor_byte_page_block(bytes, 54),
+            block_55: wit_actor_byte_page_block(bytes, 55),
+            block_56: wit_actor_byte_page_block(bytes, 56),
+            block_57: wit_actor_byte_page_block(bytes, 57),
+            block_58: wit_actor_byte_page_block(bytes, 58),
+            block_59: wit_actor_byte_page_block(bytes, 59),
+            block_60: wit_actor_byte_page_block(bytes, 60),
+            block_61: wit_actor_byte_page_block(bytes, 61),
+            block_62: wit_actor_byte_page_block(bytes, 62),
+            block_63: wit_actor_byte_page_block(bytes, 63),
+        },
     }
 }
 
@@ -2638,9 +2640,43 @@ async fn wit_surface_ref(instance_id: u32, surface: &str) -> wit_ui::SurfaceRef 
 /// 🏁️ Host → guest: `semio_framework::kernel::Event` to WIT `event` (`📜️wit/📜️events.wit`).
 /// `instance_id` fills the WIT `instance` field several kernel lifecycle variants dropped (see
 /// `WasmtimeInstanceState::instance_id`'s docstring).
+fn kernel_lifetime_to_wit(value: semio_framework::kernel::ActorInstanceLifetime) -> wit_lifetime::Lifetime {
+    wit_lifetime::Lifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
+}
+
+fn wit_lifetime_to_kernel(value: wit_lifetime::Lifetime) -> semio_framework::kernel::ActorInstanceLifetime {
+    semio_framework::kernel::ActorInstanceLifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
+}
+
+fn kernel_patch_receipt_to_wit(value: semio_framework::kernel::ActorUiPatchReceipt) -> wit_lifetime::UiPatchReceipt {
+    wit_lifetime::UiPatchReceipt { lifetime: kernel_lifetime_to_wit(value.lifetime), patch_sequence: value.patch_sequence }
+}
+
+fn wit_patch_receipt_to_kernel(value: wit_lifetime::UiPatchReceipt) -> semio_framework::kernel::ActorUiPatchReceipt {
+    semio_framework::kernel::ActorUiPatchReceipt { lifetime: wit_lifetime_to_kernel(value.lifetime), patch_sequence: value.patch_sequence }
+}
+
+fn kernel_lifecycle_receipt_to_wit(value: semio_framework::kernel::ActorInstanceLifecycleReceipt) -> wit_lifetime::Receipt {
+    use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
+    match value {
+        R::Captured { lifetime, request_sequence } => wit_lifetime::Receipt::Captured(wit_lifetime::CapturedReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence }),
+        R::Accepted { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Accepted(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+        R::Retired { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Retired(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+    }
+}
+
+fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framework::kernel::ActorInstanceLifecycleReceipt {
+    use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
+    match value {
+        wit_lifetime::Receipt::Captured(value) => R::Captured { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence },
+        wit_lifetime::Receipt::Accepted(value) => R::Accepted { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+        wit_lifetime::Receipt::Retired(value) => R::Retired { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+    }
+}
+
 async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Event {
     match event {
-        Event::InstanceOpen { instance, app_id, actor, config, assets, capabilities, quotas } => {
+        Event::InstanceOpen { request, app_id, actor, config, assets, capabilities, quotas } => {
             // 🚫️async: R10 residue shape 1 — `kernel_broker_grant_to_wit` is async, hoisted out of
             // the sync `Iterator::map` via a plain loop.
             let mut wit_capabilities = Vec::with_capacity(capabilities.len());
@@ -2648,7 +2684,9 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
                 wit_capabilities.push(kernel_broker_grant_to_wit(capability).await);
             }
             wit_events::Event::InstanceOpen(wit_events::InstanceOpenEvent {
-                instance: instance.0.parse().unwrap_or(instance_id),
+                instance: request.instance_id,
+                activation_generation: request.activation_generation,
+                request_sequence: request.request_sequence,
                 app_id: app_id.0.clone(),
                 actor: actor.clone(),
                 config: config.clone(),
@@ -2657,7 +2695,8 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
                 quotas: encode_json(quotas).await,
             })
         }
-        Event::InstanceClose => wit_events::Event::InstanceClose(wit_events::InstanceCloseEvent { instance: instance_id }),
+        Event::InstanceClose(request) => wit_events::Event::InstanceClose(wit_lifetime::CloseRequest { lifetime: kernel_lifetime_to_wit(request.lifetime), request_sequence: request.request_sequence }),
+        Event::InstanceLifecycleAck(ack) => wit_events::Event::InstanceLifecycleAck(kernel_lifecycle_receipt_to_wit(ack.receipt)),
         Event::Activate { reason } => wit_events::Event::Activate(wit_events::ActivateEvent { instance: instance_id, reason: kernel_activation_event_to_wit(reason).await }),
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
@@ -2667,8 +2706,8 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceResized { surface, width, height } => wit_events::Event::SurfaceResized(wit_events::SurfaceResizedEvent { surface: wit_surface_ref(instance_id, surface).await, width: *width, height: *height }),
-        Event::PatchAck { surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
-        Event::PatchRejected { surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { surface: wit_surface_ref(instance_id, surface).await, revision: *revision, reason: reason.clone() }),
+        Event::PatchAck { receipt, surface, revision } => wit_events::Event::PatchAck(wit_events::PatchAckEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision }),
+        Event::PatchRejected { receipt, surface, revision, reason } => wit_events::Event::PatchRejected(wit_events::PatchRejectedEvent { receipt: kernel_patch_receipt_to_wit(*receipt), surface: wit_surface_ref(instance_id, surface).await, revision: *revision, reason: reason.clone() }),
         Event::Completed { req, result } => wit_events::Event::Completed(wit_events::CompletedEvent { req: req.0, outcome: kernel_request_outcome_to_wit(result).await }),
         Event::HttpChunk { req, bytes, done } => wit_events::Event::HttpChunk(wit_events::HttpChunkEvent { req: req.0, params: wit_events::HttpChunkParams { bytes: bytes.clone(), done: *done } }),
         Event::JobProgress { job, progress } => wit_events::Event::JobProgress(wit_events::JobProgressEvent { job: *job, progress: progress.clone().unwrap_or_default() }),
@@ -4900,7 +4939,7 @@ mod runtime_metrics_publisher_tests {
     }
 
     async fn ok_turn() -> TurnResult {
-        TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
+        TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
     }
 
     /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
@@ -5023,7 +5062,7 @@ mod runtime_metrics_publisher_tests {
         kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
         kernel.tick(1).await;
         let faulted =
-            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+            TurnResult { ui_patches: vec![], effects: vec![], lifecycle_receipt: None, command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
         kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeIrradianceWM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newIrradianceWM2"
+  ],
+  "properties": {
+    "newIrradianceWM2": {
+      "type": "number"
+    }
+  }
+}

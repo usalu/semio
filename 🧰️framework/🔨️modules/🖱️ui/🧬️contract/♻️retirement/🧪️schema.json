@@ -3,8 +3,9 @@
   "$id": "semio.ui.value-retirement.fixture.v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "grants", "cases", "ownership"],
+  "required": ["version", "grants", "queuedOracleReader", "cases", "ownership"],
   "properties": {
+    "queuedOracleReader": { "const": { "aliasesBefore": 2, "aliasesAfter": 1, "readerReleasedItems": 1, "readerReleasedBytes": 0, "descendantReleasedItems": 2, "descendantReleasedBytes": 10 } },
     "version": { "const": 1 },
     "grants": { "const": [1, 64, 4096] },
     "cases": {

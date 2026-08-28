@@ -1,14 +1,19 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform: the exhaustive BinaryMutation vocabulary for stdio.binary raw/✳️any, and the recorded no-oracle decision that backs it. A raw byte buffer has no format, so there is nothing for a third-party library to be authoritative about — no crate was hunted for and none is registered. See the decision's own rationale below.",
   "oracles": [],
   "noOracleDecisions": [
     {
       "id": "raw-buffer-no-format",
-      "capabilities": ["binary-raw-mutate"],
+      "capabilities": [
+        "binary-raw-mutate"
+      ],
       "rationale": "A raw byte buffer carries no format — it is bytes, full stop. There is no grammar for a third-party library to parse, no independent reader to project both sides through, and no credible reference WRITER either: agreeing or disagreeing with some arbitrary crate would measure that crate's own opinion of what 'a buffer' is, not a defect in this subset. The specification IS the mutation vocabulary itself (`BinaryMutation`'s five variants and their documented offset/remove_len contract in `../🧬️schema/🧬️mutations/🦀️component.rs`), so the evidence is the specification vectors below plus the inverse law as a metamorphic property — both discharged by this module's own independently written splice/append/truncate implementation (`../🧪️oracle/🦀️component.rs`), which never touches the subject's `BinaryDiff`/`apply_binary_mutation`.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -30,7 +35,13 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "splice", "append-bytes", "truncate-at"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "splice",
+        "append-bytes",
+        "truncate-at"
+      ]
     }
   ]
 }

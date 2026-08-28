@@ -1,1 +1,0 @@
-extern crate derive; extern crate facade; use self::facade::MutationLeaf as SelfContract; #[derive(derive::MutationLeaf)] #[mutation_leaf(contract = ::SelfContract)] pub struct SelfPayload; mod nested { use super::facade::MutationLeaf as SuperContract; #[derive(derive::MutationLeaf)] #[mutation_leaf(contract = ::SuperContract)] pub struct SuperPayload; }

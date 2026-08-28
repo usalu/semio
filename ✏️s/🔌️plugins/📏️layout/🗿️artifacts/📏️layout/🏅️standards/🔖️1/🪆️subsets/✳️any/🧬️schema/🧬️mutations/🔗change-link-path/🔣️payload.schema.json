@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLinkPath",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPath"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newPath": {
+      "type": "string"
+    }
+  }
+}

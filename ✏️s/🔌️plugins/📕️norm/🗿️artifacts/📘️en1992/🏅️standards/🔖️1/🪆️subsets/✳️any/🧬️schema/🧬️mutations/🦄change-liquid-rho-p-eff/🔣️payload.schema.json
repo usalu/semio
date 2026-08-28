@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLiquidRhoPEff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLiquidRhoPEff"
+  ],
+  "properties": {
+    "newLiquidRhoPEff": {
+      "type": "number"
+    }
+  }
+}

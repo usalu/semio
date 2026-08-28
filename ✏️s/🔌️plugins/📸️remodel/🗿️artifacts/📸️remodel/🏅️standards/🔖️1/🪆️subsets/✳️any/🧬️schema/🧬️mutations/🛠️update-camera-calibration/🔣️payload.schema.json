@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateCameraCalibration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "camera"
+  ],
+  "properties": {
+    "camera": {
+      "title": "CameraCalibration",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cx",
+        "cy",
+        "distortion",
+        "fx",
+        "fy",
+        "id",
+        "label",
+        "locked",
+        "model",
+        "skew"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "fx": {
+          "type": "number"
+        },
+        "fy": {
+          "type": "number"
+        },
+        "cx": {
+          "type": "number"
+        },
+        "cy": {
+          "type": "number"
+        },
+        "skew": {
+          "type": "number"
+        },
+        "distortion": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 5,
+          "maxItems": 5
+        },
+        "rmsReprojectionPx": {
+          "type": "number"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

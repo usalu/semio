@@ -18,7 +18,7 @@
 //! element by element and attribute by attribute, so they cannot drift apart silently.
 //!
 //! @see ../../🧪️oracle/🔣️.json — the catalog `KINDS` below must match exactly.
-//! @see ../../../../../../🧪️tests/mutate-svg-1-1-tiny/component.feature — the case that exercises it.
+//! @see ../../../../../../🧪️tests/mutate-svg-1-1-tiny/🥒️.feature — the case that exercises it.
 
 use crate::artifacts::svg::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
 use crate::artifacts::svg::schema::snapshot::{element_attr, node_at, parse_transform_list, parse_view_box, transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};

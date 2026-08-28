@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "actor": "retained-ui-owner",
+  "instanceId": 7,
+  "activationGeneration": "9",
+  "guestLifetimes": ["13", "14"],
+  "surfaceNames": ["window", "inspector", "Ansicht 😀"],
+  "nativeSurfaceMaximumBytes": 512,
+  "lookupSlots": 1,
+  "inputToken": {"exactOriginalOperation": true, "acceptAfter": "successful-wire-offer", "mintAfter": ["decoded-input-retirement-and-apply", "cancelled-wire-terminal"], "releaseRequiresNativeSource": true, "rawOrdinalDischarge": false},
+  "ackToken": {"mintAfter": "paired-publication-notification-retirement", "foreignSource": false, "rawBooleanDischarge": false, "retryPreservesIdentity": true},
+  "retirementWitness": {"mintAfter": "all-exact-ui-descendants-and-outboxes", "transferCount": 1, "revokedActivationMayClose": true, "sameTupleForeignOwner": false, "structuralSuccess": false},
+  "steps": ["capture-old-lifetime", "lookup-window", "publish-old-root", "hold-old-reader", "start-old-close", "capture-replacement-lifetime", "publish-replacement-root", "reject-old-patch-on-new-owner", "release-old-reader", "old-terminal", "replacement-still-readable", "replacement-terminal"],
+  "hostile": ["foreign-activation-object", "foreign-guest-lifetime", "foreign-surface-facade", "same-id-replacement", "surface-name-oversize", "forged-lookup", "forged-surface-facade"],
+  "closeObligations": ["pending-lookup", "admitted-wire-input", "page-receipt", "paired-patch-publication-ack", "issued-react-root", "issued-scene-reader", "surface-cell"],
+  "laws": ["one-cell-per-advance", "same-surface-stable-read-facade", "cancelled-lookup-retains-owner-until-close", "no-global-map-or-name-lookup-on-close", "stream-before-surface-close", "stale-callback-cannot-rebind", "old-close-does-not-retire-replacement", "native-surface-cap-not-document-cap"]
+}

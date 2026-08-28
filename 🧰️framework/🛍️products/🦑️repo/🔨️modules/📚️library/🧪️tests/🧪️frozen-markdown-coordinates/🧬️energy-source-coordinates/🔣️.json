@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "contract": "energy-historical-markdown-source-coordinates-v1",
+  "documents": [
+    {
+      "id": "energy-history-reloc-g6",
+      "mode": 420,
+      "size": 13645,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️reloc-g6-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "896d0821ee85b9a58b98aa5020f96dd13c85a8b599359f943265c0b476332aaf",
+        "coordinates": [
+          {
+            "start": 11908,
+            "end": 11970,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-w1b-plugin",
+      "mode": 420,
+      "size": 13237,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1b-semio-s-plugin-energy-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "7f969a8e6abbdf1d40e7165d0311fca59d2d98f55351c077f8663c6d64e7565d",
+        "coordinates": [
+          {
+            "start": 3195,
+            "end": 3257,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-w1d-declaration-gaps",
+      "mode": 420,
+      "size": 16556,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1d-declaration-gaps-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "4cba3efe78aeefa5916a6e3486ed2d4293694c97ad5c8d6866a39478ac6bd9d4",
+        "coordinates": [
+          {
+            "start": 14109,
+            "end": 14171,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-w1d-plugin",
+      "mode": 420,
+      "size": 6738,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1d-semio-s-plugin-energy-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "587385daf44851643364af6f583b7d440e3c39f34c4cc9e3854fc470cbdb73d4",
+        "coordinates": [
+          {
+            "start": 1330,
+            "end": 1392,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-semantic-duplicates",
+      "mode": 420,
+      "size": 422776,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS/📓️semantic-duplicates.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "efb208fe2e6af74412af5838c49fe504bec479a6a3d48e5a435061af4722c2aa",
+        "coordinates": [
+          {
+            "start": 28518,
+            "end": 28635,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "f34d19023d0b6de102694f7bce3475d8a76e5cfa0a8831fe7d63ba0d29a5ab8e"
+          },
+          {
+            "start": 75639,
+            "end": 75770,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "6582fdb1c545b9f26fcdbb0aa0b2feee4e8b8d270ad76269a8c7fac653f1a60b"
+          },
+          {
+            "start": 75773,
+            "end": 75898,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "20f12a2ba10ba95ec5cef485a9b7fe1a2f5d872f1a0cd60ee36fb9d3fd8687a9"
+          },
+          {
+            "start": 176800,
+            "end": 176929,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "fca3f1df0882fec73edc26f6426ccc61cef327eb8588dfe1ef41346a0e90f3ed"
+          },
+          {
+            "start": 229870,
+            "end": 229996,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "605a7f6288938f89342ef726a60e83c78795fc4d13868a4f334dfcdb119e7b34"
+          },
+          {
+            "start": 232711,
+            "end": 232872,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "413053c42ab19de05b0e317f35a575fdfedfe3e3df13b1b0dd53483906714a69"
+          },
+          {
+            "start": 232875,
+            "end": 233042,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "355762557b6d9799c84c6b8828ac6315760c5f5d3135af6ad8333e1ed27685a8"
+          },
+          {
+            "start": 263456,
+            "end": 263577,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "99a0c2307df4e241de04b5342309a6f236c73142a0af0a5dda2046880cab179e"
+          },
+          {
+            "start": 282766,
+            "end": 282896,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "41593d25d045a5ade0a60110535139aad57b13b027ef0e7fa3078ca1e3e87463"
+          },
+          {
+            "start": 303466,
+            "end": 303597,
+            "kind": "source",
+            "form": "path-list-item",
+            "valueSha256": "01556676a9eb1755927576e4f95a9b1832dd206e5598db91b1ffec37c85512ac"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-subset-moves",
+      "mode": 420,
+      "size": 4553,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SUBSET-CONFORMANCE-AND-INTEGRATED-ROUNDTRIPS/📓️w4-smo-released-subset-moves.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "24a5059327cbf7b0e8ae0d49476eb83e4191dae265c43b220e4156057b5de46f",
+        "coordinates": [
+          {
+            "start": 3166,
+            "end": 3293,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "bb54fcc9ff9c2f70dd395c8dc89734ca71d2b02afc0d2bfd2e2e45cb6b6d6572"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-longtail-messages",
+      "mode": 420,
+      "size": 8681,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📓️f3-longtail-messages-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "8ece509991c9aaf788406a15318178af61ebc7837a7209433c3421d71177b0ca",
+        "coordinates": [
+          {
+            "start": 7302,
+            "end": 7446,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "c0f876a8643f675298d62b8161c7f532bad055dcb8b2d284f20a27997a7ff359"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-empty-facet-integration",
+      "mode": 420,
+      "size": 9261,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️s-artifact-empty-facet-integration.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "44b3c82b1bbd1600730d941c58a81fd4d64fa16ae0d231dfa06da30e0b91c7b8",
+        "coordinates": [
+          {
+            "start": 7290,
+            "end": 7403,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "15e39ed70c22995a1db3b049826b4cefb87f6ae65959f0bb47c0c2118e6b0982"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-codec-d4",
+      "mode": 420,
+      "size": 19067,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-D4-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "2256929daca15fc266545ca305bd1d17f147140c78c41c41bfc6ae1c47477993",
+        "coordinates": [
+          {
+            "start": 10688,
+            "end": 10750,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          },
+          {
+            "start": 16683,
+            "end": 16745,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "9299cdd0e8fa7ddb1a2fbd72d04e7276fd4f336c9cbed288e4672d831ecaaf3c"
+          }
+        ]
+      }
+    },
+    {
+      "id": "energy-history-rust-compilation",
+      "mode": 420,
+      "size": 14728,
+      "contract": {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/📓️draw-energy-lowpoly-space-sourcing-writer-report.md",
+        "grammar": "frozen-markdown-source-coordinates-v1",
+        "sha256": "adf8f1c2df47aa82eb0b9b74fae1c60eadcf45e0f747bc0c83a3f54eaae9107d",
+        "coordinates": [
+          {
+            "start": 1778,
+            "end": 1881,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "ff916c8215e26e30f844cdfebd1a07a82e024f410349775780ca92d9899869d0"
+          },
+          {
+            "start": 12090,
+            "end": 12193,
+            "kind": "source",
+            "form": "inline-code",
+            "valueSha256": "ff916c8215e26e30f844cdfebd1a07a82e024f410349775780ca92d9899869d0"
+          }
+        ]
+      }
+    }
+  ]
+}

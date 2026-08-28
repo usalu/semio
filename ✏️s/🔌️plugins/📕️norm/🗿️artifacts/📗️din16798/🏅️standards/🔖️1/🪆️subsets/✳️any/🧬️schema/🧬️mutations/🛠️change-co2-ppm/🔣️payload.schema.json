@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeCo2Ppm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCo2Ppm"
+  ],
+  "properties": {
+    "newCo2Ppm": {
+      "type": "number"
+    }
+  }
+}

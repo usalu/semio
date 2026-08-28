@@ -18,61 +18,21 @@
     },
     {
       "ecosystem": "go",
-      "name": "github.com/Masterminds/goutils",
-      "version": "v1.1.1",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/Masterminds/semver/v3",
-      "version": "v3.4.0",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/Masterminds/sprig/v3",
-      "version": "v3.3.0",
-      "kinds": [
-        "production-build",
-        "production-runtime"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/RoaringBitmap/roaring/v2",
-      "version": "v2.14.5",
-      "kinds": [
-        "production-build"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
       "name": "github.com/bits-and-blooms/bitset",
       "version": "v1.24.2",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/blevesearch/bleve_index_api",
+      "version": "v1.3.11",
       "kinds": [
         "production-build"
       ],
@@ -89,19 +49,6 @@
       "kinds": [
         "production-build",
         "production-runtime"
-      ],
-      "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "go",
-      "name": "github.com/blevesearch/bleve_index_api",
-      "version": "v1.3.11",
-      "kinds": [
-        "production-build"
       ],
       "users": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
@@ -469,6 +416,46 @@
     },
     {
       "ecosystem": "go",
+      "name": "github.com/Masterminds/goutils",
+      "version": "v1.1.1",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/Masterminds/semver/v3",
+      "version": "v3.4.0",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/Masterminds/sprig/v3",
+      "version": "v3.3.0",
+      "kinds": [
+        "production-build",
+        "production-runtime"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
       "name": "github.com/mattn/go-isatty",
       "version": "v0.0.20",
       "kinds": [
@@ -545,6 +532,19 @@
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/go.mod"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "go",
+      "name": "github.com/RoaringBitmap/roaring/v2",
+      "version": "v2.14.5",
+      "kinds": [
+        "production-build"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/go.mod",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/go.mod"
       ],
       "productionReachable": true
     },
@@ -1275,7 +1275,24 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true
+      "productionReachable": true,
+      "oracleIds": [
+        "brepjs-occt"
+      ],
+      "capabilities": [
+        "brep.boolean.cut",
+        "brep.boolean.fuse",
+        "brep.boolean.intersect",
+        "brep.measure.area",
+        "brep.measure.bounds",
+        "brep.measure.volume",
+        "brep.step.export",
+        "brep.step.import",
+        "brep.tessellate",
+        "brep.topology.count",
+        "brep.validity",
+        "step-ap214-cc6-mutate"
+      ]
     },
     {
       "ecosystem": "js",
@@ -1288,7 +1305,24 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json"
       ],
-      "productionReachable": true
+      "productionReachable": true,
+      "oracleIds": [
+        "brepjs-occt"
+      ],
+      "capabilities": [
+        "brep.boolean.cut",
+        "brep.boolean.fuse",
+        "brep.boolean.intersect",
+        "brep.measure.area",
+        "brep.measure.bounds",
+        "brep.measure.volume",
+        "brep.step.export",
+        "brep.step.import",
+        "brep.tessellate",
+        "brep.topology.count",
+        "brep.validity",
+        "step-ap214-cc6-mutate"
+      ]
     },
     {
       "ecosystem": "js",
@@ -1665,6 +1699,18 @@
     },
     {
       "ecosystem": "js",
+      "name": "manifold-3d",
+      "version": "3.5.1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
       "name": "three",
       "version": "^0.182.0",
       "kinds": [
@@ -1870,6 +1916,27 @@
         "pyproject.toml"
       ],
       "productionReachable": false
+    },
+    {
+      "ecosystem": "python",
+      "name": "ifcopenshell",
+      "version": "0.8.4.post1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "ifcopenshell-ifc-2x3-any-differential",
+        "ifcopenshell-ifc-4-any-differential"
+      ],
+      "capabilities": [
+        "ifc-2x3-any-mutate",
+        "ifc-4-any-mutate"
+      ]
     },
     {
       "ecosystem": "python",
@@ -2531,12 +2598,28 @@
       "productionReachable": false,
       "oracleIds": [
         "lopdf",
+        "lopdf-pdf-1-4-a-mutate",
         "lopdf-pdf-1-4-mutate",
-        "lopdf-pdf-1-7-mutate"
+        "lopdf-pdf-1-4-x-mutate",
+        "lopdf-pdf-1-7-a-mutate",
+        "lopdf-pdf-1-7-e-mutate",
+        "lopdf-pdf-1-7-h-mutate",
+        "lopdf-pdf-1-7-mutate",
+        "lopdf-pdf-1-7-ua-mutate",
+        "lopdf-pdf-1-7-vt-mutate",
+        "lopdf-pdf-1-7-x-mutate"
       ],
       "capabilities": [
+        "pdf-1-4-a-mutate",
         "pdf-1-4-mutate",
+        "pdf-1-4-x-mutate",
+        "pdf-1-7-a-mutate",
+        "pdf-1-7-e-mutate",
+        "pdf-1-7-h-mutate",
         "pdf-1-7-mutate",
+        "pdf-1-7-ua-mutate",
+        "pdf-1-7-vt-mutate",
+        "pdf-1-7-x-mutate",
         "pdf-edit",
         "pdf-parse"
       ]
@@ -2798,6 +2881,7 @@
         "quick-xml-svg-1-1-basic-mutate",
         "quick-xml-svg-1-1-mutate",
         "quick-xml-svg-1-1-tiny-mutate",
+        "quick-xml-xml-1-0-valid-mutate",
         "xlsx-ecma-376-strict-mutate",
         "xlsx-ecma-376-transitional-mutate",
         "zip-quick-xml-bcf-2-1-mutate",
@@ -2816,7 +2900,8 @@
         "svg-1-1-tiny-mutate",
         "xlsx-ecma-376-strict-mutate",
         "xlsx-ecma-376-transitional-mutate",
-        "xml-1-0-mutate"
+        "xml-1-0-mutate",
+        "xml-1-0-valid-mutate"
       ]
     },
     {
@@ -2942,15 +3027,28 @@
         "ruststep-ifc-2x3-cv20-mutate",
         "ruststep-ifc-2x3-sav-mutate",
         "ruststep-ifc-4-any-mutate",
-        "ruststep-step-ap214-any-mutate"
+        "ruststep-step-ap214-any-mutate",
+        "ruststep-step-ap214-cc1-mutate",
+        "ruststep-step-ap214-cc2-mutate",
+        "ruststep-step-ap214-cc3-mutate",
+        "ruststep-step-ap214-cc4-mutate",
+        "ruststep-step-ap214-cc5-mutate",
+        "ruststep-step-ap214-cc6-mutate"
       ],
       "capabilities": [
+        "brep.step.import",
         "ifc-2x3-any-mutate",
         "ifc-2x3-cobie-mutate",
         "ifc-2x3-cv20-mutate",
         "ifc-2x3-sav-mutate",
         "ifc-4-any-mutate",
-        "step-ap214-any-mutate"
+        "step-ap214-any-mutate",
+        "step-ap214-cc1-mutate",
+        "step-ap214-cc2-mutate",
+        "step-ap214-cc3-mutate",
+        "step-ap214-cc4-mutate",
+        "step-ap214-cc5-mutate",
+        "step-ap214-cc6-mutate"
       ]
     },
     {
@@ -3075,22 +3173,6 @@
     },
     {
       "ecosystem": "rust",
-      "name": "serde-wasm-bindgen",
-      "version": "0.6.5",
-      "kinds": [
-        "production-runtime"
-      ],
-      "users": [
-        "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
-      ],
-      "productionReachable": true
-    },
-    {
-      "ecosystem": "rust",
       "name": "serde_json",
       "version": "1.0.149",
       "kinds": [
@@ -3194,6 +3276,22 @@
         "🧰️framework/🛍️products/💻️os/🧫️fixtures/🔌️scale/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "serde-wasm-bindgen",
+      "version": "0.6.5",
+      "kinds": [
+        "production-runtime"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
     },

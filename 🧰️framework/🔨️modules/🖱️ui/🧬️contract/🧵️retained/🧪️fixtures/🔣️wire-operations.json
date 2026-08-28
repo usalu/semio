@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "root": 9007199254740991,
+  "child": 1099511627776,
+  "node": {"id": 9007199254740991, "key": "root", "component": {"type": "text", "value": "Alt / Old"}, "layout": {"kind": "leaf", "width": "hug", "height": "fill"}, "style": {}, "activity": "idle", "accessibility": {}},
+  "fields": [
+    {"tag": "set-component", "field": "component", "value": {"type": "text", "value": "Neu / New 😀"}},
+    {"tag": "set-layout", "field": "layout", "value": {"kind": "leaf", "width": "fill", "height": "hug"}},
+    {"tag": "set-activity", "field": "activity", "value": {"activity": "idle", "disabled": true}},
+    {"tag": "set-style", "field": "style", "value": {}},
+    {"tag": "set-accessibility", "field": "accessibility", "value": {"label": "Ansicht / View 😀"}},
+    {"tag": "set-bindings", "field": "bindings", "value": []},
+    {"tag": "set-menu", "field": "menu", "value": null}
+  ],
+  "scalarTags": ["remove", "set-root"],
+  "forgedAuthorities": ["operation-root", "operation-retirement", "view-buffer-shadow"],
+  "rawRetirement": {"knownFieldsOnly": true, "unknownWrapperPreserved": true, "unknownBytes": 8192, "invalidTargetTransfersPayload": false},
+  "stream": {"slots": 1, "operations": 2, "rejectWrongOrdinalBeforeRead": true, "pageReceiptBeforePatchAck": true, "lateCancelPreservesAck": true},
+  "nativeChildren": {"representation": "BigUint64Array", "maximum": 128, "values": [0,1099511627776,9007199254740991]},
+  "hostile": ["unknown-tag", "unexpected-payload", "unsafe-node-id", "negative-node-id", "payload-subview", "payload-shared-buffer", "wrong-payload-kind", "children-accessor", "children-over-capacity", "children-unsafe-id"],
+  "laws": ["one-owned-wire-op", "exact-native-field-pack", "no-array-wide-decode", "input-alias-detached", "rejection-before-transfer", "cancel-before-every-byte-phase", "source-preserved-before-publish", "ack-after-paired-publication", "close-before-next-operation"]
+}

@@ -2,15 +2,5 @@ syntax = "proto3";
 package semio.app.gis.gis2d;
 message Gis2dPresence {
   // @state presence
-  repeated string selected_ids = 1;
-  // @state presence
   string camera_json = 2;
-  // @state presence
-  string feature_selection_json = 3;
-  // @state presence
-  string hover_json = 4;
-  // @state presence
-  string selection_method = 5;
-  // @state presence
-  string selection_mode = 6;
 }

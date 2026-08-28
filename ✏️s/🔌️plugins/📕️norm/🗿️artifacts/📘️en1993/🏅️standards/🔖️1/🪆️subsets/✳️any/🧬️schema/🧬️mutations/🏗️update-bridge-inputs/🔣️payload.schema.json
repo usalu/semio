@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateBridgeInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBridgeDeltaSigmaPMpa",
+    "newBridgeLambda",
+    "newBridgePhi2"
+  ],
+  "properties": {
+    "newBridgeLambda": {
+      "type": "number"
+    },
+    "newBridgePhi2": {
+      "type": "number"
+    },
+    "newBridgeDeltaSigmaPMpa": {
+      "type": "number"
+    }
+  }
+}

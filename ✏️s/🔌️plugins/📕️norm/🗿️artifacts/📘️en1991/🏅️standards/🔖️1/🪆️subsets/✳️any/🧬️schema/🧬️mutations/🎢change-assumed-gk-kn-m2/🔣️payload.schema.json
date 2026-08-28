@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAssumedGKKnM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAssumedGKKnM2"
+  ],
+  "properties": {
+    "newAssumedGKKnM2": {
+      "type": "number"
+    }
+  }
+}

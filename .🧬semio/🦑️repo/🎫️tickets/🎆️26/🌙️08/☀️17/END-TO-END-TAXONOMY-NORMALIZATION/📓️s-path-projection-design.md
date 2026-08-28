@@ -316,7 +316,7 @@ Record the three new values as the canonical `vectors[].scenarios[].id` values b
 
 | File/region | Required change |
 |---|---|
-| `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json` `$defs.MutationCatalog` around 774–814 | Require profile identity and vector registry fields. No legacy optional form. |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json` `$defs.MutationCatalog` around 774–814 | Require profile identity and vector registry fields. No legacy optional form. |
 | `…/🧪️test/📦️packages/🟦️typescript/📦️index.ts` `MutationCatalog`/contribution loading around 620–710 and completeness around 1,098–1,135 | Validate vector/catalog bijection and expose the registered vector lookup used by projection validation. |
 | same file, fixture URI parser/resolver around 733–790 | URI resolution already works against the artifact owner; add projected URI tests and structured Gherkin tokenization, not a second resolver. |
 | `…/🧪️test/🔌️nx-plugin.mjs` `testCaseProjects` around 100–165 and `discoverCaseDirs` around 170–196 | Keep executable case discovery at immediate `🧪️tests/<case>/<feature>` only. Add a regression proving `🪆️<profile>/<mutation>/<scenario>` is a fixture projection and never becomes an Nx project. Inputs already include the artifact owner tree. |

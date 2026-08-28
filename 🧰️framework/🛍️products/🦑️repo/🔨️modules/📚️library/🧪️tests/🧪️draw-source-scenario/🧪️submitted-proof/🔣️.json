@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-submitted-plan-proof-v1",
+  "directoryName": "📓️submitted-plans",
+  "filename": "🔣️.json",
+  "fileMode": 384,
+  "writePolicy": "exclusive-synced-and-byte-identical-reuse",
+  "nodeCases": [
+    { "kind": "absent", "outcome": "create" },
+    { "kind": "identical-file", "outcome": "reuse" },
+    { "kind": "changed-file", "outcome": "reject-preserve" },
+    { "kind": "changed-mode", "outcome": "reject-preserve", "platform": "posix" },
+    { "kind": "file-symlink", "outcome": "reject-preserve" },
+    { "kind": "ancestor-symlink", "outcome": "reject-preserve" }
+  ],
+  "invalidContracts": [
+    { "field": "directoryName", "value": "📓️unowned" },
+    { "field": "filename", "value": "../📝️.md" },
+    { "field": "fileMode", "value": 420 }
+  ],
+  "progress": {
+    "externalParentSegments": ["📓️draw-source-scenarios", "📓️progress"],
+    "intervalMs": 1000,
+    "cases": [
+      { "at": 0, "operation": "plan", "phase": "incoming-reference", "current": 0, "total": 10, "retain": true },
+      { "at": 100, "operation": "plan", "phase": "incoming-reference", "current": 1, "total": 10, "retain": false },
+      { "at": 1000, "operation": "plan", "phase": "incoming-reference", "current": 5, "total": 10, "retain": true },
+      { "at": 1100, "operation": "plan", "phase": "incoming-reference", "current": 10, "total": 10, "retain": true },
+      { "at": 1101, "operation": "plan", "phase": "incoming-reference", "current": 10, "total": 10, "retain": false },
+      { "at": 1200, "operation": "plan", "phase": "generator-preview", "current": 1, "total": 1, "retain": true },
+      { "at": 1201, "operation": "apply", "phase": "generator-preview", "current": 1, "total": 1, "retain": true }
+    ]
+  },
+  "singleCase": {
+    "command": "artifact-source-residue",
+    "target": "test-artifact-source-residue",
+    "budgetMs": 120000,
+    "bunTimeoutMs": 120000,
+    "testName": "rejects ignored and unplanned residual children in a projected source owner without following links",
+    "runner": "runTestBudgeted",
+    "extraArguments": false,
+    "launchName": "🧹clean🧩️taxonomy🧪️artifact-source-residue",
+    "launchOrder": 410.194
+  },
+  "unsignedPlan": {
+    "schemaVersion": 2,
+    "taxonomySchemaVersion": 7,
+    "baselineCommit": "1111111111111111111111111111111111111111",
+    "scope": "🧪️tests/🧪️fixture",
+    "sourceTreeDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+    "excludedTreeDigests": [],
+    "moves": [],
+    "embeddedTicketRoots": [],
+    "embeddedTicketRootRelocations": [],
+    "symlinkTargetEdits": [],
+    "evidenceRemovals": [],
+    "destinationAncestorPreimages": [],
+    "edits": [],
+    "regenerations": [],
+    "unresolved": [],
+    "expectedAffectedPreStateDigest": "2222222222222222222222222222222222222222222222222222222222222222",
+    "expectedPostStateDigest": "2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}

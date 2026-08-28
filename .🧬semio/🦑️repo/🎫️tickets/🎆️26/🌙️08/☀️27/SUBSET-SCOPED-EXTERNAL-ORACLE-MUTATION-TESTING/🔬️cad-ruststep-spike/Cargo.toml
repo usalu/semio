@@ -1,0 +1,16 @@
+[workspace]
+
+[package]
+name = "cad-ruststep-spike"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "cad-ruststep-spike"
+path = "src/main.rs"
+
+[dependencies]
+ruststep = "0.4"
+dxf = "0.6"
+serde = { version = "1", features = ["derive"] }

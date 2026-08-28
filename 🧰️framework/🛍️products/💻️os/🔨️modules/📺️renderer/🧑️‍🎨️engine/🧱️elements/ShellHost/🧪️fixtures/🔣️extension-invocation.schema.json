@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instanceId", "requestId", "requestIds", "extensionId", "capability", "request", "genericRequests", "response", "completion", "completionFailures", "missing", "fault"],
+  "properties": {
+    "instanceId": { "type": "integer", "minimum": 1 },
+    "requestId": { "type": "integer", "minimum": 1 },
+    "requestIds": { "type": "array", "minItems": 3, "items": { "type": "string", "pattern": "^[1-9][0-9]*$" } },
+    "extensionId": { "type": "string", "minLength": 1 },
+    "capability": { "type": "string", "minLength": 1 },
+    "request": { "type": "object" },
+    "genericRequests": {
+      "type": "array", "minItems": 2,
+      "items": { "type": "object", "additionalProperties": false, "required": ["capability", "request"], "properties": { "capability": { "type": "string", "minLength": 1 }, "request": { "type": "object" } } }
+    },
+    "response": { "type": "object" },
+    "completion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "revision", "notification", "uiScope", "historyPatch"],
+      "properties": {
+        "surface": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 },
+        "notification": { "type": "string", "minLength": 1 },
+        "uiScope": { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "full" } } },
+        "historyPatch": {
+          "type": "object", "additionalProperties": false, "required": ["cursor", "upserts", "canUndo", "canRedo"],
+          "properties": { "cursor": { "type": "integer", "minimum": 0 }, "upserts": { "type": "array", "maxItems": 0 }, "canUndo": { "type": "boolean" }, "canRedo": { "type": "boolean" } }
+        }
+      }
+    },
+    "completionFailures": {
+      "type": "array", "minItems": 5,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kind", "code"],
+        "properties": { "kind": { "enum": ["missing-lease", "missing-complete", "missing-guard", "foreign-request", "foreign-instance"] }, "code": { "enum": ["extension.completion-unavailable", "extension.completion-owner-mismatch"] } }
+      }
+    },
+    "missing": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "code"],
+        "properties": {
+          "phase": { "enum": ["extension", "invoke"] },
+          "code": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "fault": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "code", "severity", "message", "scope", "retryable"],
+      "properties": {
+        "origin": { "const": "extension" },
+        "code": { "type": "string", "minLength": 1 },
+        "severity": { "const": "error" },
+        "message": { "type": "string", "minLength": 1 },
+        "scope": { "type": "object" },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  }
+}

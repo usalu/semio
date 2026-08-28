@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.video`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.video` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars rather than a third-party package.",
   "oracles": [
     {
       "id": "semio-video-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-video-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-video-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-video/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line streams-line` grammar in both directions — `stream`, `sample`, `rational`, `kind = V|A|S` and `bool = 0|1` included — and all nine verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. The grammars' own notes distinguish the two uses of the `hex` macro — a `schema`/`codec` leaf is the lowercase hex of a UTF-8 string (`68323634` is `h264` in the committed artifact) while a sample `data` leaf is an opaque byte run — and the reading is pinned by byte-exact re-emission of the committed file. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The container route was surveyed again and still rejected on the merits rather than for absence — `mp4` 0.14, `riff` 2.0, `pymp4` and `mp4box.js` read and write CONTAINERS, while this snapshot is container-neutral and payload-opaque, so every kind but `set-sample-data` would have to be projected through a container write that invents a track id, an edit list and a codec-configuration record the snapshot does not carry."
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-video/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line streams-line` grammar in both directions — `stream`, `sample`, `rational`, `kind = V|A|S` and `bool = 0|1` included — and all nine verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. The grammars' own notes distinguish the two uses of the `hex` macro — a `schema`/`codec` leaf is the lowercase hex of a UTF-8 string (`68323634` is `h264` in the committed artifact) while a sample `data` leaf is an opaque byte run — and the reading is pinned by byte-exact re-emission of the committed file. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The container route was surveyed again and still rejected on the merits rather than for absence — `mp4` 0.14, `riff` 2.0, `pymp4` and `mp4box.js` read and write CONTAINERS, while this snapshot is container-neutral and payload-opaque, so every kind but `set-sample-data` would have to be projected through a container write that invents a track id, an edit list and a codec-configuration record the snapshot does not carry.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-video-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -33,7 +45,17 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-stream",
+        "remove-stream",
+        "set-stream-meta",
+        "insert-sample",
+        "remove-sample",
+        "set-sample-data",
+        "set-sample-flags"
+      ]
     }
   ]
 }

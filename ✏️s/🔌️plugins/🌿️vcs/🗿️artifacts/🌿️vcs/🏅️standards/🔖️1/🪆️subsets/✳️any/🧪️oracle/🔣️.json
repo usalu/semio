@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.vcs.vcs` is a semio-NATIVE checkpoint document — its wire forms are `.vcs.dsl.semio` and `.vcs.pack.semio`, both defined by this repository alone — so no oracle is registered and the evidence rests on the committed per-kind specification vectors plus the inverse law (see noOracleDecisions).",
   "oracles": [],
   "noOracleDecisions": [

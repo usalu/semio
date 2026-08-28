@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHandleHandleKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHandleKind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newHandleKind": {
+      "type": "string"
+    }
+  }
+}

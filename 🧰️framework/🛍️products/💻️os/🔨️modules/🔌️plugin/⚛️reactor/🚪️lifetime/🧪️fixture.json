@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "grant": { "items": 1, "bytes": 4096, "callbackLimitUs": 8000 },
+  "open": { "activationGeneration": "41", "instanceId": 7, "requestSequence": 8 },
+  "priorGuestLifetime": "12",
+  "capturedGuestLifetime": "13",
+  "reopenedGuestLifetime": "14",
+  "closeRequestSequence": 9,
+  "closeGeneration": "51",
+  "nativeParticipants": ["app", "tasks", "requests", "resumes", "timers", "metadata", "patchTracker", "pendingPatches", "jobRenderBindings", "uiHandbacks", "turnPatchHandbacks"],
+  "hostParticipants": ["capturedWorkerActivation", "ownedUiInstance", "receiptTransport"],
+  "admission": [
+    { "name": "duplicate-open-pending-capture", "secondRequest": 8, "createdApps": 1, "guestLifetime": "13", "outcome": "same-owner" },
+    { "name": "replacement-open-before-final-ack", "secondRequest": 10, "createdApps": 1, "guestLifetime": "13", "outcome": "blocked" },
+    { "name": "reopen-after-final-ack", "secondRequest": 10, "createdApps": 2, "guestLifetime": "14", "outcome": "new-owner" }
+  ],
+  "acknowledgements": [
+    { "receipt": "captured", "ack": "foreign-guest", "phase": "capture-pending", "releasedSlots": 0 },
+    { "receipt": "captured", "ack": "exact", "phase": "live", "releasedSlots": 0 },
+    { "receipt": "accepted", "ack": "wrong-kind", "phase": "accepted-pending", "releasedSlots": 0 },
+    { "receipt": "accepted", "ack": "exact", "phase": "closing", "releasedSlots": 0 },
+    { "receipt": "retired", "ack": "wrong-request", "phase": "retired-pending", "releasedSlots": 0 },
+    { "receipt": "retired", "ack": "exact", "phase": "released", "releasedSlots": 1 }
+  ],
+  "preflightFailures": ["lifetime-counter-exhaust", "lifecycle-slot-full", "reactor-slot-full", "patch-slot-full", "pending-patch-slot-full", "foreign-native-cell"],
+  "preflight": { "detachedApps": 0, "detachedDescendants": 0, "lostOwners": 0 },
+  "faults": ["open-after-construction", "capture-before-publication", "child-step-unwind", "publication-clock-missing", "publication-clock-backward", "publication-elapsed-equality", "output-full"],
+  "faultRecovery": { "ownerRemainsReachable": true, "receiptRemainsOwned": true, "terminalReceiptPublished": false },
+  "terminalRelease": { "startedUs": 100, "destructorWorkUs": 8000, "firstAckAccepted": false, "destructionsAfterRetry": 1, "receiptRetainedOnLateClock": true, "arbitraryPanickingDestructorSupported": false },
+  "pendingPatch": { "surfaces": ["7:保留,🙂", "7:second"], "grants": [1, 64, 4096], "zeroGrantChangesOwner": false, "occupiedHandbackAcceptsReplacement": false, "terminalBeforeExactRelease": false, "faultLeavesStructuralOwner": true },
+  "retirement": { "nativeAppAloneIsTerminal": false, "globalEmptyIsTerminal": false, "allCapturedNativeOwnersIsTerminal": true, "retiredReceiptAloneAllowsHostDispose": false }
+}

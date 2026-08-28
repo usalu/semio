@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateGrip",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grip"
+  ],
+  "properties": {
+    "grip": {
+      "title": "Block5dGripTemplate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "angle",
+        "direction",
+        "gripKind",
+        "id",
+        "position",
+        "radius2d",
+        "radius3d"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "gripKind": {
+          "type": "string"
+        },
+        "angle": {
+          "type": "number"
+        },
+        "radius2d": {
+          "type": "number"
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "radius3d": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

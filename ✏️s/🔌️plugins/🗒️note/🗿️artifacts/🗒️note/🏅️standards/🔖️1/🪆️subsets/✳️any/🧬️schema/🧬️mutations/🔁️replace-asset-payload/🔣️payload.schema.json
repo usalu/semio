@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceAssetPayload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "key",
+    "newAsset"
+  ],
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "newAsset": {
+      "title": "NoteImageAsset",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "mime"
+      ],
+      "properties": {
+        "mime": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

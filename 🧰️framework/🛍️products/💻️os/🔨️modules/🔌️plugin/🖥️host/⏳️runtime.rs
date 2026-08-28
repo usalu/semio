@@ -295,6 +295,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         status: super::wit_turn_status_to_kernel(turn.status).await,
         fuel_used: turn.fuel_used,
         command_ingress: super::wit_command_ingress_to_kernel(turn.command_ingress),
+        lifecycle_receipt: turn.lifecycle_receipt.map(super::wit_lifecycle_receipt_to_kernel),
     })
 }
 //#endregion 🐛️Poll result conversion

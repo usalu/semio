@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:taxonomy:source-admission:v1",
+  "$ref": "#/$defs/sourceAdmissionInput",
+  "$defs": {
+    "origin": {
+      "enum": [
+        "tracked",
+        "nonignored-untracked",
+        "ignored-generator",
+        "explicit-ticket"
+      ]
+    },
+    "indexEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "mode",
+        "objectId"
+      ],
+      "properties": {
+        "stage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "mode": {
+          "enum": [
+            "100644",
+            "100755",
+            "120000",
+            "160000"
+          ]
+        },
+        "objectId": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        }
+      }
+    },
+    "generatorOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractId",
+        "rootPath",
+        "inclusion"
+      ],
+      "properties": {
+        "contractId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rootPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inclusion": {
+          "enum": [
+            "tracked",
+            "ignored"
+          ]
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourcePath",
+        "observedKind",
+        "worktreeMode",
+        "explicitDirectory",
+        "origins",
+        "indexEntries",
+        "unsafeAncestor"
+      ],
+      "properties": {
+        "sourcePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observedKind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "absent",
+            "unobserved",
+            "other"
+          ]
+        },
+        "worktreeMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "100644",
+            "100755",
+            "120000",
+            "160000",
+            "040000",
+            null
+          ]
+        },
+        "explicitDirectory": {
+          "type": "boolean"
+        },
+        "origins": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/origin"
+          }
+        },
+        "indexEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/indexEntry"
+          }
+        },
+        "unsafeAncestor": {
+          "type": "boolean"
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourcePath",
+        "observedKind",
+        "worktreeMode",
+        "explicitDirectory",
+        "origins",
+        "indexEntries",
+        "generatorOutputs"
+      ],
+      "properties": {
+        "sourcePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observedKind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "absent",
+            "unobserved",
+            "other"
+          ]
+        },
+        "worktreeMode": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "100644",
+            "100755",
+            "120000",
+            "160000",
+            "040000",
+            null
+          ]
+        },
+        "explicitDirectory": {
+          "type": "boolean"
+        },
+        "origins": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/origin"
+          }
+        },
+        "indexEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/indexEntry"
+          }
+        },
+        "generatorOutputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/generatorOutput"
+          }
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "input",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "$ref": "#/$defs/sourceAdmissionInput"
+        },
+        "expected": {
+          "$ref": "#/$defs/sourceAdmission"
+        }
+      }
+    },
+    "schemaRejection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "candidate",
+        "expectedKeyword"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "candidate": {
+          "type": "object"
+        },
+        "expectedKeyword": {
+          "enum": [
+            "enum",
+            "pattern",
+            "type",
+            "required",
+            "additionalProperties"
+          ]
+        }
+      }
+    },
+    "sourceAdmissionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "opaquePrefixes",
+        "generatorOutputRoots",
+        "candidates"
+      ],
+      "properties": {
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelledDuring": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opaquePrefixes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "generatorOutputRoots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/generatorOutput"
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/candidate"
+          }
+        }
+      }
+    },
+    "sourceAdmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "scope",
+        "status",
+        "observations",
+        "diagnostics"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "scope": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "rejected"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic"
+          }
+        }
+      }
+    },
+    "sourceAdmissionCases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "schemaRejections"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/case"
+          }
+        },
+        "schemaRejections": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/schemaRejection"
+          }
+        }
+      }
+    }
+  }
+}

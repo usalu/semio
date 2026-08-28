@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateScriptLimits",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newMaxRecursion",
+    "newMaxSteps",
+    "newTimeoutMs"
+  ],
+  "properties": {
+    "newMaxSteps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newMaxRecursion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newTimeoutMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

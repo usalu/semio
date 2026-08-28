@@ -20,8 +20,10 @@
 //   bun 📜️script.ts topology          --input <a.step>
 //   bun 📜️script.ts reimport-compare  --input <expected.step> --input <actual.step>
 //   bun 📜️script.ts tessellate        --input <a.step> --tolerance 1e-3 --out <mesh.json>
+//   bun 📜️script.ts mesh-compare      --input <expected.mesh.json> --input <actual.mesh.json>
+//   bun 📜️script.ts step-mesh-compare --input <expected.step> --input <actual.step> --tolerance 1e-3
 //
-// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json — ProbeReport
+// @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — ProbeReport
 // @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/SUBSET-SCOPED-EXTERNAL-ORACLE-MUTATION-TESTING/📓️w4-brepjs-qualification.md
 
 //#endregion 🧲️Header
@@ -49,6 +51,14 @@ type ProbeReport = {
 /** ⚙️ The engine family independence is accounted in. Two OCCT wrappers are ONE family, not two. */
 const ENGINE = { family: "opencascade", implementation: "brepjs-opencascade wasm", version: "0.15.6" } as const;
 const PROBE_VERSION = "brepjs@18.119.8";
+
+/**
+ * ⚙️ The MESH-side engine, and deliberately a DIFFERENT family from the exact kernel. A mesh check run
+ * on the same OpenCASCADE that produced the shapes would agree with that kernel's own defects; the
+ * point of measuring the tessellation independently is lost if both sides share an ancestor.
+ */
+const MESH_ENGINE = { family: "manifold", implementation: "manifold-3d wasm", version: "3.5.1" } as const;
+const MESH_PROBE_VERSION = "manifold-3d@3.5.1 + three-mesh-bvh@0.9.14";
 //#endregion 🧬️Contract
 
 //#region 🧰️Kernel
@@ -90,6 +100,202 @@ async function importStep(absPath: string): Promise<unknown> {
   return record.shape ?? resolved;
 }
 //#endregion 🧰️Kernel
+
+//#region 🔺️Mesh
+/** 🔺️ An indexed triangle mesh as the tessellate stage writes it. */
+type IndexedMesh = { vertices: number[]; triangles: number[]; tolerance?: number; angularTolerance?: number };
+
+type ManifoldModule = {
+  setup: () => void;
+  Manifold: { ofMesh: (mesh: unknown) => ManifoldSolid; difference: (a: ManifoldSolid, b: ManifoldSolid) => ManifoldSolid };
+  Mesh: new (init: { numProp: number; vertProperties: Float32Array; triVerts: Uint32Array }) => unknown;
+};
+type ManifoldSolid = {
+  volume: () => number;
+  surfaceArea: () => number;
+  genus: () => number;
+  numTri: () => number;
+  numVert: () => number;
+  boundingBox: () => { min: [number, number, number]; max: [number, number, number] };
+  subtract: (other: ManifoldSolid) => ManifoldSolid;
+  add: (other: ManifoldSolid) => ManifoldSolid;
+  isEmpty: () => boolean;
+  decompose: () => ManifoldSolid[];
+};
+
+let manifold: ManifoldModule | null = null;
+
+/** ⚙️ Loads the manifold WASM module once per process. Never reaches the network. */
+async function meshKernel(): Promise<ManifoldModule> {
+  if (manifold !== null) return manifold;
+  const factory = (await import("manifold-3d")).default as unknown as () => Promise<ManifoldModule>;
+  const loaded = await factory();
+  loaded.setup();
+  manifold = loaded;
+  return loaded;
+}
+
+/**
+ * 🪡️ Welds coincident vertices. A tessellator is free to emit one vertex per FACE CORNER — brepjs does
+ * — so the same point appears several times and no two triangles share an index. A mesh kernel then
+ * refuses the mesh as non-manifold, correctly: as indexed, its triangles genuinely do not touch.
+ *
+ * This is FORMAT NORMALIZATION, not geometry: identical positions are merged and the index buffer is
+ * rewritten. Positions are quantized to a fixed grid so that two vertices the tessellator wrote from
+ * the same point weld even when their last float bit differs, and the grid is a constant rather than a
+ * tolerance the caller can tune — a weld distance that a comparison could widen would be a way to make
+ * two different solids agree.
+ */
+function weld(mesh: IndexedMesh): { vertices: number[]; triangles: number[]; weldedAway: number } {
+  const GRID = 1e7;
+  const index = new Map<string, number>();
+  const vertices: number[] = [];
+  const remap = new Array<number>(mesh.vertices.length / 3);
+  for (let v = 0; v < mesh.vertices.length / 3; v += 1) {
+    const x = mesh.vertices[v * 3]!;
+    const y = mesh.vertices[v * 3 + 1]!;
+    const z = mesh.vertices[v * 3 + 2]!;
+    const key = `${Math.round(x * GRID)},${Math.round(y * GRID)},${Math.round(z * GRID)}`;
+    const seen = index.get(key);
+    if (seen !== undefined) {
+      remap[v] = seen;
+      continue;
+    }
+    const next = vertices.length / 3;
+    index.set(key, next);
+    vertices.push(x, y, z);
+    remap[v] = next;
+  }
+  const triangles: number[] = [];
+  for (let t = 0; t < mesh.triangles.length; t += 3) {
+    const a = remap[mesh.triangles[t]!]!;
+    const b = remap[mesh.triangles[t + 1]!]!;
+    const c = remap[mesh.triangles[t + 2]!]!;
+    // 🚫️A triangle whose corners welded together has zero area and no orientation; keeping it would
+    // hand the kernel a degenerate face it must then reject.
+    if (a === b || b === c || a === c) continue;
+    triangles.push(a, b, c);
+  }
+  return { vertices, triangles, weldedAway: mesh.vertices.length / 3 - vertices.length / 3 };
+}
+
+/** 📦️ Marshals an indexed mesh into the kernel's own type. Serialization only — no geometry here. */
+async function asSolid(mesh: IndexedMesh): Promise<{ solid: ManifoldSolid; weldedAway: number }> {
+  const kernel = await meshKernel();
+  const welded = weld(mesh);
+  return { solid: kernel.Manifold.ofMesh(new kernel.Mesh({ numProp: 3, vertProperties: Float32Array.from(welded.vertices), triVerts: Uint32Array.from(welded.triangles) })), weldedAway: welded.weldedAway };
+}
+
+/**
+ * 📐️ Symmetric Hausdorff distance, computed by a third-party BVH.
+ *
+ * `three-mesh-bvh` builds the acceleration structure and answers each closest-point query; this
+ * function marshals the arrays and takes a maximum. It is the DISTANCE half of the mesh gate and it is
+ * kept beside the symmetric-difference volume rather than instead of it, because the two miss
+ * different things: a thin spike of negligible volume barely moves the volumetric metric while moving
+ * this one by its full length, and a lost internal cavity moves the volumetric metric while leaving
+ * the outer surface — and therefore this one — untouched.
+ *
+ * Directed distance is evaluated at every VERTEX of the source mesh against the target's surface, then
+ * symmetrized. That is exact for the vertices and a lower bound between them, which is the honest
+ * characterisation: it is not the true continuous Hausdorff distance, and the report says so by naming
+ * the sampling. There is no randomness, so there is no seed and no error bound to record.
+ */
+async function symmetricHausdorff(expected: IndexedMesh, actual: IndexedMesh): Promise<{ symmetricHausdorff: number; expectedToActual: number; actualToExpected: number; samples: number }> {
+  const THREE = await import("three");
+  const { MeshBVH } = await import("three-mesh-bvh");
+  // 🧭️`BufferGeometry`'s attribute map is generic, and `MeshBVH` narrows it further than the default
+  // instantiation does. The BVH only ever reads `position` and the index, both of which are plain
+  // `BufferAttribute`s here, so the boundary is crossed once, deliberately, in one place.
+  const geometry = (mesh: IndexedMesh): never => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(Float32Array.from(mesh.vertices), 3));
+    g.setIndex(new THREE.BufferAttribute(Uint32Array.from(mesh.triangles), 1));
+    return g as never;
+  };
+  const directed = (from: IndexedMesh, to: never): number => {
+    const bvh = new MeshBVH(to);
+    const point = new THREE.Vector3();
+    let worst = 0;
+    for (let v = 0; v < from.vertices.length; v += 3) {
+      point.set(from.vertices[v]!, from.vertices[v + 1]!, from.vertices[v + 2]!);
+      const hit = bvh.closestPointToPoint(point, {} as never);
+      if (hit !== null && hit.distance > worst) worst = hit.distance;
+    }
+    return worst;
+  };
+  const expectedToActual = directed(expected, geometry(actual));
+  const actualToExpected = directed(actual, geometry(expected));
+  return { symmetricHausdorff: Math.max(expectedToActual, actualToExpected), expectedToActual, actualToExpected, samples: (expected.vertices.length + actual.vertices.length) / 3 };
+}
+
+function readMesh(absPath: string): IndexedMesh {
+  const parsed = JSON.parse(readFileSync(absPath, "utf8")) as Partial<IndexedMesh> & { positions?: number[]; indices?: number[] };
+  return { vertices: parsed.vertices ?? parsed.positions ?? [], triangles: parsed.triangles ?? parsed.indices ?? [], tolerance: parsed.tolerance, angularTolerance: parsed.angularTolerance };
+}
+
+/**
+ * 🔺️ Compares two tessellations of what should be the same solid, on a kernel that produced neither.
+ *
+ * The headline number is the SYMMETRIC-DIFFERENCE VOLUME — `(A \ B) ∪ (B \ A)`, computed by an exact
+ * mesh boolean. It is exactly 0 for identical meshes, it needs no sampling, no seed and no error bound,
+ * and unlike a sampled Hausdorff distance it cannot miss a defect that happens to fall between samples.
+ * That is what makes "the meshes may differ in tessellation but not in what they represent" a
+ * measurable claim rather than a hopeful one: a finer triangulation of the same solid moves this number
+ * only by the chord error, while a lost cavity or a displaced body moves it by the volume involved.
+ *
+ * Everything reported here is computed by manifold; this function marshals arrays and reads back numbers.
+ */
+async function compareMeshes(expected: IndexedMesh, actual: IndexedMesh): Promise<Record<string, unknown>> {
+  const kernel = await meshKernel();
+  const expectedSide = await asSolid(expected);
+  const actualSide = await asSolid(actual);
+  const a = expectedSide.solid;
+  const b = actualSide.solid;
+  const difference = kernel.Manifold.difference(a, b).add(kernel.Manifold.difference(b, a));
+  const symmetricDifferenceVolume = difference.volume();
+  const expectedVolume = a.volume();
+  const actualVolume = b.volume();
+  const box = a.boundingBox();
+  const diagonal = Math.hypot(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
+  const reference = Math.max(expectedVolume, Number.EPSILON);
+  const relative = (x: number, y: number): number => (Math.abs(y) < Number.EPSILON ? Math.abs(x - y) : Math.abs(x - y) / Math.abs(y));
+  const hausdorff = await symmetricHausdorff(expected, actual);
+  return {
+    // 📐️Normalized by the bounding-box diagonal, so the bound is scale-free — the same threshold means
+    // the same thing on a 0.02 mm part and on a 10 m building.
+    normalizedSymmetricHausdorff: hausdorff.symmetricHausdorff / Math.max(diagonal, Number.EPSILON),
+    symmetricHausdorff: hausdorff.symmetricHausdorff,
+    hausdorffExpectedToActual: hausdorff.expectedToActual,
+    hausdorffActualToExpected: hausdorff.actualToExpected,
+    hausdorffSamples: hausdorff.samples,
+    hausdorffSampling: "mesh vertices of both sides; exact at vertices, a lower bound between them",
+    // 📏️THE GATING FORM, and the reason a bare constant is the wrong shape here. Two tessellations of
+    // ONE solid differ by their chord error, which is bounded by the tessellation tolerance they were
+    // built at — so the honest question is not "how far apart are these meshes" but "are they further
+    // apart than tessellation alone could explain". MEASURED: `cut-sphere-from-box` at tolerance 1e-1
+    // against the same solid at 1e-3 — a 90× triangle-count difference, 398 vs 35 716 — gives a
+    // Hausdorff of 0.0903 mm against a declared tolerance of 1e-1, i.e. 0.90 tolerances. A constant
+    // gate sized for that case would have to sit at 2e-3 normalized, which is looser than the flat-face
+    // cases need by four orders of magnitude; expressed this way one threshold serves both.
+    hausdorffInTessellationTolerances: hausdorff.symmetricHausdorff / Math.max(expected.tolerance ?? actual.tolerance ?? 1, actual.tolerance ?? expected.tolerance ?? 1, Number.EPSILON),
+    tessellationTolerance: { expected: expected.tolerance ?? null, actual: actual.tolerance ?? null },
+    // 🎯️The gating metric: normalized by the expected volume so it is scale-free.
+    normalizedSymmetricDifferenceVolume: symmetricDifferenceVolume / reference,
+    symmetricDifferenceVolume,
+    relativeVolumeError: relative(actualVolume, expectedVolume),
+    relativeAreaError: relative(b.surfaceArea(), a.surfaceArea()),
+    connectedComponentsEqual: a.decompose().length === b.decompose().length,
+    genusEqual: a.genus() === b.genus(),
+    // 🔺️Tessellation is EXPECTED to differ, so the counts are reported and never asserted.
+    expected: { volume: expectedVolume, area: a.surfaceArea(), genus: a.genus(), triangles: a.numTri(), vertices: a.numVert(), components: a.decompose().length },
+    actual: { volume: actualVolume, area: b.surfaceArea(), genus: b.genus(), triangles: b.numTri(), vertices: b.numVert(), components: b.decompose().length },
+    boundingBoxDiagonal: diagonal,
+    tessellationDiffers: expected.triangles.length !== actual.triangles.length,
+    weldedAway: { expected: expectedSide.weldedAway, actual: actualSide.weldedAway },
+  };
+}
+//#endregion 🔺️Mesh
 
 //#region #⃣Digest
 async function contentDigest(absPath: string): Promise<string> {
@@ -201,6 +407,34 @@ const PROBES: Record<string, (inputs: string[], options: Record<string, string>)
     };
   },
 
+  /**
+   * 🔺️ Compares two indexed meshes on an INDEPENDENT engine family. This is the stage that makes
+   * "different tessellation is allowed, a different solid is not" enforceable.
+   */
+  "mesh-compare": async (inputs) => {
+    if (inputs.length !== 2) return { status: "failed", measurements: {}, diagnostics: [{ severity: "error", message: `mesh-compare needs exactly two inputs, got ${inputs.length}` }] };
+    return { status: "ok", measurements: await compareMeshes(readMesh(inputs[0]!), readMesh(inputs[1]!)) };
+  },
+
+  /**
+   * 🔺️ Tessellates both STEP files at ONE declared tolerance and compares the results — the whole
+   * mesh half of the gate in a single invocation, so the two sides can never be measured at two
+   * different tessellation settings.
+   */
+  "step-mesh-compare": async (inputs, options) => {
+    if (inputs.length !== 2) return { status: "failed", measurements: {}, diagnostics: [{ severity: "error", message: `step-mesh-compare needs exactly two inputs, got ${inputs.length}` }] };
+    const b = await brep();
+    const tolerance = Number(options.tolerance ?? "1e-3");
+    const angular = Number(options.angularTolerance ?? "0.1");
+    const tessellate = async (input: string): Promise<IndexedMesh> => {
+      const shape = await importStep(input);
+      const meshed = unwrap((b.mesh as (s: unknown, o: unknown) => unknown)(shape, { tolerance, angularTolerance: angular }), `mesh ${input}`) as Record<string, ArrayLike<number>>;
+      return { vertices: Array.from(meshed.vertices ?? meshed.positions!), triangles: Array.from(meshed.triangles ?? meshed.indices!), tolerance, angularTolerance: angular };
+    };
+    const measurements = await compareMeshes(await tessellate(inputs[0]!), await tessellate(inputs[1]!));
+    return { status: "ok", measurements: { ...measurements, tolerance, angularTolerance: angular } };
+  },
+
   /** 🔺️ Tessellates at a DECLARED tolerance and writes an indexed mesh beside the report. */
   tessellate: async (inputs, options) => {
     const b = await brep();
@@ -255,7 +489,10 @@ async function main(argv: readonly string[]): Promise<number> {
     }
     process.stdout.write(`${JSON.stringify(report)}\n`);
   };
-  const base = { schema: "semio.repository-test.probe-report/v2", probe, probeVersion: PROBE_VERSION, engine: ENGINE } as const;
+  // ⚙️A mesh probe reports the MESH engine family, not the exact kernel's — independence accounting
+  // reads this field, and mislabelling it would make two different engines look like one.
+  const meshSide = probe === "mesh-compare" || probe === "step-mesh-compare";
+  const base = { schema: "semio.repository-test.probe-report/v2", probe, probeVersion: meshSide ? MESH_PROBE_VERSION : PROBE_VERSION, engine: meshSide ? MESH_ENGINE : ENGINE } as const;
   if (handler === undefined) {
     emit({ ...base, status: "unsupported", durationMs: 0, measurements: {}, diagnostics: [{ severity: "error", message: `unknown probe ${JSON.stringify(probe)} — expected one of ${Object.keys(PROBES).join(", ")}` }] });
     return 2;

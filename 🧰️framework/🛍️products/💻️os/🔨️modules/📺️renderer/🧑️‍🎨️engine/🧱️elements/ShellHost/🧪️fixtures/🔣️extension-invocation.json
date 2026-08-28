@@ -1,0 +1,39 @@
+{
+  "instanceId": 7,
+  "requestId": 41,
+  "requestIds": ["1", "9007199254740993", "18446744073709551615"],
+  "extensionId": "flow-extension-text",
+  "capability": "evaluate",
+  "request": { "operatorId": "text.upper", "inputJson": "{\"text\":\"hi\"}" },
+  "genericRequests": [
+    { "capability": "evaluate", "request": { "operatorId": "text.upper", "inputJson": "{\"text\":\"hi\"}" } },
+    { "capability": "manifest", "request": {} }
+  ],
+  "response": { "text": "HI" },
+  "completion": {
+    "surface": "preview",
+    "revision": 1,
+    "notification": "Extension completed",
+    "uiScope": { "kind": "full" },
+    "historyPatch": { "cursor": 0, "upserts": [], "canUndo": false, "canRedo": false }
+  },
+  "completionFailures": [
+    { "kind": "missing-lease", "code": "extension.completion-unavailable" },
+    { "kind": "missing-complete", "code": "extension.completion-unavailable" },
+    { "kind": "missing-guard", "code": "extension.completion-unavailable" },
+    { "kind": "foreign-request", "code": "extension.completion-owner-mismatch" },
+    { "kind": "foreign-instance", "code": "extension.completion-owner-mismatch" }
+  ],
+  "missing": [
+    { "phase": "extension", "code": "extension.missing" },
+    { "phase": "invoke", "code": "extension.invoke-unavailable" }
+  ],
+  "fault": {
+    "origin": "extension",
+    "code": "extension.evaluate.bad-request",
+    "severity": "error",
+    "message": "Invalid authored input",
+    "scope": { "pluginId": "flow-extension-text" },
+    "retryable": false
+  }
+}

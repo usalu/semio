@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/Counter",
+  "$defs": {
+    "I64": {
+      "type": "integer",
+      "minimum": -9223372036854775808,
+      "maximum": 9223372036854775807
+    },
+    "U8": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "Counter": {
+      "$ref": "#/$defs/I64"
+    },
+    "CounterDiff": {
+      "type": "object",
+      "required": [
+        "deltas"
+      ],
+      "properties": {
+        "deltas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/I64"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
+

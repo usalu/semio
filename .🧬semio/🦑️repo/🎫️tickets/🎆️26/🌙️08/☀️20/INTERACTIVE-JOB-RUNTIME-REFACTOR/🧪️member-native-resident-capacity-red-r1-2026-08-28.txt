@@ -1,0 +1,17 @@
+
+> nx run @semio-tech/value-resident-rs:test
+
+> bun ./📜️script.ts test
+
+error[E0432]: unresolved imports `super::ResidentCapacity`, `super::ResidentFault`, `super::ResidentResources`, `super::RESIDENT_MAXIMUM_COUNT`
+error: could not compile `semio-framework-value-resident` (lib test) due to 1 previous error; 1 warning emittedWarning: command "bun ./📜️script.ts test" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/value-resident-rs failed
+
+Failed tasks:
+
+- @semio-tech/value-resident-rs:test
+
+Hint: run the command with --verbose for more details.
+

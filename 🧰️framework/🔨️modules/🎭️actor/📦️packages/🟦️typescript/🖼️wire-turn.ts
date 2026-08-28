@@ -22,6 +22,7 @@ import type { Effect } from "../../../🎠️kernel/🟦️component.ts";
  * possible encodings for `list<u8>` at this boundary. */
 export function coerceWireBytes(raw: unknown): Uint8Array {
   if (raw instanceof Uint8Array) return raw;
+  if (ArrayBuffer.isView(raw) && Object.prototype.toString.call(raw) === "[object Uint8Array]") return new Uint8Array(raw.buffer, raw.byteOffset, raw.byteLength);
   if (Array.isArray(raw)) return Uint8Array.from(raw as number[]);
   if (raw && typeof raw === "object") {
     const record = raw as Record<string, unknown>;
@@ -144,6 +145,17 @@ export function applyUiPatchToRetained(previous: RetainedSurface | null, patch: 
 //#endregion 🔖️RetainedUiPatch
 
 //#region 🔖️EffectWire
+/** 🪪️ Decodes the schema-owned nested request without narrowing its u64 identity or interpreting JSON as a pack. */
+export function wireExtensionInvocation(effect: WireVariant): Extract<Effect, { readonly invokeExtension: unknown }> {
+  const value = effect.val as { readonly req?: unknown; readonly params?: { readonly extensionId?: unknown; readonly capability?: unknown; readonly payload?: unknown } } | undefined;
+  const req = value?.req;
+  if (typeof req !== "bigint" || req <= 0n || req > 0xffffffffffffffffn) throw new Error("extension.request-id-invalid");
+  const params = value?.params;
+  if (typeof params?.extensionId !== "string" || !params.extensionId || typeof params.capability !== "string" || !params.capability) throw new Error("extension.request-address-invalid");
+  const requestJson = new TextDecoder("utf-8", { fatal: true }).decode(coerceWireBytes(params.payload));
+  return { invokeExtension: { req, extensionId: params.extensionId, capability: params.capability, requestJson } };
+}
+
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant into the friendly `Effect` union
  * `🎠️kernel/🟦️component.ts` already declares — Rust `kernel::Effect`'s externally-tagged serde shape,
  * which every downstream consumer already expects. Covers the effect kinds a renderer commonly
@@ -155,6 +167,8 @@ export function wireEffectToFriendly(effect: WireVariant, decodePackValue: (byte
   const num = (key: string): number => Number(val[key] ?? 0);
   const packField = (key: string): unknown => (val[key] !== undefined ? decodePackValue(coerceWireBytes(val[key])) : undefined);
   switch (effect.tag) {
+    case "invoke-extension":
+      return wireExtensionInvocation(effect);
     case "request-sync":
       return "requestSync";
     case "notify":

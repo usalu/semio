@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Actor Activation Lease Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["actorId", "instanceId", "revocations", "disposals"],
+  "properties": {
+    "actorId": { "type": "string", "minLength": 1 },
+    "instanceId": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+    "disposals": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["route", "refuseFirst", "expected"],
+        "properties": {
+          "route": { "enum": ["moved", "released"] },
+          "refuseFirst": { "type": "boolean" },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["originalPosts", "otherPosts", "sameGeneration", "routeReleased", "oldLeasePosts", "replacementActive"],
+            "properties": {
+              "originalPosts": { "const": 1 },
+              "otherPosts": { "const": 0 },
+              "sameGeneration": { "const": true },
+              "routeReleased": { "const": true },
+              "oldLeasePosts": { "const": 0 },
+              "replacementActive": { "const": true }
+            }
+          }
+        }
+      }
+    },
+    "revocations": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "expected"],
+        "properties": {
+          "action": { "enum": ["close", "close-refused", "dispose", "worker-error", "terminate", "dispose-all"] },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["activeBefore", "activeAfter", "newTurns"],
+            "properties": { "activeBefore": { "const": true }, "activeAfter": { "const": false }, "newTurns": { "const": 0 } }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/diff-ownership-tests",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["base", "cases"],
+  "properties": {
+    "base": { "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "diff"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "diff": { "$ref": "https://semio.dev/schema/os/flow-vcs/diff" },
+          "expectedWidgetIds": { "type": "array", "items": { "type": "string" } },
+          "expectedSynapseIds": { "type": "array", "items": { "type": "string" } },
+          "expectedLayoutIds": { "type": "array", "items": { "type": "string" } },
+          "errorCode": { "enum": ["mutation.apply.missing-target", "mutation.apply.duplicate-target", "mutation.apply.index-range"] }
+        },
+        "oneOf": [
+          { "required": ["expectedWidgetIds", "expectedSynapseIds", "expectedLayoutIds"], "not": { "required": ["errorCode"] } },
+          { "required": ["errorCode"], "not": { "anyOf": [{ "required": ["expectedWidgetIds"] }, { "required": ["expectedSynapseIds"] }, { "required": ["expectedLayoutIds"] }] } }
+        ]
+      }
+    }
+  }
+}

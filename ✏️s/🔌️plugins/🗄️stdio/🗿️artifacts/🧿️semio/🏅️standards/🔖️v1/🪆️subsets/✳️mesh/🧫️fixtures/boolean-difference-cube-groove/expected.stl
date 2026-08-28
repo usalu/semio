@@ -1,0 +1,198 @@
+solid exported
+	facet normal -1 0 0
+		outer loop
+			vertex -20 -10 -6
+			vertex -20 -2.5 1
+			vertex -20 2.5 1
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex -20 -10 -6
+			vertex 20 -10 -6
+			vertex -20 -10 6
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex -20 -10 -6
+			vertex -20 10 -6
+			vertex 20 -10 -6
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex -20 -10 -6
+			vertex -20 -10 6
+			vertex -20 -2.5 1
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex -20 -10 6
+			vertex -20 -2.5 6
+			vertex -20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex -20 -10 6
+			vertex 20 -10 6
+			vertex -20 -2.5 6
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex -20 -10 -6
+			vertex -20 2.5 1
+			vertex -20 10 -6
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex -20 10 -6
+			vertex -20 2.5 1
+			vertex -20 2.5 6
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex -20 10 -6
+			vertex -20 2.5 6
+			vertex -20 10 6
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex -20 10 -6
+			vertex -20 10 6
+			vertex 20 10 6
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex -20 10 6
+			vertex -20 2.5 6
+			vertex 20 2.5 6
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 -10 -6
+			vertex 20 10 -6
+			vertex 20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex -20 -10 6
+			vertex 20 -10 -6
+			vertex 20 -10 6
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 20 -10 6
+			vertex 20 -2.5 6
+			vertex -20 -2.5 6
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 -10 -6
+			vertex 20 -2.5 6
+			vertex 20 -10 6
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 -10 -6
+			vertex 20 -2.5 1
+			vertex 20 -2.5 6
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex -20 10 -6
+			vertex 20 10 -6
+			vertex 20 -10 -6
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex -20 10 -6
+			vertex 20 10 6
+			vertex 20 10 -6
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 10 -6
+			vertex 20 2.5 1
+			vertex 20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex -20 10 6
+			vertex 20 2.5 6
+			vertex 20 10 6
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 10 -6
+			vertex 20 10 6
+			vertex 20 2.5 1
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 20 10 6
+			vertex 20 2.5 6
+			vertex 20 2.5 1
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex -20 2.5 1
+			vertex -20 -2.5 1
+			vertex 20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex -20 -2.5 6
+			vertex 20 -2.5 6
+			vertex -20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex -20 2.5 1
+			vertex 20 2.5 1
+			vertex -20 2.5 6
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex -20 -2.5 1
+			vertex 20 -2.5 6
+			vertex 20 -2.5 1
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 20 -2.5 1
+			vertex 20 2.5 1
+			vertex -20 2.5 1
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 20 2.5 6
+			vertex -20 2.5 6
+			vertex 20 2.5 1
+		endloop
+	endfacet
+endsolid exported

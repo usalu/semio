@@ -1,0 +1,40 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.actor.return-response.credit.v1",
+  "title":"Captured Return Response Credit",
+  "description":"Local ownership protocol on the existing actual worker request, not a new wire identity or WIT ABI. The original worker object, activation object and actual positive safe request sequence identify each credit. A composition-owned neutral ledger reserves the full canonical 4161-byte receiver backing allowance and every retained owner record before dispatch. Receipt capture precedes decoding, pending removal and callbacks. One private worker reply owner permits at most one successful transfer; the receiver permits at most one credited capture. First protocol violation seals new admissions and retains the first emergency root and all existing pending roots. Arbitrary uncredited flooding is outside the finite credited contract, never a bounded-memory or disposal claim.",
+  "definitions":{
+    "authority":{
+      "type":"object","additionalProperties":false,"required":["activationGeneration","transportRequestSequence"],
+      "properties":{"activationGeneration":{"$ref":"semio.actor.retained-return.v1#/definitions/u64"},"transportRequestSequence":{"$ref":"semio.actor.return-response.v1#/definitions/transportRequestSequence"}}
+    },
+    "receiverPhase":{"enum":["reserved","posted","captured","heldFault","cancelled"]},
+    "workerPhase":{"enum":["admitted","captured","ready","posted","heldFault"]},
+    "receiver":{
+      "type":"object","additionalProperties":false,"required":["phase","rawBackingBytes","captures","emergencyRoots","sealed","pendingRetained","rawRetained","faultRetained"],
+      "properties":{"phase":{"$ref":"#/definitions/receiverPhase"},"rawBackingBytes":{"enum":[0,4161]},"captures":{"type":"integer","minimum":0,"maximum":1},"emergencyRoots":{"type":"integer","minimum":0,"maximum":1},"sealed":{"type":"boolean"},"pendingRetained":{"type":"boolean"},"rawRetained":{"type":"boolean"},"faultRetained":{"type":"boolean"}},
+      "allOf":[
+        {"if":{"properties":{"phase":{"const":"cancelled"}}},"then":{"properties":{"rawBackingBytes":{"const":0},"captures":{"const":0},"emergencyRoots":{"const":0},"pendingRetained":{"const":false},"rawRetained":{"const":false},"faultRetained":{"const":false}}},"else":{"properties":{"rawBackingBytes":{"const":4161}}}},
+        {"if":{"properties":{"captures":{"const":1}}},"then":{"properties":{"rawRetained":{"const":true}}},"else":{"properties":{"rawRetained":{"const":false}}}},
+        {"if":{"properties":{"phase":{"const":"captured"}}},"then":{"properties":{"captures":{"const":1}}}},
+        {"if":{"properties":{"phase":{"enum":["reserved","posted"]}}},"then":{"properties":{"captures":{"const":0},"pendingRetained":{"const":true},"sealed":{"const":false}}}},
+        {"if":{"properties":{"phase":{"const":"heldFault"}}},"then":{"properties":{"sealed":{"const":true},"faultRetained":{"const":true}}}},
+        {"if":{"properties":{"emergencyRoots":{"const":1}}},"then":{"properties":{"sealed":{"const":true}}}}
+      ]
+    },
+    "worker":{
+      "type":"object","additionalProperties":false,"required":["phase","transferCreditsSpent","rawRetained","backingRetained","faultRetained"],
+      "properties":{"phase":{"$ref":"#/definitions/workerPhase"},"transferCreditsSpent":{"type":"integer","minimum":0,"maximum":1},"rawRetained":{"type":"boolean"},"backingRetained":{"type":"boolean"},"faultRetained":{"type":"boolean"}},
+      "allOf":[
+        {"if":{"properties":{"transferCreditsSpent":{"const":1}}},"then":{"properties":{"backingRetained":{"const":false}}}},
+        {"if":{"properties":{"phase":{"const":"admitted"}}},"then":{"properties":{"transferCreditsSpent":{"const":0},"rawRetained":{"const":false},"backingRetained":{"const":false},"faultRetained":{"const":false}}}},
+        {"if":{"properties":{"phase":{"const":"ready"}}},"then":{"properties":{"transferCreditsSpent":{"const":0},"rawRetained":{"const":true},"backingRetained":{"const":true}}}},
+        {"if":{"properties":{"phase":{"const":"posted"}}},"then":{"properties":{"transferCreditsSpent":{"const":1},"rawRetained":{"const":true}}}},
+        {"if":{"properties":{"phase":{"const":"heldFault"}}},"then":{"properties":{"faultRetained":{"const":true}}}}
+      ]
+    },
+    "receiverAction":{"enum":["post","cancelEmpty","postRefused","capture","settle","bodyFault","headerFault","foreignWorker","foreignActivation","foreignRequest","duplicate","callbackFault"]},
+    "workerAction":{"enum":["capture","normalize","normalizationFault","post","postRefused","detachedPostFault","duplicate"]}
+  },
+  "oneOf":[{"$ref":"#/definitions/receiver"},{"$ref":"#/definitions/worker"}]
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/🎥️set-camera",
+  "semanticKind": "set-camera",
+  "displayName": "Set Camera",
+  "emoji": "🎥️",
+  "aggregateVariant": "SetCamera",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-camera",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

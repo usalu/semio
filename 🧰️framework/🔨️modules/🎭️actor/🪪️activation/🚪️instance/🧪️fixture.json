@@ -1,0 +1,9 @@
+{
+  "invalidAckStatuses": [null, {}, {"tag":"faulted","val":[1]}, {"tag":"faulted","val":[99]}, {"tag":"refused"}],
+  "closeCancellation": [0, 1, 2],
+  "ordinaryOutput": ["accepted", "revoked"],
+  "instanceId": 7,
+  "guestLifetime": "13",
+  "phases": ["opening", "captured", "open", "closing", "accepted", "retired", "complete"],
+  "refusals": ["postMessage-throw", "worker-result-error", "foreign-worker", "replaced-worker", "wrong-guest-lifetime", "host-not-retired"]
+}

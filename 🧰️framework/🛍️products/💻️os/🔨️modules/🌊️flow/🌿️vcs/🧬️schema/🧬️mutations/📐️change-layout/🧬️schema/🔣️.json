@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/os/flow-vcs/change-layout",
+  "title": "ChangeLayout",
+  "$ref": "#/$defs/payload",
+  "unevaluatedProperties": false,
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "https://semio.dev/schema/os/flow-vcs/snapshot#/$defs/layoutEntry"
+          }
+        }
+      },
+      "required": [
+        "entries"
+      ]
+    }
+  }
+}
+

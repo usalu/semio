@@ -5591,6 +5591,164 @@ if (import.meta.vitest) {
   });
 
   describe("pluginComponentBridgeSource", () => {
+    it("forwards canonical nested byte pages unchanged into the generated component poll", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const { createShardCommandIngressPages } = await import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts");
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📄️page/🧪️fixture.json"), "utf8"));
+      const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
+      const inputs = vectors.map((row: { length: number }, index: number) => {
+        const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
+        return { hex: Buffer.from(command).toString("hex"), page: createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: index, commandCount: vectors.length, instance: 13, seq: BigInt(index + 17), command })[0] };
+      });
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        let received;
+        const context = createContext({ URL, Uint8Array, record: page => { received = page; } });
+        const component = new SourceTextModule("export const reactor = { poll: async (_events, page) => { record(page); return { uiPatches: [], status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
+        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
+        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
+        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
+        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
+        const api = await bridge.namespace.createActorApi("paged", 1n);
+        const rows = [];
+        for (const entry of input.inputs) {
+          const page = entry.page;
+          for (const key of ["owner", "generation", "seq"]) page.cursor[key] = BigInt(page.cursor[key]);
+          for (let block = 0; block < 64; block++) for (let word = 0; word < 8; word++) {
+            const value = page.page["block" + block.toString().padStart(2, "0")];
+            value["word" + word] = BigInt(value["word" + word]);
+          }
+          await api.poll([], page, { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 });
+          const bytes = Buffer.alloc(4096);
+          for (let block = 0; block < 64; block++) for (let word = 0; word < 8; word++) bytes.writeBigUInt64LE(received.page["block" + block.toString().padStart(2, "0")]["word" + word], block * 64 + word * 8);
+          rows.push({ same: received === page, keys: Object.keys(received), length: received.page.length, hex: bytes.subarray(0, received.page.length).toString("hex"), zeroTail: bytes.subarray(received.page.length).every(byte => byte === 0) });
+        }
+        console.log(JSON.stringify(rows));
+      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), inputs }, (_key, value) => typeof value === "bigint" ? value.toString() : value), encoding: "utf8", timeout: 10_000 });
+      expect(JSON.parse(output)).toEqual(inputs.map((entry: { hex: string }, index: number) => ({ same: true, keys: ["cursor", "page"], length: vectors[index].length, hex: entry.hex, zeroTail: true })));
+    });
+
+    it("maps issued UI patch receipts and exact ACK or rejection through the generated bridge", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🧪️fixture.json"), "utf8"));
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const observed = [];
+        const context = createContext({ URL, Uint8Array, nextResult: null, record: events => observed.push(events) });
+        const component = new SourceTextModule("export const reactor = { poll: async events => { record(events); return nextResult; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
+        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
+        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
+        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
+        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
+        const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
+        const result = (receipt, count) => ({ uiPatches: Array.from({ length: count }, () => ({})), uiPatchReceipt: receipt, status: { tag: "idle" }, commandIngress: { kind: 0 } });
+        const convert = value => ({ lifetime: { activationGeneration: BigInt(value.lifetime.activationGeneration), instanceId: value.lifetime.instanceId, guestLifetime: BigInt(value.lifetime.guestLifetime) }, patchSequence: BigInt(value.patchSequence) });
+        const rows = [];
+        for (const vector of input.fixture.vectors) {
+          const receipt = convert(vector.value);
+          const api = await bridge.namespace.createActorApi("same", receipt.lifetime.activationGeneration);
+          context.nextResult = result(receipt, 1);
+          const actual = await api.poll([], undefined, budget);
+          const row = { hex: actual.uiPatchReceipt instanceof Uint8Array ? Buffer.from(actual.uiPatchReceipt).toString("hex") : null, feedback: [] };
+          context.nextResult = result(undefined, 0);
+          for (const kind of input.fixture.feedback.kinds) {
+            const payload = { receipt, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: BigInt(input.fixture.feedback.revision), ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) };
+            await api.poll([{ kind: "patch-" + kind, payload }], undefined, budget);
+            row.feedback.push(observed.at(-1)[0]);
+          }
+          rows.push(row);
+        }
+        const receipt = convert(input.fixture.vectors[1].value);
+        const api = await bridge.namespace.createActorApi("same", receipt.lifetime.activationGeneration);
+        const pairings = [];
+        for (const row of input.fixture.pairing) {
+          context.nextResult = result(row.hasReceipt ? receipt : undefined, row.patchCount);
+          try { await api.poll([], undefined, budget); pairings.push(true); } catch { pairings.push(false); }
+        }
+        const malformedResults = [result({ ...receipt, patchSequence: 0n }, 1), result({ ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }, 1), { ...result(undefined, 0), uiPatches: undefined }];
+        const refusedResults = [];
+        for (const raw of malformedResults) { context.nextResult = raw; try { await api.poll([], undefined, budget); refusedResults.push(false); } catch { refusedResults.push(true); } }
+        context.nextResult = result(undefined, 0);
+        const refusedEvents = [];
+        for (const kind of input.fixture.feedback.kinds) {
+          for (const wrong of [undefined, { ...receipt, patchSequence: 0n }, { ...receipt, lifetime: { ...receipt.lifetime, activationGeneration: 42n } }]) {
+            const before = observed.length;
+            try { await api.poll([{ kind: "patch-" + kind, payload: { receipt: wrong, surface: { instance: receipt.lifetime.instanceId, surface: input.fixture.feedback.surface }, revision: 1n, reason: "fixture" } }], undefined, budget); refusedEvents.push(false); } catch { refusedEvents.push(observed.length === before); }
+          }
+        }
+        console.log(JSON.stringify({ rows, pairings, refusedResults, refusedEvents }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
+      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), fixture }), encoding: "utf8", timeout: 10_000 });
+      const result = JSON.parse(output);
+      expect(result.rows.map((row: { hex: string }) => row.hex)).toEqual(fixture.vectors.map((row: { hex: string }) => row.hex));
+      expect(result.pairings).toEqual(fixture.pairing.map((row: { accepted: boolean }) => row.accepted));
+      expect(result.refusedResults).toEqual([true, true, true]);
+      expect(result.refusedEvents).toEqual([true, true, true, true, true, true]);
+      for (let index = 0; index < fixture.vectors.length; index += 1) {
+        for (let kindIndex = 0; kindIndex < fixture.feedback.kinds.length; kindIndex += 1) {
+          const kind = fixture.feedback.kinds[kindIndex];
+          expect(result.rows[index].feedback[kindIndex]).toEqual({ tag: "patch-" + kind, val: { receipt: fixture.vectors[index].value, surface: { instance: fixture.vectors[index].value.lifetime.instanceId, surface: fixture.feedback.surface }, revision: fixture.feedback.revision, ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) } });
+        }
+      }
+    });
+
+    it("maps canonical lifecycle requests and receipts through the real generated bridge", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json"), "utf8"));
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const observed = [];
+        const context = createContext({ URL, Uint8Array, nextReceipt: undefined, record: events => observed.push(events) });
+        const component = new SourceTextModule("export const reactor = { poll: async events => { record(events); return { uiPatches: [], lifecycleReceipt: nextReceipt, status: { tag: 'idle' }, commandIngress: { kind: 0 } }; } }; export const jobs = {}; export const checkpoint = {}; export const describe = {};", { context });
+        const host = new SourceTextModule("export const __resolveEffect = () => {}; export const __rejectEffect = () => {};", { context });
+        for (const module of [component, host]) { await module.link(() => { throw new Error("unexpected import"); }); await module.evaluate(); }
+        const bridge = new SourceTextModule(input.source, { context, identifier: "https://fixture.invalid/bridge.js", initializeImportMeta: meta => { meta.url = "https://fixture.invalid/bridge.js"; }, importModuleDynamically: async specifier => specifier.includes("host-shim") ? host : component });
+        await bridge.link(() => { throw new Error("unexpected static import"); }); await bridge.evaluate();
+        const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
+        const rows = [];
+        const body = receipt => ({ lifetime: receipt.lifetime, requestSequence: BigInt(receipt.requestSequence), ...(receipt.kind === "captured" ? {} : { closeGeneration: receipt.closeGeneration }) });
+        for (const row of input.vectors) {
+          const value = JSON.parse(JSON.stringify(row.value), (key, value) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(value) : value);
+          const receipt = value.kind === "ack" ? value.receipt : value;
+          const generation = value.kind === "open" ? value.activationGeneration : receipt.lifetime.activationGeneration;
+          const api = await bridge.namespace.createActorApi("same", generation);
+          context.nextReceipt = undefined;
+          if (["captured", "accepted", "retired"].includes(value.kind)) {
+            context.nextReceipt = { tag: value.kind, val: body(value) };
+            const result = await api.poll([], undefined, budget);
+            rows.push({ kind: value.kind, hex: Buffer.from(result.lifecycleReceipt).toString("hex") });
+          } else {
+            const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
+            const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
+            await api.poll([{ kind, payload }], undefined, budget);
+            rows.push({ kind: value.kind, event: observed.at(-1)[0] });
+          }
+        }
+        const api = await bridge.namespace.createActorApi("same", 1n);
+        const errors = [];
+        for (const receipt of [{ tag: "open", val: {} }, { tag: "captured", val: { lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 13n }, requestSequence: 9007199254740992n } }]) {
+          context.nextReceipt = receipt;
+          try { await api.poll([], undefined, budget); errors.push(false); } catch { errors.push(true); }
+        }
+        console.log(JSON.stringify({ rows, errors }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
+      `], { input: JSON.stringify({ source: pluginComponentBridgeSource("component", "component.core.wasm"), vectors: fixture.vectors }), encoding: "utf8", timeout: 10_000 });
+      const result = JSON.parse(output);
+      expect(result.errors).toEqual([true, true]);
+      for (let index = 0; index < fixture.vectors.length; index += 1) {
+        const value = fixture.vectors[index].value;
+        const actual = result.rows[index];
+        if (["captured", "accepted", "retired"].includes(value.kind)) expect(actual.hex).toBe(fixture.vectors[index].hex);
+        else if (value.kind === "open") expect(actual.event).toMatchObject({ tag: "instance-open", val: { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: String(value.requestSequence) } });
+        else if (value.kind === "close") expect(actual.event).toEqual({ tag: "instance-close", val: { lifetime: value.lifetime, requestSequence: String(value.requestSequence) } });
+        else expect(actual.event).toEqual({ tag: "instance-lifecycle-ack", val: { tag: value.receipt.kind, val: { lifetime: value.receipt.lifetime, requestSequence: String(value.receipt.requestSequence), ...(value.receipt.kind === "captured" ? {} : { closeGeneration: value.receipt.closeGeneration }) } } });
+      }
+    });
+
     it("requires every actor export from plugin and extension component namespaces", () => {
       const actor = Object.fromEntries(Object.entries(ACTOR_COMPONENT_EXPORTS).map(([name, methods]) => [name, Object.fromEntries(methods.map((method) => [method, () => undefined]))]));
       expect(() => assertActorComponentExports(actor, ACTOR_COMPONENT_EXPORTS)).not.toThrow();
@@ -5647,6 +5805,125 @@ if (import.meta.vitest) {
   });
 
   describe("rewriteJcoComponentAssetUrls", () => {
+    it("keeps generated host imports and replies isolated across same-package activations", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const { default: Ajv } = await import("ajv");
+      const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
+      const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
+      const oracle = new Ajv();
+      expect(oracle.validate(JSON.parse(readFileSync(join(fixtureRoot, "🔣️host-activation.schema.json"), "utf8")), fixture)).toBe(true);
+      const component = rewriteJcoComponentAssetUrls(`import { storageRead, emit } from "./🟨️host-shim.js";
+export const reactor = { poll: async (events) => { emit(events[0].val); return { value: await storageRead(events[0].val), uiPatches: [], commandIngress: { kind: 0 } }; } };
+export const jobs = {};
+export const checkpoint = {};
+export const describe = {};`);
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const sent = [];
+        const context = createContext({ URL, console, self: { postMessage: (message) => sent.push(message) } });
+        const cache = new Map();
+        async function load(url) {
+          let module = cache.get(url);
+          if (module) return module;
+          const source = input.sources[decodeURIComponent(new URL(url).pathname).split("/").at(-1)];
+          if (typeof source !== "string") throw new Error("unknown fixture module " + url);
+          module = new SourceTextModule(source, { context, identifier: url, initializeImportMeta: (meta) => { meta.url = url; }, importModuleDynamically: async (specifier, parent) => {
+            const child = await load(new URL(specifier, parent.identifier).href);
+            if (child.status === "linked") await child.evaluate();
+            return child;
+          } });
+          cache.set(url, module);
+          await module.link((specifier, parent) => load(new URL(specifier, parent.identifier).href));
+          return module;
+        }
+        const bridge = await load("file:///fixture/bridge.js?v=source-checkpoint");
+        await bridge.evaluate();
+        const apis = [];
+        for (const row of input.activations) apis.push(await bridge.namespace.createActorApi(row.actorId, BigInt(row.generation)));
+        const pending = apis.map((api, index) => api.poll([{ kind: "request", payload: { input: index } }], undefined, { fuel: 1, wallMs: 4, maxEffects: 8, maxPatchBytes: 4096 }));
+        const effects = sent.filter((message) => message.frame.envelope.payload.kind === "effect-request");
+        const actual = effects.map((message, index) => ({ actorId: message.actorId, generation: String(message.activationGeneration), value: input.activations[index].value }));
+        for (let index = 0; index < effects.length; index += 1) apis[index].resolveEffect(effects[index].frame.envelope.payload.payload.requestId, input.activations[index].value);
+        const values = (await Promise.all(pending)).map((value) => value.value);
+        const emissions = sent.filter((message) => message.frame.envelope.payload.kind === "effect-emit").map((message) => ({ actorId: message.actorId, generation: String(message.activationGeneration) }));
+        console.log(JSON.stringify({ actual, values, emissions, requestIds: effects.map((message) => message.frame.envelope.payload.payload.requestId) }));
+      `], { input: JSON.stringify({ activations: fixture.activations, sources: { "bridge.js": pluginComponentBridgeSource("component", "component.core.wasm"), "component.js": component, "🟨️host-shim.js": hostShimSource() } }), encoding: "utf8", timeout: 10_000 });
+      const result = JSON.parse(output) as { actual: typeof fixture.activations; values: string[]; emissions: Array<{ actorId: string; generation: string }>; requestIds: string[] };
+      expect(result.actual).toEqual(fixture.activations);
+      expect(oracle.validate({ const: fixture.activations }, result.actual)).toBe(true);
+      expect(result.values).toEqual(fixture.activations.map((row) => row.value));
+      expect(result.emissions).toEqual(fixture.activations.map(({ actorId, generation }) => ({ actorId, generation })));
+      expect(new Set(result.requestIds).size).toBe(fixture.activations.length);
+    });
+
+    it("rejects a stale effect reply in the actual generated worker dispatcher", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const replies = [];
+        let listener;
+        const context = createContext({ console, WebAssembly: { Suspending() {}, promising() {} }, self: { postMessage() {}, addEventListener: (_kind, callback) => { listener = callback; } }, record: (generation, request, value) => replies.push({ generation: String(generation), request, value }) });
+        const bridge = new SourceTextModule("export async function createActorApi(actorId, generation) { return { resolveEffect: (request, value) => record(generation, request, value) }; }", { context });
+        await bridge.link(() => { throw new Error("unexpected import"); });
+        await bridge.evaluate();
+        const worker = new SourceTextModule(input.worker, { context, importModuleDynamically: async () => bridge });
+        await worker.link(() => { throw new Error("unexpected import"); });
+        await worker.evaluate();
+        await listener({ data: { kind: "activate", requestId: "a1", actorId: "same", activationGeneration: 1n, moduleUrl: "fixture" } });
+        await listener({ data: { kind: "dispose", actorId: "same", activationGeneration: 1n } });
+        await listener({ data: { kind: "activate", requestId: "a2", actorId: "same", activationGeneration: 2n, moduleUrl: "fixture" } });
+        for (const [generation, from, to, value] of [[1n, "kernel", "same", "old"], [undefined, "kernel", "same", "missing"], [2n, "actor", "same", "foreign-origin"], [2n, "kernel", "other", "foreign-target"], [2n, "kernel", "same", "fresh"]]) {
+          await listener({ data: { kind: "frame", actorId: "same", activationGeneration: generation, frame: { kind: "Envelope", envelope: { to, from: { kind: from }, payload: { kind: "effect-complete", payload: { requestId: "reused", value } } } } } });
+        }
+        console.log(JSON.stringify(replies));
+      `], { input: JSON.stringify({ worker: shardWorkerSource() }), encoding: "utf8", timeout: 10_000 });
+      expect(JSON.parse(output)).toEqual([{ generation: "2", request: "reused", value: "fresh" }]);
+    });
+
+    it("forwards lifecycle through the captured scheduled turn and rejects the removed side message", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json"), "utf8")) as { vectors: Array<{ value: { kind: string }; hex: string }> };
+      const request = fixture.vectors.find((row) => row.value.kind === "close")!;
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const messages = [];
+        const calls = [];
+        let listener;
+        const context = createContext({ console, Uint8Array, WebAssembly: { Suspending() {}, promising() {} }, self: { postMessage: (message) => messages.push(message), addEventListener: (_kind, callback) => { listener = callback; } }, record: (name) => calls.push(name) });
+        const bridge = new SourceTextModule("export async function createActorApi() { record('captured'); return { poll: async (events) => { record(events); return { status: { tag: 'idle' } }; } }; }", { context });
+        await bridge.link(() => { throw new Error("unexpected import"); });
+        await bridge.evaluate();
+        const worker = new SourceTextModule(input.worker, { context, importModuleDynamically: async () => bridge });
+        await worker.link(() => { throw new Error("unexpected import"); });
+        await worker.evaluate();
+        await listener({ data: { kind: "activate", requestId: "a1", actorId: "same", activationGeneration: 1n, moduleUrl: "fixture" } });
+        const wire = Uint8Array.from(Buffer.from(input.request, "hex"));
+        const payload = JSON.parse(JSON.stringify(input.value), (key, value) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(value) : value);
+        const events = [{ kind: "instance-close", payload }];
+        await listener({ data: { kind: "turn", requestId: "close", actorId: "same", activationGeneration: 1n, events, budget: {} } });
+        await listener({ data: { kind: "turn", requestId: "old", actorId: "same", activationGeneration: 2n, events, budget: {} } });
+        await listener({ data: { kind: "closeInstance", requestId: "side", actorId: "same", activationGeneration: 1n, wire } });
+        await listener({ data: { kind: "activate", requestId: "reuse", actorId: "same", activationGeneration: 2n, moduleUrl: "fixture" } });
+        console.log(JSON.stringify({ results: messages.filter((message) => message.kind === "result").map(({ requestId, ok, error }) => ({ requestId, ok, ...(error ? { error } : {}) })), receipts: messages.filter((message) => message.kind === "instanceCloseReceipt").length, calls }, (_key, value) => typeof value === "bigint" ? value.toString() : value));
+      `], { input: JSON.stringify({ worker: shardWorkerSource(), request: request.hex, value: request.value }), encoding: "utf8", timeout: 10_000 });
+      const result = JSON.parse(output);
+      expect(result.results).toEqual([
+        { requestId: "a1", ok: true },
+        { requestId: "close", ok: true },
+        { requestId: "old", ok: false, error: "actor-lifecycle.activation-mismatch" },
+        { requestId: "side", ok: false, error: "unknown shard worker message kind: closeInstance" },
+        { requestId: "reuse", ok: false, error: "actor-close.activation-already-owned" },
+      ]);
+      expect(result.receipts).toBe(0);
+      expect(result.calls).toEqual(["captured", [{ kind: "instance-close", payload: request.value }]]);
+    });
+
     it("propagates a component module rebuild version to every extracted core wasm fetch", () => {
       const generated = `const module0 = fetchCompile(new URL('./plugin_component.core.wasm', import.meta.url));
 const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.meta.url));`;
@@ -5657,6 +5934,53 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       expect(rewritten).toContain("__semioVersionedComponentAssetUrl('./plugin_component.core2.wasm')");
       expect(rewriteJcoComponentAssetUrls(rewritten)).toBe(rewritten);
     });
+  });
+
+  describe("PluginComponentInstantiation", () => {
+    it("executes independent Wasm memories from one cached explicit factory module", async () => {
+      const { execFileSync } = await import("node:child_process");
+      const { default: Ajv } = await import("ajv");
+      const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures");
+      const fixture = JSON.parse(readFileSync(join(root, "🔣️component-instantiation.json"), "utf8"));
+      const oracle = new Ajv({ strict: true });
+      expect(oracle.validate(JSON.parse(readFileSync(join(root, "🔣️component-instantiation.schema.json"), "utf8")), fixture)).toBe(true);
+      const output = execFileSync("node", ["--experimental-vm-modules", "--input-type=module", "--eval", `
+        import { parse, transpile } from "@bytecodealliance/jco";
+        import { SourceTextModule, createContext } from "node:vm";
+        import { readFileSync } from "node:fs";
+        import ts from "typescript";
+        const input = JSON.parse(readFileSync(0, "utf8"));
+        const bytes = await parse(input.component);
+        const options = { name: "counter", noTypescript: true, base64Cutoff: 0, nodejsCompat: false, wasiShim: false };
+        const explicit = await transpile(bytes, { ...options, instantiation: "async" });
+        const automatic = await transpile(bytes, options);
+        const source = new TextDecoder().decode(explicit.files["counter.js"]);
+        const auto = new TextDecoder().decode(automatic.files["counter.js"]);
+        const moduleInstanceRoots = source => {
+          const parsed = ts.createSourceFile("counter.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+          return parsed.statements.some(statement => ts.isVariableStatement(statement) && statement.declarationList.declarations.some(declaration => ts.isIdentifier(declaration.name) && /^(exports|memory)[0-9]+$/.test(declaration.name.text)));
+        };
+        const context = createContext({ WebAssembly, Promise, console, TextEncoder, TextDecoder });
+        const module = new SourceTextModule(source, { context, identifier: "https://fixture.invalid/counter.js" });
+        await module.link(() => { throw new Error("Unexpected factory import"); });
+        await module.evaluate();
+        const captured = [];
+        const moduleImportInstances = captured.length;
+        const load = path => WebAssembly.compile(explicit.files[path]);
+        const instantiate = (module, imports) => { const instance = new WebAssembly.Instance(module, imports); captured.push(instance); return instance; };
+        const owners = [await module.namespace.instantiate(load, {}, instantiate), await module.namespace.instantiate(load, {}, instantiate)];
+        const results = input.calls.map(call => owners[call.instance].advance(call.delta));
+        const core = await load("counter.core.wasm");
+        const direct = [new WebAssembly.Instance(core), new WebAssembly.Instance(core)];
+        const independent = input.calls.map(call => direct[call.instance].exports.advance(call.delta));
+        const actual = { moduleImportInstances, instantiated: captured.length, results, memory: captured.map(instance => new DataView(instance.exports.memory.buffer).getUint32(0, true)), distinctMemories: captured[0].exports.memory !== captured[1].exports.memory, factoryHasNoModuleInstanceRoots: !moduleInstanceRoots(source), automaticHasModuleInstanceRoots: moduleInstanceRoots(auto) };
+        console.log(JSON.stringify({ actual, independent }));
+      `], { cwd: repoRoot, input: JSON.stringify(fixture), encoding: "utf8", timeout: 20_000, maxBuffer: 2 * 1024 * 1024 });
+      const { actual, independent } = JSON.parse(output);
+      expect(actual).toEqual(fixture.expected);
+      expect(independent).toEqual(fixture.expected.results);
+      expect(oracle.validate({ const: fixture.expected }, actual)).toBe(true);
+    }, 30_000);
   });
 
   describe("rewriteJcoAsyncResultLifting", () => {

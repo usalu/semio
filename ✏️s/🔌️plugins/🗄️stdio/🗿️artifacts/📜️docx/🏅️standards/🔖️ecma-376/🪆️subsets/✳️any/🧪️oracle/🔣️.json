@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ DOCX ECMA-376/✳️any's own contribution to the repository test platform -- its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). A DOCX is a ZIP of XML parts, and both `zip` 6 and `quick-xml` 0.42 are already linked and are genuinely independent of this repository's own codec: `zip` unzips/rezips the OPC container, `quick-xml` parses/edits/re-serializes the OOXML parts (word/document.xml, word/styles.xml, [Content_Types].xml, every *.rels). Registered as ONE oracle entry naming the composition -- neither library alone reads a DOCX; the pair together is the real independent implementation, and this subset's own oracle module (../🧪️oracle/🦀️component.rs) is the composition code, not a third dependency.",
   "oracles": [
     {
@@ -27,7 +27,15 @@
           "homepage": "https://github.com/tafia/quick-xml",
           "role": "independent XML reader/writer for every part inside the archive"
         }
-      ]
+      ],
+      "kind": "third-party-library",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

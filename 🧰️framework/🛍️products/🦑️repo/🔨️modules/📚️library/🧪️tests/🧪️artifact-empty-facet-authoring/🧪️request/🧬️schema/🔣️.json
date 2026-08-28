@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contractId",
+    "readBytes",
+    "readChunkBytes",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contractId": {
+      "const": "artifact-scaffold-request-safety-v1"
+    },
+    "readBytes": {
+      "const": 196608
+    },
+    "readChunkBytes": {
+      "const": 65536
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "empty-request",
+          "leaves": [],
+          "action": "none",
+          "error": "request must contain leaves",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "duplicate-leaf",
+          "leaves": [
+            "🦀️.rs",
+            "🦀️.rs"
+          ],
+          "action": "none",
+          "error": "Invalid authored leaf request",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "noncanonical-leaf",
+          "leaves": [
+            "🦀️.rs",
+            "📝️note.md"
+          ],
+          "action": "none",
+          "error": "Invalid authored leaf request",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "outside-owner",
+          "leaves": [
+            "🦀️.rs",
+            "../🟦️.ts"
+          ],
+          "action": "none",
+          "error": "Invalid authoring coordinate",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "unowned-markdown",
+          "leaves": [
+            "🦀️.rs",
+            "📝️.md"
+          ],
+          "action": "none",
+          "error": "Unowned authored leaf",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "globally-recognized-wrong-child",
+          "leaves": [
+            "🦀️.rs",
+            "🖼️assets/🧬️schema/🦀️.rs"
+          ],
+          "action": "none",
+          "error": "Unpermitted authoring child",
+          "ownedFiles": 0,
+          "dryRun": true
+        },
+        {
+          "id": "cancel-before-preflight",
+          "leaves": [
+            "🦀️.rs",
+            "📚️examples/📝️.md"
+          ],
+          "action": "cancel-before",
+          "error": "Authoring cancelled",
+          "ownedFiles": 0,
+          "dryRun": false
+        },
+        {
+          "id": "cancel-after-first-leaf",
+          "leaves": [
+            "🦀️.rs",
+            "📚️examples/📝️.md"
+          ],
+          "action": "cancel-after-first",
+          "error": "Authoring cancelled",
+          "ownedFiles": 1,
+          "dryRun": false
+        },
+        {
+          "id": "same-size-read-write",
+          "leaves": [
+            "🦀️.rs",
+            "📚️examples/📝️.md"
+          ],
+          "action": "write-during-read",
+          "error": "changed while reading",
+          "ownedFiles": 0,
+          "dryRun": false
+        }
+      ]
+    }
+  }
+}

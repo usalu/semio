@@ -1,18 +1,29 @@
-//#region 🚪️InstanceCloseWire
-export type ActorInstanceLifetime = { readonly activationGeneration: bigint; readonly instanceId: number };
+//#region 🚪️InstanceLifecycleWire
+export type ActorInstanceLifetime = { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint };
+export type ActorInstanceOpenRequest = { readonly kind: "open"; readonly activationGeneration: bigint; readonly instanceId: number; readonly requestSequence: number };
 export type ActorInstanceCloseRequest = { readonly kind: "close"; readonly lifetime: ActorInstanceLifetime; readonly requestSequence: number };
-export type ActorInstanceCloseReceipt = { readonly kind: "accepted" | "retired"; readonly lifetime: ActorInstanceLifetime; readonly requestSequence: number; readonly closeGeneration: bigint };
-export type ActorInstanceCloseWire = ActorInstanceCloseRequest | ActorInstanceCloseReceipt;
+export type ActorInstanceLifecycleReceipt =
+  | { readonly kind: "captured"; readonly lifetime: ActorInstanceLifetime; readonly requestSequence: number }
+  | { readonly kind: "accepted" | "retired"; readonly lifetime: ActorInstanceLifetime; readonly requestSequence: number; readonly closeGeneration: bigint };
+export type ActorInstanceLifecycleAck = { readonly kind: "ack"; readonly receipt: ActorInstanceLifecycleReceipt };
+export type ActorInstanceLifecycleWire = ActorInstanceOpenRequest | ActorInstanceCloseRequest | ActorInstanceLifecycleReceipt | ActorInstanceLifecycleAck;
 
-export const ACTOR_INSTANCE_CLOSE_MAXIMUM_BYTES = 34;
+export const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = 44;
 
-/** 📤️ Encodes only fixed-width close authority in canonical unsigned LEB128. */
-export function encodeActorInstanceClose(value: ActorInstanceCloseWire): Uint8Array {
-  const generation = value.lifetime.activationGeneration;
-  const instance = value.lifetime.instanceId;
-  if (generation <= 0n || generation > 0xffffffffffffffffn || !Number.isInteger(instance) || instance < 0 || instance > 0xffffffff || !Number.isSafeInteger(value.requestSequence) || value.requestSequence <= 0) throw new Error("actor-close.invalid-authority");
-  if (value.kind !== "close" && (value.closeGeneration <= 0n || value.closeGeneration > 0xffffffffffffffffn)) throw new Error("actor-close.invalid-close-generation");
-  const output = new Uint8Array(ACTOR_INSTANCE_CLOSE_MAXIMUM_BYTES);
+/** 📤️ Encodes fixed lifecycle authority and exact receipt ACKs in canonical unsigned LEB128. */
+export function encodeActorInstanceLifecycle(value: ActorInstanceLifecycleWire): Uint8Array {
+  const body = value.kind === "ack" ? value.receipt : value;
+  const tag = value.kind === "ack"
+    ? body.kind === "captured" ? 5 : body.kind === "accepted" ? 6 : body.kind === "retired" ? 7 : -1
+    : body.kind === "open" ? 0 : body.kind === "captured" ? 1 : body.kind === "close" ? 2 : body.kind === "accepted" ? 3 : body.kind === "retired" ? 4 : -1;
+  if (tag === -1) throw new Error("actor-lifecycle.tag");
+  const generation = body.kind === "open" ? body.activationGeneration : body.lifetime.activationGeneration;
+  const instance = body.kind === "open" ? body.instanceId : body.lifetime.instanceId;
+  const validGeneration = (field: bigint): boolean => typeof field === "bigint" && field > 0n && field <= 0xffffffffffffffffn;
+  if (!validGeneration(generation) || !Number.isInteger(instance) || instance < 0 || instance > 0xffffffff || !Number.isSafeInteger(body.requestSequence) || body.requestSequence <= 0) throw new Error("actor-lifecycle.invalid-authority");
+  if (body.kind !== "open" && !validGeneration(body.lifetime.guestLifetime)) throw new Error("actor-lifecycle.invalid-guest-lifetime");
+  if ((body.kind === "accepted" || body.kind === "retired") && !validGeneration(body.closeGeneration)) throw new Error("actor-lifecycle.invalid-close-generation");
+  const output = new Uint8Array(ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES);
   let length = 0;
   const put = (initial: bigint) => {
     let rest = initial;
@@ -22,48 +33,71 @@ export function encodeActorInstanceClose(value: ActorInstanceCloseWire): Uint8Ar
       output[length++] = byte | (rest === 0n ? 0 : 128);
     } while (rest !== 0n);
   };
-  output[length++] = value.kind === "close" ? 0 : value.kind === "accepted" ? 1 : 2;
-  put(generation); put(BigInt(instance)); put(BigInt(value.requestSequence));
-  if (value.kind !== "close") put(value.closeGeneration);
+  output[length++] = tag;
+  put(generation); put(BigInt(instance));
+  if (body.kind !== "open") put(body.lifetime.guestLifetime);
+  put(BigInt(body.requestSequence));
+  if (body.kind === "accepted" || body.kind === "retired") put(body.closeGeneration);
   return output.slice(0, length);
 }
 
-/** 📥️ Rejects trailing, truncated, noncanonical, overflowed, and zero close authority before dispatch. */
-export function decodeActorInstanceClose(bytes: Uint8Array): ActorInstanceCloseWire {
-  if (bytes.length === 0 || bytes.length > ACTOR_INSTANCE_CLOSE_MAXIMUM_BYTES) throw new Error("actor-close.envelope");
+/** 📥️ Rejects trailing, truncated, noncanonical, overflowed, and zero lifecycle authority before dispatch. */
+export function decodeActorInstanceLifecycle(bytes: Uint8Array): ActorInstanceLifecycleWire {
+  if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES) throw new Error("actor-lifecycle.envelope");
   const kind = bytes[0];
-  if (kind !== 0 && kind !== 1 && kind !== 2) throw new Error("actor-close.tag");
+  if (kind === undefined || kind > 7) throw new Error("actor-lifecycle.tag");
   let offset = 1;
   const get = (maximum: bigint, nonzero: boolean) => {
     let value = 0n;
     for (let index = 0; index < 10; index += 1) {
       const byte = bytes[offset++];
-      if (byte === undefined) throw new Error("actor-close.truncated");
+      if (byte === undefined) throw new Error("actor-lifecycle.truncated");
       value |= BigInt(byte & 127) << BigInt(index * 7);
       if ((byte & 128) === 0) {
-        if ((index !== 0 && byte === 0) || value > maximum || (nonzero && value === 0n)) throw new Error("actor-close.noncanonical-authority");
+        if ((index !== 0 && byte === 0) || value > maximum || (nonzero && value === 0n)) throw new Error("actor-lifecycle.noncanonical-authority");
         return value;
       }
     }
-    throw new Error("actor-close.overlong");
+    throw new Error("actor-lifecycle.overlong");
   };
   const activationGeneration = get(0xffffffffffffffffn, true);
   const instanceId = Number(get(0xffffffffn, false));
+  const guestLifetime = kind === 0 ? null : get(0xffffffffffffffffn, true);
   const requestSequence = Number(get(BigInt(Number.MAX_SAFE_INTEGER), true));
-  const lifetime = { activationGeneration, instanceId };
-  const value: ActorInstanceCloseWire = kind === 0 ? { kind: "close", lifetime, requestSequence } : { kind: kind === 1 ? "accepted" : "retired", lifetime, requestSequence, closeGeneration: get(0xffffffffffffffffn, true) };
-  if (offset !== bytes.length) throw new Error("actor-close.trailing");
+  let value: ActorInstanceLifecycleWire;
+  if (guestLifetime === null) value = { kind: "open", activationGeneration, instanceId, requestSequence };
+  else {
+    const lifetime = { activationGeneration, instanceId, guestLifetime };
+    if (kind === 2) value = { kind: "close", lifetime, requestSequence };
+    else {
+      const receipt: ActorInstanceLifecycleReceipt = kind === 1 || kind === 5
+        ? { kind: "captured", lifetime, requestSequence }
+        : { kind: kind === 3 || kind === 6 ? "accepted" : "retired", lifetime, requestSequence, closeGeneration: get(0xffffffffffffffffn, true) };
+      value = kind >= 5 ? { kind: "ack", receipt } : receipt;
+    }
+  }
+  if (offset !== bytes.length) throw new Error("actor-lifecycle.trailing");
   return value;
 }
 
-/** 🪪️ Compares fixed activation authority, never a fresh actor-name lookup. */
+/** 🪪️ Compares the captured guest lifetime as well as worker activation and numeric instance. */
 export function actorInstanceLifetimeEquals(left: ActorInstanceLifetime, right: ActorInstanceLifetime): boolean {
-  return left.activationGeneration === right.activationGeneration && left.instanceId === right.instanceId;
+  return left.activationGeneration === right.activationGeneration && left.instanceId === right.instanceId && left.guestLifetime === right.guestLifetime;
+}
+
+/** 🪞️ Requires ACK identity to equal the original receipt, including its phase and generation. */
+export function actorInstanceLifecycleReceiptEquals(left: ActorInstanceLifecycleReceipt, right: ActorInstanceLifecycleReceipt): boolean {
+  return left.kind === right.kind && actorInstanceLifetimeEquals(left.lifetime, right.lifetime) && left.requestSequence === right.requestSequence && (left.kind === "captured" || right.kind !== "captured" && left.closeGeneration === right.closeGeneration);
+}
+
+/** 🔓️ Correlates guest-issued capture with the exact pending open request. */
+export function actorInstanceCapturedReceiptMatches(request: ActorInstanceOpenRequest, receipt: ActorInstanceLifecycleReceipt): boolean {
+  return receipt.kind === "captured" && request.activationGeneration === receipt.lifetime.activationGeneration && request.instanceId === receipt.lifetime.instanceId && request.requestSequence === receipt.requestSequence;
 }
 
 /** 📨️ Binds the receipt's wire identity only; native descendant terminal authority is not manufactured here. */
-export function actorInstanceCloseReceiptMatches(request: ActorInstanceCloseRequest, accepted: ActorInstanceCloseReceipt | null, receipt: ActorInstanceCloseReceipt): boolean {
-  return actorInstanceLifetimeEquals(request.lifetime, receipt.lifetime) && request.requestSequence === receipt.requestSequence && (accepted === null ? receipt.kind === "accepted" : accepted.kind === "accepted" && actorInstanceLifetimeEquals(accepted.lifetime, receipt.lifetime) && accepted.requestSequence === receipt.requestSequence && accepted.closeGeneration === receipt.closeGeneration);
+export function actorInstanceCloseReceiptMatches(request: ActorInstanceCloseRequest, accepted: ActorInstanceLifecycleReceipt | null, receipt: ActorInstanceLifecycleReceipt): boolean {
+  return receipt.kind !== "captured" && actorInstanceLifetimeEquals(request.lifetime, receipt.lifetime) && request.requestSequence === receipt.requestSequence && (accepted === null ? receipt.kind === "accepted" : accepted.kind === "accepted" && actorInstanceLifetimeEquals(accepted.lifetime, receipt.lifetime) && accepted.requestSequence === receipt.requestSequence && accepted.closeGeneration === receipt.closeGeneration);
 }
 
 //#region 🧪️WireLaws
@@ -234,6 +268,19 @@ if (import.meta.vitest) {
     expect(validate({ ...fixture, expectedOrder: fixture.expectedOrder.slice(1) })).toBe(false);
     expect(validate({ ...fixture, emptyReadyBitConsumesNewOwner: true })).toBe(false);
     expect(validate({ ...fixture, rejectedObligationRetained: false })).toBe(false);
+    expect(validate({ ...fixture, aliasCounter: { ...fixture.aliasCounter, afterReturn: "0" } })).toBe(false);
+    const counter = fixture.aliasCounter;
+    const independent = Buffer.alloc(8);
+    independent.writeBigUInt64LE(BigInt(counter.before));
+    let carry = 1;
+    for (let index = 0; index < independent.length; index++) {
+      const next = independent[index] + carry;
+      independent[index] = next & 255;
+      carry = next >>> 8;
+    }
+    expect(independent.readBigUInt64LE().toString()).toBe(counter.afterReturn);
+    expect((BigInt(counter.afterReturn) - 1n).toString()).toBe(counter.afterConsume);
+    expect((2n ** 64n - 1n).toString()).toBe(counter.maximum);
     const counts = new Map<number, number>();
     for (const owner of fixture.obligations) counts.set(owner.slot, (counts.get(owner.slot) ?? 0) + 1);
     const moduleName = "lodash-es/groupBy.js";
@@ -260,6 +307,40 @@ if (import.meta.vitest) {
     expect(order).toEqual(fixture.expectedOrder);
   });
 
+  it("actor patch storage separates physical placement from semantic retirement grants", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { default: Ajv } = await import("ajv");
+    const fixture = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️fixture.json", import.meta.url), "utf8"));
+    const schema = JSON.parse(readFileSync(new URL("../../🖱️ui/🧬️contract/♻️retirement/📋️patch/🧪️schema.json", import.meta.url), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(schema);
+    expect(validate(fixture)).toBe(true);
+    for (const invalid of [
+      { ...fixture, logicalCapacity: 128 },
+      { ...fixture, placedBytes: [0, 4096, fixture.native64.operationBytes - 1, fixture.native64.operationBytes, fixture.native64.operationBytes] },
+      { ...fixture, allocationBeforeAdmission: true },
+      { ...fixture, emptyPageStillCharged: false },
+      { ...fixture, cancelMovesPayload: true },
+      { ...fixture, unplaced: { ...fixture.unplaced, allocationBytes: fixture.native64.operationBytes } },
+    ]) expect(validate(invalid)).toBe(false);
+    const chunkModule = "lodash-es/chunk.js";
+    const module: unknown = await import(chunkModule);
+    const chunk: unknown = module && typeof module === "object" ? Reflect.get(module, "default") : null;
+    if (typeof chunk !== "function") throw new Error("invalid independent patch paging oracle");
+    const pages: unknown = chunk(fixture.operations, 1);
+    if (!Array.isArray(pages) || !pages.every(Array.isArray)) throw new Error("invalid independent patch pages");
+    expect(pages.map(page => page.length)).toEqual(fixture.pageLengths);
+    expect(pages.slice().reverse().map(page => page[0].id)).toEqual(fixture.retirementOrder);
+    const native = fixture.native64;
+    expect(fixture.logicalCapacity * native.descriptorBytes).toBe(native.directoryBytes);
+    expect(native.directoryBytes + native.operationBytes).toBe(native.firstBackingBytes);
+    expect(fixture.placementGrants.map((grant: number) => grant >= native.operationBytes ? native.operationBytes : 0)).toEqual(fixture.placedBytes);
+    expect(native.directoryBytes).toBeLessThanOrEqual(fixture.physicalGrant);
+    expect(native.firstPayloadBytes).toBeLessThanOrEqual(fixture.physicalGrant);
+    expect(native.operationBytes).toBeGreaterThan(Math.max(...fixture.semanticGrants));
+    expect(Buffer.byteLength("é".repeat(256))).toBe(fixture.unplaced.semanticBytes);
+    expect(new TextEncoder().encode("é".repeat(256)).length).toBe(fixture.unplaced.semanticBytes);
+  });
+
   it("actor instance close wire matches strict shared fixtures and an independent LEB128 encoder", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
@@ -270,7 +351,10 @@ if (import.meta.vitest) {
     ajv.addSchema(schema);
     expect(ajv.compile(fixtureSchema)(fixture)).toBe(true);
     const validate = ajv.compile(schema);
-    for (const invalid of ["0", "-1", "01", "18446744073709551616"]) expect(validate({ ...fixture.vectors[0].value, lifetime: { activationGeneration: invalid, instanceId: 7 } })).toBe(false);
+    for (const invalid of ["0", "-1", "01", "18446744073709551616"]) {
+      expect(validate({ ...fixture.vectors[0].value, activationGeneration: invalid })).toBe(false);
+      expect(validate({ ...fixture.vectors[1].value, lifetime: { ...fixture.vectors[1].value.lifetime, guestLifetime: invalid } })).toBe(false);
+    }
     expect(validate({ ...fixture.vectors[0].value, unexpected: true })).toBe(false);
     const dropModule = "lodash-es/drop.js";
     const importedDrop: unknown = await import(dropModule);
@@ -293,26 +377,33 @@ if (import.meta.vitest) {
       return Array.from(output);
     };
     for (const row of fixture.vectors) {
-      const lifetime = { ...row.value.lifetime, activationGeneration: BigInt(row.value.lifetime.activationGeneration) };
-      const value: ActorInstanceCloseWire = row.value.kind === "close" ? { ...row.value, lifetime } : { ...row.value, lifetime, closeGeneration: BigInt(row.value.closeGeneration) };
-      const bytes = encodeActorInstanceClose(value);
-      const expected = [value.kind === "close" ? 0 : value.kind === "accepted" ? 1 : 2, ...u64(lifetime.activationGeneration), ...u64(BigInt(lifetime.instanceId)), ...u64(BigInt(value.requestSequence)), ...(value.kind === "close" ? [] : u64(value.closeGeneration))];
+      const value: ActorInstanceLifecycleWire = JSON.parse(JSON.stringify(row.value), (key, field) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(field) : field);
+      const bytes = encodeActorInstanceLifecycle(value);
+      const body = value.kind === "ack" ? value.receipt : value;
+      const tag = value.kind === "ack" ? { captured: 5, accepted: 6, retired: 7 }[value.receipt.kind] : { open: 0, captured: 1, close: 2, accepted: 3, retired: 4 }[value.kind];
+      const expected = body.kind === "open"
+        ? [tag, ...u64(body.activationGeneration), ...u64(BigInt(body.instanceId)), ...u64(BigInt(body.requestSequence))]
+        : [tag, ...u64(body.lifetime.activationGeneration), ...u64(BigInt(body.lifetime.instanceId)), ...u64(body.lifetime.guestLifetime), ...u64(BigInt(body.requestSequence)), ...("closeGeneration" in body ? u64(body.closeGeneration) : [])];
       expect(Array.from(bytes)).toEqual(expected);
       expect(Buffer.from(bytes).toString("hex")).toBe(row.hex);
-      expect(decodeActorInstanceClose(bytes)).toEqual(value);
-      expect(() => decodeActorInstanceClose(Uint8Array.from([...bytes, 0]))).toThrow();
-      for (let length = 0; length < bytes.length; length += 1) expect(() => decodeActorInstanceClose(bytes.subarray(0, length))).toThrow();
+      expect(bytes.length).toBeLessThanOrEqual(ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES);
+      expect(decodeActorInstanceLifecycle(bytes)).toEqual(value);
+      expect(() => decodeActorInstanceLifecycle(Uint8Array.from([...bytes, 0]))).toThrow();
+      for (let length = 0; length < bytes.length; length += 1) expect(() => decodeActorInstanceLifecycle(bytes.subarray(0, length))).toThrow();
     }
-    for (const bytes of [[3, 1, 7, 9], [0, 0, 7, 9], [0, 0x81, 0, 7, 9], [0, ...Array(10).fill(255), 7, 9], [0, 1, 7, 0]]) expect(() => decodeActorInstanceClose(Uint8Array.from(bytes))).toThrow();
+    for (const bytes of [[8, 1, 7, 9], [0, 0, 7, 9], [0, 0x81, 0, 7, 9], [0, ...Array(10).fill(255), 7, 9], [0, 1, 7, 0], [1, 1, 7, 0, 9], [3, 1, 7, 13, 9, 0], [0, 1, 7, ...u64(9007199254740992n)]]) expect(() => decodeActorInstanceLifecycle(Uint8Array.from(bytes))).toThrow();
+    for (const activationGeneration of [0n, -1n, 18446744073709551616n, 1, "1"]) expect(() => encodeActorInstanceLifecycle({ kind: "open", activationGeneration, instanceId: 7, requestSequence: 8 } as ActorInstanceOpenRequest)).toThrow();
+    for (const guestLifetime of [0n, -1n, 18446744073709551616n, 13, "13"]) expect(() => encodeActorInstanceLifecycle({ kind: "captured", lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime }, requestSequence: 8 } as ActorInstanceLifecycleReceipt)).toThrow();
+    expect(() => encodeActorInstanceLifecycle({ kind: "ack", receipt: { kind: "open", activationGeneration: 1n, instanceId: 7, requestSequence: 8 } } as unknown as ActorInstanceLifecycleWire)).toThrow();
   });
 
   it("actor instance close receipts reject reused IDs and premature terminal messages", async () => {
     const { readFileSync } = await import("node:fs");
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
-    const prior = { ...fixture.reopen.prior, activationGeneration: BigInt(fixture.reopen.prior.activationGeneration) };
-    const current = { ...fixture.reopen.current, activationGeneration: BigInt(fixture.reopen.current.activationGeneration) };
+    const prior = { ...fixture.reopen.prior, activationGeneration: BigInt(fixture.reopen.prior.activationGeneration), guestLifetime: BigInt(fixture.reopen.prior.guestLifetime) };
+    const current = { ...fixture.reopen.current, activationGeneration: BigInt(fixture.reopen.current.activationGeneration), guestLifetime: BigInt(fixture.reopen.current.guestLifetime) };
     const request: ActorInstanceCloseRequest = { kind: "close", lifetime: current, requestSequence: 9 };
-    const accepted: ActorInstanceCloseReceipt = { kind: "accepted", lifetime: current, requestSequence: 9, closeGeneration: 13n };
+    const accepted: ActorInstanceLifecycleReceipt = { kind: "accepted", lifetime: current, requestSequence: 9, closeGeneration: 13n };
     expect(actorInstanceLifetimeEquals(prior, current)).toBe(fixture.reopen.oldRequestAccepted);
     expect(actorInstanceCloseReceiptMatches(request, null, { ...accepted, lifetime: prior })).toBe(fixture.reopen.oldReceiptAccepted);
     expect(actorInstanceCloseReceiptMatches(request, null, { ...accepted, kind: "retired" })).toBe(false);
@@ -320,6 +411,16 @@ if (import.meta.vitest) {
     expect(actorInstanceCloseReceiptMatches(request, accepted, { ...accepted, kind: "retired" })).toBe(true);
     expect(actorInstanceCloseReceiptMatches(request, accepted, { ...accepted, kind: "retired", closeGeneration: 12n })).toBe(false);
     expect(actorInstanceCloseReceiptMatches(request, accepted, { ...accepted, kind: "retired", requestSequence: 8 })).toBe(false);
+    const open: ActorInstanceOpenRequest = { kind: "open", activationGeneration: current.activationGeneration, instanceId: current.instanceId, requestSequence: 8 };
+    const captured: ActorInstanceLifecycleReceipt = { kind: "captured", lifetime: current, requestSequence: 8 };
+    expect(actorInstanceCapturedReceiptMatches(open, captured)).toBe(true);
+    expect(actorInstanceCapturedReceiptMatches(open, accepted)).toBe(false);
+    expect(actorInstanceCapturedReceiptMatches(open, { ...captured, requestSequence: 7 })).toBe(false);
+    expect(actorInstanceCapturedReceiptMatches(open, { ...captured, lifetime: { ...current, activationGeneration: current.activationGeneration + 1n } })).toBe(false);
+    expect(actorInstanceLifecycleReceiptEquals(captured, { ...captured })).toBe(true);
+    expect(actorInstanceLifecycleReceiptEquals(captured, { ...captured, lifetime: prior })).toBe(false);
+    expect(actorInstanceLifecycleReceiptEquals(accepted, { ...accepted, kind: "retired" })).toBe(false);
+    expect(actorInstanceLifecycleReceiptEquals(accepted, { ...accepted, closeGeneration: 14n })).toBe(false);
   });
 
   it("actor instance close worker activation preserves the new generation across a delayed dispose", async () => {
@@ -327,7 +428,7 @@ if (import.meta.vitest) {
     const { shardWorkerSource } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts");
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);
-    const current = BigInt(fixture.reopen.current.activationGeneration);
+    const current = prior + 1n;
     const { Worker } = await import("node:worker_threads");
     type Message = { readonly kind: string; readonly requestId?: string; readonly ok?: boolean; readonly value?: unknown; readonly error?: string };
     const pending = new Map<string, { resolve: (value: Message) => void; reject: (error: Error) => void }>();
@@ -342,11 +443,11 @@ if (import.meta.vitest) {
     const send = (data: unknown, requestId: string): Promise<Message> => new Promise((resolve, reject) => { pending.set(requestId, { resolve, reject }); worker.postMessage(data); });
     try {
       expect(await send({ kind: "activate", requestId: "a1", actorId: "same", activationGeneration: prior, moduleUrl, assets: [] }, "a1")).toMatchObject({ ok: true });
-      expect((await send({ kind: "turn", requestId: "t1", actorId: "same", events: [], budget: {} }, "t1")).value).toEqual({ actorId: "same", activationGeneration: prior });
+      expect((await send({ kind: "turn", requestId: "t1", actorId: "same", activationGeneration: prior, events: [], budget: {} }, "t1")).value).toEqual({ actorId: "same", activationGeneration: prior });
       worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: prior });
       expect(await send({ kind: "activate", requestId: "a2", actorId: "same", activationGeneration: current, moduleUrl, assets: [] }, "a2")).toMatchObject({ ok: true });
       worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: prior });
-      expect((await send({ kind: "turn", requestId: "t2", actorId: "same", events: [], budget: {} }, "t2")).value).toEqual({ actorId: "same", activationGeneration: current });
+      expect((await send({ kind: "turn", requestId: "t2", actorId: "same", activationGeneration: current, events: [], budget: {} }, "t2")).value).toEqual({ actorId: "same", activationGeneration: current });
       expect((await send({ kind: "activate", requestId: "old", actorId: "old", activationGeneration: prior, moduleUrl, assets: [] }, "old")).ok).toBe(false);
       worker.postMessage({ kind: "dispose", actorId: "same", activationGeneration: current });
     } finally {
@@ -355,4 +456,4 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪️WireLaws
-//#endregion 🚪️InstanceCloseWire
+//#endregion 🚪️InstanceLifecycleWire

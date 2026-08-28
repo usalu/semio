@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdatePileInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newPileKRed",
+    "newPileNEdKn",
+    "newPileSigmaMpa"
+  ],
+  "properties": {
+    "newPileSigmaMpa": {
+      "type": "number"
+    },
+    "newPileKRed": {
+      "type": "number"
+    },
+    "newPileNEdKn": {
+      "type": "number"
+    }
+  }
+}

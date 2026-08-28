@@ -717,7 +717,7 @@ mod tests {
 
     #[test]
     fn dispatch_registers_semantic_descriptors() {
-        register_puzzle3d_mutation_descriptors();
+        register_puzzle3d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
         for kind in <Puzzle3dMutation as protocol::SemanticMutation<Puzzle3dSnapshot>>::kinds() {
             assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
         }

@@ -8,7 +8,7 @@ A) The ROOT script depended on implementation detail.
      TEST_DOMAIN_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"   ← a module's location
      LEVELLESS_PHASES = ["discover","doctor","report","metrics"]           ← another module's vocabulary
      names.filter((n) => n.toLowerCase().includes("compose"))              ← an area, by name
-     policyReadFileSafe(repoRoot, "…/🧪️test/📇️registry/🔣️component.json")  ← another module's file
+     policyReadFileSafe(repoRoot, "…/🧪️test/📇️registry/🔣️.json")  ← another module's file
 
 B) The FRAMEWORK test domain depended on ✏️s and 🌎️hub.
      🔮️oracle/{,🖼️raster,🎒️archive,🔊️audio,📊️tabular}/🦀️component.rs      ← PDF/PNG/GIF/ZIP/WAV/CSV

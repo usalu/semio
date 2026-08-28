@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "maximumBytes": 35,
+  "vectors": [
+    { "value": { "lifetime": { "activationGeneration": "1", "instanceId": 0, "guestLifetime": "1" }, "patchSequence": "1" }, "hex": "01000101" },
+    { "value": { "lifetime": { "activationGeneration": "41", "instanceId": 7, "guestLifetime": "13" }, "patchSequence": "51" }, "hex": "29070d33" },
+    { "value": { "lifetime": { "activationGeneration": "128", "instanceId": 128, "guestLifetime": "16384" }, "patchSequence": "2097152" }, "hex": "8001800180800180808001" },
+    { "value": { "lifetime": { "activationGeneration": "18446744073709551615", "instanceId": 4294967295, "guestLifetime": "18446744073709551615" }, "patchSequence": "18446744073709551615" }, "hex": "ffffffffffffffffff01ffffffff0fffffffffffffffffff01ffffffffffffffffff01" }
+  ],
+  "invalidHex": ["", "00000101", "01000001", "01000100", "8100000101", "01ffffffff100101", "ffffffffffffffffff02000101", "0100010100"],
+  "pairing": [
+    { "patchCount": 0, "hasReceipt": false, "accepted": true },
+    { "patchCount": 0, "hasReceipt": true, "accepted": false },
+    { "patchCount": 1, "hasReceipt": false, "accepted": false },
+    { "patchCount": 1, "hasReceipt": true, "accepted": true },
+    { "patchCount": 2, "hasReceipt": true, "accepted": false }
+  ],
+  "feedback": { "kinds": ["ack", "rejected"], "surface": "7:保留,🙂", "revision": "1", "oldGuestAccepted": false, "oldSequenceAccepted": false, "duplicateConsumesTwice": false, "clockFaultRetainsReceipt": true },
+  "wireEmptyPatchPayloadBytes": 0,
+  "outerReceiptOrder": ["lifecycleReceipt", "uiPatchReceipt"]
+}

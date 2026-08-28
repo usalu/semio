@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["version","componentCount","grants","closeGrant","text","textRepeats","nestedItems","cancelFrontiers","differentBackingMayBeEqual","contendedProgress","frame","cases"],
+  "properties":{
+    "version":{"const":1},"componentCount":{"const":18},"grants":{"const":[1,64,4096]},"closeGrant":{"const":64},
+    "text":{"const":"é"},"textRepeats":{"const":256},"nestedItems":{"const":32},"cancelFrontiers":{"const":[0,1,2,5,16,64,128]},
+    "differentBackingMayBeEqual":{"const":true},"contendedProgress":{"const":false},
+    "frame":{"const":{"logicalDepth":256,"pageCount":256,"maximumTextBytes":512,"maximumPosition":1024,"none":65535,"bytes":8,"maximumCursorBytes":4096,"littleEndian":"ff00000000040000"}},
+    "cases":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"object","additionalProperties":false,"required":["left","right","equal"],"properties":{"left":{"type":"object"},"right":{"type":"object"},"equal":{"type":"boolean"}}}}
+  }
+}

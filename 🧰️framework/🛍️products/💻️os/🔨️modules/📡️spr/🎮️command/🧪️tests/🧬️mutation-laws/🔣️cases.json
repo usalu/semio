@@ -1,0 +1,200 @@
+{
+  "leaves": [
+    {
+      "variant": "AddCounter",
+      "folder": "➕️add-counter",
+      "kind": "add-counter",
+      "emoji": "➕️",
+      "fields": {
+        "delta": "i64"
+      },
+      "composite": false
+    },
+    {
+      "variant": "AddCounterTwice",
+      "folder": "✌️add-counter-twice",
+      "kind": "add-counter-twice",
+      "emoji": "✌️",
+      "fields": {
+        "delta": "i64"
+      },
+      "composite": true
+    },
+    {
+      "variant": "AddCounterFourTimes",
+      "folder": "4️⃣add-counter-four-times",
+      "kind": "add-counter-four-times",
+      "emoji": "4️⃣",
+      "fields": {
+        "delta": "i64"
+      },
+      "composite": true
+    },
+    {
+      "variant": "AddCounterThenNotifyForeign",
+      "folder": "🌐️add-counter-then-notify-foreign",
+      "kind": "add-counter-then-notify-foreign",
+      "emoji": "🌐️",
+      "fields": {
+        "delta": "i64",
+        "foreignCount": "u8"
+      },
+      "composite": true
+    },
+    {
+      "variant": "AddCounterSequence",
+      "folder": "🔢️add-counter-sequence",
+      "kind": "add-counter-sequence",
+      "emoji": "🔢️",
+      "fields": {
+        "deltas": "i64s"
+      },
+      "composite": true
+    }
+  ],
+  "cases": [
+    {
+      "operation": "addCounter",
+      "payload": {
+        "delta": 3
+      },
+      "before": 10,
+      "after": 13
+    },
+    {
+      "operation": "addCounterTwice",
+      "payload": {
+        "delta": 3
+      },
+      "before": 10,
+      "after": 16
+    },
+    {
+      "operation": "addCounterFourTimes",
+      "payload": {
+        "delta": 3
+      },
+      "before": 10,
+      "after": 22
+    },
+    {
+      "operation": "addCounterThenNotifyForeign",
+      "payload": {
+        "delta": 3,
+        "foreignCount": 2
+      },
+      "before": 10,
+      "after": 13
+    },
+    {
+      "operation": "addCounterSequence",
+      "payload": {
+        "deltas": [
+          2,
+          3
+        ]
+      },
+      "before": 10,
+      "after": 15
+    }
+  ],
+  "arithmetic": [
+    {
+      "id": "identity",
+      "before": "7",
+      "deltas": [],
+      "after": "7"
+    },
+    {
+      "id": "ordered-zero",
+      "before": "-9223372036854775808",
+      "deltas": [
+        "9223372036854775807",
+        "1"
+      ],
+      "after": "0"
+    },
+    {
+      "id": "mixed-min-max",
+      "before": "1",
+      "deltas": [
+        "-9223372036854775808",
+        "9223372036854775807"
+      ],
+      "after": "0",
+      "storedInverse": [
+        "1",
+        "9223372036854775807",
+        "-9223372036854775807"
+      ]
+    },
+    {
+      "id": "minimum-inverse",
+      "before": "0",
+      "deltas": [
+        "-9223372036854775808"
+      ],
+      "after": "-9223372036854775808",
+      "storedInverse": [
+        "1",
+        "9223372036854775807"
+      ]
+    },
+    {
+      "id": "maximum-inverse",
+      "before": "-1",
+      "deltas": [
+        "9223372036854775807"
+      ],
+      "after": "9223372036854775806",
+      "storedInverse": [
+        "-9223372036854775807"
+      ]
+    },
+    {
+      "id": "positive-overflow",
+      "before": "9223372036854775807",
+      "deltas": [
+        "1"
+      ],
+      "error": true
+    },
+    {
+      "id": "negative-overflow",
+      "before": "-9223372036854775808",
+      "deltas": [
+        "-1"
+      ],
+      "error": true
+    },
+    {
+      "id": "intermediate-overflow",
+      "before": "0",
+      "deltas": [
+        "9223372036854775807",
+        "1",
+        "-1"
+      ],
+      "error": true
+    }
+  ],
+  "decimalI64": [
+    {
+      "value": "-9223372036854775808",
+      "valid": true
+    },
+    {
+      "value": "9223372036854775807",
+      "valid": true
+    },
+    {
+      "value": "-9223372036854775809",
+      "valid": false
+    },
+    {
+      "value": "9223372036854775808",
+      "valid": false
+    }
+  ]
+}
+

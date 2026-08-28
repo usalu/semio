@@ -26,6 +26,7 @@
  * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/📓️terra-bench-web-rows-report.md
  */
 import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts";
+import { OwnedResidentLedger } from "../../../../../../../🧰️framework/🔨️modules/🌱️value/💾️resident/🟦️component.ts";
 
 //#region 🟨️StubWorker
 /** 🟨️ Protocol-faithful stand-in for the real, generated `🟨️shard-worker.js` (`shardWorkerSource()`).
@@ -145,7 +146,8 @@ export async function runBenchWebBudgets(input: BenchWebInput): Promise<BenchWeb
   // 🚫️ exclusiveShardCount:0 — this proof activates the WHOLE pool as round-robin so "distinct shards
   // used" measures all K, matching the budget-3 wording ("shards==K") rather than K minus the ≤2 shards
   // `ShardClient`'s default reserves for `leaseExclusive`, which this bench never calls.
-  const client = new ShardClient({ shardCount: input.shardCount, exclusiveShardCount: 0, createWorker: () => createStubWorker(mainWorkers) });
+  const residentLedger = new OwnedResidentLedger({ bytes: 33554432, slots: 262144, owners: 262144, control: { bytes: 65536, slots: 1024, owners: 1024 } });
+  const client = new ShardClient({ residentLedger, shardCount: input.shardCount, exclusiveShardCount: 0, createWorker: () => createStubWorker(mainWorkers) });
 
   //#region 2️⃣ Cold boot to first interactive frame (STUB-WORKER TIMING — see file header)
   const firstActorId = input.pluginIds[0]!;
@@ -193,7 +195,7 @@ export async function runBenchWebBudgets(input: BenchWebInput): Promise<BenchWeb
   //#region 6️⃣ Hang actor killed and rebuilt, siblings restored, total pause budget
   const hangWorkers: ShardWorkerLike[] = [];
   const trapEvents: { actorId: string; message: string }[] = [];
-  const hangClient = new ShardClient({ shardCount: 1, exclusiveShardCount: 0, createWorker: () => createStubWorker(hangWorkers), onActorTrap: (actorId, message) => trapEvents.push({ actorId, message }) });
+  const hangClient = new ShardClient({ residentLedger, shardCount: 1, exclusiveShardCount: 0, createWorker: () => createStubWorker(hangWorkers), onActorTrap: (actorId, message) => trapEvents.push({ actorId, message }) });
   await hangClient.activate("bench-hang-actor", "stub://hang?overrunMs=25", [], STUB_BUDGET);
   await hangClient.activate("bench-sibling-a", "stub://ok", [], STUB_BUDGET);
   await hangClient.activate("bench-sibling-b", "stub://ok", [], STUB_BUDGET);

@@ -3,7 +3,13 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Layout } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/Shell/🟦️component.tsx";
 import bootCanvasFixture from "../../../../🧱️elements/Shell/🧪️fixtures/🔣️boot-canvas.json";
+import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../../../🧱️elements/ShellHost/🟦️component.tsx";
+import type { LoadedProgramState } from "../../../../🧱️elements/Shell/🟦️component.tsx";
+import extensionInvocationFixture from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.json";
+import extensionInvocationSchema from "../../../../🧱️elements/ShellHost/🧪️fixtures/🔣️extension-invocation.schema.json";
 import Ajv from "ajv";
+import descriptorLoadFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load.json";
+import descriptorLoadSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧪️fixtures/📇️descriptor-load.schema.json";
 import { createInstance as createTranslationOracle } from "i18next";
 import labelResolutionSchema from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.schema.json";
 import labelResolutionFixture from "../../../../🧱️elements/ShellHelpers/🧪️fixtures/🔣️label-resolution.json";
@@ -21,6 +27,226 @@ import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+
+//#region 🔁️ExtensionInvocation
+describe("extension invocation completion ownership", () => {
+  const fixture = extensionInvocationFixture;
+  const entry = (handle: Record<string, unknown>) => ({ handle, manifest: {} }) as unknown as LoadedProgramState;
+  const completionHandle = (complete: (instanceId: number, req: bigint, outcome: unknown) => Promise<unknown>) => ({ captureExtensionCompletion: (instanceId: number, req: bigint) => ({ instanceId, req, assertActive: () => {}, complete: (outcome: unknown) => complete(instanceId, req, outcome) }) });
+  const call = (requester: LoadedProgramState, extension?: LoadedProgramState) =>
+    runInvokeExtensionEffect(requester, extension, fixture.instanceId, fixture.extensionId, fixture.capability, JSON.stringify(fixture.request), BigInt(fixture.requestId));
+
+  it("validates the language-neutral request and fault vectors with the schema oracle", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(extensionInvocationSchema);
+    expect(validate(fixture)).toBe(true);
+    expect(validate({ ...fixture, requestId: 0 })).toBe(false);
+  });
+
+  it.each(fixture.missing)("faults the exact requester when $phase is unavailable", async ({ phase, code }) => {
+    const { decodePackValue, decodeFaultFromWire } = await import("@semio-tech/framework-os");
+    const complete = vi.fn(async () => {});
+    await call(entry(completionHandle(complete)), phase === "extension" ? undefined : entry({}));
+    expect(complete).toHaveBeenCalledOnce();
+    const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { fault: Uint8Array }];
+    expect([instance, req]).toEqual([fixture.instanceId, BigInt(fixture.requestId)]);
+    expect(outcome).toHaveProperty("fault");
+    const fault = decodeFaultFromWire(Array.from(outcome.fault), decodePackValue);
+    expect(fault?.code).toBe(code);
+    expect(fault?.origin).toBe("os");
+  });
+
+  it("refuses a missing completion capability before executing the extension", async () => {
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    await expect(call(entry({}), entry({ invoke }))).rejects.toThrow("extension.completion-unavailable");
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it("preserves a typed extension fault and sends exactly one completion", async () => {
+    const { SemioFaultError } = await import("@semio-tech/framework");
+    const { decodePackValue } = await import("@semio-tech/framework-os");
+    const complete = vi.fn(async () => {});
+    const invoke = vi.fn(async () => { throw new SemioFaultError(fixture.fault as ConstructorParameters<typeof SemioFaultError>[0]); });
+    await call(entry(completionHandle(complete)), entry({ invoke }));
+    expect(complete).toHaveBeenCalledOnce();
+    const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { fault: Uint8Array }];
+    expect([instance, req]).toEqual([fixture.instanceId, BigInt(fixture.requestId)]);
+    expect(decodePackValue(outcome.fault)).toEqual(fixture.fault);
+  });
+
+  it("propagates a failed completion without retrying it as a second fault completion", async () => {
+    const failure = new Error("completion transport refused");
+    const complete = vi.fn(async () => { throw failure; });
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    await expect(call(entry(completionHandle(complete)), entry({ invoke }))).rejects.toBe(failure);
+    expect(invoke).toHaveBeenCalledOnce();
+    expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it("returns the requesting actor's completion publication to its host owner", async () => {
+    const response = { output: fixture.response, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch };
+    const complete = vi.fn(async () => response);
+    expect(await call(entry(completionHandle(complete)), entry({ invoke: async () => JSON.stringify(fixture.response) }))).toBe(response);
+    expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it.each(fixture.genericRequests)("dispatches $capability without requiring unrelated domain fields", async ({ capability, request }) => {
+    const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
+    const extension = entry({ pluginId: fixture.extensionId, invoke });
+    const requestJson = JSON.stringify(request);
+    const publish = vi.fn(async () => {});
+    await dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability, requestJson }, publish);
+    expect(invoke).toHaveBeenCalledExactlyOnceWith(capability, requestJson);
+    expect(complete).toHaveBeenCalledOnce();
+    expect(publish).toHaveBeenCalledExactlyOnceWith(requester, await complete.mock.results[0]!.value);
+  });
+
+  it("rejects a missing originating plugin rather than silently discarding its request", async () => {
+    await expect(dispatchInvokeExtensionEffect([], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => {})).rejects.toThrow("extension.requester-unavailable");
+  });
+
+  it("propagates publication refusal after delivering only one completion", async () => {
+    const refusal = new Error("extension.requester-retired");
+    const complete = vi.fn(async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }));
+    const requester = entry({ pluginId: "requester", ...completionHandle(complete) });
+    const extension = entry({ pluginId: fixture.extensionId, invoke: async () => JSON.stringify(fixture.response) });
+    await expect(dispatchInvokeExtensionEffect([requester, extension], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, async () => { throw refusal; })).rejects.toBe(refusal);
+    expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it("decodes a real response without losing the owning method receiver", async () => {
+    const { decodePackValue } = await import("@semio-tech/framework-os");
+    const complete = vi.fn(async () => {});
+    const handle = { response: fixture.response, invoke: async function () { return JSON.stringify(this.response); } };
+    await call(entry(completionHandle(complete)), entry(handle));
+    const [instance, req, outcome] = complete.mock.calls[0] as unknown as [number, bigint, { ok: Uint8Array }];
+    expect([instance, req]).toEqual([fixture.instanceId, BigInt(fixture.requestId)]);
+    expect(decodePackValue(outcome.ok)).toEqual(fixture.response);
+  });
+
+  it("captures the exact completion authority before executing extension evaluation", async () => {
+    const events: string[] = [];
+    const complete = vi.fn(async () => { events.push("complete"); return { output: null }; });
+    const capture = vi.fn((instanceId: number, req: bigint) => {
+      events.push("capture");
+      return { instanceId, req, assertActive: () => {}, complete };
+    });
+    const invoke = vi.fn(async () => { events.push("invoke"); return JSON.stringify(fixture.response); });
+    await call(entry({ captureExtensionCompletion: capture }), entry({ invoke }));
+    expect(events).toEqual(["capture", "invoke", "complete"]);
+    expect(capture).toHaveBeenCalledExactlyOnceWith(fixture.instanceId, BigInt(fixture.requestId));
+    expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it("does not evaluate when initial activation capture is refused", async () => {
+    const failure = new Error("actor-activation.revoked");
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const complete = vi.fn(async () => ({ output: null }));
+    await expect(call(entry({ captureExtensionCompletion: () => { throw failure; } }), entry({ invoke }))).rejects.toBe(failure);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it.each(fixture.completionFailures)("refuses $kind before extension execution", async ({ kind, code }) => {
+    const complete = vi.fn(async () => ({ output: null }));
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const capture = (instanceId: number, req: bigint) => kind === "missing-lease" ? null : {
+      instanceId: kind === "foreign-instance" ? instanceId + 1 : instanceId,
+      req: kind === "foreign-request" ? req + 1n : req,
+      assertActive: kind === "missing-guard" ? undefined : () => {},
+      complete: kind === "missing-complete" ? undefined : complete,
+    };
+    await expect(call(entry({ captureExtensionCompletion: capture }), entry({ invoke }))).rejects.toThrow(code);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("does not deliver a result to an activation replaced during extension evaluation", async () => {
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<string>();
+    let generation = 1;
+    const complete = vi.fn(async () => ({ output: null }));
+    const capture = (instanceId: number, req: bigint) => {
+      const captured = generation;
+      return { instanceId, req, assertActive: () => { if (captured !== generation) throw new Error("actor-activation.revoked"); }, complete };
+    };
+    const pending = call(entry({ captureExtensionCompletion: capture }), entry({ invoke: async () => { entered.resolve(); return release.promise; } }));
+    const observed = expect(pending).rejects.toThrow("actor-activation.revoked");
+    await entered.promise;
+    generation += 1;
+    release.resolve(JSON.stringify(fixture.response));
+    await observed;
+    expect(complete).not.toHaveBeenCalled();
+  });
+
+  it("captures before the host queue and cancels queued evaluation after replacement", async () => {
+    const { serializePerActor } = await import("../../../../🧱️elements/PluginRuntime/🟦️component.tsx");
+    const entered = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    let generation = 1;
+    const complete = vi.fn(async () => ({ output: null }));
+    const capture = vi.fn((instanceId: number, req: bigint) => {
+      const captured = generation;
+      return { instanceId, req, assertActive: () => { if (captured !== generation) throw new Error("actor-activation.revoked"); }, complete };
+    });
+    const requester = entry({ pluginId: "requester", captureExtensionCompletion: capture });
+    const invoke = vi.fn(async () => JSON.stringify(fixture.response));
+    const held = serializePerActor(`requester:${fixture.instanceId}`, async () => { entered.resolve(); await release.promise; });
+    await entered.promise;
+    const publish = vi.fn(async () => {});
+    const pending = dispatchInvokeExtensionEffect([requester, entry({ pluginId: fixture.extensionId, invoke })], { pluginId: "requester", instanceId: fixture.instanceId }, { req: BigInt(fixture.requestId), extensionId: fixture.extensionId, capability: fixture.capability, requestJson: JSON.stringify(fixture.request) }, publish);
+    const observed = expect(pending).rejects.toThrow("actor-activation.revoked");
+    const capturedBeforeRelease = capture.mock.calls.length;
+    generation += 1;
+    release.resolve();
+    await held;
+    await observed;
+    expect(capturedBeforeRelease).toBe(1);
+    expect(capture).toHaveBeenCalledOnce();
+    expect(invoke).not.toHaveBeenCalled();
+    expect(complete).not.toHaveBeenCalled();
+    expect(publish).not.toHaveBeenCalled();
+  });
+});
+//#endregion 🔁️ExtensionInvocation
+
+//#region 📇️DescriptorAdmission
+describe("descriptor load admission", () => {
+  it("validates the language-neutral response cases with the JSON schema oracle", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(descriptorLoadSchema);
+    expect(validate(descriptorLoadFixture)).toBe(true);
+    expect(validate({ ...descriptorLoadFixture, pluginId: "" })).toBe(false);
+  });
+
+  it.each(descriptorLoadFixture.rejected)("refuses $name before starting the actor runtime", async (vector) => {
+    const originalFetch = globalThis.fetch;
+    const initialize = vi.fn();
+    const fetch = vi.fn(async () => new Response(vector.body, { status: vector.status, headers: { "content-type": vector.contentType } }));
+    globalThis.fetch = fetch;
+    try {
+      await expect(resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl), initialize)).rejects.toMatchObject({ fault: { code: vector.fault, scope: { pluginId: descriptorLoadFixture.pluginId } } });
+      expect(fetch).toHaveBeenCalledExactlyOnceWith(descriptorLoadFixture.descriptorUrl, undefined);
+      expect(initialize).not.toHaveBeenCalled();
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("admits an actual descriptor including an extension's empty app roster", async () => {
+    const originalFetch = globalThis.fetch;
+    try {
+      for (const apps of [descriptorLoadFixture.descriptor.manifest.apps, []]) {
+        const descriptor = { manifest: { ...descriptorLoadFixture.descriptor.manifest, apps } };
+        globalThis.fetch = async () => new Response(JSON.stringify(descriptor), { headers: { "content-type": "application/json" } });
+        expect(await fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl)).toEqual(descriptor.manifest);
+      }
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+//#endregion 📇️DescriptorAdmission
 
 //#region 🎞️TutorialDocumentTrack
 describe("tutorial document wire contract", () => {
@@ -1507,22 +1733,11 @@ describe("framework plugin runtime", () => {
     await expect(handle.refreshUi(instanceId, { viewState: {}, windows: [{ key: "overview", bodyKey: "overview" }] })).resolves.toEqual({});
   });
 
-  // 🧬️ H1-react — `acquirePluginModule`/`PluginModuleLease` (the refcounted per-plugin Worker lease)
-  // are deleted outright (packet H2, `📓️terra-H2-web-shard-report.md`'s "must not exist" list),
-  // replaced by `ActivationRegistry`'s manifest-only registration. `loadPluginModule` itself now
-  // needs a real `Worker` (the shard pool) to fully exercise end to end, which this vitest
-  // environment does not provide — the part of the old mechanism that WAS a pure, host-only
-  // function (reading a build-time manifest without ever touching wasm) is `fetchDescriptorManifest`,
-  // exercised directly here instead: honest-empty fallback when no `🔣️descriptor.json` is reachable
-  // (true for every plugin but `🗒️note` as of this packet — `📓️status.md`'s "E2-builder-descriptor"
-  // entry), and the real descriptor's `manifest` field surfacing through when one IS reachable.
-  it("fetchDescriptorManifest falls back to an honest empty manifest when no 🔣️descriptor.json is reachable, and surfaces a real one when it is", async () => {
+  it("fetchDescriptorManifest refuses a missing descriptor and surfaces a published one", async () => {
     const originalFetch = globalThis.fetch;
     try {
       globalThis.fetch = (async () => ({ ok: false, status: 404 })) as unknown as typeof fetch;
-      const empty = await fetchDescriptorManifest("mock", "/plugin-modules/mock/index.js");
-      expect(empty.pluginId).toBe("mock");
-      expect(empty.apps).toEqual([]);
+      await expect(fetchDescriptorManifest("mock", "/plugin-modules/mock/index.js")).rejects.toThrow("plugin.descriptor-unavailable");
 
       globalThis.fetch = (async () => ({ ok: true, json: async () => ({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }) })) as unknown as typeof fetch;
       const real = await fetchDescriptorManifest("mock", "/plugin-modules/mock/index.js");

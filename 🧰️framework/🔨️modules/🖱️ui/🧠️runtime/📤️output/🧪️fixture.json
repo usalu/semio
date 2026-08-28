@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "entrySlots": 64,
+  "queueSlots": 64,
+  "physicalGrant": 32768,
+  "closeGrants": [1, 64, 4096],
+  "zeroGrantInvocations": 0,
+  "saturatedInvocations": 64,
+  "extraInvocation": false,
+  "surfaces": ["first-é", "second-界"],
+  "surfaceUtf8": ["66697273742dc3a9", "7365636f6e642de7958c"],
+  "reserveBeforeProducer": true,
+  "refusalPreservesReady": true,
+  "partialProducerUnwindRetainsOwner": true,
+  "incompleteProducerSourcesPreserveRemainingOwners": true,
+  "cancelledAdmission": { "surface": "74:cancelled-admission", "revision": 0, "generationPreserved": true, "terminal": true },
+  "dropWaits": false,
+  "concurrentAdmission": { "occupied": 63, "workers": 2, "accepted": 1, "restored": 64 },
+  "capturedLifetime": { "instance": 75, "original": 1, "reused": 2, "foreignCloseAccepted": false, "terminal": true },
+  "directReceiver": { "zeroGrantTransfers": false, "occupiedTransfers": false, "unwindRetainsPayload": true, "terminal": true },
+  "aggregateCeilingBytes": 33554432,
+  "residentCapacity": { "reservationBytes": 8388608, "cases": [{ "fixedBytes": 0, "capacity": 4 }, { "fixedBytes": 1, "capacity": 3 }, { "fixedBytes": 8388608, "capacity": 3 }, { "fixedBytes": 8388609, "capacity": 2 }, { "fixedBytes": 33554432, "capacity": 0 }], "capPlusOneAccepted": false, "refusalPreservesTree": true, "terminal": true },
+  "returnedEntryReusableBeforeDrain": false,
+  "staleEpochAccepted": false,
+  "zeroGrantMutates": false,
+  "handbackAdmission": { "slots": 384, "perProducer": 2, "onlyOneFreeAccepted": false, "saturatedAfterSealTransfers": true },
+  "readyRevalidation": [
+    { "case": "cancelled", "cancelled": true, "sameGeneration": true, "fuel": 1, "deadline": 6, "now": 5, "outcome": "fault" },
+    { "case": "stale", "cancelled": false, "sameGeneration": false, "fuel": 1, "deadline": 6, "now": 5, "outcome": "fault" },
+    { "case": "zero-fuel", "cancelled": false, "sameGeneration": true, "fuel": 0, "deadline": 6, "now": 5, "outcome": "pending" },
+    { "case": "expired", "cancelled": false, "sameGeneration": true, "fuel": 1, "deadline": 5, "now": 5, "outcome": "pending" }
+  ]
+}

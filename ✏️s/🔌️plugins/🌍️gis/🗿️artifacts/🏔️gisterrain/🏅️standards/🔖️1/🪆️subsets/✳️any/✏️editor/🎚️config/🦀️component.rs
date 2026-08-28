@@ -5,14 +5,13 @@
 //! The terrain's one editable property (exaggeration) is document state and lives in
 //! `crate::artifacts::gisterrain`.
 
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config
 /// 🧮️ gis3d's `ArtifactEditor::Config` — the free/live viewport camera and world selection, plus
 /// `locale`. Mirrors `crate::editor::gis2d::config::Gis2dConfig`'s identical shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "gis3dcfg")]
 #[dsl(id = "gis.gis3dcfg")]
 #[dsl(layout = "lines")]
@@ -84,17 +83,13 @@ store::impl_whole_record_config!(Gis3dConfig);
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `Gis3dConfig`'s operation enum — one variant per settled interaction; each variant's
-/// `backwards()` re-emits the SAME variant with the old field value read from `base` (no
-/// whole-config snapshot sentinel) — mirrors `crate::editor::gis2d::config::Gis2dConfigMutation`'s
-/// identical shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum Gis3dConfigMutation {
-    #[dsl(key = "camera")]
-    SetCamera { camera_json: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod configuration_diff;
+pub use configuration_diff::{Gis3dConfigDelta, Gis3dConfigDiff};
+
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+pub mod mutations;
+pub use mutations::*;
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Gis3dConfigMutation {
@@ -117,75 +112,33 @@ impl protocol::OpText for Gis3dConfigMutation {
     }
 }
 
-/// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Gis3dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
 }
 
 //#endregion 🔖️OpCodec
 
-impl Mutation<Gis3dConfig> for Gis3dConfigMutation {
-    type Diff = Gis3dConfig;
-
-    fn diff(&self, base: &Gis3dConfig) -> protocol::MutationOutcome<Gis3dConfig> {
-        let mut next = base.clone();
-        match self {
-            Gis3dConfigMutation::SetCamera { camera_json } => {
-                if &base.camera_json == camera_json {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Camera is already at the requested position.");
-                }
-                next.camera_json = camera_json.clone();
-            }
-            Gis3dConfigMutation::SetLocale { value } => {
-                if &base.locale == value {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
-                }
-                next.locale = value.clone();
-            }
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &Gis3dConfig) -> Vec<Self> {
-        match self {
-            Gis3dConfigMutation::SetCamera { .. } => vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }],
-            Gis3dConfigMutation::SetLocale { .. } => vec![Gis3dConfigMutation::SetLocale { value: base.locale.clone() }],
-        }
-    }
-}
 //#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
 #[cfg(test)]
+#[path = "🧪️tests/🧬️direct-leaves/🦀️.rs"]
+mod direct_leaf_contracts;
+
+#[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::{Mutation, MutationDiff};
+
+    #[test]
+    fn gis3d_config_serde_is_strict_and_requires_both_fields() {
+        assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}"}"#).is_err());
+        assert!(serde_json::from_str::<Gis3dConfig>(r#"{"locale":"en-US"}"#).is_err());
+        assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":null,"locale":"en-US"}"#).is_err());
+        assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}","locale":"en-US","extra":true}"#).is_err());
+        assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}","locale":"en-US"}"#).is_ok());
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn gis3d_config_default_matches_the_pre_migration_view_defaults() {
@@ -205,18 +158,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() {
         let base = Gis3dConfig::default();
-        let operation = Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() };
-        let next = operation.diff(&base).diff().clone();
+        let operation = Gis3dConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
+        let next = operation.diff(&base).diff().apply(&base).expect("apply");
         assert_eq!(next.camera_json, r#"{"position":[1.0,2.0,3.0]}"#);
         let backwards = operation.inverse(&base);
-        assert_eq!(backwards, vec![Gis3dConfigMutation::SetCamera { camera_json: base.camera_json.clone() }]);
-        assert_eq!(backwards[0].diff(&next).diff().clone(), base);
+        assert_eq!(backwards, vec![Gis3dConfigMutation::SetCamera(SetCamera { camera_json: base.camera_json.clone() })]);
+        assert_eq!(backwards[0].diff(&next).diff().apply(&next).expect("restore"), base);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gis3d_config_operation_lines_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() });
-        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests

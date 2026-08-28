@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["cases", "queueTransitionBytes", "terminalChildBytes", "retryNotifications"],
+  "properties": {
+    "cases": { "type": "array", "minItems": 4, "items": { "type": "object", "additionalProperties": false, "required": ["name", "kind", "items", "bytes", "expected"], "properties": { "name": { "type": "string" }, "kind": { "enum": ["blocked", "rejected", "pending", "throw"] }, "items": { "type": "integer", "minimum": 0 }, "bytes": { "type": "integer", "minimum": 0 }, "expected": { "enum": ["blocked", "rejected"] } } } },
+    "queueTransitionBytes": { "const": 64 }, "terminalChildBytes": { "const": 4096 }, "retryNotifications": { "const": 1 }
+  }
+}

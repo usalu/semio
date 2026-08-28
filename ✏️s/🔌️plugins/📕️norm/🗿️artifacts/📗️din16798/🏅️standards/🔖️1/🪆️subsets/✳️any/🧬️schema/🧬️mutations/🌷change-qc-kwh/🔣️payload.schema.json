@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeQCKwh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newQCKwh"
+  ],
+  "properties": {
+    "newQCKwh": {
+      "type": "number"
+    }
+  }
+}

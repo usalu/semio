@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "contract": "rust-writable-path-authority-v1",
+  "semantics": {
+    "authority": "immutable-editable-source-and-shared-complete-physical-proof",
+    "failure": "conservative-unsupported-never-writable-or-complete-empty",
+    "batch": "one-shared-source-proof-per-tokenization-call",
+    "required": [
+      "exact-current-source-bytes",
+      "one-cargo-owner",
+      "raw-no-follow-cargo-and-module-edges",
+      "unshadowed-inherited-environment",
+      "all-raw-target-steps-admitted-and-present",
+      "cancellation",
+      "unique-nonoverlapping-proof-spans"
+    ],
+    "preservedFiniteCheckpoint": {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-finite-target-consumption/🟦️.ts",
+      "sha256": "949e9c2b3166f5d30cde120c3e93f473ca7b55c3b7cc4552d88155796cafb546",
+      "tests": 74,
+      "assertions": 313
+    }
+  },
+  "cases": [
+    {
+      "id": "safe-writable",
+      "condition": "regular",
+      "expected": "writable",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "cancelled-module-edge",
+      "condition": "cancelled-module-edge",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "cancelled-lib-edge",
+      "condition": "cancelled-manifest-edge",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "inherited-env-macro",
+      "condition": "parent-env-macro",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "ambiguous-cargo",
+      "condition": "two-owners",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "missing-cargo",
+      "condition": "no-owner",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "missing-target",
+      "condition": "missing-writable-target",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [],
+      "affected": [
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "unadmitted-target",
+      "condition": "unadmitted",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "symlink-leaf",
+      "condition": "symlink-leaf",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "symlink-ancestor",
+      "condition": "symlink-ancestor",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "cancelled-symlink-join",
+      "condition": "cancelled-symlink",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../alias/../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "changed-consumer",
+      "condition": "changed-consumer",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "changed-source-chain",
+      "condition": "changed-chain",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    },
+    {
+      "id": "changed-manifest",
+      "condition": "changed-manifest",
+      "expected": "unsupported",
+      "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let file = root.join(\"item.json\"); println!(\"TARGET:{}\", std::fs::read_to_string(file).unwrap().trim()); }\n",
+      "targets": [
+        "foreign/item.json"
+      ],
+      "affected": [
+        "foreign/item.json",
+        "pkg/item.json"
+      ]
+    }
+  ],
+  "batch": {
+    "source": "pub fn read() { let root = std::path::Path::new(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\"); let _ = root.join(\"alpha.json\"); let _ = root.join(\"beta.json\"); for leaf in [\"gamma.json\"] { let _ = root.join(leaf); println!(\"{leaf}\"); } }\n",
+    "targets": [
+      "foreign/alpha.json",
+      "foreign/beta.json",
+      "foreign/gamma.json"
+    ]
+  },
+  "spanIntegrity": [
+    "duplicate-immutable-span",
+    "overlapping-immutable-span",
+    "same-span-finite-candidate",
+    "same-key-shorter-finite-candidate",
+    "covering-finite-candidate"
+  ],
+  "registration": {
+    "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "target": "test-rust-writable-path-authority",
+    "command": "bun ./📜️script.ts test rust-writable-path-authority",
+    "packageCommand": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
+    "route": "rust-writable-path-authority",
+    "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-writable-path-authority/🟦️.ts",
+    "launchPaths": [
+      ".vscode/🧩️launch.seed.jsonc",
+      ".vscode/launch.json"
+    ],
+    "launchName": "🧹clean🧩️taxonomy🧪️rust-writable-path-authority",
+    "launchOrder": 410.196,
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-writable-path-authority --skip-nx-cache"
+  },
+  "retention": {
+    "parentSegments": [
+      "📓️energy-rust-reference-diagnostics",
+      "🧭️writable-path-authority",
+      "🧾️runs"
+    ],
+    "runPrefix": "🔖️"
+  }
+}

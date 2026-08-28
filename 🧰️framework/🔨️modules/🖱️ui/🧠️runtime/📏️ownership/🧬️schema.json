@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "inlineCases", "backingCases", "transfer", "patchAllocation", "bindingClone", "componentCopy", "existingComponent"],
+  "properties": {
+    "componentCopy": { "type": "object", "additionalProperties": false, "required": ["allocationGrant", "workGrant", "payloadBytes", "cancelFrontiers"], "properties": { "allocationGrant": { "const": 32768 }, "workGrant": { "const": 4096 }, "payloadBytes": { "const": 32768 }, "cancelFrontiers": { "const": [0, 1, 2, 3, 4, 5, 8, 12, 16, 32] } } },
+    "existingComponent": { "type":"object", "additionalProperties":false, "required":["allocationGrant","workGrant","payloadBytes","minimumTurns","rejectionAllocationBytes","oldRootCopied"], "properties":{"allocationGrant":{"const":32768},"workGrant":{"const":4096},"payloadBytes":{"const":32768},"minimumTurns":{"const":8},"rejectionAllocationBytes":{"const":0},"oldRootCopied":{"const":false}} },
+    "version": { "const": 1 },
+    "bindingClone": {
+      "type": "object", "additionalProperties": false,
+      "required": ["items", "elementBytes", "wholeBackingBytes", "maximumBytesPerTurn", "cancelFrontiers", "unwindRetainsRoots"],
+      "properties": { "items": { "const": 32 }, "elementBytes": { "const": 2072 }, "wholeBackingBytes": { "const": 66304 }, "maximumBytesPerTurn": { "const": 32768 }, "cancelFrontiers": { "const": [0, 1, 2, 3, 4, 5, 12, 64, 100, 132] }, "unwindRetainsRoots": { "const": true } }
+    },
+    "patchAllocation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximumBytesPerTurn", "directoryBytes", "operationBytes"],
+      "properties": { "maximumBytesPerTurn": { "const": 32768 }, "directoryBytes": { "const": 27672 }, "operationBytes": { "const": 6416 } }
+    },
+    "transfer": {
+      "type": "object", "additionalProperties": false,
+      "required": ["capacity", "values", "sourceBackingBytes", "sourceItems", "rejectedPayload"],
+      "properties": {
+        "capacity": { "const": 4 },
+        "values": { "const": [7, 11] },
+        "sourceBackingBytes": { "const": 0 },
+        "sourceItems": { "const": 0 },
+        "rejectedPayload": { "const": "retained-payload" }
+      }
+    },
+    "inlineCases": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "before", "after", "backingCapacity", "additionalOwnedBytes"],
+        "properties": {
+          "name": { "enum": ["tree-item-icon", "reserved-binding"] },
+          "before": { "type": "integer", "minimum": 0, "maximum": 32 },
+          "after": { "type": "integer", "minimum": 1, "maximum": 32 },
+          "backingCapacity": { "enum": [0, 32] },
+          "additionalOwnedBytes": { "const": 0 }
+        }
+      }
+    },
+    "backingCases": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "capacity", "initialized", "elementBytes", "ownedBytes"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "capacity": { "type": "integer", "minimum": 0, "maximum": 64 },
+          "initialized": { "type": "integer", "minimum": 0, "maximum": 64 },
+          "elementBytes": { "type": "integer", "minimum": 0, "maximum": 8192 },
+          "ownedBytes": { "type": "integer", "minimum": 0, "maximum": 524288 }
+        }
+      }
+    }
+  }
+}

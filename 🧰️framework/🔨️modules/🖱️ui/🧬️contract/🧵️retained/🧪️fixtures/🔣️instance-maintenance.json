@@ -1,0 +1,11 @@
+{
+  "cases": [
+    { "name": "blocked-child", "kind": "blocked", "items": 0, "bytes": 0, "expected": "blocked" },
+    { "name": "rejected-child", "kind": "rejected", "items": 1, "bytes": 17, "expected": "rejected" },
+    { "name": "overgrant-child", "kind": "pending", "items": 1, "bytes": 4097, "expected": "rejected" },
+    { "name": "throwing-child", "kind": "throw", "items": 0, "bytes": 0, "expected": "rejected" }
+  ],
+  "queueTransitionBytes": 64,
+  "terminalChildBytes": 4096,
+  "retryNotifications": 1
+}

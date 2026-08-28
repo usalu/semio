@@ -1,0 +1,158 @@
+{
+  "schema": "builder-dependency-fixture",
+  "payload": {
+    "delta": 5
+  },
+  "snapshot": {
+    "value": 7
+  },
+  "expectedContributionId": "dep-target.document#builder-test-contributor-ok:add-value",
+  "cases": [
+    {
+      "name": "positive",
+      "base": 7,
+      "deltas": [
+        5
+      ],
+      "result": 12,
+      "inverse": [
+        -5
+      ]
+    },
+    {
+      "name": "negative",
+      "base": 7,
+      "deltas": [
+        -5
+      ],
+      "result": 2,
+      "inverse": [
+        5
+      ]
+    },
+    {
+      "name": "zero",
+      "base": 7,
+      "deltas": [
+        0
+      ],
+      "result": 7,
+      "inverse": [
+        0
+      ]
+    },
+    {
+      "name": "minimum-delta",
+      "base": 0,
+      "deltas": [
+        -2147483648
+      ],
+      "result": -2147483648,
+      "inverse": [
+        1,
+        2147483647
+      ]
+    },
+    {
+      "name": "minimum-from-positive",
+      "base": 2147483647,
+      "deltas": [
+        -2147483648
+      ],
+      "result": -1,
+      "inverse": [
+        1,
+        2147483647
+      ]
+    },
+    {
+      "name": "maximum",
+      "base": 0,
+      "deltas": [
+        2147483647
+      ],
+      "result": 2147483647,
+      "inverse": [
+        -2147483647
+      ]
+    },
+    {
+      "name": "overflow",
+      "base": 2147483647,
+      "deltas": [
+        1
+      ],
+      "error": true
+    },
+    {
+      "name": "underflow",
+      "base": -2147483648,
+      "deltas": [
+        -1
+      ],
+      "error": true
+    },
+    {
+      "name": "ordered-overflow",
+      "base": 1,
+      "deltas": [
+        2147483647,
+        -2147483647
+      ],
+      "error": true
+    },
+    {
+      "name": "ordered-cancellation",
+      "base": 0,
+      "deltas": [
+        2147483647,
+        -2147483647
+      ],
+      "result": 0,
+      "inverse": [
+        -2147483647,
+        2147483647
+      ]
+    },
+    {
+      "name": "mixed-extrema",
+      "base": 1,
+      "deltas": [
+        -2147483648,
+        2147483647
+      ],
+      "result": 0,
+      "inverse": [
+        1,
+        2147483647,
+        -2147483647
+      ]
+    }
+  ],
+  "invalid": [
+    {},
+    {
+      "delta": null
+    },
+    {
+      "delta": 0.5
+    },
+    {
+      "delta": -2147483649
+    },
+    {
+      "delta": 2147483648
+    },
+    {
+      "delta": "5"
+    },
+    {
+      "delta": 5,
+      "unknown": true
+    },
+    {
+      "value": 5
+    }
+  ]
+}
+

@@ -2,16 +2,22 @@
   "artifact": "s.stdio.pdf",
   "standard": "1.4",
   "subsets": {
-    "*": {
-      "name": "Unconstrained pdf 1.4"
-    },
     "a": {
       "name": "PDF/A -- ISO 19005-1:2005 (PDF/A-1), based on PDF 1.4; schema-gapped -- see stdio.pdf.a.schema-gap-unverifiable",
-      "levels": ["1a", "1b"]
+      "levels": [
+        "1a",
+        "1b"
+      ]
     },
     "x": {
       "name": "PDF/X -- ISO 15930-1:2001 (X-1a) / ISO 15930-3:2002 (X-3), based on PDF 1.4; schema-gapped -- see stdio.pdf.x.schema-gap-unverifiable",
-      "levels": ["1a", "3"]
+      "levels": [
+        "1a",
+        "3"
+      ]
+    },
+    "base": {
+      "name": "ISO 32000-1 base surface (PDF 1.4), the scope every conformance profile builds on"
     }
   }
 }

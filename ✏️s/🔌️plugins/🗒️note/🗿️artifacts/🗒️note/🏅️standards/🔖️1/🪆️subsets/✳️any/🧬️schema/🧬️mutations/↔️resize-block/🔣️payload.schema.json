@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ResizeBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeight",
+    "newWidth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newWidth": {
+      "type": "number"
+    },
+    "newHeight": {
+      "type": "number"
+    }
+  }
+}

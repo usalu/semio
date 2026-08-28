@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSeismicAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSeismicAEdKn"
+  ],
+  "properties": {
+    "newSeismicAEdKn": {
+      "type": "number"
+    }
+  }
+}

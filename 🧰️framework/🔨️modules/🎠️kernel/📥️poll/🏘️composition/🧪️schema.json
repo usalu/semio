@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.kernel.poll.composition.fixture.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "valid", "invalid", "partitionRefusals", "bindingCases"],
+  "properties": {
+    "version": { "const": 1 },
+    "valid": { "type": "array", "minItems": 3, "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "words"], "properties": { "name": { "type": "string" }, "input": { "$ref": "semio.kernel.poll.composition.v1" }, "words": { "type": "array", "minItems": 6, "maxItems": 6, "items": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$" } } } } },
+    "invalid": { "type": "array", "minItems": 8, "items": { "type": "object", "additionalProperties": false, "required": ["name", "input"], "properties": { "name": { "type": "string" }, "input": {} } } },
+    "partitionRefusals": { "type": "array", "minItems": 3, "items": { "$ref": "semio.value.resident.capacity.v1" } },
+    "bindingCases": { "type": "array", "minItems": 11, "items": { "type": "object", "additionalProperties": false, "required": ["name", "phase", "sameActivation", "sameOwner", "sameConfiguration", "cleanup", "expected"], "properties": { "name": { "type": "string" }, "phase": { "enum": ["empty", "opening", "ready", "closing"] }, "sameActivation": { "type": "boolean" }, "sameOwner": { "type": "boolean" }, "sameConfiguration": { "type": "boolean" }, "cleanup": { "type": "boolean" }, "expected": { "enum": ["initialize-original", "resume-original", "close-original-opening", "use-original", "drain-original", "refuse-retain-original"] } } } }
+  }
+}

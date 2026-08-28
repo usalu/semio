@@ -189,6 +189,23 @@ async fn instance_lifetime_close_witness_survives_quarantine_removal_and_reused_
 }
 
 #[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_constructs_worker_shell_before_exact_live_detachment() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️lifetime/🧪️construction.json")).unwrap();
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    close_lease_app(&runtime).await;
+    let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(None));
+    lease.begin_close(&runtime).unwrap();
+    let constructed_while_live = super::super::RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.take());
+    let live_after = runtime.instances.borrow().get(7).is_some();
+    let quarantined_after = runtime.close_quarantine.borrow().get(7).is_some();
+    drive_close_lease(&runtime, &lease);
+    assert_eq!(constructed_while_live, fixture["atWorkerShellExactLiveAllocation"].as_bool());
+    assert_eq!(live_after, fixture["states"][2]["liveOwner"].as_bool().unwrap());
+    assert_eq!(quarantined_after, fixture["states"][2]["quarantineOwner"].as_bool().unwrap());
+}
+
+#[semio_framework_async_macros::async_test]
 async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_detach() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
     let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
@@ -209,6 +226,32 @@ async fn instance_lifetime_close_rejects_foreign_root_and_exhaustion_before_deta
     runtime.instances.borrow_mut().insert_admitted(7, displaced);
     old.begin_close(&runtime).unwrap();
     drive_close_lease(&runtime, &old);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn instance_lifetime_close_construction_failure_preserves_original_live_root() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🚪️lifetime/🧪️construction.json")).unwrap();
+    let law = &fixture["constructionFailure"];
+    let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
+    close_lease_app(&runtime).await;
+    let rescue = runtime.instances.borrow().get(7).unwrap().clone();
+    let generation = runtime.close_generation.get();
+    let mut lease = crate::plugin_runtime::plugin_capture_instance_close(&runtime, 7).unwrap();
+    super::super::RUNTIME_CLOSE_CONSTRUCTION_FAIL.with(|fail| fail.set(true));
+    let fault = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| lease.begin_close(&runtime)));
+    let live = runtime.instances.borrow().get(7).is_some();
+    let same = runtime.instances.borrow().get(7).is_some_and(|owner| std::sync::Arc::ptr_eq(owner, &rescue));
+    let generation_unchanged = runtime.close_generation.get() == generation;
+    let quarantine_empty = runtime.close_quarantine.borrow().is_empty();
+    if !live { runtime.instances.borrow_mut().insert_admitted(7, rescue.clone()); }
+    drop(rescue);
+    lease.begin_close(&runtime).unwrap();
+    drive_close_lease(&runtime, &lease);
+    assert!(fault.is_err());
+    assert!(quarantine_empty);
+    assert_eq!(live, law["liveOwner"].as_bool().unwrap());
+    assert_eq!(same, law["sameAllocation"].as_bool().unwrap());
+    assert_eq!(generation_unchanged, law["generationUnchanged"].as_bool().unwrap());
 }
 //#endregion 🚪️ExactRuntimeCloseLease
 
@@ -248,7 +291,7 @@ async fn local_interaction_cold_transaction_receipts_and_encoded_route_rejection
     assert_eq!(fault.code.0, "plugin.command-route-state-machine-required");
     assert!(!denied.iter().any(|frame| matches!(frame, protocol::AppFrame::Done { .. })));
     for (prepare_seq, finish_seq, txn_id, commit) in [(1, 2, "receipt-commit", true), (3, 4, "receipt-rollback", false)] {
-        let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount { value: prepare_seq as i32 }).unwrap();
+        let operation = <TestMutation as protocol::OpBinary>::encode_op(&TestMutation::SetCount(SetCount { value: prepare_seq as i32 })).unwrap();
         let prepared = cold_decoded_command(&runtime, prepare_seq, protocol::AppCommand::TransactionPrepare { seq: prepare_seq, txn_id: txn_id.into(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![operation], label: "receipt fixture".into(), origin: Vec::new() }).await;
         assert_eq!(prepared.iter().filter(|frame| matches!(frame, protocol::AppFrame::Done { in_reply_to } if *in_reply_to == prepare_seq)).count(), 1, "[DEBUG] transaction prepare seq={prepare_seq} frames={prepared:?}");
         assert!(prepared.iter().any(|frame| matches!(frame, protocol::AppFrame::TransactionPrepared { txn_id: actual, rejection, .. } if actual == txn_id && rejection.is_empty())));

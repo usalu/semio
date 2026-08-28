@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-residue-ignore-precedence-v1",
+  "rootIgnore": "*.cache\n!**/🔖️*/**\n",
+  "residueSegments": ["🔖️1", "🧪️subject", "🧪️unexpected"],
+  "leaf": "📝️.md",
+  "content": "ignored residual source\n",
+  "lowerPrioritySource": ".git/info/exclude",
+  "authoritativeSource": ".gitignore",
+  "writePolicy": "append-exact-anchored-directory-rule",
+  "beforeIgnored": false,
+  "absentIgnored": true,
+  "presentIgnored": true,
+  "siblingIgnored": false
+}

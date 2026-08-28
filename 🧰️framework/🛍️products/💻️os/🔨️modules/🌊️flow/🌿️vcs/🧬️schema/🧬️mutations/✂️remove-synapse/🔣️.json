@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/✂️remove-synapse",
+  "semanticKind": "remove-synapse",
+  "displayName": "Remove Synapse",
+  "emoji": "✂️",
+  "aggregateVariant": "RemoveSynapse",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-synapse",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

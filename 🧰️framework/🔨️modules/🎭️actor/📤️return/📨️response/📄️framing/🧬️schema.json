@@ -1,0 +1,11 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"semio.actor.return-response.framing.v1",
+  "title":"Canonical Return Response Framing Projection",
+  "description":"Bytewise validation of the sole canonical worker response. The caller retains the original backing and separately admits parser metadata. Header routing and offsets do not mint producer, resident custody, input acknowledgement or retirement authority.",
+  "type":"object","additionalProperties":false,"required":["maximumFeedBytes","maximumHeaderBytes","maximumResponseBytes","maximumPayloadCopies","maximumBufferedPayloadBytes","pageOffsetBasis","formatMintsAuthority","failureIsSticky"],
+  "properties":{"maximumFeedBytes":{"const":1},"maximumHeaderBytes":{"const":23},"maximumResponseBytes":{"const":4161},"maximumPayloadCopies":{"const":0},"maximumBufferedPayloadBytes":{"const":0},"pageOffsetBasis":{"const":"responseStart"},"formatMintsAuthority":{"const":false},"failureIsSticky":{"const":true}},
+  "definitions":{
+    "pageProjection":{"type":"object","additionalProperties":false,"required":["kind","receipt","payloadOffset"],"properties":{"kind":{"const":"page"},"receipt":{"$ref":"semio.actor.retained-return.v1#/definitions/pageReceipt"},"payloadOffset":{"type":"integer","minimum":14,"maximum":65}}}
+  }
+}

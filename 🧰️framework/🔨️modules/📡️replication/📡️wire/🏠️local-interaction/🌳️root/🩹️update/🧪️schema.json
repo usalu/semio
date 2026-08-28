@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "cases", "grants", "cancelSourceCase", "cancelOwnedStringBytes", "largeSourceCase", "domainKeyCopies", "partialCandidateReadable", "cancelPublishesCandidate", "comparisonBytesAreRetiredBytes", "zeroGrantMutates", "absentFieldsRemoveOnlyTargetDomain", "publishedCandidateUsesOriginalPayloadPointers"],
+  "properties": {
+    "version": { "const": 1 },
+    "cases": { "const": ["sparse-anchor-comma-private-preserved", "sparse-remove-domain", "empty-selection-not-absent", "anchor-outside-current-selection"] },
+    "grants": { "const": [1, 64, 4096] },
+    "cancelSourceCase": { "const": "sparse-anchor-comma-private-preserved" },
+    "cancelOwnedStringBytes": { "const": 101 },
+    "largeSourceCase": { "const": "semantic-unicode-over-page" },
+    "domainKeyCopies": { "const": 0 },
+    "partialCandidateReadable": { "const": false },
+    "cancelPublishesCandidate": { "const": false },
+    "comparisonBytesAreRetiredBytes": { "const": false },
+    "zeroGrantMutates": { "const": false },
+    "absentFieldsRemoveOnlyTargetDomain": { "const": true },
+    "publishedCandidateUsesOriginalPayloadPointers": { "const": true }
+  }
+}

@@ -12,7 +12,7 @@ from meta import META
 
 ART = os.path.join(ROOT, "✏️s/🔌️plugins/📕️norm/🗿️artifacts")
 SUB = "🏅️standards/🔖️1/🪆️subsets/✳️any"
-SCHEMA = os.path.join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json")
+SCHEMA = os.path.join(ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json")
 survey = json.load(open(os.path.join(TICKET, "survey.json"), encoding="utf-8"))
 
 

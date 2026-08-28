@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "field": "composition",
+  "capacitySchema": "semio.value.resident.capacity.v1",
+  "wireOrder": ["bytes", "slots", "owners", "control.bytes", "control.slots", "control.owners"],
+  "scalar": { "wit": "u64", "minimum": 0, "maximum": 9007199254740991, "ownedJson": "integer", "typescriptWit": "checked-bigint" },
+  "partitions": "control-at-most-total-on-each-axis;data=total-control;no-overlap",
+  "initialization": "original-empty-composition-slot-after-host-preinstantiation-admission",
+  "identity": "private-original-activation-and-composition-owner;capacity-equality-is-not-authority",
+  "retry": "same-private-owner-and-identical-six-scalars-resumes-original-partial-construction",
+  "openingCancellation": { "control": "returnDrive.control.cancel", "identity": "original-admitted-return-identity", "beforeExpensiveConstruction": "publish-existing-pending-result-with-original-identity", "transition": "opening-to-closing-retaining-original-partial-descendants", "unboundCleanup": "refuse" },
+  "closing": "new-work-refused;exact-issued-cleanup-retains-original-owner-and-configuration;admitted-opening-cancellation-enters-closing-with-original-partial-descendants",
+  "ownership": "refusal-retains-original-composition-opening-and-descendants",
+  "bootstrap": "host-admits-original-guest-static-and-input-backing-before-instantiation-or-owned-allocation",
+  "ownedJson": { "path": "owned_abi::PollInput.composition", "required": true, "default": false, "aliases": [], "alternateEnvelope": false },
+  "unchanged": ["return-origin", "return-drive-discriminators", "return-result-binary", "lifecycle-request-sequence", "ui-patch-receipt"],
+  "producerGuards": ["poll", "start-job", "step-job", "cancel-job", "take-segmented-download-chunk", "checkpoint", "restore", "describe"],
+  "scope": { "schemaOnly": true, "hostAdmissionMounted": false, "guestBindingMounted": false, "bundleConstructionBounded": false }
+}

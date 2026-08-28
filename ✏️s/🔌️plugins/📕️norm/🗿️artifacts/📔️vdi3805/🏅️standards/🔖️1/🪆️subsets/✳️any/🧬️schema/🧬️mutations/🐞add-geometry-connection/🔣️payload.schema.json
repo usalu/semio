@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AddGeometryConnection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connection",
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "connection": {
+      "title": "ConnectionPoint",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "id",
+        "medium",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "medium": {
+          "type": "string"
+        },
+        "position": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "diameterMm": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveBlockToContainer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "index"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newParentId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

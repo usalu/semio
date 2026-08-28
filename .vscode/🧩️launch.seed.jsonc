@@ -1298,6 +1298,182 @@
       }
     },
     {
+      "name": "⚖️gate🎭️actor🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 399
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📄️page",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorBytePage",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📥️command-page",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=fixed.command.ingress",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.1
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin📄️byte-page",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-dev:test-long --skip-nx-cache -- --testNamePattern=canonical.nested.byte.pages",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.2
+      }
+    },
+    {
+      "name": "⚖️gate📺️renderer⚛️typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-renderer-react:typecheck --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.3
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️return-drive",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorReturnDrive",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.4
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️return-result",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorReturnResult",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.5
+      }
+    },
+    {
+      "name": "⚖️gate🎠️kernel📤️return-content",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-kernel:test --skip-nx-cache -- --testNamePattern=KernelReturnContentFraming",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.6
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin📤️return-wit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-dev:test --skip-nx-cache -- --testNamePattern=PluginReturnWit",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.7
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🏭️instance",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-os-dev:test --skip-nx-cache -- --testNamePattern=PluginComponentInstantiation",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.8
+      }
+    },
+    {
+      "name": "⚖️gate🎠️kernel📤️input-header",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-kernel:test --skip-nx-cache -- --testNamePattern=KernelReturnUiOperationHeader",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️response",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorReturnResponse",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.91
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️result-framing",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorReturnResultFraming",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.92
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️response-credit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ActorReturnResponseCredit",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.93
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor💾️composition",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-actor:test --skip-nx-cache -- --testNamePattern=ShardResidentComposition",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.94
+      }
+    },
+    {
+      "name": "⚖️gate📺️renderer💾️composition",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/framework-renderer-react:test --skip-nx-cache -- --testNamePattern=RendererResidentComposition",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.95
+      }
+    },
+    {
       "name": "⚖️gate🏪️store🦀️check",
       "type": "node-terminal",
       "request": "launch",
@@ -1466,6 +1642,15 @@
       "presentation": { "group": "4_gate", "order": 407.34 }
     },
     {
+      "name": "⚖️gate🖱️runtime📏️ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-runtime-rs:test --args='--lib surface_ownership_ -- --nocapture'",
+      "cwd": "${workspaceFolder}",
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${env:SEMIO_TEST_ARTIFACT_DIR}" },
+      "presentation": { "group": "4_gate", "order": 407.35 }
+    },
+    {
       "name": "⚖️gate🔌️plugin⏱️registered-500us",
       "type": "node-terminal",
       "request": "launch",
@@ -1567,6 +1752,30 @@
       "command": "bun x nx run @semio-tech/value-numeric-index:test",
       "cwd": "${workspaceFolder}",
       "presentation": { "group": "4_gate", "order": 408.31 }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.32 }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.33 }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:check-wasm --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 408.34 }
     },
     {
       "name": "⚖️gate🗂️ordered🧪️native",
@@ -1887,6 +2096,149 @@
       }
     },
     {
+      "name": "🧹clean🧩️taxonomy🧪️preflight-reference-basis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-preflight-reference-basis --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.16
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️typescript-path-collection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.17
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️frozen-markdown-coordinates",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-frozen-markdown-coordinates --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.18
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️historical-json-source-encoding",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-historical-json-source-encoding --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.19
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️transaction-recovery-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-transaction-recovery-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.191
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️testing-readme-coordinates",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.192
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️rust-finite-target-consumption",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-finite-target-consumption --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.193
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-source-residue",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-source-residue --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.194
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️readme-current-source-revision",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-current-source-revision --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.195
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️rust-writable-path-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-writable-path-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.196
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️readme-move-source-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.197
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-source-commit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-source-commit --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.198
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.199
+      }
+    },
+    {
       "name": "⚖️gate🦀️zero-warnings🌐️wasip2",
       "type": "node-terminal",
       "request": "launch",
@@ -2110,6 +2462,127 @@
       }
     },
     {
+      "name": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-source --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.201
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-native --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.202
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-syn",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.203
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️readme-current-source-activation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.204
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-empty-facet-authoring",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authoring --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.205
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️readme-reviewed-fixture-inputs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.206
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️taxonomy-pattern-compiler-reuse",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-pattern-compiler-reuse --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.207
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️reference-coverage-selection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-reference-coverage-selection --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.208
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️taxonomy-leading-grapheme",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-leading-grapheme --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.209
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️reference-coordinate-progress",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-reference-coordinate-progress --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.21
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️draw-destination-observation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-draw-destination-observation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.211
+      }
+    },
+    {
       "name": "⚖️gate🧬️schema-representation",
       "type": "node-terminal",
       "request": "launch",
@@ -2121,6 +2594,105 @@
       }
     },
     {
+      "name": "⚖️gate🕸️dag🧬️payload-schema",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-direct-35/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.31
+      }
+    },
+    {
+      "name": "⚖️gate🕸️dag🧬️mounted-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dag-mounted-38/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.32
+      }
+    },
+    {
+      "name": "⚖️gate🏪️store🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-fixtures-39/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.33
+      }
+    },
+    {
+      "name": "⚖️gate📡️spr🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️spr-testkit-direct-40/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.34
+      }
+    },
+    {
+      "name": "⚖️gate⏱️mutation🧬️timestamp-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.35
+      }
+    },
+    {
+      "name": "⚖️gate⏱️mutation🧬️timestamp-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-timestamp-39/🧪️native/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.36
+      }
+    },
+    {
+      "name": "⚖️gate📡️spr🎮️command🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️command-fixtures-40/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.37
+      }
+    },
+    {
+      "name": "⚖️gate🧬️mutations🧪️os-kernel-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.38
+      }
+    },
+    {
+      "name": "⚖️gate🌍️gis🎚️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis-config-direct-41/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.39
+      }
+    },
+    {
       "name": "⚖️gate🚪️io-serializer-matrix",
       "type": "node-terminal",
       "request": "launch",
@@ -2129,6 +2701,215 @@
       "presentation": {
         "group": "4_gate",
         "order": 410.4
+      }
+    },
+    {
+      "name": "⚖️gate🗣️dsl🔢️checked-integers-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️dsl-checked-integers-41/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.401
+      }
+    },
+    {
+      "name": "⚖️gate🗣️dsl🔢️checked-integers-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" checked-integers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.41
+      }
+    },
+    {
+      "name": "⚖️gate🌊️flow🌿️vcs🧪️direct-leaves",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-vcs-direct-41/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.42
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🏗️builder🧪️dependency-fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-builder-fixture-42/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.43
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin📡️contributed-wire🧪️direct-fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-contributed-wire-43/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.44
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🧬️declaration🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-declaration-fixtures-43/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.45
+      }
+    },
+    {
+      "name": "⚖️gate🧬️mutations🧾️declaration-census",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️mutation-declarations-41/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.46
+      }
+    },
+    {
+      "name": "⚖️gate🌊️flow🌿️vcs🧹️mutation-retirement",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️flow-mutation-retirement-44/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.47
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🧪️children-fixture",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.48
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🧾️metadata-preflight",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-children-fixture-44/📜️script.ts\" --preflight",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.49
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🧪️test-mutation-direct-leaves",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️test-mutation-direct-leaves/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.491
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin💼️job🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️plugin-reactor-job-mutation-plan-44/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.492
+      }
+    },
+    {
+      "name": "⚖️gate🌍️gis🏔️config🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis3d-config-direct-45/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.493
+      }
+    },
+    {
+      "name": "⚖️gate🏪️store🧬️owned-grammar-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️store-owned-decoder-grammar-48/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.494
+      }
+    },
+    {
+      "name": "⚖️gate🏪️store🧬️owned-grammar-native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️os-kernel-fixtures-41/📜️script.ts\" owned-schema-grammar",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.495
+      }
+    },
+    {
+      "name": "⚖️gate🌍️gis🗺️presence🧪️direct-fixtures",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️gis2d-presence-direct-47/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.496
+      }
+    },
+    {
+      "name": "⚖️gate🧬️mutation📚️admission-reference",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-admission-51/📜️script.ts\" reference",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.497
+      }
+    },
+    {
+      "name": "⚖️gate🧬️mutation📚️admission-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-admission-51/📜️script.ts\" subject",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.498
+      }
+    },
+    {
+      "name": "⚖️gate🧬️mutation📚️admission-io",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️source-admission-io-51/📜️script.ts\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.499
       }
     },
     {
@@ -2952,6 +3733,160 @@
         "group": "4_gate",
         "order": 411.48
       }
+    },
+    {
+      "name": "⚖️gate🧪️test🔍️discover",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-discover",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 412
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🩺️doctor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-doctor",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 413
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧾️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 414
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🏭️inventory",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-inventory",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 415
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🔬️probe",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-probe",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 416
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧫️fixture-verify",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-fixture-verify",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 417
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧫️fixture-audit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-fixture-audit",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 418
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧫️fixture-reproduce",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-fixture-reproduce",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 419
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧫️fixture-generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-fixture-generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 420
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test⚖️parity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-parity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 421
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test📊️matrix",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-matrix",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 422
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🔒️dependency",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-dependency",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 423
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧹️clean",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-clean",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 424
+      }
+    },
+    {
+      "name": "⚖️gate🧪️test🧹️gc",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/repo-test-domain:test-gc",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 425
+      }
     }
     // #endregion
   ],
@@ -2983,8 +3918,7 @@
         "order": 386.16
       }
     }
-  ]
-,
+  ],
 
   // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated
   // output); see 🖥️launch.ts readSeed() for the exact split contract this marker line supports.

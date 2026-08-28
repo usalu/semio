@@ -1,0 +1,50 @@
+{
+  "domainOrder": "utf16-code-unit-lexicographic",
+  "cases": [
+    {
+      "name": "domain-order-is-independent-of-object-insertion-and-integer-property-order",
+      "before": { "selection": {}, "activeMode": {}, "activeGranularity": {} },
+      "after": { "selection": {}, "activeMode": { "2": "single", "10": "single", "😀": "multiple", "\ue000": "single" }, "activeGranularity": {} },
+      "changes": [
+        { "kind": "localInteractionDomain", "domainId": "10", "patch": { "selection": null, "activeMode": "single", "activeGranularity": null } },
+        { "kind": "localInteractionDomain", "domainId": "2", "patch": { "selection": null, "activeMode": "single", "activeGranularity": null } },
+        { "kind": "localInteractionDomain", "domainId": "😀", "patch": { "selection": null, "activeMode": "multiple", "activeGranularity": null } },
+        { "kind": "localInteractionDomain", "domainId": "\ue000", "patch": { "selection": null, "activeMode": "single", "activeGranularity": null } }
+      ]
+    },
+    {
+      "name": "comma-identity-and-anchor",
+      "before": { "selection": { "canvas": { "granularity": "point", "ids": ["a,b", "c"], "anchorId": "a,b" } }, "activeMode": { "canvas": "multiple" }, "activeGranularity": { "canvas": "point" } },
+      "after": { "selection": { "canvas": { "granularity": "point", "ids": ["a", "b,c"], "anchorId": "b,c" } }, "activeMode": { "canvas": "multiple" }, "activeGranularity": { "canvas": "point" } },
+      "changes": [{ "kind": "localInteractionDomain", "domainId": "canvas", "patch": { "selection": { "granularity": "point", "ids": ["a", "b,c"], "anchorId": "b,c" }, "activeMode": "multiple", "activeGranularity": "point" } }]
+    },
+    {
+      "name": "mode-and-granularity-without-selection",
+      "before": { "selection": {}, "activeMode": { "control": "single" }, "activeGranularity": { "control": "face" } },
+      "after": { "selection": {}, "activeMode": { "control": "multiple" }, "activeGranularity": { "control": "edge" } },
+      "changes": [{ "kind": "localInteractionDomain", "domainId": "control", "patch": { "selection": null, "activeMode": "multiple", "activeGranularity": "edge" } }]
+    },
+    {
+      "name": "removed-domain-preserves-private-domain",
+      "before": { "selection": { "private": { "granularity": "item", "ids": ["local-only"], "anchorId": "local-only" }, "removed": { "granularity": "item", "ids": ["old"] } }, "activeMode": { "private": "single", "removed": "single" }, "activeGranularity": { "private": "item", "removed": "item" } },
+      "after": { "selection": { "private": { "granularity": "item", "ids": ["local-only"], "anchorId": "local-only" } }, "activeMode": { "private": "single" }, "activeGranularity": { "private": "item" } },
+      "changes": [{ "kind": "localInteractionDomain", "domainId": "removed", "patch": { "selection": null, "activeMode": null, "activeGranularity": null } }]
+    },
+    {
+      "name": "anchor-only-change",
+      "before": { "selection": { "canvas": { "granularity": "point", "ids": ["a", "b"], "anchorId": "a" } }, "activeMode": { "canvas": "multiple" }, "activeGranularity": { "canvas": "point" } },
+      "after": { "selection": { "canvas": { "granularity": "point", "ids": ["a", "b"], "anchorId": "b" } }, "activeMode": { "canvas": "multiple" }, "activeGranularity": { "canvas": "point" } },
+      "changes": [{ "kind": "localInteractionDomain", "domainId": "canvas", "patch": { "selection": { "granularity": "point", "ids": ["a", "b"], "anchorId": "b" }, "activeMode": "multiple", "activeGranularity": "point" } }]
+    },
+    {
+      "name": "prototype-spelling-is-an-exact-domain",
+      "before": { "selection": {}, "activeMode": {}, "activeGranularity": {} },
+      "after": { "selection": { "__proto__": { "granularity": "item", "ids": ["owned"], "anchorId": "owned" } }, "activeMode": { "__proto__": "single" }, "activeGranularity": { "__proto__": "item" } },
+      "changes": [{ "kind": "localInteractionDomain", "domainId": "__proto__", "patch": { "selection": { "granularity": "item", "ids": ["owned"], "anchorId": "owned" }, "activeMode": "single", "activeGranularity": "item" } }]
+    }
+  ],
+  "captureIdentityIsHistoricalContent": false,
+  "restoreUsesCurrentIdentity": true,
+  "fullRestoreClearsAbsentDomains": true,
+  "absentCaptureDefaultsToEmpty": false
+}

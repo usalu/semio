@@ -1,0 +1,68 @@
+{
+  "pluginId": "fixture",
+  "moduleUrl": "/plugin-modules/fixture/plugin.js",
+  "descriptorUrl": "/plugin-modules/fixture/🔣️descriptor.json",
+  "descriptor": {
+    "manifest": {
+      "pluginId": "fixture",
+      "label": "Fixture",
+      "version": "1.0.0",
+      "apps": [
+        {
+          "id": "main"
+        }
+      ]
+    }
+  },
+  "rejected": [
+    {
+      "name": "missing",
+      "status": 404,
+      "contentType": "application/json",
+      "body": "{}",
+      "fault": "plugin.descriptor-unavailable"
+    },
+    {
+      "name": "SPA fallback",
+      "status": 200,
+      "contentType": "text/html",
+      "body": "<!doctype html>",
+      "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "malformed JSON",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{",
+      "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "null envelope",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "null",
+      "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "missing manifest",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{}",
+      "fault": "plugin.descriptor-invalid"
+    },
+    {
+      "name": "different owner",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{\"manifest\":{\"pluginId\":\"other\",\"apps\":[]}}",
+      "fault": "plugin.descriptor-identity-mismatch"
+    },
+    {
+      "name": "missing app roster",
+      "status": 200,
+      "contentType": "application/json",
+      "body": "{\"manifest\":{\"pluginId\":\"fixture\"}}",
+      "fault": "plugin.descriptor-invalid"
+    }
+  ]
+}

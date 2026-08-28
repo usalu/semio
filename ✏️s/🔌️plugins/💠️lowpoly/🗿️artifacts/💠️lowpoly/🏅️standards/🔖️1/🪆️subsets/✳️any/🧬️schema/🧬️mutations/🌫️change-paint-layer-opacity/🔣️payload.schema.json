@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePaintLayerOpacity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newOpacity",
+    "objectId"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newOpacity": {
+      "type": "number"
+    }
+  }
+}

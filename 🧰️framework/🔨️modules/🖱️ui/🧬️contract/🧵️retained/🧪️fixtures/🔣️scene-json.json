@@ -1,0 +1,22 @@
+{
+  "version":1,
+  "forgedSourceCaptureCalls":0,
+  "valid":[
+    {"name":"null","text":"null"},
+    {"name":"booleans","text":"[true,false]"},
+    {"name":"empty-array","text":"[]"},
+    {"name":"empty-object","text":"{}"},
+    {"name":"nested","text":"{\"a\":[1,{\"b\":\"Grüße 😀\"}],\"c\":null}"},
+    {"name":"duplicate-escaped-key","text":"{\"a\":1,\"\\u0061\":2}"},
+    {"name":"prototype-data","text":"{\"__proto__\":{\"safe\":true}}"},
+    {"name":"whitespace","text":" \r\n\t [ 1, 2 ] \t"},
+    {"name":"escapes","text":"\"\\\"\\\\\\/\\b\\f\\n\\r\\t\""},
+    {"name":"surrogate-pair","text":"\"\\ud83d\\ude00\""},
+    {"name":"lone-surrogate","text":"\"\\ud800\""},
+    {"name":"numbers","text":"[-0,0,12,-2.5,1e3,2E-2,1e400,9007199254740993]"}
+  ],
+  "invalid":["","[1,]","{\"a\":}","01","-","1.","1e","+1","NaN","[true false]","{\"a\" 1}","\"\\x20\"","\"\\u123\"","\"a\nb\"","null false","[","{","\"unterminated"],
+  "large":{"key":"ä","repeat":4096,"value":"😀"},
+  "depth":4096,
+  "cancelPrefixes":[0,1,2,8,16,32,256,4096]
+}

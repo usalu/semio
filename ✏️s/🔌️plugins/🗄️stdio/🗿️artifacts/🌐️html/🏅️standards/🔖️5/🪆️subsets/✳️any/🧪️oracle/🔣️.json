@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform — the HTML 5 `any` mutation vocabulary and the reference implementation that exercises it. `html5ever`/`markup5ever_rcdom` are registered here under a distinct id and the `html-5-mutate` capability this subset's exhaustive mutation case (`mutate-html-5`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
     {
@@ -8,8 +8,12 @@
       "ecosystem": "rust",
       "package": "html5ever",
       "version": "0.39",
-      "capabilities": ["html-5-mutate"],
-      "comparisonProfiles": ["semantic-html-v1"],
+      "capabilities": [
+        "html-5-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-html-v1"
+      ],
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/servo/html5ever",
@@ -23,7 +27,15 @@
           "homepage": "https://github.com/servo/html5ever/tree/main/rcdom",
           "role": "reference-counted DOM tree sink and serializer — the tree `html5ever` only builds through a caller-supplied TreeSink"
         }
-      ]
+      ],
+      "kind": "third-party-library",
+      "engine": {
+        "family": "html5ever",
+        "implementation": "html5ever WHATWG HTML5 tokenizer/tree-builder",
+        "version": "0.39"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

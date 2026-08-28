@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateBoltInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBoltASMm2",
+    "newBoltD0Mm",
+    "newBoltDMm",
+    "newBoltE1Mm",
+    "newBoltE2Mm",
+    "newBoltFEdKn",
+    "newBoltFUMpa",
+    "newBoltFUbMpa",
+    "newBoltNBolts",
+    "newBoltTMm"
+  ],
+  "properties": {
+    "newBoltFEdKn": {
+      "type": "number"
+    },
+    "newBoltNBolts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newBoltASMm2": {
+      "type": "number"
+    },
+    "newBoltE1Mm": {
+      "type": "number"
+    },
+    "newBoltE2Mm": {
+      "type": "number"
+    },
+    "newBoltD0Mm": {
+      "type": "number"
+    },
+    "newBoltDMm": {
+      "type": "number"
+    },
+    "newBoltTMm": {
+      "type": "number"
+    },
+    "newBoltFUMpa": {
+      "type": "number"
+    },
+    "newBoltFUbMpa": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["instanceId", "guestLifetime", "phases", "refusals", "invalidAckStatuses", "closeCancellation", "ordinaryOutput"],
+  "properties": {
+    "invalidAckStatuses": { "const": [null, {}, {"tag":"faulted","val":[1]}, {"tag":"faulted","val":[99]}, {"tag":"refused"}] },
+    "closeCancellation": { "const": [0, 1, 2] },
+    "ordinaryOutput": { "const": ["accepted", "revoked"] },
+    "instanceId": { "const": 7 },
+    "guestLifetime": { "const": "13" },
+    "phases": {
+      "const": ["opening", "captured", "open", "closing", "accepted", "retired", "complete"]
+    },
+    "refusals": {
+      "const": ["postMessage-throw", "worker-result-error", "foreign-worker", "replaced-worker", "wrong-guest-lifetime", "host-not-retired"]
+    }
+  }
+}

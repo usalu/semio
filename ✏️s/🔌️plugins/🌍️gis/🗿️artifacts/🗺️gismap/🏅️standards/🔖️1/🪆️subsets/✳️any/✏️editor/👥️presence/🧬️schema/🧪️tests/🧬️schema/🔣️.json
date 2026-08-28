@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/gis/gis2d-presence/tests",
+  "type": "object",
+  "required": ["state", "payload", "aggregate", "diff", "laws"],
+  "additionalProperties": false,
+  "properties": {
+    "state": {"$ref": "#/$defs/cases"},
+    "payload": {"$ref": "#/$defs/cases"},
+    "aggregate": {"$ref": "#/$defs/cases"},
+    "diff": {"$ref": "#/$defs/cases"},
+    "laws": {"type": "array", "minItems": 4, "items": {"$ref": "#/$defs/law"}}
+  },
+  "$defs": {
+    "cases": {"type": "object", "required": ["valid", "invalid"], "additionalProperties": false, "properties": {"valid": {"type": "array", "minItems": 1}, "invalid": {"type": "array", "minItems": 1}}},
+    "state": {"type": "object", "required": ["cameraJson"], "additionalProperties": false, "properties": {"cameraJson": {"type": "string"}}},
+    "operation": {"type": "object", "required": ["operation", "cameraJson"], "additionalProperties": false, "properties": {"operation": {"const": "setCamera"}, "cameraJson": {"type": "string"}}},
+    "diff": {"type": "object", "required": ["steps"], "additionalProperties": false, "properties": {"steps": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"cameraJson": {"type": ["string", "null"]}}}}}},
+    "law": {"type": "object", "required": ["name", "before", "operation", "diff", "inverse", "after", "outcome"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "before": {"$ref": "#/$defs/state"}, "operation": {"$ref": "#/$defs/operation"}, "operationDiff": {"$ref": "#/$defs/diff"}, "diff": {"$ref": "#/$defs/diff"}, "inverse": {"type": "array", "items": {"$ref": "#/$defs/operation"}}, "after": {"$ref": "#/$defs/state"}, "outcome": {"type": "object", "required": ["changed", "warningCode"], "additionalProperties": false, "properties": {"changed": {"type": "boolean"}, "warningCode": {"type": ["string", "null"]}}}}}
+  }
+}

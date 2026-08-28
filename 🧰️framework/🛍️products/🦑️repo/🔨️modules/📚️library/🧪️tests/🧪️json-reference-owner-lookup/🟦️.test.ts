@@ -23,6 +23,54 @@ const compilers = [
   { name: "TypeScript", compile: (source: string) => ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText },
 ];
 
+const projectionScope = JSON.parse(readFileSync(join(import.meta.dir, "📍️projection-scope/🔣️.json"), "utf8"));
+
+/** 🧭️ Executes the actual planner activation helper without scanning a workspace. */
+function projectionScopeImplementation(compiler: typeof compilers[number]) {
+  const helper = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "mutationReferenceProjectionState");
+  if (!helper) throw new Error("Missing actual structural scope authority");
+  const actual = new Function(compiler.compile(helper.getText(syntax)) + "\nreturn mutationReferenceProjectionState;")();
+  return (row: any) => actual({ rewriteData: { artifactRoot: row.owner, projectionProfile: row.profile }, ...(row.hasTarget ? { targetValues: ["unresolved-physical-source"] } : {}) }, row.target, new Set(projectionScope.activeKeys), row.scope);
+}
+
+test("the planner invokes structural scope authority and retains its unresolved branch", () => {
+  const planner = syntax.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "buildReferenceEdits");
+  if (!planner) throw new Error("Missing actual reference planner");
+  const calls: string[][] = [], guards: string[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "mutationReferenceProjectionState") calls.push(node.arguments.map((argument) => argument.getText(syntax)));
+    if (ts.isIfStatement(node) && node.expression.getText(syntax) === 'projectionState === "unproven"') guards.push(node.thenStatement.getText(syntax));
+    ts.forEachChild(node, visit);
+  };
+  visit(planner);
+  expect(calls).toEqual([["token", "oldTarget", "activeProjectionKeys", "inventory.scope"]]);
+  expect(guards).toHaveLength(1);
+  expect(guards[0]).toContain('unresolved.push(violation("reference-syntax-unsupported"');
+  expect(guards[0]).toContain("continue;");
+  expect(planner.getText(syntax)).not.toContain("activeProjectionProfiles");
+});
+
+test("language-neutral projection scope decisions match an independent JSON Schema oracle", () => {
+  const validate = new Ajv({ strict: false }).compile({
+    type: "object", required: ["schemaVersion", "contract", "activeKeys", "semantics", "oracle", "cases"],
+    properties: {
+      schemaVersion: { const: 1 }, contract: { const: "mutation-reference-projection-scope-v1" },
+      cases: { type: "array", minItems: 17, items: { type: "object", required: ["id", "owner", "profile", "scope", "target", "hasTarget", "state"], properties: { state: { enum: ["active", "inactive", "unproven"] }, target: { type: ["string", "null"] }, hasTarget: { type: "boolean" } } } },
+    },
+  });
+  expect(validate(projectionScope), JSON.stringify(validate.errors)).toBe(true);
+  const active = new Ajv({ strict: false }).compile(projectionScope.oracle.active), unproven = new Ajv({ strict: false }).compile(projectionScope.oracle.unproven);
+  for (const row of projectionScope.cases) {
+    expect(active(row) && unproven(row), row.id).toBe(false);
+    expect(active(row) ? "active" : unproven(row) ? "unproven" : "inactive", row.id).toBe(row.state);
+  }
+});
+
+for (const compiler of compilers) test(compiler.name + " scopes structural fallback to an exact complete artifact owner and leaves unproved owned references unresolved", () => {
+  const actual = projectionScopeImplementation(compiler);
+  expect(projectionScope.cases.map((row: any) => ({ id: row.id, state: actual(row) }))).toEqual(projectionScope.cases.map((row: any) => ({ id: row.id, state: row.state })));
+});
+
 /** 🧬️ Executes the actual private parser and helpers through independent compilers with an observable owner lookup. */
 function implementation(compiler: typeof compilers[number]) {
   const dependencies = new Function("posix", compiler.compile(support) + "\nreturn { artifactRootForPath, structuralTokensInFragment, mutationStructuralPaths, embeddedArgumentTokens };")(posix);

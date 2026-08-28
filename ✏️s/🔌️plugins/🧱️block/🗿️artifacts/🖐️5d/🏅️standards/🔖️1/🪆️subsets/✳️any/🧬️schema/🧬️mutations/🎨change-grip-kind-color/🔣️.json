@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-grip-kind-color",
+  "semanticKind": "change-grip-kind-color",
+  "displayName": "Change Grip Kind Color",
+  "emoji": "🎨",
+  "aggregateVariant": "ChangeGripKindColor",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "change-grip-kind-color",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🖼️set-render-mode",
+  "semanticKind": "set-render-mode",
+  "displayName": "Set Render Mode",
+  "emoji": "🖼️",
+  "aggregateVariant": "SetRenderMode",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-render-mode",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": ["applied", "warning"],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": ["rust", "json-schema", "text", "binary"]
+}

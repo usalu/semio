@@ -4,7 +4,5 @@ message Gis3dConfig {
   // @state config
   string camera_json = 1;
   // @state config
-  repeated string selected_ids = 2;
-  // @state config
   string locale = 3;
 }

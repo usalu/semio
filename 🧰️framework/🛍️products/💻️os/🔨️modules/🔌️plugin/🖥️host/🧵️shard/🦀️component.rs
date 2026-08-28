@@ -176,20 +176,23 @@ async fn to_actor_turn_result_in_place(result: &mut TurnResult, session: u64, wa
     };
     loop {
         match patch_transport.drive_one(session, false, false) {
-            semio_framework::kernel::UiTurnPatchTransportStep::MoreWork => semio_framework_async::yield_once().await,
+            semio_framework::kernel::UiTurnPatchTransportStep::MoreWork | semio_framework::kernel::UiTurnPatchTransportStep::Blocked => semio_framework_async::yield_once().await,
             semio_framework::kernel::UiTurnPatchTransportStep::Ready => break,
             semio_framework::kernel::UiTurnPatchTransportStep::Cancelled | semio_framework::kernel::UiTurnPatchTransportStep::Stale => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), "fixed turn patch transport became stale before publication"));
             }
+            semio_framework::kernel::UiTurnPatchTransportStep::Fault(reason) => return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-transport"), reason)),
         }
     }
     let effects = serde_json::to_vec(&result.effects).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-effects-encode"), error.to_string()))?;
     let command_ingress = serde_json::to_vec(&result.command_ingress).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-ingress-encode"), error.to_string()))?;
-    let ui_patches = patch_transport
-        .take_ready()
-        .map(|token| token.to_vec())
-        .ok_or_else(|| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-publication"), "fixed turn patch transport did not publish a complete token"))?;
-    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
+    let ui_patches = loop {
+        match patch_transport.take_ready().map_err(|reason| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.turn-patches-publication"), reason))? {
+            Some(token) => break token.to_vec(),
+            None => semio_framework_async::yield_once().await,
+        }
+    };
+    Ok(semio_framework_actor::TurnResult { ui_patches, effects, command_ingress, lifecycle_receipt: result.lifecycle_receipt, next_wake: result.next_wake, status, usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes } })
 }
 //#endregion 🔀️BudgetBridge
 
@@ -231,12 +234,15 @@ pub enum ShardOutcome {
 }
 
 impl ShardOutcome {
-    pub async fn pack_encode(&self, out: &mut Vec<u8>) {
+    pub async fn pack_encode(&self, out: &mut Vec<u8>) -> Result<(), semio_framework_actor::pack::PackError> {
+        if let Self::Turn { result, .. } = self {
+            if result.lifecycle_receipt.is_some_and(|receipt| !receipt.is_valid()) { return Err(semio_framework_actor::pack::PackError::InvalidLifecycle("invalid turn receipt authority")); }
+        }
         match self {
             Self::Turn { actor, result } => {
                 semio_framework_actor::pack::write_u8(out, 0).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
-                result.pack_encode(out).await;
+                result.pack_encode(out).await?;
             }
             Self::Job { actor, authority, request, placement, publication } => {
                 semio_framework_actor::pack::write_u8(out, 1).await;
@@ -275,6 +281,7 @@ impl ShardOutcome {
                 semio_framework_actor::pack::write_u64(out, *actor).await;
             }
         }
+        Ok(())
     }
 
     pub async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, semio_framework_actor::pack::PackError> {
@@ -1728,6 +1735,7 @@ impl ShardLoop {
                     status: semio_framework::kernel::TurnStatus::MoreWork,
                     fuel_used: 0,
                     command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                    lifecycle_receipt: None,
                 };
                 match to_actor_turn_result(result, actor_id, 0, 0).await {
                     Ok(result) => ShardOutcome::Turn { actor: actor_id, result },
@@ -1992,7 +2000,7 @@ impl ShardLoop {
 
     async fn send_outcome(&mut self, outcome: &ShardOutcome) -> Result<(), PluginHostError> {
         let mut bytes = Vec::new();
-        outcome.pack_encode(&mut bytes).await;
+        outcome.pack_encode(&mut bytes).await.map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         self.transport.send(&bytes).await;
         Ok(())
     }
@@ -2190,6 +2198,7 @@ impl GuestRuntime for RecordingRuntime {
             status: semio_framework::kernel::TurnStatus::Idle,
             fuel_used: 0,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            lifecycle_receipt: None,
         })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
@@ -2773,6 +2782,7 @@ mod tests {
                     ui_patches: vec![1],
                     effects: vec![2],
                     command_ingress: vec![3],
+                    lifecycle_receipt: None,
                     next_wake: Some(3),
                     status: semio_framework_actor::TurnStatus::MoreWork,
                     usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
@@ -2991,6 +3001,7 @@ mod tests {
             status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()),
             fuel_used: 999,
             command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+            lifecycle_receipt: None,
         };
         let bridged = to_actor_turn_result(kernel_result, 1, 1234, 5678).await.expect("fixed turn encoding");
         assert_eq!(bridged.next_wake, Some(42));
@@ -3018,6 +3029,7 @@ mod tests {
                 status: kernel_status,
                 fuel_used: 0,
                 command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                lifecycle_receipt: None,
             };
             let bridged = to_actor_turn_result(kernel_result, 1, 0, 0).await.expect("fixed turn encoding");
             assert_eq!(bridged.status, expected);

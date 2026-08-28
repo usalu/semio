@@ -1,5 +1,11 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+//#region 📄️DeclarationFixtureMutationMount
+#[cfg(test)]
+#[path = "🧪️tests/📄️declaration-channels/🦀️.rs"]
+mod declaration_fixture_mutations;
+//#endregion 📄️DeclarationFixtureMutationMount
+
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §4): a wasm32-wasip2
 /// component exports `world actor` — one WIT world for both plugins and extensions now (no more
 /// `plugin-world`/`extension-world` split, no more `component-guest`/`component-extension-guest`
@@ -113,7 +119,6 @@ pub mod owned_abi {
         pub events: Vec<semio_framework::kernel::Event>,
         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         pub budget: semio_framework::kernel::Budget,
-        pub close_instances: Vec<u32>,
     }
 
     #[derive(Deserialize, Serialize)]
@@ -202,6 +207,19 @@ pub mod retained_command;
 #[path = "🕹️interaction/🦀️component.rs"]
 pub(crate) mod local_interaction;
 
+#[cfg(test)]
+#[path = "🧪️tests/🧬️publication-fixtures/🦀️.rs"]
+pub(crate) mod publication_fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️test-app-mutations/🦀️.rs"]
+pub(crate) mod test_app_mutation_fixture;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧬️contributed-mutation-wire/🦀️.rs"]
+pub(crate) mod contributed_mutation_wire;
+
+#[path = "."]
 pub mod app {
     // #region app
     //! 🧩️ Declarative app builder and plugin trait.
@@ -6575,6 +6593,10 @@ pub mod app {
     }
     //#endregion 🧪️MergeUiValuesTests
 
+    #[cfg(test)]
+    #[path = "🧪️tests/🧬️mutation-fixtures/🦀️.rs"]
+    pub(crate) mod mutation_fixture;
+
     //#region 🔖️Testkit
     pub mod testkit {
         //! 🧪️ Generic test-harness helpers for `ArtifactApp` implementors. Factors out the ~24x duplicated
@@ -6625,10 +6647,48 @@ pub mod app {
             VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition)).await
         }
 
+        /// 🧬️ A registry-backed wrapper whose manifest is authored asynchronously by the concrete fixture.
+        pub async fn new_registered_app<A, Manifest>(manifest: Manifest) -> VcsArtifactApp<A>
+        where
+            A: ArtifactApp + Default,
+            Manifest: std::future::Future<Output = App>,
+        {
+            let definition = manifest.await.definition;
+            VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition)).await
+        }
+
+        /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
+        pub fn close_registered_fixture_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A>) {
+            for _ in 0..64 {
+                if app.close_terminal_is_empty() { return; }
+                match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close") {
+                    super::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
+                    super::PluginCloseStep::Blocked { reason } => panic!("registered fixture close blocked: {reason}"),
+                    super::PluginCloseStep::Complete => break,
+                }
+            }
+            assert!(app.close_terminal_is_empty(), "registered fixture did not reach its exact terminal-empty witness");
+        }
+
         /// 🔗️ Two registry-less store-only instances joined by an in-memory backbone on `channel`.
         pub async fn paired_apps<A: ArtifactApp + Default>(channel: &str) -> (VcsArtifactApp<A>, VcsArtifactApp<A>) {
             let mut a = new_app::<A>().await;
             let mut b = new_app::<A>().await;
+            let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
+            a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+            b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+            (a, b)
+        }
+
+        /// 🧬️ Two explicitly registered fixture instances joined by an in-memory backbone.
+        pub async fn paired_registered_apps<A, Manifest, Build>(channel: &str, manifest: Build) -> (VcsArtifactApp<A>, VcsArtifactApp<A>)
+        where
+            A: ArtifactApp + Default,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let mut a = new_registered_app::<A, _>(manifest()).await;
+            let mut b = new_registered_app::<A, _>(manifest()).await;
             let (backbone_a, backbone_b) = MemoryBackbone::pair(channel, channel).await;
             a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
             b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
@@ -6712,6 +6772,24 @@ pub mod app {
             assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
         }
 
+        /// 🧬️ Registered twin of [`assert_two_instances_converge`].
+        pub async fn assert_two_registered_instances_converge<A, P, Manifest, Build>(channel: &str, manifest: Build, command_a: A::Command, command_b: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
+        where
+            A: ArtifactApp + Default,
+            P: PartialEq + std::fmt::Debug,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let (mut instance_a, mut instance_b) = paired_registered_apps::<A, Manifest, Build>(channel, manifest).await;
+            instance_a.dispatch_typed(command_a, &meta("actor-a")).await.expect("a applies its edit");
+            instance_b.dispatch_typed(command_b, &meta("actor-b")).await.expect("b applies its edit");
+            instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+            instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
+            assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same snapshot");
+            close_registered_fixture_app(&mut instance_a);
+            close_registered_fixture_app(&mut instance_b);
+        }
+
         // 🪦️ `assert_graph_merge_preserves_referential_integrity` DELETED
         // (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` M1): zero callers
         // repo-wide (confirmed via grep) — a generic testkit helper offered for app tests to probe
@@ -6747,6 +6825,34 @@ pub mod app {
             let once = probe(&receiver);
             receiver.ingest_operations(&operations).await.expect("ingest twice");
             assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
+        }
+
+        /// 🧬️ Registered twin of [`assert_ingest_idempotent`].
+        pub async fn assert_registered_ingest_idempotent<A, P, Manifest, Build>(manifest: Build, command: A::Command, probe: impl Fn(&VcsArtifactApp<A>) -> P)
+        where
+            A: ArtifactApp + Default,
+            P: PartialEq + std::fmt::Debug,
+            Manifest: std::future::Future<Output = App>,
+            Build: Fn() -> Manifest,
+        {
+            let mut sender = new_registered_app::<A, _>(manifest()).await;
+            let (near, mut far) = MemoryBackbone::pair("mem://testkit-idempotent", "mem://testkit-idempotent").await;
+            sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+            sender.dispatch_typed(command, &meta("local")).await.expect("apply command");
+            let mut envelopes = Vec::new();
+            for message in far.receive().await.expect("receive") {
+                if let BackboneMessage::Mutations { envelopes: operations } = message {
+                    envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
+                }
+            }
+            let operations = protocol::encode_envelopes(&envelopes);
+            let mut receiver = new_registered_app::<A, _>(manifest()).await;
+            receiver.ingest_operations(&operations).await.expect("ingest once");
+            let once = probe(&receiver);
+            receiver.ingest_operations(&operations).await.expect("ingest twice");
+            assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
+            close_registered_fixture_app(&mut sender);
+            close_registered_fixture_app(&mut receiver);
         }
 
         //#region 🧪️testkit
@@ -6805,635 +6911,8 @@ pub mod app {
         //#endregion 🧪️testkit
 
         #[cfg(test)]
-        mod testkit_tests {
-            //! 🧪️ Proves each `testkit` primitive against a minimal dummy `ArtifactApp` before any real app
-            //! adopts them.
-            use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
-            use super::*;
-            use crate::app::{ArtifactView, Emit};
-            use crate::{built_text_to_component_tree, UiAssemblyResult};
-            use protocol::{Mutation, MutationDiff};
-            use semio_framework::Fault;
-            use serde::{Deserialize, Serialize};
-            use store::EngineHandles;
-            use ui_wgpu::wgpu::Label;
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-            #[dsl(extension = "testkit-dummy")]
-            struct DummySnapshot {
-                count: i32,
-            }
-
-            /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
-            impl store::ArtifactDsl for DummySnapshot {
-                const EXTENSION: &'static str = "testkit-dummy";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                    if text.trim().is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-                }
-                fn print_dsl(&self) -> String {
-                    serde_json::to_string(self).unwrap_or_default()
-                }
-            }
-
-            impl store::ArtifactPack for DummySnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                    if bytes.is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-            }
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-            struct DummyDiff {
-                count: Option<i32>,
-            }
-
-            impl MutationDiff<DummySnapshot> for DummyDiff {
-                fn apply(&self, snapshot: &DummySnapshot) -> protocol::MutationApplyResult<DummySnapshot> {
-                    Ok(DummySnapshot { count: self.count.unwrap_or(snapshot.count) })
-                }
-
-                fn absorb(&mut self, other: Self) {
-                    if other.count.is_some() {
-                        self.count = other.count;
-                    }
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            #[serde(tag = "operation", rename_all = "camelCase")]
-            enum DummyMutation {
-                #[dsl(key = "set-count")]
-                SetCount { value: i32 },
-            }
-
-            impl Mutation<DummySnapshot> for DummyMutation {
-                type Diff = DummyDiff;
-
-                fn diff(&self, _snapshot: &DummySnapshot) -> ::protocol::MutationOutcome<DummyDiff> {
-                    ::protocol::MutationOutcome::new(match self {
-                        DummyMutation::SetCount { value } => DummyDiff { count: Some(*value) },
-                    })
-                }
-
-                fn inverse(&self, snapshot: &DummySnapshot) -> Vec<Self> {
-                    vec![DummyMutation::SetCount { value: snapshot.count }]
-                }
-            }
-
-            impl ::protocol::OpText for DummyMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for DummyMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            enum DummyCommand {
-                #[dsl(key = "increment")]
-                Increment,
-            }
-
-            impl ::protocol::OpText for DummyCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for DummyCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Default)]
-            struct DummyApp;
-
-            impl ArtifactApp for DummyApp {
-                const APP_ID: &'static str = "testkit-dummy";
-                const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
-                type Snapshot = DummySnapshot;
-                type Mutation = DummyMutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Draft = NoDraft;
-                type DraftMutation = NoDraftMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = DummyCommand;
-
-                async fn initial_snapshot() -> DummySnapshot {
-                    DummySnapshot::default()
-                }
-
-                async fn handle(
-                    command: &DummyCommand,
-                    doc: &ArtifactView<'_, DummySnapshot>,
-                    _cfg: &ConfigView<'_, NoConfig>,
-                    _interaction: &crate::app::InteractionView<'_>,
-                    _draft: &DraftView<'_, NoDraft>,
-                    _engines: &EngineHandles,
-                ) -> Result<Emit<DummyMutation>, Fault> {
-                    match command {
-                        DummyCommand::Increment => Ok(Emit { artifact_mutations: vec![DummyMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
-                    }
-                }
-
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, DummySnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
-                }
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn meta_carries_actor_and_local_instance_id() {
-                let m = meta("actor-x");
-                assert_eq!(m.actor, "actor-x");
-                assert_eq!(m.instance_id, 1);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn new_app_constructs_a_registry_less_wrapper() {
-                let mut app = new_app::<DummyApp>().await;
-                app.dispatch_typed(DummyCommand::Increment, &meta("local")).await.expect("increment");
-                assert_eq!(app.snapshot().unwrap().count, 1);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
-                let mut app = new_app::<DummyApp>().await;
-                assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1).await;
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn assert_two_instances_converge_on_disjoint_edits() {
-                assert_two_instances_converge::<DummyApp, i32>("mem://testkit-converge", DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn assert_ingest_idempotent_does_not_double_apply() {
-                assert_ingest_idempotent::<DummyApp, i32>(DummyCommand::Increment, |app| app.snapshot().unwrap().count).await;
-            }
-        }
-
         //#region 🧪️testkit
         #[cfg(test)]
-        mod transaction_testkit_tests {
-            //! 🧪️ Proves the `🧪️testkit` transaction helpers — and the underlying `dispatch_emit`/
-            //! `transaction_prepare`/`transaction_commit`/`transaction_rollback`/`transaction_undo`/
-            //! `transaction_redo` machinery (contract-freeze.md §5) — against a minimal
-            //! `ArtifactApp` fixture whose `SetCountAndNotify` mutation carries a real foreign step.
-            //! Self-contained (does not extend `testkit_tests`'s own `DummyApp`, whose `DummyMutation`
-            //! never overrides `foreign_steps`) — see `📓️w1-b-report.md` for the full test/gate output.
-            use super::super::{ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
-            use super::*;
-            use crate::app::{ArtifactView, Emit};
-            use crate::{built_text_to_component_tree, UiAssemblyResult};
-            use protocol::{Mutation, MutationDiff};
-            use semio_framework::Fault;
-            use serde::{Deserialize, Serialize};
-            use store::EngineHandles;
-            use ui_wgpu::wgpu::Label;
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-            #[dsl(extension = "testkit-txn")]
-            struct TxnSnapshot {
-                count: i32,
-            }
-
-            impl store::ArtifactDsl for TxnSnapshot {
-                const EXTENSION: &'static str = "testkit-txn";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                    if text.trim().is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-                }
-                fn print_dsl(&self) -> String {
-                    serde_json::to_string(self).unwrap_or_default()
-                }
-            }
-
-            impl store::ArtifactPack for TxnSnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                    if bytes.is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-            }
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-            struct TxnDiff {
-                count: Option<i32>,
-            }
-
-            impl MutationDiff<TxnSnapshot> for TxnDiff {
-                fn apply(&self, snapshot: &TxnSnapshot) -> protocol::MutationApplyResult<TxnSnapshot> {
-                    Ok(TxnSnapshot { count: self.count.unwrap_or(snapshot.count) })
-                }
-                fn absorb(&mut self, other: Self) {
-                    if other.count.is_some() {
-                        self.count = other.count;
-                    }
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            #[serde(tag = "operation", rename_all = "camelCase")]
-            enum TxnMutation {
-                #[dsl(key = "set-count")]
-                SetCount { value: i32 },
-                #[dsl(key = "set-count-without-preflight")]
-                SetCountWithoutPreflight { value: i32 },
-                /// 🔀️ The one variant whose `foreign_steps` is non-empty — proves `dispatch_emit`'s
-                /// proposal detection (contract §5.1) against a real (non-defaulted) override.
-                #[dsl(key = "set-count-and-notify")]
-                SetCountAndNotify { value: i32 },
-            }
-
-            impl Mutation<TxnSnapshot> for TxnMutation {
-                type Diff = TxnDiff;
-
-                fn diff(&self, _snapshot: &TxnSnapshot) -> ::protocol::MutationOutcome<TxnDiff> {
-                    ::protocol::MutationOutcome::new(match self {
-                        TxnMutation::SetCount { value } => TxnDiff { count: Some(*value) },
-                        TxnMutation::SetCountWithoutPreflight { value } => TxnDiff { count: Some(*value) },
-                        TxnMutation::SetCountAndNotify { value } => TxnDiff { count: Some(*value) },
-                    })
-                }
-
-                fn inverse(&self, snapshot: &TxnSnapshot) -> Vec<Self> {
-                    vec![TxnMutation::SetCount { value: snapshot.count }]
-                }
-
-                fn foreign_steps(&self, _snapshot: &TxnSnapshot) -> Vec<protocol::ForeignStep> {
-                    match self {
-                        TxnMutation::SetCountAndNotify { .. } => vec![protocol::ForeignStep {
-                            target: protocol::ForeignTarget { artifact_id: "peer-doc".to_string(), artifact_kind: "s.testkit.txn".to_string(), dialect: None },
-                            mutation_id: protocol::SchemaId("semio.testkit-txn/v1#notify".to_string()),
-                            payload: Vec::new(),
-                            label: "notify".to_string(),
-                        }],
-                        TxnMutation::SetCountWithoutPreflight { .. } => panic!("no-foreign mutations must bypass foreign-step preflight"),
-                        TxnMutation::SetCount { .. } => Vec::new(),
-                    }
-                }
-
-                fn may_emit_foreign_steps(&self) -> bool {
-                    matches!(self, TxnMutation::SetCountAndNotify { .. })
-                }
-            }
-
-            impl ::protocol::OpText for TxnMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for TxnMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            enum TxnCommand {
-                #[dsl(key = "increment")]
-                Increment,
-                #[dsl(key = "coalesced-increment")]
-                CoalescedIncrement,
-                #[dsl(key = "increment-and-notify")]
-                IncrementAndNotify,
-            }
-
-            impl ::protocol::OpText for TxnCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for TxnCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Default)]
-            struct TxnApp;
-
-            impl ArtifactApp for TxnApp {
-                const APP_ID: &'static str = "testkit-txn";
-                const DOCUMENT_SCHEMA: &'static str = "semio.testkit-txn/v1";
-                type Snapshot = TxnSnapshot;
-                type Mutation = TxnMutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Draft = NoDraft;
-                type DraftMutation = NoDraftMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = TxnCommand;
-
-                async fn initial_snapshot() -> TxnSnapshot {
-                    TxnSnapshot::default()
-                }
-
-                async fn handle(
-                    command: &TxnCommand,
-                    doc: &ArtifactView<'_, TxnSnapshot>,
-                    _cfg: &ConfigView<'_, NoConfig>,
-                    _interaction: &crate::app::InteractionView<'_>,
-                    _draft: &DraftView<'_, NoDraft>,
-                    _engines: &EngineHandles,
-                ) -> Result<Emit<TxnMutation>, Fault> {
-                    match command {
-                        TxnCommand::Increment => Ok(Emit { artifact_mutations: vec![TxnMutation::SetCountWithoutPreflight { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
-                        TxnCommand::CoalescedIncrement => {
-                            Ok(Emit { artifact_mutations: vec![TxnMutation::SetCountWithoutPreflight { value: doc.snapshot.count + 1 }], description: Some("coalesced-increment".into()), coalesce_key: Some("counter".into()), ..Default::default() })
-                        }
-                        TxnCommand::IncrementAndNotify => Ok(Emit { artifact_mutations: vec![TxnMutation::SetCountAndNotify { value: doc.snapshot.count + 1 }], description: Some("increment-and-notify".into()), ..Default::default() }),
-                    }
-                }
-
-                async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
-                }
-
-                fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
-                    Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
-                }
-
-                fn build_config_store_owners() -> Option<store::MemberStoreOwners<Self::Config, Self::ConfigMutation>> {
-                    Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
-                }
-            }
-
-            fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
-                for _ in 0..100_000 {
-                    if store::SpaceMember::close_owned_step(&mut app.store, 1, 1_048_576).expect("document store bounded close") == store::SnapshotRetirementStep::Complete {
-                        break;
-                    }
-                }
-                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.store));
-                for _ in 0..100_000 {
-                    if store::SpaceMember::close_owned_step(&mut app.config_store, 1, 1_048_576).expect("config store bounded close") == store::SnapshotRetirementStep::Complete {
-                        break;
-                    }
-                }
-                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.config_store));
-                app.draft_store.install_member_store_owners_exact(crate::app::bounded_document_store_owners::<NoDraft, NoDraftMutation>());
-                for _ in 0..100_000 {
-                    if store::SpaceMember::close_owned_step(&mut app.draft_store, 1, 1_048_576).expect("draft store bounded close") == store::SnapshotRetirementStep::Complete {
-                        break;
-                    }
-                }
-                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.draft_store));
-                for _ in 0..100_000 {
-                    if store::SpaceMember::close_owned_step(&mut app.interaction_store, 1, 1_048_576).expect("interaction store bounded close") == store::SnapshotRetirementStep::Complete {
-                        break;
-                    }
-                }
-                assert!(store::SpaceMember::close_owned_terminal_is_empty(&app.interaction_store));
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying() {
-                let mut app = new_app::<TxnApp>().await;
-                let draft = assert_proposes_transaction(&mut app, TxnCommand::IncrementAndNotify).await;
-                assert_eq!(draft.local_ops.len(), 1, "the local op must still be encoded for the proposal");
-                assert_eq!(draft.foreign.len(), 1, "the foreign step must be reported");
-                assert_eq!(draft.foreign[0].target.artifact_id, "peer-doc");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn plain_command_still_applies_normally() {
-                let mut app = new_app::<TxnApp>().await;
-                app.dispatch_typed(TxnCommand::Increment, &meta("local")).await.expect("increment");
-                assert_eq!(app.snapshot().unwrap().count, 1);
-                assert!(app.take_pending_transaction_proposal().await.is_none(), "a plain command must not stash a proposal");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn command_cache_inputs_share_immutable_arcs() {
-                let mut app = new_app::<TxnApp>().await;
-                app.refresh_cache().await.expect("refresh cache");
-                let (_, cached_snapshot, cached_config, cached_history) = app.cache.as_ref().expect("cache");
-                let (snapshot, config, history) = app.command_cache_inputs();
-                assert!(std::sync::Arc::ptr_eq(cached_snapshot, &snapshot));
-                assert!(std::sync::Arc::ptr_eq(cached_config, &config));
-                assert!(std::sync::Arc::ptr_eq(cached_history, &history));
-                close_transaction_store_roots(&mut app);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn amended_edit_extends_cached_history_in_place() {
-                let mut app = new_app::<TxnApp>().await;
-                app.dispatch_typed(TxnCommand::CoalescedIncrement, &meta("local")).await.expect("first increment");
-                let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
-                app.dispatch_typed(TxnCommand::CoalescedIncrement, &meta("local")).await.expect("second increment");
-                app.refresh_cache().await.expect("extend history cache");
-                let history = &app.cache.as_ref().expect("extended history cache").3;
-                assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "an amend must update the uniquely-owned history allocation in place");
-                assert_eq!(app.store.envelope().vcs.edits.len(), 1, "coalesced increments stay one undo edit");
-                assert_eq!(history.commands.len(), 1, "coalesced increments stay one command row");
-                assert_eq!(history.commands[0].op_lines.len(), 2, "only the new operation tail is appended to cached history");
-                close_transaction_store_roots(&mut app);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
-                let mut app = new_app::<TxnApp>().await;
-                let origin = protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: "initiator-doc".into(), artifact_kind: "s.testkit.txn".into(), dialect: None } };
-                let edit_id = assert_transaction_commits_as_one_edit(&mut app, "txn-1", vec![TxnMutation::SetCount { value: 7 }], "peer-write", origin).await;
-                assert_eq!(app.snapshot().unwrap().count, 7);
-                assert!(!edit_id.is_empty());
-                assert!(app.transaction_commit("txn-1", &meta("local")).await.is_err(), "committing an already-committed txn_id must fail, not double-apply");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn rollback_leaves_state_untouched() {
-                let mut app = new_app::<TxnApp>().await;
-                app.dispatch_typed(TxnCommand::Increment, &meta("local")).await.expect("increment");
-                assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![TxnMutation::SetCount { value: 99 }], "peer-write").await;
-                assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
-            }
-
-            /// 🔀️ Contract §5.8 and §5.10 are COMPLEMENTARY, and this test is where that shows: §5.10
-            /// already blocks every local mutating command while a transaction is pending, so a local
-            /// edit can never be what moves the generation out from under a prepared member. The only
-            /// remaining way for the base generation to go stale is an edit that does not come from a
-            /// command at all — a remote envelope ingested from the backbone mid-transaction — which is
-            /// precisely the race §5.8's check exists to catch. Driving this through `dispatch_typed`
-            /// instead only proves §5.10 a second time (it rejects with `transaction.instance-busy`).
-            #[semio_framework_async_macros::async_test]
-            async fn generation_mismatch_is_rejected_with_the_frozen_code() {
-                let mut sender = new_app::<TxnApp>().await;
-                let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn").await;
-                sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-                sender.dispatch_typed(TxnCommand::Increment, &meta("remote")).await.expect("the peer edits its own copy");
-                let mut envelopes = Vec::new();
-                for message in far.receive().await.expect("receive") {
-                    if let BackboneMessage::Mutations { envelopes: operations } = message {
-                        envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
-                    }
-                }
-                assert!(!envelopes.is_empty(), "the peer's edit must reach the channel");
-                let operations = protocol::encode_envelopes(&envelopes);
-
-                let mut app = new_app::<TxnApp>().await;
-                let outcome = app.transaction_prepare("txn-3", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 5 }).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
-                assert!(outcome.rejection.is_none());
-                app.ingest_operations(&operations).await.expect("a remote edit lands while the transaction is pending");
-                let error = app.transaction_commit("txn-3", &meta("local")).await.expect_err("commit must reject a stale generation");
-                assert_eq!(error.code.0, "transaction.generation-mismatch");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn second_prepare_while_pending_is_rejected_instance_busy() {
-                let mut app = new_app::<TxnApp>().await;
-                let first = app.transaction_prepare("txn-4a", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 1 }).expect("encode")], "first", Some(protocol::MutationOrigin::Owner)).await;
-                assert!(first.rejection.is_none());
-                let second = app.transaction_prepare("txn-4b", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 2 }).expect("encode")], "second", Some(protocol::MutationOrigin::Owner)).await;
-                let rejection = second.rejection.expect("second prepare while pending must be rejected");
-                assert_eq!(rejection.code.0, "transaction.instance-busy");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
-                let mut app = new_app::<TxnApp>().await;
-                let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::SetCount { value: 1 }).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
-                assert!(prepared.rejection.is_none());
-                let blocked = app.dispatch_typed(TxnCommand::Increment, &meta("local")).await;
-                assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");
-                assert_eq!(blocked.unwrap_err().code.0, "transaction.instance-busy");
-                // 🔖️ Read-only surfaces stay unaffected — `render`/`snapshot` never go through
-                // `dispatch_emit` at all, matching contract §5.10's carve-out for
-                // RefreshUi/ReadDocument/ContextMenu/ephemeral lanes.
-                assert_eq!(app.snapshot().unwrap().count, 0, "the pending transaction must not have applied anything yet");
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn undo_and_redo_by_group() {
-                let mut app = new_app::<TxnApp>().await;
-                assert_transaction_commits_as_one_edit(&mut app, "txn-6", vec![TxnMutation::SetCount { value: 42 }], "peer-write", protocol::MutationOrigin::Owner).await;
-                assert_eq!(app.snapshot().unwrap().count, 42);
-                app.transaction_undo("txn-6").await.expect("undo the group");
-                assert_eq!(app.snapshot().unwrap().count, 0, "undo must revert the transaction's edit");
-                app.transaction_redo("txn-6").await.expect("redo the group");
-                assert_eq!(app.snapshot().unwrap().count, 42, "redo must reapply the transaction's edit");
-            }
-        }
         //#endregion 🧪️testkit
 
         //#region 👁️✏️SurfaceTestkit
@@ -7481,345 +6960,6 @@ pub mod app {
         }
 
         #[cfg(test)]
-        mod surface_testkit_tests {
-            //! 🧪️ Proves `assert_viewer_never_mutates`/`assert_editor_and_viewer_share_dialect`/
-            //! `new_viewer` (contract §2.5) against a minimal `ArtifactEditor`/`ArtifactViewer` pair
-            //! sharing one `Dialect`. Self-contained — does not reach into `testkit_tests`'s own
-            //! `DummyApp` (private to that sibling module) or `transaction_testkit_tests`'s `TxnApp`.
-            use super::super::{ConfigView, DraftView, EditorApp, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, REVERT_TO_COMMAND_ACTION_ID};
-            use super::*;
-            use crate::app::{ArtifactView, Emit, ViewEmit};
-            use crate::{built_text_to_component_tree, UiAssemblyResult};
-            use protocol::{Mutation, MutationDiff};
-            use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
-            use serde::{Deserialize, Serialize};
-            use store::EngineHandles;
-            use ui_wgpu::wgpu::Label;
-
-            const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-            #[dsl(extension = "testkit-surface")]
-            struct SurfaceSnapshot {
-                count: i32,
-            }
-
-            impl store::ArtifactDsl for SurfaceSnapshot {
-                const EXTENSION: &'static str = "testkit-surface";
-                fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                    if text.trim().is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-                }
-                fn print_dsl(&self) -> String {
-                    serde_json::to_string(self).unwrap_or_default()
-                }
-            }
-
-            impl store::ArtifactPack for SurfaceSnapshot {
-                fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                    serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-                fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                    if bytes.is_empty() {
-                        return Ok(Self::default());
-                    }
-                    serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-                }
-            }
-
-            #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-            struct SurfaceDiff {
-                count: Option<i32>,
-            }
-
-            impl MutationDiff<SurfaceSnapshot> for SurfaceDiff {
-                fn apply(&self, snapshot: &SurfaceSnapshot) -> protocol::MutationApplyResult<SurfaceSnapshot> {
-                    Ok(SurfaceSnapshot { count: self.count.unwrap_or(snapshot.count) })
-                }
-                fn absorb(&mut self, other: Self) {
-                    if other.count.is_some() {
-                        self.count = other.count;
-                    }
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            #[serde(tag = "operation", rename_all = "camelCase")]
-            enum SurfaceMutation {
-                #[dsl(key = "set-count")]
-                SetCount { value: i32 },
-            }
-
-            impl Mutation<SurfaceSnapshot> for SurfaceMutation {
-                type Diff = SurfaceDiff;
-                fn diff(&self, _snapshot: &SurfaceSnapshot) -> ::protocol::MutationOutcome<SurfaceDiff> {
-                    match self {
-                        SurfaceMutation::SetCount { value } => ::protocol::MutationOutcome::new(SurfaceDiff { count: Some(*value) }),
-                    }
-                }
-                fn inverse(&self, snapshot: &SurfaceSnapshot) -> Vec<Self> {
-                    vec![SurfaceMutation::SetCount { value: snapshot.count }]
-                }
-            }
-
-            impl ::protocol::OpText for SurfaceMutation {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for SurfaceMutation {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-            enum SurfaceEditorCommand {
-                #[dsl(key = "increment")]
-                Increment,
-            }
-
-            impl ::protocol::OpText for SurfaceEditorCommand {
-                fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    for (keyword, spec_fn) in &variants {
-                        let probe = format!("{keyword} ");
-                        if line == keyword.as_str() || line.starts_with(&probe) {
-                            let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                            let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                            return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                        }
-                    }
-                    Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-                }
-                fn print_op(&self) -> String {
-                    let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                    let variants = <Self as ::dsl::DslVariants>::variants();
-                    let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                    let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                    if body.is_empty() {
-                        keyword
-                    } else {
-                        format!("{keyword} {body}")
-                    }
-                }
-            }
-
-            impl ::protocol::OpBinary for SurfaceEditorCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::encode_op(self)
-                }
-                fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    ::dsl::variants_binary::decode_op(bytes)
-                }
-            }
-
-            #[derive(Clone, Copy, Debug, Default, PartialEq)]
-            enum SurfaceViewerCommand {
-                #[default]
-                Noop,
-            }
-
-            impl ::protocol::OpBinary for SurfaceViewerCommand {
-                fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                    Ok(Vec::new())
-                }
-                fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                    Ok(SurfaceViewerCommand::Noop)
-                }
-            }
-
-            #[derive(Default)]
-            struct SurfaceEditorFixture;
-
-            impl ArtifactEditor for SurfaceEditorFixture {
-                const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
-                const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
-                type Snapshot = SurfaceSnapshot;
-                type Mutation = SurfaceMutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Draft = NoDraft;
-                type DraftMutation = NoDraftMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = SurfaceEditorCommand;
-
-                fn initial_snapshot() -> SurfaceSnapshot {
-                    SurfaceSnapshot::default()
-                }
-
-                fn handle(
-                    command: &SurfaceEditorCommand,
-                    doc: &ArtifactView<'_, SurfaceSnapshot>,
-                    _cfg: &ConfigView<'_, NoConfig>,
-                    _interaction: &crate::app::InteractionView<'_>,
-                    _draft: &DraftView<'_, NoDraft>,
-                    _engines: &EngineHandles,
-                ) -> Result<Emit<SurfaceMutation>, Fault> {
-                    match command {
-                        SurfaceEditorCommand::Increment => Ok(Emit { artifact_mutations: vec![SurfaceMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
-                    }
-                }
-
-                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
-                }
-            }
-
-            #[derive(Default)]
-            struct SurfaceViewerFixture;
-
-            impl ArtifactViewer for SurfaceViewerFixture {
-                const DIALECT: Dialect = SURFACE_TESTKIT_DIALECT;
-                const DOCUMENT_SCHEMA: &'static str = "semio.testkit-surface/v1";
-                type Snapshot = SurfaceSnapshot;
-                type Mutation = SurfaceMutation;
-                type Config = NoConfig;
-                type ConfigMutation = NoConfigMutation;
-                type Presence = NoPresence;
-                type PresenceMutation = NoPresenceMutation;
-                type Transient = crate::app::NoTransient;
-                type TransientMutation = crate::app::NoTransientMutation;
-                type Command = SurfaceViewerCommand;
-
-                fn initial_snapshot() -> SurfaceSnapshot {
-                    SurfaceSnapshot::default()
-                }
-
-                fn handle(
-                    _command: &SurfaceViewerCommand,
-                    _doc: &ArtifactView<'_, SurfaceSnapshot>,
-                    _cfg: &ConfigView<'_, NoConfig>,
-                    _interaction: &crate::app::InteractionView<'_>,
-                    _engines: &EngineHandles,
-                ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
-                    Ok(ViewEmit::default())
-                }
-
-                fn render(_body_key: &str, doc: &ArtifactView<'_, SurfaceSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
-                    built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
-                }
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn viewer_never_mutates_the_document_or_draft_store() {
-                assert_viewer_never_mutates::<SurfaceViewerFixture>();
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn editor_and_viewer_share_one_dialect() {
-                assert_editor_and_viewer_share_dialect::<SurfaceEditorFixture, SurfaceViewerFixture>().await;
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn new_viewer_constructs_a_registry_less_wrapper() {
-                let app = new_viewer::<SurfaceViewerFixture>().await;
-                assert_eq!(app.snapshot().unwrap().count, 0);
-            }
-
-            #[semio_framework_async_macros::async_test]
-            async fn editor_fixture_still_mutates_normally() {
-                let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
-                app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect("increment");
-                assert_eq!(app.snapshot().unwrap().count, 1);
-            }
-
-            /// 🐛️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-G — WITH
-            /// TEETH: `ShellHost::encodeWindowActionInvocation` addresses every real click with the
-            /// surface's canonical id (`surface_app_id`, e.g. `s.space.home@1/*#editor`), never
-            /// `EditorApp::APP_ID`'s runtime-const placeholder (`"surface"`). Before the fix,
-            /// `handle_action_invocation`'s ownership check compared `address.app_id` against that
-            /// literal placeholder, so even the textbook-correct canonical id was rejected — every
-            /// button click across every `EditorApp`/`ViewerApp` surface in the product. This fixture's
-            /// registry is empty (`new_app`, contract-enforcement-less), so once ownership passes the
-            /// very next check (`registry.has_mode`) must fail instead — proving the rejection was
-            /// specifically the ownership line, not a coincidence of an otherwise-valid dispatch.
-            #[semio_framework_async_macros::async_test]
-            async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
-                use semio_framework::manifest::{ActionAddress, ActionInvocation};
-                let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
-                let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
-                let invocation = ActionInvocation {
-                    address: ActionAddress { plugin_id: "test".into(), app_id: real_id.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
-                    arguments: Default::default(),
-                };
-                let error = app.handle_action_invocation(&invocation, Some("edit"), &meta("local")).await.expect_err("registry-less fixture declares no modes");
-                assert!(!error.message.contains("does not match"), "the real canonical app id must satisfy the ownership check, got: {}", error.message);
-                assert!(error.message.contains("unknown action mode owner"), "expected ownership to pass and the mode lookup to fail instead, got: {}", error.message);
-                assert_eq!(app.app_id().await, real_id, "PluginApp::app_id must report the real canonical id, not the APP_ID placeholder");
-            }
-
-            /// 🪪️ Verifies `EditorApp` initializes its document, config, draft, and interaction
-            /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
-            #[semio_framework_async_macros::async_test]
-            async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
-                let app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
-                let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
-                assert_eq!(app.store.envelope().id, real_id);
-                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
-            }
-
-            /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
-            /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
-            #[semio_framework_async_macros::async_test]
-            async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
-                let app = new_viewer::<SurfaceViewerFixture>().await;
-                let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
-                assert_eq!(app.store.envelope().id, real_id);
-                assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
-                assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
-                assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
-            }
-
-            /// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
-            /// through the full `VcsArtifactApp<ViewerApp<V>>` runtime path (`handle_action` for the
-            /// seven string actions, `import_media` for the eighth) and asserts every one comes back
-            /// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
-            #[semio_framework_async_macros::async_test]
-            async fn viewer_rejects_every_contract_mutating_verb() {
-                let mut app = new_viewer::<SurfaceViewerFixture>().await;
-                for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"] {
-                    let error = app.handle_action(verb, None, &meta("local")).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
-                    assert_eq!(error.origin, FaultOrigin::Framework, "'{verb}' rejection must carry FaultOrigin::Framework");
-                    assert_eq!(error.code.0, "viewer.read-only", "'{verb}' rejection must carry the frozen viewer.read-only code");
-                }
-                let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "semio.testkit-surface/v1".into(), json: "{}".into() } };
-                let error = app.import_media("any-port", media, &meta("local")).await.err().expect("'import' must be rejected on a viewer instance");
-                assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
-                assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
-            }
-        }
         //#endregion 👁️✏️SurfaceTestkit
 
         //#region 🔖️DeclarationTestkit
@@ -10383,56 +9523,41 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-    #[serde(rename_all = "camelCase")]
-    pub enum NoConfigMutation {
-        Noop,
-    }
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    pub enum NoConfigMutation {}
 
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
         type Diff = NoConfig;
+        const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
+
+        fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
+            match *self {}
+        }
 
         fn diff(&self, _base: &NoConfig) -> ::protocol::MutationOutcome<NoConfig> {
-            ::protocol::MutationOutcome::new(NoConfig::default())
+            match *self {}
         }
 
         fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
-            vec![NoConfigMutation::Noop]
+            match *self {}
         }
     }
 
     impl ::protocol::OpText for NoConfigMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        fn parse_op(_line: &str) -> Result<Self, ::store::TextError> {
+            Err(::store::TextError::new("no config mutations exist", ::store::TextSpan::at(1, 1)))
         }
         fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
+            match *self {}
         }
     }
 
     impl ::protocol::OpBinary for NoConfigMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
+            match *self {}
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
+        fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            Err(::protocol::ProtocolError::Malformed { what: "no-config-mutation", offset: 0, detail: "no config mutations exist".into() })
         }
     }
     //#endregion 🔖️NoConfig
@@ -10479,56 +9604,41 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-    #[serde(rename_all = "camelCase")]
-    pub enum NoPresenceMutation {
-        Noop,
-    }
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    pub enum NoPresenceMutation {}
 
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
         type Diff = NoPresence;
+        const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
+
+        fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
+            match *self {}
+        }
 
         fn diff(&self, _base: &NoPresence) -> ::protocol::MutationOutcome<NoPresence> {
-            ::protocol::MutationOutcome::new(NoPresence::default())
+            match *self {}
         }
 
         fn inverse(&self, _base: &NoPresence) -> Vec<Self> {
-            vec![NoPresenceMutation::Noop]
+            match *self {}
         }
     }
 
     impl ::protocol::OpText for NoPresenceMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        fn parse_op(_line: &str) -> Result<Self, ::store::TextError> {
+            Err(::store::TextError::new("no presence mutations exist", ::store::TextSpan::at(1, 1)))
         }
         fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
+            match *self {}
         }
     }
 
     impl ::protocol::OpBinary for NoPresenceMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
+            match *self {}
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
+        fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            Err(::protocol::ProtocolError::Malformed { what: "no-presence-mutation", offset: 0, detail: "no presence mutations exist".into() })
         }
     }
     //#endregion 🔖️NoPresence
@@ -10580,56 +9690,41 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-    #[serde(rename_all = "camelCase")]
-    pub enum NoTransientMutation {
-        Noop,
-    }
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    pub enum NoTransientMutation {}
 
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
         type Diff = NoTransient;
+        const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = &[];
+
+        fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
+            match *self {}
+        }
 
         fn diff(&self, _base: &NoTransient) -> ::protocol::MutationOutcome<NoTransient> {
-            ::protocol::MutationOutcome::new(NoTransient::default())
+            match *self {}
         }
 
         fn inverse(&self, _base: &NoTransient) -> Vec<Self> {
-            vec![NoTransientMutation::Noop]
+            match *self {}
         }
     }
 
     impl ::protocol::OpText for NoTransientMutation {
-        fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            for (keyword, spec_fn) in &variants {
-                let probe = format!("{keyword} ");
-                if line == keyword.as_str() || line.starts_with(&probe) {
-                    let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                    let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                    return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                }
-            }
-            Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
+        fn parse_op(_line: &str) -> Result<Self, ::store::TextError> {
+            Err(::store::TextError::new("no transient mutations exist", ::store::TextSpan::at(1, 1)))
         }
         fn print_op(&self) -> String {
-            let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-            let variants = <Self as ::dsl::DslVariants>::variants();
-            let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-            let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-            if body.is_empty() {
-                keyword
-            } else {
-                format!("{keyword} {body}")
-            }
+            match *self {}
         }
     }
 
     impl ::protocol::OpBinary for NoTransientMutation {
         fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::encode_op(self)
+            match *self {}
         }
-        fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-            ::dsl::variants_binary::decode_op(bytes)
+        fn decode_op(_bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+            Err(::protocol::ProtocolError::Malformed { what: "no-transient-mutation", offset: 0, detail: "no transient mutations exist".into() })
         }
     }
     //#endregion 🔖️NoTransient
@@ -10643,17 +9738,18 @@ pub mod app {
     /// machinery `TransientStore` requires would be unused ceremony.
     pub type InteractionHoverState = BTreeMap<String, protocol::DomainHover>;
 
-    /// 🕹️ The single mutation `VcsArtifactApp::interaction_store` (the framework-owned, persisted-local
-    /// selection + active mode/granularity store — see that field's doc comment) ever applies: a
-    /// whole-`InteractionState` replace, mirroring the `NoConfig` family's "whole record, no field-level
-    /// diff" pattern (`validate_state` already recomputes the whole thing on every dispatch, so a
-    /// field-level diff would buy nothing). `protocol::InteractionState` and the `Mutation`/`MutationDiff`/
-    /// `OpText`/`OpBinary` traits are all foreign to this crate — this concrete enum (not `InteractionState`
-    /// itself) is the `Self` the orphan rule requires, so its own `Diff` type is itself.
+    pub use crate::local_interaction::set_state::SetInteractionState;
+
+    /// 🕹️ Framework interaction mutation aggregate; its direct leaf owns metadata and ordinary semantics.
+    /// 🧊️ Whole-state cold codecs/evaluation do not certify a retained restore or reserved interaction route.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub enum InteractionConfigMutation {
-        SetState(protocol::InteractionState),
+        SetState(SetInteractionState),
+    }
+
+    impl InteractionConfigMutation {
+        pub fn set_state(state: protocol::InteractionState) -> Self { Self::SetState(SetInteractionState { state }) }
     }
 
     /// 🕹️ `MutationDiff`'s supertrait bound — a "no-op" default, never dispatched as a real mutation
@@ -10661,14 +9757,14 @@ pub mod app {
     /// starting point of a fresh mutation).
     impl Default for InteractionConfigMutation {
         fn default() -> Self {
-            InteractionConfigMutation::SetState(protocol::InteractionState::default())
+            InteractionConfigMutation::set_state(protocol::InteractionState::default())
         }
     }
 
     impl ::protocol::MutationDiff<protocol::InteractionState> for InteractionConfigMutation {
         fn apply(&self, _base: &protocol::InteractionState) -> protocol::MutationApplyResult<protocol::InteractionState> {
             let InteractionConfigMutation::SetState(state) = self;
-            Ok(state.clone())
+            state.apply()
         }
         fn absorb(&mut self, other: Self) {
             *self = other;
@@ -10677,13 +9773,18 @@ pub mod app {
 
     impl ::protocol::Mutation<protocol::InteractionState> for InteractionConfigMutation {
         type Diff = InteractionConfigMutation;
+        const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[<crate::local_interaction::set_state::SetInteractionState as protocol::MutationLeaf>::DESCRIPTOR];
+
+        fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
 
         fn diff(&self, _base: &protocol::InteractionState) -> ::protocol::MutationOutcome<Self::Diff> {
-            ::protocol::MutationOutcome::new(self.clone())
+            let InteractionConfigMutation::SetState(state) = self;
+            state.diff()
         }
 
         fn inverse(&self, base: &protocol::InteractionState) -> Vec<Self> {
-            vec![InteractionConfigMutation::SetState(base.clone())]
+            let InteractionConfigMutation::SetState(state) = self;
+            state.inverse(base)
         }
     }
 
@@ -10695,7 +9796,7 @@ pub mod app {
         fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
             let body = line.strip_prefix("set-interaction-state ").ok_or_else(|| ::store::TextError::new(format!("unknown interaction config op '{line}'"), ::store::TextSpan::at(1, 1)))?;
             let state: protocol::InteractionState = serde_json::from_str(body).map_err(|error| ::store::TextError::new(error.to_string(), ::store::TextSpan::at(1, 1)))?;
-            Ok(InteractionConfigMutation::SetState(state))
+            Ok(InteractionConfigMutation::set_state(state))
         }
     }
 
@@ -10706,7 +9807,7 @@ pub mod app {
         }
         fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
             let state: protocol::InteractionState = serde_json::from_slice(bytes).map_err(|error| ::protocol::ProtocolError::Malformed { what: "interaction-config-mutation", offset: 0, detail: error.to_string() })?;
-            Ok(InteractionConfigMutation::SetState(state))
+            Ok(InteractionConfigMutation::set_state(state))
         }
     }
     //#endregion 🔖️InteractionConfig
@@ -17697,12 +16798,12 @@ pub mod app {
     }
 
     #[cfg(test)]
-    pub(crate) async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+    pub(crate) async fn test_retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
         typed_command_full_operation_tests::retained_cancellation_publication_boundaries::<A>().await;
     }
 
     #[cfg(test)]
-    pub(crate) async fn test_retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+    pub(crate) async fn test_retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = crate::publication_fixture::PublicationPresence, PresenceMutation = crate::publication_fixture::PublicationPresenceMutation> + Default>() {
         typed_command_full_operation_tests::retained_latest_wins_slot_and_publication_fairness::<A>().await;
     }
 
@@ -17714,8 +16815,9 @@ pub mod app {
     #[cfg(test)]
     mod typed_command_full_operation_tests {
         use super::*;
+        use crate::publication_fixture::{ChangePublicationPresence, PublicationPresence, PublicationPresenceMutation};
 
-        const FIXTURE: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️shared-typed-command-full-operation-v1.json"));
+        const FIXTURE: &str = include_str!("🧵️retained-command/🧪️full-operation/🧪️fixture.json");
 
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
         struct TypedCommandCensusDecision {
@@ -17857,30 +16959,30 @@ pub mod app {
             }
         }
 
-        struct TwoTurnNoPresencePreparationFactory;
+        struct TwoTurnPublicationPresencePreparationFactory;
 
-        struct TwoTurnNoPresencePreparation {
-            request: Option<store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>>,
-            prepared: Option<store::ArtifactEphemeralOneItemPrepared<NoPresence>>,
+        struct TwoTurnPublicationPresencePreparation {
+            request: Option<store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>>,
+            prepared: Option<store::ArtifactEphemeralOneItemPrepared<PublicationPresence>>,
             checkpoint: store::ArtifactStoreOneItemCheckpoint,
             turn: u8,
             closing: bool,
         }
 
-        impl store::ArtifactEphemeralOneItemPreparationFactory<NoPresence, NoPresenceMutation> for TwoTurnNoPresencePreparationFactory {
-            fn preflight(&self, _mutation: &NoPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        impl store::ArtifactEphemeralOneItemPreparationFactory<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparationFactory {
+            fn preflight(&self, _mutation: &PublicationPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
                 Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 64 })
             }
 
             fn begin(
                 &self,
-                request: store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>,
-            ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<NoPresence, NoPresenceMutation>>, store::ArtifactEphemeralOneItemPreparationRequest<NoPresence, NoPresenceMutation>> {
-                Ok(Box::new(TwoTurnNoPresencePreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
+                request: store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>,
+            ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation>>, store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>> {
+                Ok(Box::new(TwoTurnPublicationPresencePreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
             }
         }
 
-        impl store::ArtifactEphemeralOneItemPreparation<NoPresence, NoPresenceMutation> for TwoTurnNoPresencePreparation {
+        impl store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparation {
             fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
                 if !grant.permits_one() {
                     return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
@@ -17891,8 +16993,9 @@ pub mod app {
                     return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
                 }
                 if self.prepared.is_none() {
-                    let _request = self.request.take().ok_or_else(|| "two-turn presence preparation lost its owner bundle".to_string())?;
-                    self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(NoPresence::default()) });
+                    let request = self.request.take().ok_or_else(|| "two-turn publication-presence preparation lost its owner bundle".to_string())?;
+                    let next_root = request.mutation.diff(request.base.as_ref()).diff().apply(request.base.as_ref()).map_err(|error| error.to_string())?;
+                    self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
                     self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
                 }
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -17902,11 +17005,11 @@ pub mod app {
                 self.checkpoint
             }
 
-            fn prepared(&self) -> Option<&store::ArtifactEphemeralOneItemPrepared<NoPresence>> {
+            fn prepared(&self) -> Option<&store::ArtifactEphemeralOneItemPrepared<PublicationPresence>> {
                 self.prepared.as_ref()
             }
 
-            fn take_prepared(&mut self) -> Option<store::ArtifactEphemeralOneItemPrepared<NoPresence>> {
+            fn take_prepared(&mut self) -> Option<store::ArtifactEphemeralOneItemPrepared<PublicationPresence>> {
                 self.prepared.take()
             }
 
@@ -17931,11 +17034,11 @@ pub mod app {
             }
         }
 
-        struct NoPresenceLocalRootRetirement {
-            root: Option<std::sync::Arc<NoPresence>>,
+        struct PublicationPresenceLocalRootRetirement {
+            root: Option<std::sync::Arc<PublicationPresence>>,
         }
 
-        impl store::ErasedSnapshotRetirement for NoPresenceLocalRootRetirement {
+        impl store::ErasedSnapshotRetirement for PublicationPresenceLocalRootRetirement {
             fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
                 if maximum_items == 0 {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -17951,15 +17054,15 @@ pub mod app {
             }
         }
 
-        struct NoPresenceLocalRootRetirementFactory;
+        struct PublicationPresenceLocalRootRetirementFactory;
 
-        impl store::SnapshotRetirementFactory<NoPresence> for NoPresenceLocalRootRetirementFactory {
-            fn retire(&self, snapshot: std::sync::Arc<NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(NoPresenceLocalRootRetirement { root: Some(snapshot) })
+        impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceLocalRootRetirementFactory {
+            fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(PublicationPresenceLocalRootRetirement { root: Some(snapshot) })
             }
         }
 
-        pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+        pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
             let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_bytes: fixture["maximumBytes"].as_u64().unwrap() as usize };
             assert_eq!(grant.maximum_items, 1);
@@ -17981,7 +17084,7 @@ pub mod app {
                     result_page_presented: false, result_sequence: 0, publication_attempt: 0, ui_pending: true, stage: MountedTypedCommandFullOperationStage::Publishing,
                 };
                 if boundary != "producer" {
-                    let pending = app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
+                    let pending = app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
                     let target = match boundary {
                         "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
@@ -18042,10 +17145,10 @@ pub mod app {
                 let cancellations = ToolCancellationHandle::default();
                 let key = ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: semio_framework_job::allocate_operation_id(), base_revision: semio_framework_job::RevisionId(3), generation: semio_framework_job::Generation(0) };
                 let lease = cancellations.begin(key.clone()).unwrap();
-                let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
-                let factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> = std::sync::Arc::new(NoPresenceLocalRootRetirementFactory);
+                let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
+                let factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(PublicationPresenceLocalRootRetirementFactory);
                 presence.install_local_retirement_factory(factory.clone()).unwrap();
-                let mut pending = presence.begin_publish_one(key.operation_id, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), Some(factory.clone())).unwrap();
+                let mut pending = presence.begin_publish_one(key.operation_id, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), Some(factory.clone())).unwrap();
                 for _ in 0..8 {
                     if pending.phase() == store::ArtifactStoreOneItemPublicationPhase::Publishing { break; }
                     assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Progress(_)));
@@ -18071,7 +17174,7 @@ pub mod app {
                 assert!(pending.terminal_is_empty());
                 lease.finish();
                 assert_eq!(cancellations.active_operation_count(), 0);
-                let mut close = presence.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).ok().unwrap();
+                let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
                 for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
                 assert!(close.terminal_is_empty());
             }
@@ -18328,7 +17431,7 @@ pub mod app {
             eprintln!("[DEBUG] retained latest-wins registry admitted65sequential completed targets under64live slots and one-item/4096-byte grants");
         }
 
-        pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = NoPresence, PresenceMutation = NoPresenceMutation> + Default>() {
+        pub(super) async fn retained_latest_wins_slot_and_publication_fairness<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
             let fixture: Value = serde_json::from_str(include_str!("🧪️tool-latest-wins-integration.json")).unwrap();
             let mut app = VcsArtifactApp::<A>::new(A::default()).await;
             let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
@@ -18342,7 +17445,7 @@ pub mod app {
             for id in [1, 2] {
                 let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(0), 17);
                 let lease = app.tool_cancellations.begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation.operation, base_revision: operation.base_revision, generation: operation.generation }).unwrap();
-                let pending = if id == 2 { Some(PendingArtifactStorePublication::Presence(app.presence_store.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&TwoTurnNoPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap())) } else { None };
+                let pending = if id == 2 { Some(PendingArtifactStorePublication::Presence(app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap())) } else { None };
                 app.tool_operations.insert_admitted(id, MountedTypedCommandFullOperation::<A> {
                     verb: "setGraphParameter".into(), meta: ActionMeta { actor: "fixture".into(), instance_id: 7 }, operation, canonical_revision: revision,
                     artifact_generation: 0, config_generation: 0, draft_generation: 0, presence_generation: 0, transient_generation: 0,
@@ -18532,12 +17635,12 @@ pub mod app {
         fn document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root() {
             let canonical_revision = [3; 32];
             let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(93), semio_framework_job::RevisionId(u64::from_be_bytes([3; 8])), semio_framework_job::Generation(0), 17);
-            let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
-            let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<NoPresence>> = std::sync::Arc::new(NoPresenceLocalRootRetirementFactory);
+            let mut presence = store::PresenceStore::<PublicationPresence, PublicationPresenceMutation>::new(PublicationPresence::default());
+            let root_factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<PublicationPresence>> = std::sync::Arc::new(PublicationPresenceLocalRootRetirementFactory);
             presence.install_local_retirement_factory(root_factory.clone()).unwrap();
             let initial_root = presence.local_read().unwrap();
-            let factory = TwoTurnNoPresencePreparationFactory;
-            let mut publication = presence.begin_publish_one(operation.operation, 0, NoPresenceMutation::Noop, Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
+            let factory = TwoTurnPublicationPresencePreparationFactory;
+            let mut publication = presence.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
             let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 64 };
             assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
             assert!(std::ptr::eq(initial_root.get(), presence.local()));
@@ -18555,7 +17658,7 @@ pub mod app {
             assert!(std::ptr::eq(initial_root.get(), presence.local()));
             assert_eq!(presence.generation_now(), 0);
             drop(initial_root);
-            let mut close = presence.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).ok().unwrap();
+            let mut close = presence.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).ok().unwrap();
             for _ in 0..2048 { if close.close_step(1, 4096).unwrap() == store::SnapshotRetirementStep::Complete { break; } }
             assert!(close.terminal_is_empty());
         }
@@ -21847,7 +20950,7 @@ pub mod app {
             let persisted = protocol::InteractionState { selection: validated.selection, hover: BTreeMap::new(), active_mode: validated.active_mode, active_granularity: validated.active_granularity };
             if persisted != persisted_before {
                 self.interaction_store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
-                self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::SetState(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
+                self.interaction_store.dispatch(ArtifactCommand::ApplyInLane { mutations: vec![InteractionConfigMutation::set_state(persisted)], description: None, lane: HistoryLane::Interaction }).await.map_err(|error| error.into_fault())?;
             }
             Ok(())
         }
@@ -22639,14 +21742,12 @@ pub mod app {
         /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard/interaction) —
         /// an app's own behavior is dispatched exclusively through `dispatch_typed_command` now.
         pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let definition =
-                self.registry.get(action).await.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
-            validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
-            // 🔒️ Contract §2.3 clause 1 — checked before every other branch below, including
-            // `INTERACTION_ACTION_IDS`, since none of those six ever appear in `VIEWER_REJECTED_ACTION_IDS`.
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
+            let definition =
+                self.registry.get(action).await.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-key"), format!("UI dispatch rejected unknown action key '{action}' before command construction")))?;
+            validate_ui_dispatch_classification("action", action, definition.semantics.execution.interactive_job)?;
             if HISTORY_ACTION_IDS.contains(&action)
                 || CLIPBOARD_ACTION_IDS.contains(&action)
                 || INTERACTION_ACTION_IDS.contains(&action)
@@ -28177,6 +27278,12 @@ pub mod app {
             use super::*;
             use serde::de::DeserializeOwned;
             use serde::{Deserialize, Serialize};
+            use super::super::super::declaration_fixture_mutations::{
+                std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations,
+            };
+            use std1_any_mutations::Std1AnyMutation;
+            use std1_strict_mutations::Std1StrictMutation;
+            use std2_any_mutations::Std2AnyMutation;
 
             //#region 🔖️Dialects
             pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -28192,7 +27299,7 @@ pub mod app {
             /// authored `.grammar.semio`/`.protocol.semio`) — `NativeCodecs.snapshot/diff/mutations`
             /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
             macro_rules! fixture_channel {
-                ($snapshot:ident, $diff:ident, $mutation:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
+                ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
                     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
                     pub(crate) struct $snapshot {
                         pub value: i32,
@@ -28236,20 +27343,6 @@ pub mod app {
                         }
                     }
 
-                    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-                    pub(crate) enum $mutation {
-                        SetValue { value: i32 },
-                    }
-                    impl Mutation<$snapshot> for $mutation {
-                        type Diff = $diff;
-                        fn diff(&self, _base: &$snapshot) -> protocol::MutationOutcome<$diff> {
-                            let $mutation::SetValue { value } = self;
-                            protocol::MutationOutcome::new($diff { value: Some(*value) })
-                        }
-                        fn inverse(&self, base: &$snapshot) -> Vec<Self> {
-                            vec![$mutation::SetValue { value: base.value }]
-                        }
-                    }
                     impl protocol::OpText for $mutation {
                         fn parse_op(line: &str) -> Result<Self, store::TextError> {
                             serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
@@ -28308,7 +27401,7 @@ pub mod app {
                             _draft: &DraftView<'_, NoDraft>,
                             _engines: &EngineHandles,
                         ) -> Result<Emit<$mutation>, Fault> {
-                            Ok(Emit { artifact_mutations: vec![$mutation::SetValue { value: doc.snapshot.value }], ..Default::default() })
+                            Ok(Emit { artifact_mutations: vec![$mutation::SetValue($leaf_owner::SetValue { value: doc.snapshot.value })], ..Default::default() })
                         }
                         fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
                             built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("value={}", doc.snapshot.value)))
@@ -28342,9 +27435,9 @@ pub mod app {
                 };
             }
 
-            fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, Std1AnyCommand, Std1AnyEditor, Std1AnyViewer, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
-            fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, Std1StrictCommand, Std1StrictEditor, Std1StrictViewer, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
-            fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, Std2AnyCommand, Std2AnyEditor, Std2AnyViewer, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
+            fixture_channel!(Std1AnySnapshot, Std1AnyDiff, Std1AnyMutation, std1_any_mutations, Std1AnyCommand, Std1AnyEditor, Std1AnyViewer, STD1_ANY_DIALECT, "semio.testkit.w1c-fixture.std1-any/v1");
+            fixture_channel!(Std1StrictSnapshot, Std1StrictDiff, Std1StrictMutation, std1_strict_mutations, Std1StrictCommand, Std1StrictEditor, Std1StrictViewer, STD1_STRICT_DIALECT, "semio.testkit.w1c-fixture.std1-strict/v1");
+            fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, Std2AnyEditor, Std2AnyViewer, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
             //#endregion 🔖️FixtureChannel
 
             //#region 🔖️ProfileHop
@@ -28540,7 +27633,7 @@ pub mod app {
                 type Construction = SnapshotBuilder<Std1AnySnapshot, Std1AnyMutation>;
                 let bytes = Std1AnySnapshot { value: 1 }.encode_pack();
                 let opened = Construction::from_binary(&bytes).expect("open");
-                let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue { value: 42 });
+                let (mutated, outcome) = opened.mutate(Std1AnyMutation::SetValue(std1_any_mutations::SetValue { value: 42 }));
                 assert!(outcome.messages().is_empty(), "a fresh mutate must not fail");
                 let saved = mutated.build().expect("save");
                 assert_eq!(saved.value, 42);
@@ -28875,6 +27968,11 @@ pub mod plugin_runtime {
 
     impl<T> Drop for RuntimeInstanceRegistry<T> {
         fn drop(&mut self) {}
+    }
+
+    #[cfg(test)]
+    mod native_aggregate_backing_tests {
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🚪️lifetime/🧪️aggregate-admission.rs"));
     }
 
     #[cfg(test)]
@@ -29347,74 +28445,11 @@ pub mod plugin_runtime {
     #[cfg(test)]
     mod contributed_mutation_wire_tests {
         use super::*;
+        use crate::contributed_mutation_wire::{AddValue, WireTestMutation, WireTestSnapshot};
         use store::{ArtifactPack, OpBinary};
 
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-        struct WireTestSnapshot {
-            value: i32,
-        }
-        impl ArtifactPack for WireTestSnapshot {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-        }
-
-        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-        struct WireTestDiff {
-            delta: i32,
-        }
-        impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
-            fn apply(&self, base: &WireTestSnapshot) -> protocol::MutationApplyResult<WireTestSnapshot> {
-                Ok(WireTestSnapshot { value: base.value + self.delta })
-            }
-            fn absorb(&mut self, other: Self) {
-                self.delta += other.delta;
-            }
-        }
-
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-        enum WireTestOp {
-            Add(i32),
-        }
-        impl protocol::Mutation<WireTestSnapshot> for WireTestOp {
-            type Diff = WireTestDiff;
-            fn diff(&self, _base: &WireTestSnapshot) -> protocol::MutationOutcome<WireTestDiff> {
-                let WireTestOp::Add(delta) = self;
-                protocol::MutationOutcome::new(WireTestDiff { delta: *delta })
-            }
-            fn inverse(&self, _base: &WireTestSnapshot) -> Vec<Self> {
-                let WireTestOp::Add(delta) = self;
-                vec![WireTestOp::Add(-delta)]
-            }
-        }
-        impl OpBinary for WireTestOp {
-            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                Ok(serde_json::to_vec(self).expect("wire test op always encodes"))
-            }
-            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
-            }
-        }
-
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-        struct WireTestMutationKind {
-            delta: i32,
-        }
-        impl protocol::CompositeMutationKind<WireTestSnapshot, WireTestOp> for WireTestMutationKind {
-            const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-            fn plan(&self, _base: &WireTestSnapshot, planner: &mut protocol::Planner<WireTestSnapshot, WireTestOp>) -> Result<(), protocol::PlanError> {
-                planner.call(WireTestOp::Add(self.delta))
-            }
-            fn label(&self) -> String {
-                format!("Add {} to value", self.delta)
-            }
-        }
-
         async fn commit_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str, delta: i32) -> String {
-            let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestOp, WireTestMutationKind>(target_document_schema, 1, 1).await.build();
+            let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<WireTestSnapshot, WireTestMutation, AddValue>(target_document_schema, 1, 1).await.build();
             let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
             let mutation_id = descriptor.mutations[0].mutation_id.clone();
             crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
@@ -29425,7 +28460,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn artifact_mutation_plan_rejects_a_mismatched_artifact_kind() {
             let mutation_id = commit_test_contribution("s.wiretest.kind-mismatch", "wiretest.kind-mismatch.document", "wiretest-contributor-a", 5).await;
-            let payload = crate::app::encode_contributed_wire(&WireTestMutationKind { delta: 5 }).await;
+            let payload = crate::app::encode_contributed_wire(&AddValue { delta: 5 }).await;
             let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.wrong-kind".into(), mutation_id, revision: 7, generation: 3, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
             let error = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect_err("mismatched artifact_kind must be rejected");
             assert!(error.message.contains("artifact-mutation.artifact-kind-mismatch"), "unexpected message: {}", error.message);
@@ -29448,7 +28483,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn artifact_mutation_plan_echoes_identity_and_runs_the_registered_plan() {
             let mutation_id = commit_test_contribution("s.wiretest.echo", "wiretest.echo.document", "wiretest-contributor-b", 5).await;
-            let payload = crate::app::encode_contributed_wire(&WireTestMutationKind { delta: 5 }).await;
+            let payload = crate::app::encode_contributed_wire(&AddValue { delta: 5 }).await;
             let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: "s.wiretest.echo".into(), mutation_id: mutation_id.clone(), revision: 42, generation: 9, snapshot_pack: WireTestSnapshot { value: 10 }.encode_pack(), payload };
             let encoded = wire_artifact_mutation_plan(&encode_wire_serialized(&request)).await.expect("matching artifact_kind must be accepted");
             let result: crate::app::WireArtifactMutationPlanResult = decode_wire_serialized(&encoded).await.expect("result decodes");
@@ -29459,8 +28494,8 @@ pub mod plugin_runtime {
             assert_eq!(result.label, "Add 5 to value");
             assert!(result.foreign.is_empty());
             assert_eq!(result.owner_ops.len(), 1);
-            let op = WireTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
-            assert_eq!(op, WireTestOp::Add(5));
+            let op = WireTestMutation::decode_op(&result.owner_ops[0]).expect("owner op decodes");
+            assert_eq!(op, WireTestMutation::AddValue(AddValue { delta: 5 }));
         }
     }
 
@@ -30210,6 +29245,12 @@ pub mod plugin_runtime {
         plugin_begin_instance_close(runtime, instance_id, None).map(|_| ())
     }
 
+    #[cfg(test)]
+    std::thread_local! {
+        static RUNTIME_CLOSE_CONSTRUCTION_LIVE: std::cell::Cell<Option<bool>> = const { std::cell::Cell::new(None) };
+        static RUNTIME_CLOSE_CONSTRUCTION_FAIL: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    }
+
     fn plugin_begin_instance_close<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32, expected: Option<&std::sync::Weak<RuntimeAppCell<PA>>>) -> Result<std::sync::Arc<RuntimeCloseWorkerState<PA>>, Fault> {
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?;
@@ -30224,8 +29265,11 @@ pub mod plugin_runtime {
             return Err(plugin_internal_fault(format!("runtime close quarantine is saturated or collided: {instance_id}")));
         }
         let generation = checked_runtime_close_generation(runtime.close_generation.get())?;
-        let cell = instances.take(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
-        runtime.close_generation.set(generation);
+        #[cfg(test)]
+        let original_allocation = instances.get(instance_id).map(std::sync::Arc::as_ptr);
+        let cell = instances.get(instance_id).cloned().ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
+        #[cfg(test)]
+        RUNTIME_CLOSE_CONSTRUCTION_FAIL.with(|fail| { if fail.replace(false) { panic!("injected before close worker allocation"); } });
         let state = std::sync::Arc::new(RuntimeCloseWorkerState {
             instance_id,
             generation: semio_framework_job::Generation(generation),
@@ -30244,7 +29288,11 @@ pub mod plugin_runtime {
             #[cfg(test)]
             callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
         });
+        #[cfg(test)]
+        RUNTIME_CLOSE_CONSTRUCTION_LIVE.with(|probe| probe.set(Some(original_allocation.is_some() && instances.get(instance_id).map(std::sync::Arc::as_ptr) == original_allocation)));
         quarantine.insert_admitted(instance_id, RuntimeCloseEntry { state: state.clone() });
+        drop(instances.take(instance_id));
+        runtime.close_generation.set(generation);
         drop(actors.take(instance_id));
         drop(actors);
         drop(quarantine);
@@ -32431,7 +31479,7 @@ pub mod plugin_runtime {
                 __semio_ensure_plugin_runtime();
                 let result = match input {
                     Ok(input) => __SEMIO_PLUGIN_RUNTIME
-                        .with(|runtime| $crate::app::resolve_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.budget, &input.close_instances)))
+                        .with(|runtime| $crate::app::resolve_ready($crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.budget)))
                         .map_err(|fault| ::dsl::encode_fault_bytes(&fault)),
                     Err(error) => Err(error),
                 };
@@ -32983,6 +32031,7 @@ pub mod plugin_runtime {
             InteractionView, Menu, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp,
         };
         use crate::store::FaultFrom;
+        use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
         use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, ViewModel};
         use protocol::{Mutation, MutationDiff};
         use semio_framework::kernel::ArtifactHandle;
@@ -33043,54 +32092,9 @@ pub mod plugin_runtime {
             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
         }
 
-        const MAXIMUM_CHILD_PROBE_BYTES: usize = 4 * 1024 * 1024;
-        static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-        static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-
-        #[derive(Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-        #[dsl(extension = "testkit-macro")]
-        struct TestSnapshot {
-            count: i32,
-            label: String,
-        }
-
-        impl Clone for TestSnapshot {
-            fn clone(&self) -> Self {
-                if self.label.len() >= MAXIMUM_CHILD_PROBE_BYTES {
-                    MAXIMUM_CHILD_CLONES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-                Self { count: self.count, label: self.label.clone() }
-            }
-        }
-
-        /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
-        impl store::ArtifactDsl for TestSnapshot {
-            const EXTENSION: &'static str = "testkit-macro";
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                if text.trim().is_empty() {
-                    return Ok(Self::default());
-                }
-                serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-            }
-            fn print_dsl(&self) -> String {
-                serde_json::to_string(self).unwrap_or_default()
-            }
-        }
-
-        impl ArtifactPack for TestSnapshot {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                if self.label.len() >= MAXIMUM_CHILD_PROBE_BYTES {
-                    MAXIMUM_CHILD_ENCODINGS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                }
-                serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                if bytes.is_empty() {
-                    return Ok(Self::default());
-                }
-                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-        }
+        //#region 🧬️TestDocumentMutationFixture
+        use crate::test_app_mutation_fixture::document::{MAXIMUM_CHILD_CLONES, MAXIMUM_CHILD_ENCODINGS, MAXIMUM_CHILD_PROBE_BYTES};
+        use crate::test_app_mutation_fixture::{TestDiff, TestSnapshot};
 
         /// 🧪️ Trivial dummy `ArtifactSerializer`/`ArtifactDeserializer` pair, round-tripping
         /// `TestSnapshot` to itself, for `serializer_entry_of`/`deserializer_entry_of` smoke tests.
@@ -33147,53 +32151,9 @@ pub mod plugin_runtime {
             assert!(two_sources_err.message.contains("needs exactly 1 source"), "{}", two_sources_err.message);
         }
 
-        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-        struct TestDiff {
-            count: Option<i32>,
-            label: Option<String>,
-        }
-
-        impl MutationDiff<TestSnapshot> for TestDiff {
-            fn apply(&self, snapshot: &TestSnapshot) -> protocol::MutationApplyResult<TestSnapshot> {
-                Ok(TestSnapshot { count: self.count.unwrap_or(snapshot.count), label: self.label.clone().unwrap_or_else(|| snapshot.label.clone()) })
-            }
-
-            fn absorb(&mut self, other: Self) {
-                if other.count.is_some() {
-                    self.count = other.count;
-                }
-                if other.label.is_some() {
-                    self.label = other.label;
-                }
-            }
-        }
-
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-        #[serde(tag = "operation", rename_all = "camelCase")]
-        enum TestMutation {
-            #[dsl(key = "set-count")]
-            SetCount { value: i32 },
-            #[dsl(key = "set-label")]
-            SetLabel { value: String },
-        }
-
-        impl Mutation<TestSnapshot> for TestMutation {
-            type Diff = TestDiff;
-
-            fn diff(&self, _snapshot: &TestSnapshot) -> ::protocol::MutationOutcome<TestDiff> {
-                ::protocol::MutationOutcome::new(match self {
-                    TestMutation::SetCount { value } => TestDiff { count: Some(*value), label: None },
-                    TestMutation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
-                })
-            }
-
-            fn inverse(&self, snapshot: &TestSnapshot) -> Vec<Self> {
-                match self {
-                    TestMutation::SetCount { .. } => vec![TestMutation::SetCount { value: snapshot.count }],
-                    TestMutation::SetLabel { .. } => vec![TestMutation::SetLabel { value: snapshot.label.clone() }],
-                }
-            }
-        }
+        //#region 🧬️TestDocumentMutationLeaves
+        use crate::test_app_mutation_fixture::{SetCount, SetLabel, TestMutation};
+        //#endregion 🧬️TestDocumentMutationLeaves
 
         struct TestCountOneItemPreparationFactory;
 
@@ -33207,7 +32167,7 @@ pub mod plugin_runtime {
 
         impl store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation> for TestCountOneItemPreparationFactory {
             fn preflight(&self, mutation: &TestMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-                if !matches!(mutation, TestMutation::SetCount { .. }) || description.is_some() || lane != store::HistoryLane::Document { return Err("test count accepts exactly one scalar mutation".into()); }
+                if !matches!(mutation, TestMutation::SetCount(SetCount { .. })) || description.is_some() || lane != store::HistoryLane::Document { return Err("test count accepts exactly one scalar mutation".into()); }
                 Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 1_024 })
             }
 
@@ -33226,11 +32186,11 @@ pub mod plugin_runtime {
                 }
                 if self.prepared.is_none() {
                     let request = self.request.as_ref().ok_or_else(|| "test count lost its exact request".to_string())?;
-                    let TestMutation::SetCount { value } = &request.mutation else { return Err("test count requires scalar mutation".into()); };
+                    let TestMutation::SetCount(SetCount { value }) = &request.mutation else { return Err("test count requires scalar mutation".into()); };
                     let authority = &request.authority;
                     let edit = store::Edit {
                         id: format!("fixture-count-{}", authority.next_sequence_number()), actor: Some(authority.actor().into()),
-                        forwards: vec![TestMutation::SetCount { value: *value }], inverse: vec![TestMutation::SetCount { value: request.base.get().count }],
+                        forwards: vec![TestMutation::SetCount(SetCount { value: *value })], inverse: vec![TestMutation::SetCount(SetCount { value: request.base.get().count })],
                         mutation_meta: vec![protocol::MutationMeta { mutation_id: None, dependencies: Vec::new(), base_version: 0, author_id: Some(protocol::ActorId(authority.actor().into())), timestamp: authority.next_clock(),
                             undo_policy: protocol::UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: None, origin: Default::default() }],
                         description: None, coalesce_key: None, sequence_number: authority.next_sequence_number(), started_at: String::new(), finished_at: None,
@@ -33268,174 +32228,9 @@ pub mod plugin_runtime {
 
             fn terminal_is_empty(&self) -> bool { self.closing && self.prepared.is_none() && self.request.is_none() && self.authority_retirement.is_none() }
         }
+        //#endregion 🧬️TestDocumentMutationFixture
 
-        impl ::protocol::OpText for TestMutation {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                for (keyword, spec_fn) in &variants {
-                    let probe = format!("{keyword} ");
-                    if line == keyword.as_str() || line.starts_with(&probe) {
-                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                    }
-                }
-                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-            }
-            fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                if body.is_empty() {
-                    keyword
-                } else {
-                    format!("{keyword} {body}")
-                }
-            }
-        }
-
-        impl ::protocol::OpBinary for TestMutation {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::encode_op(self)
-            }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::decode_op(bytes)
-            }
-        }
-
-        /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): `ChildEmit::of` requires `SemanticMutation<S>`
-        /// — this fixture lets both the PARENT (`TestApp`) and a CHILD (a bare `ArtifactStore<TestSnapshot,
-        /// TestMutation>` registered via `VcsArtifactApp::register_child`) share the identical
-        /// `TestSnapshot`/`TestMutation` pair, so the composition tests below need no second mutation enum.
-        impl protocol::SemanticMutation<TestSnapshot> for TestMutation {
-            fn kinds() -> &'static [protocol::SemanticDescriptor] {
-                const KINDS: &[protocol::SemanticDescriptor] =
-                    &[protocol::SemanticDescriptor { verb: "set", entity: "count", kind: "set-count", record: "SetCount" }, protocol::SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" }];
-                KINDS
-            }
-            fn semantics(&self) -> &'static protocol::SemanticDescriptor {
-                match self {
-                    TestMutation::SetCount { .. } => &Self::kinds()[0],
-                    TestMutation::SetLabel { .. } => &Self::kinds()[1],
-                }
-            }
-            fn label(&self) -> String {
-                match self {
-                    TestMutation::SetCount { value } => format!("Set count to {value}"),
-                    TestMutation::SetLabel { value } => format!("Set label to {value}"),
-                }
-            }
-            fn target(&self) -> Vec<String> {
-                Vec::new()
-            }
-        }
-
-        /// 🧪️ B1: `TestApp`'s config — `selected` moved out of an app-struct `RefCell` into a real config
-        /// artifact (was ephemeral view state demonstrated via `ActionEmit::view_with_inverse`; now a
-        /// config operation with a real `inverse`, proving the B1 replacement end to end).
-        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-        #[dsl(extension = "testkit-macro-cfg")]
-        struct TestConfig {
-            selected: Option<String>,
-        }
-
-        /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
-        impl store::ArtifactDsl for TestConfig {
-            const EXTENSION: &'static str = "testkit-macro-cfg";
-            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-                if text.trim().is_empty() {
-                    return Ok(Self::default());
-                }
-                serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
-            }
-            fn print_dsl(&self) -> String {
-                serde_json::to_string(self).unwrap_or_default()
-            }
-        }
-
-        impl ArtifactPack for TestConfig {
-            fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-                serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-            fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-                if bytes.is_empty() {
-                    return Ok(Self::default());
-                }
-                serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-            }
-        }
-
-        impl store::ConfigRecord for TestConfig {}
-
-        impl MutationDiff<TestConfig> for TestConfig {
-            fn apply(&self, _base: &TestConfig) -> protocol::MutationApplyResult<TestConfig> {
-                Ok(self.clone())
-            }
-            fn absorb(&mut self, other: Self) {
-                *self = other;
-            }
-        }
-
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-        enum TestConfigMutation {
-            #[dsl(key = "set-selected")]
-            SetSelected { value: Option<String> },
-            /// 🧮️ Full-snapshot restore — every `inverse()` below returns this, mirroring the
-            /// `ShootingConfigMutation` pilot pattern (see `shooting_op`).
-            #[dsl(key = "snapshot")]
-            Snapshot { selected: Option<String> },
-        }
-
-        impl Mutation<TestConfig> for TestConfigMutation {
-            type Diff = TestConfig;
-
-            fn diff(&self, _base: &TestConfig) -> ::protocol::MutationOutcome<TestConfig> {
-                ::protocol::MutationOutcome::new(match self {
-                    TestConfigMutation::SetSelected { value } => TestConfig { selected: value.clone() },
-                    TestConfigMutation::Snapshot { selected } => TestConfig { selected: selected.clone() },
-                })
-            }
-
-            fn inverse(&self, base: &TestConfig) -> Vec<Self> {
-                vec![TestConfigMutation::Snapshot { selected: base.selected.clone() }]
-            }
-        }
-
-        impl ::protocol::OpText for TestConfigMutation {
-            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                for (keyword, spec_fn) in &variants {
-                    let probe = format!("{keyword} ");
-                    if line == keyword.as_str() || line.starts_with(&probe) {
-                        let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                        let record = ::dsl::parse(body, &spec_fn(), &::dsl::ParseOptions { limits: ::dsl::Limits::default(), mode: ::dsl::SourceMode::Inline })?;
-                        return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
-                    }
-                }
-                Err(::dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-            }
-            fn print_op(&self) -> String {
-                let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
-                let variants = <Self as ::dsl::DslVariants>::variants();
-                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-                let body = ::dsl::print(&record, &spec_fn(), ::dsl::JoinMode::Inline);
-                if body.is_empty() {
-                    keyword
-                } else {
-                    format!("{keyword} {body}")
-                }
-            }
-        }
-
-        impl ::protocol::OpBinary for TestConfigMutation {
-            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::encode_op(self)
-            }
-            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
-                ::dsl::variants_binary::decode_op(bytes)
-            }
-        }
+        use crate::test_app_mutation_fixture::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
 
         /// 🧪️ B1: `TestApp`'s typed command enum — the sole dispatch surface for its own behavior.
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -33570,7 +32365,7 @@ pub mod plugin_runtime {
                     self.cursor += 1;
                     return Ok(crate::retained_command::ArtifactCommandWorkStep::Progress { stage: "test-retained-command-work", preview: br#"{"en":"Applying","de":"Anwenden"}"# });
                 }
-                Ok(crate::retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel { value: "resumed".into() }])))
+                Ok(crate::retained_command::ArtifactCommandWorkStep::Complete(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })])))
             }
 
             fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
@@ -33737,7 +32532,7 @@ pub mod plugin_runtime {
                             source_app: TestApp::APP_ID.to_string(),
                             label: self.snapshot.label.clone(),
                         };
-                        Emit { artifact_mutations: (self.tool_id == "cut").then(|| TestMutation::SetLabel { value: String::new() }).into_iter().collect(), effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() }
+                        Emit { artifact_mutations: (self.tool_id == "cut").then(|| TestMutation::SetLabel(SetLabel { value: String::new() })).into_iter().collect(), effects: vec![Effect::ClipboardWrite { fragment }], ..Default::default() }
                     }
                     "paste" => {
                         let Some(args) = args else { return Emit::default() };
@@ -33750,7 +32545,7 @@ pub mod plugin_runtime {
                             PasteAnchor::Original => fragment.dsl_text,
                             anchor => format!("{}-{anchor:?}", fragment.dsl_text),
                         };
-                        Emit::mutations(vec![TestMutation::SetLabel { value }])
+                        Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value })])
                     }
                     _ => Emit::default(),
                 }
@@ -33810,11 +32605,11 @@ pub mod plugin_runtime {
         }
         //#endregion 🧪️TestClipboardReservedJob
 
-        struct NoPresenceRetirement {
-            snapshot: Option<std::sync::Arc<NoPresence>>,
+        struct PublicationPresenceRetirement {
+            snapshot: Option<std::sync::Arc<PublicationPresence>>,
         }
 
-        impl store::ErasedSnapshotRetirement for NoPresenceRetirement {
+        impl store::ErasedSnapshotRetirement for PublicationPresenceRetirement {
             fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
                 if maximum_items == 0 {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
@@ -33830,19 +32625,19 @@ pub mod plugin_runtime {
             }
         }
 
-        struct NoPresenceRetirementFactory;
+        struct PublicationPresenceRetirementFactory;
 
-        impl store::SnapshotRetirementFactory<NoPresence> for NoPresenceRetirementFactory {
-            fn retire(&self, snapshot: std::sync::Arc<NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
-                Box::new(NoPresenceRetirement { snapshot: Some(snapshot) })
+        impl store::SnapshotRetirementFactory<PublicationPresence> for PublicationPresenceRetirementFactory {
+            fn retire(&self, snapshot: std::sync::Arc<PublicationPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(PublicationPresenceRetirement { snapshot: Some(snapshot) })
             }
         }
 
-        //#region 🧹️ExactEmptyLaneFixtureOwners
-        struct TestEmptyPresenceStoreDisposer(Option<store::PresenceStoreRetirement<NoPresence>>);
+        //#region 🧹️PublicationLaneFixtureOwners
+        struct TestPublicationPresenceStoreDisposer(Option<store::PresenceStoreRetirement<PublicationPresence>>);
 
-        impl ArtifactOwnedDisposer<store::PresenceStore<NoPresence, NoPresenceMutation>> for TestEmptyPresenceStoreDisposer {
-            fn close_step(&mut self, owner: &mut store::PresenceStore<NoPresence, NoPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        impl ArtifactOwnedDisposer<store::PresenceStore<PublicationPresence, PublicationPresenceMutation>> for TestPublicationPresenceStoreDisposer {
+            fn close_step(&mut self, owner: &mut store::PresenceStore<PublicationPresence, PublicationPresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
                 if maximum_items == 0 {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
@@ -33853,36 +32648,34 @@ pub mod plugin_runtime {
                         store::SnapshotRetirementStep::Complete => PluginCloseStep::Complete,
                     });
                 }
-                assert_eq!(std::mem::size_of::<NoPresence>(), 0);
-                self.0 = Some(owner.begin_retirement(std::sync::Arc::new(NoPresence {}), |_| true).map_err(|(reason, _)| Fault::from(reason))?);
+                self.0 = Some(owner.begin_retirement(std::sync::Arc::new(PublicationPresence::default()), |_| true).map_err(|(reason, _)| Fault::from(reason))?);
                 Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
             }
 
-            fn terminal_is_empty(&self, owner: &store::PresenceStore<NoPresence, NoPresenceMutation>) -> bool {
-                owner.retirement_started() && self.0.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.peers_root().is_empty() && std::mem::size_of::<NoPresence>() == 0
+            fn terminal_is_empty(&self, owner: &store::PresenceStore<PublicationPresence, PublicationPresenceMutation>) -> bool {
+                owner.retirement_started() && self.0.as_ref().is_some_and(store::PresenceStoreRetirement::terminal_is_empty) && owner.peers_root().is_empty()
             }
         }
 
-        struct TestEmptyTransientStoreDisposer;
+        struct TestPublicationTransientStoreDisposer;
 
-        impl ArtifactOwnedDisposer<store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>> for TestEmptyTransientStoreDisposer {
-            fn close_step(&mut self, _owner: &mut store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        impl ArtifactOwnedDisposer<store::TransientStore<PublicationTransient, PublicationTransientMutation>> for TestPublicationTransientStoreDisposer {
+            fn close_step(&mut self, _owner: &mut store::TransientStore<PublicationTransient, PublicationTransientMutation>, maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
                 if maximum_items == 0 {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                assert_eq!(std::mem::size_of::<crate::app::NoTransient>(), 0);
                 Ok(PluginCloseStep::Complete)
             }
 
-            fn terminal_is_empty(&self, _owner: &store::TransientStore<crate::app::NoTransient, crate::app::NoTransientMutation>) -> bool {
-                std::mem::size_of::<crate::app::NoTransient>() == 0
+            fn terminal_is_empty(&self, _owner: &store::TransientStore<PublicationTransient, PublicationTransientMutation>) -> bool {
+                true
             }
         }
-        //#endregion 🧹️ExactEmptyLaneFixtureOwners
+        //#endregion 🧹️PublicationLaneFixtureOwners
 
         impl ArtifactApp for TestApp {
             fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(std::sync::Arc::new(NoPresenceRetirementFactory))
+                Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
             }
             // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
             // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
@@ -33895,14 +32688,14 @@ pub mod plugin_runtime {
             type ConfigMutation = TestConfigMutation;
             type Draft = NoDraft;
             type DraftMutation = NoDraftMutation;
-            type Presence = NoPresence;
-            type PresenceMutation = NoPresenceMutation;
-            type Transient = crate::app::NoTransient;
-            type TransientMutation = crate::app::NoTransientMutation;
+            type Presence = PublicationPresence;
+            type PresenceMutation = PublicationPresenceMutation;
+            type Transient = PublicationTransient;
+            type TransientMutation = PublicationTransientMutation;
             type Command = TestCommand;
 
             fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-                Some(std::sync::Arc::new(NoPresenceRetirementFactory))
+                Some(std::sync::Arc::new(PublicationPresenceRetirementFactory))
             }
 
             fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -33930,11 +32723,11 @@ pub mod plugin_runtime {
             }
 
             fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-                Some(Box::new(TestEmptyPresenceStoreDisposer(None)))
+                Some(Box::new(TestPublicationPresenceStoreDisposer(None)))
             }
 
             fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-                Some(Box::new(TestEmptyTransientStoreDisposer))
+                Some(Box::new(TestPublicationTransientStoreDisposer))
             }
 
             fn build_reserved_tool_job(request: ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
@@ -33945,20 +32738,18 @@ pub mod plugin_runtime {
                 TestSnapshot::default()
             }
 
-            /// 👥️🫧️ Emits into BOTH ephemeral lanes on `increment`, so the dispatch path that
-            /// reaches `presence_store`/`transient_store` is actually exercised rather than merely
-            /// compiled. `Noop` is a real mutation of the `No*` lane types — it changes no content
-            /// but does bump each store's generation, which is exactly the signal the host
-            /// broadcasts (presence) and re-renders (transient) on.
             async fn ephemeral(
                 command: &TestCommand,
                 _doc: &ArtifactView<'_, TestSnapshot>,
                 _cfg: &ConfigView<'_, TestConfig>,
-                _presence: &crate::app::PresenceView<'_, NoPresence>,
-                _transient: &crate::app::TransientView<'_, crate::app::NoTransient>,
+                presence: &crate::app::PresenceView<'_, PublicationPresence>,
+                transient: &crate::app::TransientView<'_, PublicationTransient>,
             ) -> crate::app::EphemeralEmit<Self> {
                 match command {
-                    TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+                    TestCommand::Increment => crate::app::EphemeralEmit {
+                        presence: vec![ChangePublicationPresence { revision: presence.local.revision.saturating_add(1) }.into()],
+                        transient: vec![ChangePublicationTransient { revision: transient.snapshot.revision.saturating_add(1) }.into()],
+                    },
                     _ => crate::app::EphemeralEmit::default(),
                 }
             }
@@ -34014,7 +32805,7 @@ pub mod plugin_runtime {
             ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
                 let _ = Self::command_id(command);
                 match command {
-                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount { value: doc.snapshot.count + 1 }], description: Some("increment".into()), ..Default::default() }),
+                    TestCommand::Increment | TestCommand::IncrementViaCommand => Ok(Emit { artifact_mutations: vec![TestMutation::SetCount(SetCount { value: doc.snapshot.count + 1 })], description: Some("increment".into()), ..Default::default() }),
                     TestCommand::WatchdogOverrun => {
                         let started = std::time::Instant::now();
                         while started.elapsed() < std::time::Duration::from_millis(10) {
@@ -34022,13 +32813,13 @@ pub mod plugin_runtime {
                         }
                         Ok(Emit::default())
                     }
-                    TestCommand::SetLabel { value } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel { value: value.clone() }], coalesce_key: Some("label".into()), ..Default::default() }),
-                    TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel { value: value.clone() }])),
-                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel { value: value.clone() }], "label")),
-                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel { value: value.clone() }], "commit label")),
-                    TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount { value: 99 }])),
+                    TestCommand::SetLabel { value } => Ok(Emit { artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], coalesce_key: Some("label".into()), ..Default::default() }),
+                    TestCommand::SetLabelViaCommand { value } => Ok(Emit::mutations(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })])),
+                    TestCommand::AmendLabel { value } => Ok(Emit::amend(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "label")),
+                    TestCommand::CommitLabel { value } => Ok(Emit::commit(vec![TestMutation::SetLabel(SetLabel { value: value.clone() })], "commit label")),
+                    TestCommand::BadView => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: 99 })])),
                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) })),
-                    TestCommand::Select { id } => Ok(Emit::config(vec![TestConfigMutation::SetSelected { value: id.clone() }])),
+                    TestCommand::Select { id } => Ok(Emit::config(vec![ChangeTestConfigSelection { selected: id.clone() }.into()])),
                     TestCommand::Navigate => Ok(Emit::effect(Effect::Navigate { uri: "semio://home".into() })),
                     TestCommand::NoopMutation => Ok(Emit::default()),
                     TestCommand::ViewNoScope => Ok(Emit { ui_scope: UiDirtyScope::None, ..Default::default() }),
@@ -34036,8 +32827,8 @@ pub mod plugin_runtime {
                         Ok(Emit { ui_scope: UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }, ..Default::default() })
                     }
                     TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
-                        artifact_mutations: vec![TestMutation::SetLabel { value: "composite".into() }],
-                        child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), vec![TestMutation::SetCount { value: *child_value }])],
+                        artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: "composite".into() })],
+                        child_emits: vec![ChildEmit::of::<TestSnapshot, _>(slot.clone(), child_id.clone(), vec![TestMutation::SetCount(SetCount { value: *child_value })])],
                         ..Default::default()
                     }),
                     TestCommand::ProbeChild { slot, child_id } => {
@@ -34057,7 +32848,7 @@ pub mod plugin_runtime {
                         })
                         .await,
                     )),
-                    TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount { value: *value }])),
+                    TestCommand::ApplyCountFromTask { value } => Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: *value })])),
                 }
             }
 
@@ -34087,7 +32878,7 @@ pub mod plugin_runtime {
                 if doc.snapshot.label.is_empty() {
                     Vec::new()
                 } else {
-                    vec![TestMutation::SetLabel { value: String::new() }]
+                    vec![TestMutation::SetLabel(SetLabel { value: String::new() })]
                 }
             }
 
@@ -34099,7 +32890,7 @@ pub mod plugin_runtime {
                     PasteAnchor::Original => fragment.dsl_text.clone(),
                     _ => format!("{}-{:?}", fragment.dsl_text, placement.anchor),
                 };
-                Ok(vec![TestMutation::SetLabel { value }])
+                Ok(vec![TestMutation::SetLabel(SetLabel { value })])
             }
 
             /// 🧪️ Menu = always "setLabelRequired"; "incrementViaCommand" gated on a non-empty label
@@ -34179,7 +32970,7 @@ pub mod plugin_runtime {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 let TestCommand::CompositeEdit { child_value, .. } = self.command.as_deref().unwrap() else { panic!("exact keyed fixture command"); };
-                self.completion.as_ref().unwrap().complete(Ok(Emit::mutations(vec![TestMutation::SetCount { value: self.base_count + child_value }])), EphemeralEmit::default()).expect("one exact keyed completion");
+                self.completion.as_ref().unwrap().complete(Ok(Emit::mutations(vec![TestMutation::SetCount(SetCount { value: self.base_count + child_value })])), EphemeralEmit::default()).expect("one exact keyed completion");
                 semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
                     state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
                     output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
@@ -34238,6 +33029,9 @@ pub mod plugin_runtime {
             fn build_latest_wins_command_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<TestCommand>>> { Some(Box::new(KeyedTestCommandDisposer)) }
         }
 
+        //#region 🧹️KeyedNoStateFixtureOwners
+        //#endregion 🧹️KeyedNoStateFixtureOwners
+
         impl ArtifactApp for KeyedTestApp {
             const APP_ID: &'static str = "s.test.keyed@1/*#editor";
             const DOCUMENT_SCHEMA: &'static str = "semio.test/v1";
@@ -34272,15 +33066,74 @@ pub mod plugin_runtime {
             fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { TestApp::build_document_store_disposer() }
             fn build_config_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> { TestApp::build_config_store_disposer() }
             fn build_draft_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> { TestApp::build_draft_store_disposer() }
-            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { TestApp::build_presence_store_disposer() }
-            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { TestApp::build_transient_store_disposer() }
-            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::build_presence_peer_retirement_factory() }
-            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { TestApp::build_presence_local_root_retirement_factory() }
-            fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { TestApp::build_transient_local_root_retirement_factory() }
+            fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> { Some(crate::app::mutation_fixture::no_state::presence_store_disposer()) }
+            fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { Some(crate::app::mutation_fixture::no_state::transient_store_disposer()) }
+            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory()) }
+            fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory()) }
+            fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory()) }
             async fn initial_snapshot() -> TestSnapshot { TestSnapshot::default() }
             async fn command_id(command: &TestCommand) -> &'static str { TestApp::command_id(command).await }
             async fn handle(_command: &TestCommand, _doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> { Err(Fault::from("keyed fixture requires its actual retained factory")) }
             async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> { TestApp::render(body, doc, cfg).await }
+        }
+
+        #[test]
+        fn keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners() {
+            fn close_root<T: Send + Sync + 'static>(factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<T>>, root: T) {
+                let mut retirement = store::SnapshotRetirementFactory::retire(factory.as_ref(), std::sync::Arc::new(root));
+                assert!(matches!(store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })));
+                for _ in 0..4 {
+                    match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded root retirement") {
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
+                        store::SnapshotRetirementStep::Complete => {
+                            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()));
+                            return;
+                        }
+                        store::SnapshotRetirementStep::Blocked => panic!("no-state root retirement must not block"),
+                    }
+                }
+                panic!("no-state root retirement exceeded its bounded close turns");
+            }
+
+            close_root(<KeyedTestApp as ArtifactApp>::build_presence_local_root_retirement_factory().expect("presence local factory"), NoPresence::default());
+            close_root(<KeyedTestApp as ArtifactApp>::build_presence_peer_retirement_factory().expect("presence peer factory"), NoPresence::default());
+            close_root(<KeyedTestApp as ArtifactApp>::build_transient_local_root_retirement_factory().expect("transient local factory"), crate::app::NoTransient::default());
+
+            let mut presence = store::PresenceStore::<NoPresence, NoPresenceMutation>::new(NoPresence::default());
+            presence.install_local_retirement_factory(<KeyedTestApp as ArtifactApp>::build_presence_local_root_retirement_factory().expect("presence local factory")).expect("presence local factory installs once");
+            presence.install_peer_retirement_factory(<KeyedTestApp as ArtifactApp>::build_presence_peer_retirement_factory().expect("presence peer factory")).expect("presence peer factory installs once");
+            let mut presence_disposer = <KeyedTestApp as ArtifactApp>::build_presence_store_disposer().expect("presence disposer");
+            assert_eq!(presence_disposer.close_step(&mut presence, 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            for _ in 0..8 {
+                if presence_disposer.close_step(&mut presence, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("presence close") == PluginCloseStep::Complete { break; }
+            }
+            assert!(presence_disposer.terminal_is_empty(&presence));
+            assert!(presence.retirement_started() && presence.peers_root().is_empty());
+
+            let mut transient = store::TransientStore::<crate::app::NoTransient, crate::app::NoTransientMutation>::new(crate::app::NoTransient::default());
+            let mut transient_disposer = <KeyedTestApp as ArtifactApp>::build_transient_store_disposer().expect("transient disposer");
+            let original_transient_root = transient.current_root();
+            let original_transient_weak = std::sync::Arc::downgrade(&original_transient_root);
+            let original_transient_generation = transient.generation_now();
+            assert_eq!(transient_disposer.close_step(&mut transient, 0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("zero grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert!(!transient_disposer.terminal_is_empty(&transient));
+            let short_transient_grant = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.checked_sub(1).expect("nonzero transient retirement page");
+            assert_eq!(transient_disposer.close_step(&mut transient, 1, short_transient_grant).expect("short transient grant"), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(transient.generation_now(), original_transient_generation);
+            assert!(std::sync::Arc::ptr_eq(&original_transient_root, &transient.current_root()));
+            assert_eq!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient owned-store retirement"), PluginCloseStep::Pending { released_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES });
+            assert_eq!(transient.generation_now(), 0);
+            assert!(!std::sync::Arc::ptr_eq(&original_transient_root, &transient.current_root()));
+            drop(original_transient_root);
+            assert!(original_transient_weak.upgrade().is_none());
+            assert_eq!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient terminal completion"), PluginCloseStep::Complete);
+            assert!(transient_disposer.terminal_is_empty(&transient));
+            assert_eq!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("transient repeated complete"), PluginCloseStep::Complete);
+            transient = store::TransientStore::new(crate::app::NoTransient::default());
+            let drifted_transient_root = transient.current_root();
+            assert!(!transient_disposer.terminal_is_empty(&transient));
+            assert!(transient_disposer.close_step(&mut transient, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).is_err(), "transient terminal witness rejects owner drift");
+            assert!(std::sync::Arc::ptr_eq(&drifted_transient_root, &transient.current_root()));
         }
 
         async fn keyed_test_registry() -> AppActionRegistry {
@@ -34305,7 +33158,7 @@ pub mod plugin_runtime {
             crate::app::test_retained_keyed_dispatch::<KeyedTestApp>(
                 keyed_test_registry().await,
                 |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
-                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count, None,
+                |value| TestMutation::SetCount(SetCount { value }), |snapshot| snapshot.count, None,
             ).await;
         }
 
@@ -34315,7 +33168,7 @@ pub mod plugin_runtime {
             crate::app::test_retained_keyed_dispatch::<KeyedTestApp>(
                 keyed_test_registry().await,
                 |target, value| TestCommand::CompositeEdit { slot: String::new(), child_id: target.into(), child_value: value },
-                |value| TestMutation::SetCount { value }, |snapshot| snapshot.count, Some(clock),
+                |value| TestMutation::SetCount(SetCount { value }), |snapshot| snapshot.count, Some(clock),
             ).await;
             eprintln!("[DEBUG] registered 500us factory completed real dispatch/rebase/publication/ACK/close with exact fake microsecond clock");
         }
@@ -34624,7 +33477,7 @@ pub mod plugin_runtime {
 
         #[semio_framework_async_macros::async_test]
         async fn retained_latest_wins_real_document_publication_cancellation_and_exhausted_ack_close() {
-            crate::app::test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount { value: 42 }, |snapshot| snapshot.count).await;
+            crate::app::test_retained_document_cancellation::<TestApp>(&TestCountOneItemPreparationFactory, || TestMutation::SetCount(SetCount { value: 42 }), |snapshot| snapshot.count).await;
         }
 
         #[semio_framework_async_macros::async_test]
@@ -35043,7 +33896,7 @@ pub mod plugin_runtime {
             assert!(completed, "resumed retained command reaches its commit boundary");
             assert_eq!(TEST_RETAINED_COMMAND_STEP_CALLS.load(std::sync::atomic::Ordering::SeqCst), 2, "resume continues after cursor one instead of replaying completed custom work");
             let (result, _) = resumed_consumer.take_emit().expect("resumed completion cell").expect("resumed completion value");
-            assert_eq!(result.expect("resumed command emit").artifact_mutations, vec![TestMutation::SetLabel { value: "resumed".into() }]);
+            assert_eq!(result.expect("resumed command emit").artifact_mutations, vec![TestMutation::SetLabel(SetLabel { value: "resumed".into() })]);
             resumed.job.begin_close();
             for _ in 0..64 {
                 if resumed.job.terminal_is_empty() {
@@ -35223,8 +34076,8 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default()).await;
             let result = app.dispatch_typed(TestCommand::Increment, &meta()).await.expect("increment");
             assert_eq!(result.mutations.len(), 1);
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
-            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
+            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
             assert_eq!(result.inverse_group.mutations.len(), 1);
             assert_eq!(app.test_snapshot().await.count, 1);
         }
@@ -35242,7 +34095,7 @@ pub mod plugin_runtime {
             assert_eq!(app.transient_store.generation().await, 1, "transient lane never received the command's emission");
             assert_eq!(
                 app.ephemeral_snapshot().await,
-                EphemeralSnapshot { presence: NoPresence::default().encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
+                EphemeralSnapshot { presence: PublicationPresence { revision: 1 }.encode_pack(), presence_generation: 1, transient_generation: 1, interaction: Vec::new() },
                 "object-safe channel snapshot must carry the typed presence pack, both generations, and (declaring no interaction domain) empty interaction bytes"
             );
 
@@ -35296,7 +34149,7 @@ pub mod plugin_runtime {
                 actor: actor.to_string(),
                 connected_at_ms: 1,
                 label: None,
-                presence_pack: with_pack.then(|| NoPresence::default().encode_pack()),
+                presence_pack: with_pack.then(|| PublicationPresence::default().encode_pack()),
                 user_id: None,
                 role: None,
                 drag_ghost_json: None,
@@ -35784,7 +34637,7 @@ pub mod plugin_runtime {
             app.register_child("slot", "child-maximum", test_child_dialect().await, new_test_child("child-maximum").await.expect("construct maximum child")).await.expect("register maximum child");
             let (_, member) = app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child");
             let TestMembers::Child(child) = member;
-            child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) }], description: None }).await.expect("seed maximum child");
+            child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel(SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) })], description: None }).await.expect("seed maximum child");
             let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
             app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
             MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
@@ -36616,10 +35469,10 @@ pub mod plugin_runtime {
             app.dispatch_typed(TestCommand::AmendLabel { value: "ab".into() }, &meta()).await.expect("amendLabel ab");
             let result = app.dispatch_typed(TestCommand::AmendLabel { value: "abc".into() }, &meta()).await.expect("amendLabel abc");
             assert_eq!(result.mutations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel { value: "abc".into() }).unwrap());
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "abc".into() })).unwrap());
             assert_eq!(
                 result.mutations[0].inverse.inverse_diff.payload,
-                protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetLabel { value: "ab".into() }).unwrap()]),
+                protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetLabel(SetLabel { value: "ab".into() })).unwrap()]),
                 "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
             );
             assert_eq!(result.inverse_group.mutations.len(), 1);
@@ -36635,8 +35488,8 @@ pub mod plugin_runtime {
             let mut app = contract_app_under_test().await;
             let result = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("incrementViaCommand");
             assert_eq!(result.mutations.len(), 1);
-            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 1 }).unwrap());
-            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount { value: 0 }).unwrap()]));
+            assert_eq!(result.mutations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 1 })).unwrap());
+            assert_eq!(result.mutations[0].inverse.inverse_diff.payload, protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestMutation::SetCount(SetCount { value: 0 })).unwrap()]));
             assert_eq!(app.test_snapshot().await.count, 1);
         }
 
@@ -37020,7 +35873,7 @@ pub mod plugin_runtime {
             let ops = protocol::decode_ops_vec(&document_ops).expect("document_ops must decode as an ops-vec");
             assert_eq!(ops.len(), 1, "ApplyCountFromTask emits exactly one document mutation");
             let applied_mutation = <TestMutation as ::protocol::OpBinary>::decode_op(&ops[0]).expect("must decode back to a TestMutation");
-            assert_eq!(applied_mutation, TestMutation::SetCount { value: 42 }, "the follow-up dispatch must have applied the SAME mutation ApplyCountFromTask{{value:42}} produces directly");
+            assert_eq!(applied_mutation, TestMutation::SetCount(SetCount { value: 42 }), "the follow-up dispatch must have applied the SAME mutation ApplyCountFromTask{{value:42}} produces directly");
         }
 
         /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
@@ -37137,22 +35990,26 @@ pub mod plugin_runtime {
         /// `TestApp` instance, exactly like a live task's own resume.
         #[semio_framework_async_macros::async_test]
         async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
+            let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
             let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new();
             let instance = 507;
             let meta = ActionMeta { actor: "local".into(), instance_id: instance };
             let restart_command = <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value: 7 }).expect("must encode");
+            let observed_completion = std::sync::Arc::new(std::sync::Mutex::new(None));
 
             let task = AsyncTask::<TestMutation, TestConfigMutation, NoDraftMutation>::new("checkpointed", {
-                let restart_command = restart_command.clone();
+                let observed_completion = observed_completion.clone();
                 move |ctx: TaskCtx| async move {
-                    let _ = ctx.host.storage_read("never-resolved-either").await; // stays in flight
+                    let result = ctx.host.storage_read("never-resolved-either").await;
+                    *observed_completion.lock().unwrap() = Some(result);
                     Ok(TaskResolution::Done)
                 }
             })
             .await
             .restartable(restart_command.clone());
             crate::reactor::spawn_task(instance, &meta, task.await).await.expect("must spawn");
-            crate::reactor::test_support::run_until_idle(8); // parks — still in flight when checkpointed
+            assert!(crate::reactor::test_support::run_until_idle(8).await);
+            let observed_parked_requests = crate::reactor::test_support::pending_request_count().await;
 
             let packed = crate::reactor::checkpoint_now(&runtime).await.expect("checkpoint must succeed while the task is in flight");
 
@@ -37160,8 +36017,14 @@ pub mod plugin_runtime {
             // never resumed as though the host round-trip were still live (design-abi.md §4).
             // `restore_now` below is what re-arms it, as a fresh Command resume, not a revival.
             crate::reactor::cancel_instance_tasks(instance);
-            crate::reactor::test_support::cancel_instance_registry_requests(instance);
+            crate::reactor::test_support::cancel_instance_registry_requests(instance).await;
+            crate::reactor::cancel_instance_tasks(instance);
             assert_eq!(crate::reactor::test_support::task_count_for_instance(instance).await, 0);
+            assert_eq!(observed_parked_requests as u64, completion["checkpoint"]["parkedRequests"].as_u64().unwrap(), "checkpoint must observe an actually polled and parked task");
+            assert_eq!(crate::reactor::test_support::pending_request_count().await as u64, completion["checkpoint"]["requestsAfterCancel"].as_u64().unwrap());
+            let fault = observed_completion.lock().unwrap().take().expect("the original retained task completed").expect_err("retired request must not become a successful host response");
+            assert_eq!(fault.code.0, completion["checkpoint"]["completionFaultCode"].as_str().unwrap());
+            assert_eq!(fault.message, completion["checkpoint"]["completionFaultMessage"].as_str().unwrap());
 
             crate::reactor::restore_now(&runtime, &packed).await.expect("restore must succeed");
             let (resumed_instance, resumed_meta, resumed_input) = crate::reactor::test_support::pop_task_resume().await.expect("restore must have queued exactly one resume for the restartable task");
@@ -37178,6 +36041,14 @@ pub mod plugin_runtime {
             // restore here).
             let direct = app.dispatch_typed(TestCommand::ApplyCountFromTask { value: 7 }, &meta).await.expect("the SAME command dispatched directly must succeed");
             assert_eq!(direct.mutations.len(), 1);
+        }
+
+        #[test]
+        fn checkpoint_restart_mode_requires_its_exact_concrete_factory_owner() {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
+            assert_eq!(TestApp::<false>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["defaultProofs"].as_u64().unwrap());
+            assert_eq!(TestApp::<true>::bounded_first_step_tool_proofs().len() as u64, fixture["restartAuthority"]["retainedProofs"].as_u64().unwrap());
+            assert_ne!(ToolOwnerWitness::of::<TestApp<false>>(), ToolOwnerWitness::of::<TestApp<true>>());
         }
         //#endregion 🔖️AsyncTaskTests
     }
@@ -38422,18 +37293,13 @@ mod derived_artifact_children_tests {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    struct ChildrenTestMutation;
-
-    impl protocol::Mutation<ChildrenTestSnapshot> for ChildrenTestMutation {
-        type Diff = ChildrenTestDiff;
-        fn diff(&self, _snapshot: &ChildrenTestSnapshot) -> protocol::MutationOutcome<ChildrenTestDiff> {
-            protocol::MutationOutcome::new(ChildrenTestDiff)
-        }
-        fn inverse(&self, _snapshot: &ChildrenTestSnapshot) -> Vec<Self> {
-            Vec::new()
-        }
+    //#region 🧬️ChildrenMutationRoster
+    mod mutations {
+        use super::{ChildrenTestDiff, ChildrenTestSnapshot};
+        include!("🧪️tests/🧬️children-fixture/🧬️mutations/🦀️.rs");
     }
+    use mutations::ChildrenTestMutation;
+    //#endregion 🧬️ChildrenMutationRoster
 
     #[derive(Clone, Debug)]
     struct ChildrenTestConstruction(ChildrenTestSnapshot);
@@ -38716,9 +37582,11 @@ macro_rules! subset {
 
                 #[semio_framework_async_macros::async_test]
                 async fn subset_macro_derived_validator_registers() {
-                    register();
+                    register().await;
+                    let registered = semio_framework::io::list_registered_subset_validator_dialects().await.expect("registered subset observation");
+                    assert_eq!(registered.iter().filter(|dialect| **dialect == SUBSET_DIALECT).count(), 1);
                     let payload = $crate::IoPayload::Text(String::new());
-                    let _ = <$validator as $crate::SubsetValidator>::validate(&payload);
+                    let _ = <$validator as $crate::SubsetValidator>::validate(&payload).await;
                 }
             }
         }
@@ -38750,8 +37618,11 @@ mod subset_macro_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_macro_derived_register_is_idempotent() {
-        register_subset();
-        register_subset();
+        let completion: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/⏳️completion/🧪️fixture.json"))).unwrap();
+        register_subset().await;
+        register_subset().await;
+        let registered = semio_framework::io::list_registered_subset_validator_dialects().await.expect("registry observation");
+        assert_eq!(registered.iter().filter(|dialect| **dialect == SUBSET_DIALECT).count() as u64, completion["registration"]["registeredEntries"].as_u64().unwrap(), "two completed registrations must install exactly one actual registry entry");
         let diagnostics = MacroDerivedValidator::validate(&IoPayload::Text(String::new())).await;
         assert_eq!(diagnostics.len(), 1);
         assert_eq!(diagnostics[0].code.0, "test.subset-macro.ok");

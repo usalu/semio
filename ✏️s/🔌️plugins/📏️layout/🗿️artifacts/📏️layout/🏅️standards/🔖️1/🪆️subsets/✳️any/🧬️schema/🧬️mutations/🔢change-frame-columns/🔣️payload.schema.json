@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFrameColumns",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frameId",
+    "newColumns",
+    "pageId"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string"
+    },
+    "frameId": {
+      "type": "string"
+    },
+    "newColumns": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

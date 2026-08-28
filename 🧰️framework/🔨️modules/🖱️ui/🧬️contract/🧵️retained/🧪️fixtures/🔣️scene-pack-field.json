@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "forgedRootAccepted": false,
+  "valid": [
+    {"name":"empty-binary","text":"pk:","hex":""},
+    {"name":"one-byte","text":"pk:AA==","hex":"00"},
+    {"name":"two-bytes","text":"pk:AQI=","hex":"0102"},
+    {"name":"three-bytes","text":"pk:AQID","hex":"010203"},
+    {"name":"unpadded-one","text":"pk:AA","hex":"00"},
+    {"name":"unpadded-two","text":"pk:AQI","hex":"0102"},
+    {"name":"ascii-whitespace","text":"pk: A Q\nI=\t","hex":"0102"},
+    {"name":"split-padding","text":"pk:AA=\n=","hex":"00"},
+    {"name":"unused-low-bits","text":"pk:AB==","hex":"00"},
+    {"name":"alphabet-end","text":"pk:+/8=","hex":"fbff"}
+  ],
+  "invalid": ["", "Pk:AA==", " pk:AA==", "pk:A", "pk:AA===", "pk:A=AA", "pk:AA==A", "pk:!!!!", "pk:AA-_", "pk:AA ", "pk:=", "pk:A===", "pk:AQI=="],
+  "largeBytes": 16384,
+  "cancelPrefixes": [0,1,2,3,4,8,16,256,4096,32768,65536],
+  "maximumChunkBytes": 256,
+  "grant": {"maxItems":1,"maxBytes":4096}
+}

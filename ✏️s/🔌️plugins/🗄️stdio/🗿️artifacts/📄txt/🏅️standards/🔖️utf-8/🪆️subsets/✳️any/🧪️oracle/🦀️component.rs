@@ -451,7 +451,7 @@ mod tests {
     const REAL_FIXTURE: &[u8] = include_bytes!("../../../../../🧫️fixtures/📄️interview-transkript.tex");
 
     /// 🎬️ The `@id-mutate`/`@id-inverse` Examples table of
-    /// `../../../../../🧪️tests/mutate-txt-utf-8/component.feature`, verbatim — the same seven rows,
+    /// `../../../../../🧪️tests/mutate-txt-utf-8/🥒️.feature`, verbatim — the same seven rows,
     /// the same parameters against the same real document.
     // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
     fn feature_example_rows() -> Vec<Json> {

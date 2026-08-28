@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `stdio.semio.value` is a semio-NATIVE format — no third party reads or writes `.dsl.semio`/`.pack.semio` for it — so the reference registered below is a second IMPLEMENTATION in another language rather than a third-party package.",
   "oracles": [
     {
       "id": "semio-value-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-value-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-value-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer a differential comparison needs is a second IMPLEMENTATION. `../../../../../../🧪️tests/mutate-semio-value/🐍️component.py` is that implementation: the semio envelope, the recursive `[hex(schema),<value>,[<node>,…]]` DSL grammar, the tag-prefixed `SemioValue` production and all nine verbs with their inverses — including the ORDER-restoring multi-step undo `remove-map-entry` needs, because `set-map-entry` appends an absent key — written in Python from the committed specification documents alone: `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio`, `../🧬️schema/🧬️mutations/🔣️component.json` and the committed `(before, mutation, after)` vectors. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The `semio-value-mutation-semantics` no-oracle decision this entry replaces had named `json` 0.12 (json-rust) as the nearest candidate and declined it on evidence: a generic JSON DOM has no analogue for `Bytes`, `Ref`, lexeme-preserving `Int`/`Float` or the top-level id-keyed node graph, so every one of the nine semantics would still have been hand-written on top of it. That judgement stands. Python's `json` module IS used, for the job it is authoritative about — reading the real committed 424 KB `spatial.modelspace` building model once, with `parse_int`/`parse_float` hooks so every numeric source lexeme survives, to derive the document the case mutates — and `payload-fidelity` re-reads that same source on the subject side with this repository's own `stdio.json` RFC 8259 codec, so the two parsers are compared against each other as well."
+      "rationale": "No library in any ecosystem reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so the second producer a differential comparison needs is a second IMPLEMENTATION. `../../../../../../🧪️tests/mutate-semio-value/🐍️component.py` is that implementation: the semio envelope, the recursive `[hex(schema),<value>,[<node>,…]]` DSL grammar, the tag-prefixed `SemioValue` production and all nine verbs with their inverses — including the ORDER-restoring multi-step undo `remove-map-entry` needs, because `set-map-entry` appends an absent key — written in Python from the committed specification documents alone: `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/📸️snapshot/💾️binary/📡️component.protocol.semio`, `../🧬️schema/🧬️mutations/🔣️component.json` and the committed `(before, mutation, after)` vectors. It imports nothing from and transliterates nothing of the Rust it judges, and it needs no host package, which is why `package` is empty. The `semio-value-mutation-semantics` no-oracle decision this entry replaces had named `json` 0.12 (json-rust) as the nearest candidate and declined it on evidence: a generic JSON DOM has no analogue for `Bytes`, `Ref`, lexeme-preserving `Int`/`Float` or the top-level id-keyed node graph, so every one of the nine semantics would still have been hand-written on top of it. That judgement stands. Python's `json` module IS used, for the job it is authoritative about — reading the real committed 424 KB `spatial.modelspace` building model once, with `parse_int`/`parse_float` hooks so every numeric source lexeme survives, to derive the document the case mutates — and `payload-fidelity` re-reads that same source on the subject side with this repository's own `stdio.json` RFC 8259 codec, so the two parsers are compared against each other as well.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-value-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -33,7 +45,17 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-value",
+        "set-map-entry",
+        "remove-map-entry",
+        "insert-list-item",
+        "remove-list-item",
+        "set-node",
+        "remove-node"
+      ]
     }
   ]
 }

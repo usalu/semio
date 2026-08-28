@@ -3,7 +3,7 @@
 
 use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
-use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation};
+use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetLocale as SetLocaleMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
 
@@ -18,7 +18,7 @@ pub mod set_locale {
     }
 
     pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, GisTerrainSnapshot>, _cfg: &ConfigView<'_, Gis3dConfig>) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation>, Fault> {
-        Ok(Emit::config(vec![Gis3dConfigMutation::SetLocale { value: payload.value.clone() }]))
+        Ok(Emit::config(vec![Gis3dConfigMutation::SetLocale(SetLocaleMutation { value: payload.value.clone() })]))
     }
 }
 //#endregion 🔖️SetLocale

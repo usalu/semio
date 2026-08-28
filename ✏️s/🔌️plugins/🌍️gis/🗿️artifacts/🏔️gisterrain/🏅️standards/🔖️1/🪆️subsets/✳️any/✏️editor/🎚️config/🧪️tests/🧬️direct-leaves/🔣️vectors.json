@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "config": {
+    "valid": [{"cameraJson":"{\"position\":[1,2,3]}","locale":"de-DE"},{"cameraJson":"","locale":""}],
+    "invalid": [{},{"cameraJson":"{}"},{"locale":"en-US"},{"cameraJson":null,"locale":"en-US"},{"cameraJson":"{}","locale":null},{"cameraJson":7,"locale":"en-US"},{"cameraJson":"{}","locale":"en-US","selectedIds":[]}]
+  },
+  "mutations": {
+    "valid": [{"operation":"setCamera","cameraJson":"{\"position\":[1,2,3]}"},{"operation":"setLocale","value":"de-DE"}],
+    "invalid": [{},{"operation":"setCamera"},{"operation":"setLocale"},{"operation":"setCamera","cameraJson":null},{"operation":"setLocale","value":42},{"operation":"camera","cameraJson":"{}"},{"operation":"setCamera","cameraJson":"{}","locale":"en-US"},{"operation":"setLocale","value":"de-DE","extra":1}]
+  },
+  "payloads": {
+    "camera": {"valid":[{"cameraJson":"{}"},{"cameraJson":"opaque\n☃"}],"invalid":[{},{"cameraJson":null},{"cameraJson":9},{"cameraJson":"{}","value":"de-DE"}]},
+    "locale": {"valid":[{"value":"de-DE"},{"value":""}],"invalid":[{},{"value":null},{"value":9},{"value":"de-DE","cameraJson":"{}"}]}
+  },
+  "diff": {
+    "valid": [{"steps":[]},{"steps":[{}]},{"steps":[{"cameraJson":null,"locale":null}]},{"steps":[{"cameraJson":"{}","locale":"de-DE"}]},{"steps":[{"cameraJson":"a"},{"cameraJson":"b"},{"locale":"de-DE"}]}],
+    "invalid": [{},{"deltas":[]},{"steps":null},{"steps":{}},{"steps":[null]},{"steps":[{"cameraJson":9}]},{"steps":[{"locale":false}]},{"steps":[{"unknown":1}]},{"steps":[],"extra":1}],
+    "laws": [
+      {"id":"identity","before":{"cameraJson":"original","locale":"de-DE"},"diff":{"steps":[]},"after":{"cameraJson":"original","locale":"de-DE"}},
+      {"id":"missing-null-identity","before":{"cameraJson":"original","locale":"de-DE"},"diff":{"steps":[{},{"cameraJson":null,"locale":null}]},"after":{"cameraJson":"original","locale":"de-DE"}},
+      {"id":"ordered-writes","before":{"cameraJson":"original","locale":"en-US"},"diff":{"steps":[{"cameraJson":"a"},{"locale":"de-DE"},{"cameraJson":"b"}]},"after":{"cameraJson":"b","locale":"de-DE"}},
+      {"id":"both-fields","before":{"cameraJson":"original","locale":"en-US"},"diff":{"steps":[{"cameraJson":"","locale":""}]},"after":{"cameraJson":"","locale":""}}
+    ],
+    "absorption": [
+      {"id":"ordered-absorb","before":{"cameraJson":"original","locale":"en-US"},"left":{"steps":[{"cameraJson":"a"}]},"right":{"steps":[{"locale":"de-DE"},{"cameraJson":"b"}]},"expected":{"steps":[{"cameraJson":"a"},{"locale":"de-DE"},{"cameraJson":"b"}]},"after":{"cameraJson":"b","locale":"de-DE"}}
+    ]
+  },
+  "leaves": [
+    {
+      "key":"camera","folder":"🎥️set-camera","variant":"SetCamera","kind":"set-camera","tag":0,"field":"cameraJson","target":"cameraJson",
+      "cases":[
+        {"id":"camera-change","before":{"cameraJson":"{}","locale":"de-DE"},"payload":{"cameraJson":"{\"position\":[1,2,3]}"},"after":{"cameraJson":"{\"position\":[1,2,3]}","locale":"de-DE"},"diff":{"steps":[{"cameraJson":"{\"position\":[1,2,3]}"}]},"inverse":[{"operation":"setCamera","cameraJson":"{}"}],"warning":null},
+        {"id":"camera-noop","before":{"cameraJson":"{}","locale":"de-DE"},"payload":{"cameraJson":"{}"},"after":{"cameraJson":"{}","locale":"de-DE"},"diff":{"steps":[]},"inverse":[{"operation":"setCamera","cameraJson":"{}"}],"warning":"mutation.no-op"},
+        {"id":"opaque-camera-string","before":{"cameraJson":"{}","locale":"en-US"},"payload":{"cameraJson":"opaque\n☃"},"after":{"cameraJson":"opaque\n☃","locale":"en-US"},"diff":{"steps":[{"cameraJson":"opaque\n☃"}]},"inverse":[{"operation":"setCamera","cameraJson":"{}"}],"warning":null}
+      ]
+    },
+    {
+      "key":"locale","folder":"🗣️set-locale","variant":"SetLocale","kind":"set-locale","tag":1,"field":"value","target":"locale",
+      "cases":[
+        {"id":"locale-change","before":{"cameraJson":"{\"position\":[1,2,3]}","locale":"en-US"},"payload":{"value":"de-DE"},"after":{"cameraJson":"{\"position\":[1,2,3]}","locale":"de-DE"},"diff":{"steps":[{"locale":"de-DE"}]},"inverse":[{"operation":"setLocale","value":"en-US"}],"warning":null},
+        {"id":"locale-noop","before":{"cameraJson":"{}","locale":"de-DE"},"payload":{"value":"de-DE"},"after":{"cameraJson":"{}","locale":"de-DE"},"diff":{"steps":[]},"inverse":[{"operation":"setLocale","value":"de-DE"}],"warning":"mutation.no-op"},
+        {"id":"opaque-locale-string","before":{"cameraJson":"{}","locale":"en-US"},"payload":{"value":""},"after":{"cameraJson":"{}","locale":""},"diff":{"steps":[{"locale":""}]},"inverse":[{"operation":"setLocale","value":"en-US"}],"warning":null}
+      ]
+    }
+  ]
+}

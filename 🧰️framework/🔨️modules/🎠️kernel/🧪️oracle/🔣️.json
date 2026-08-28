@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ The kernel module's contribution to the repository test platform. `semver` is the published contract this module's own versionSatisfies() implements a deliberate subset of, so it belongs to this owner rather than to the test framework.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/npm/node-semver",
       "rationale": "The reference implementation of the semver requirement grammar, and the definition of the caret tiers this module reimplements (^1.2.3 pins major, ^0.2.3 pins minor, ^0.0.3 pins patch). Deterministic, dependency-free, no network. Valid only INSIDE the frozen subset — `*`, `=`, `^`, `~`, `>=` over plain major.minor.patch — because ranges, prerelease tags, wildcards and whitespace comparators are rejected by design here, and comparing those would measure a deliberate divergence rather than a defect.",
-      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "node-semver",
+        "implementation": "node-semver (npm semver package)",
+        "version": "7.8.5"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DragBlocks",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dx",
+    "dy",
+    "ids"
+  ],
+  "properties": {
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "dx": {
+      "type": "number"
+    },
+    "dy": {
+      "type": "number"
+    }
+  }
+}

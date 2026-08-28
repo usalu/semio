@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SetDefaultApp",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "app",
+    "dialect",
+    "role"
+  ],
+  "properties": {
+    "dialect": {
+      "title": "ArtifactDialect",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      }
+    },
+    "role": {
+      "type": "string"
+    },
+    "app": {
+      "title": "AppRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "appId",
+        "pluginId"
+      ],
+      "properties": {
+        "pluginId": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

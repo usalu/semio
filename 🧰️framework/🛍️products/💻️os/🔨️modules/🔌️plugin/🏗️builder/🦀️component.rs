@@ -696,6 +696,12 @@ impl<PA: PluginApp> Plugin<PA> {
     }
 }
 
+//#region 🧪️DependencyContributionFixtureMount
+#[cfg(test)]
+#[path = "🧪️tests/🔗️dependency-contribution/🦀️.rs"]
+mod dependency_fixture;
+//#endregion 🧪️DependencyContributionFixtureMount
+
 #[cfg(test)]
 mod plugin_builder_dependency_tests {
     use super::*;
@@ -736,72 +742,10 @@ mod plugin_builder_dependency_tests {
         Ok(serde_json::json!({ "bridge": "alternate" }))
     }
 
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct DependencyTestSnapshot {
-        value: i32,
-    }
-    impl store::ArtifactPack for DependencyTestSnapshot {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-        }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-        }
-    }
-
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct DependencyTestDiff {
-        delta: i32,
-    }
-    impl protocol::MutationDiff<DependencyTestSnapshot> for DependencyTestDiff {
-        fn apply(&self, base: &DependencyTestSnapshot) -> protocol::MutationApplyResult<DependencyTestSnapshot> {
-            Ok(DependencyTestSnapshot { value: base.value + self.delta })
-        }
-        fn absorb(&mut self, other: Self) {
-            self.delta += other.delta;
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    enum DependencyTestOp {
-        Add(i32),
-    }
-    impl protocol::Mutation<DependencyTestSnapshot> for DependencyTestOp {
-        type Diff = DependencyTestDiff;
-        fn diff(&self, _base: &DependencyTestSnapshot) -> protocol::MutationOutcome<DependencyTestDiff> {
-            let DependencyTestOp::Add(delta) = self;
-            protocol::MutationOutcome::new(DependencyTestDiff { delta: *delta })
-        }
-        fn inverse(&self, _base: &DependencyTestSnapshot) -> Vec<Self> {
-            let DependencyTestOp::Add(delta) = self;
-            vec![DependencyTestOp::Add(-delta)]
-        }
-    }
-    impl protocol::OpBinary for DependencyTestOp {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-            Ok(serde_json::to_vec(self).expect("dependency test op always encodes"))
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct DependencyTestMutationKind {
-        delta: i32,
-    }
-    impl protocol::CompositeMutationKind<DependencyTestSnapshot, DependencyTestOp> for DependencyTestMutationKind {
-        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-        fn plan(&self, _base: &DependencyTestSnapshot, planner: &mut protocol::Planner<DependencyTestSnapshot, DependencyTestOp>) -> Result<(), protocol::PlanError> {
-            planner.call(DependencyTestOp::Add(self.delta))
-        }
-        fn label(&self) -> String {
-            format!("Add {} to value", self.delta)
-        }
-    }
+    use super::dependency_fixture::{AddValue, DependencyTestOp, DependencyTestSnapshot};
 
     async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
-        ArtifactContribution::builder(target_artifact_kind).await.mutation::<DependencyTestSnapshot, DependencyTestOp, DependencyTestMutationKind>("dep-target.document", 1, 1).await.build()
+        ArtifactContribution::builder(target_artifact_kind).await.mutation::<DependencyTestSnapshot, DependencyTestOp, AddValue>("dep-target.document", 1, 1).await.build()
     }
 
     #[semio_framework_async_macros::async_test]

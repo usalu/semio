@@ -660,7 +660,7 @@ mod tests {
     /// reads both files as text and fails the moment any of the three drift apart.
     #[test]
     fn kinds_match_the_catalog_and_the_vocabulary() {
-        let manifest = include_str!("🔣️component.json");
+        let manifest = include_str!("🔣️.json");
         let vocabulary = include_str!("../🧬️schema/🧬️mutations/🦀️component.rs");
         let variants = ["NoMutation", "SetSnapshot", "SetId3v2", "SetFrames", "SetId3v1"];
         assert_eq!(KINDS.len(), variants.len());
@@ -668,7 +668,7 @@ mod tests {
             assert!(manifest.contains(&format!("\"{kind}\"")), "catalog is missing kind {kind:?}");
             assert!(vocabulary.contains(&format!("{variant} ")) || vocabulary.contains(&format!("{variant},")) || vocabulary.contains(&format!("{variant} {{")), "Mp3Mutation is missing variant {variant:?} for kind {kind:?}");
         }
-        let feature = include_str!("../../../../../🧪️tests/mutate-mp3-mpeg1-layer3/component.feature");
+        let feature = include_str!("../../../../../🧪️tests/mutate-mp3-mpeg1-layer3/🥒️.feature");
         for kind in KINDS {
             assert!(feature.contains(&format!("| {kind} ")) || feature.contains(&format!("| {kind}\t")) || feature.contains(&format!("| {kind}  ")), "the case's Examples table is missing kind {kind:?}");
         }

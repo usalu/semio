@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFVkMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFVkMpa"
+  ],
+  "properties": {
+    "newFVkMpa": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveFrame",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "frameId",
+    "newX",
+    "newY",
+    "pageId"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string"
+    },
+    "frameId": {
+      "type": "string"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

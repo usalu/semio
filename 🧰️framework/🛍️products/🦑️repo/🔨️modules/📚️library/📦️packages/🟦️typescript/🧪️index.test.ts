@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
+import "../../🧹️normalization/🧪️tests/🧪️source-admission/🟦️.ts";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, posix, relative, resolve, sep } from "node:path";
 import { parseArgs } from "node:util";
 import { nextestArtifactLocation, partitionNextestExecutionFilters } from "./📦️index.ts";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
@@ -24,14 +25,252 @@ import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modul
 import { areaOf, clearDiscoveryCache, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadTaxonomy, readSemioMarker, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, validateTaxonomy } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, projectCargoProviderManifest, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, semanticProjectionCatalogProblems, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type SemanticProjectionAuthorityNode, type SemanticProjectionCatalogRegistration, type Taxonomy } from "../../🔍️discovery/🟦️component.ts";
 import { computeWorkspaces, diffWorkspaces } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { chmodSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readlinkSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
 import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFilesystemEntry } from "../../🧪️tests/🔍️filesystem/🟦️component.ts";
 import Ajv from "ajv";
 import toml from "@iarna/toml";
 import fastGlob from "fast-glob";
+import { registryCompilerInputDependencies, registryStaticImports, type RegistryCompilerInputRole } from "../../🔍️discovery/🟦️component.ts";
 import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, inventoryMutationTaxonomy, newScaffoldMutationTree, planMutationTaxonomy, policyMutationStructuralBreaches, runMutationTaxonomyCli, validateJsonSchemaSubset } from "../../../../../../../📜️script.ts";
+
+describe("package language semantic handoff", () => {
+  const inputRoot = join(import.meta.dir, "../../🧪️tests/🧪️package-language-kind-handoff");
+  const vector = JSON.parse(readFileSync(join(inputRoot, "🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8"));
+  const fold = (value: string): string => value.normalize("NFC").replaceAll("\uFE0F", "");
+
+  test("schema-first six-language authority preserves the existing package purity boundary", () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...vector, extra: true })).toBe(false);
+    expect(validate({ ...vector, schemaVersion: 2 })).toBe(false);
+    expect(validate({ ...vector, oracleCompilation: { ...vector.oracleCompilation, maxCompilationsPerIdentity: 2 } })).toBe(false);
+    expect(validate({ ...vector, oracleCompilation: { ...vector.oracleCompilation, scope: "process-global" } })).toBe(false);
+    expect(vector.languages.map((row: { name: string }) => row.name).sort()).toEqual(Object.keys(schema.packageBoundaryRules).sort());
+    for (const language of vector.languages) {
+      expect(schema.semanticDirectoryKinds[language.id]).toEqual({ emoji: language.emoji, slugPattern: "^" + language.slug + "$", allowEmojiOnly: false, parentKindIds: ["packages"] });
+      expect(schema.packageBoundaryRules[language.name].allowedDirectoryKindIds).toEqual(language.allowedDirectoryKindIds);
+    }
+  });
+
+  test("the actual directory classifier agrees with independent compilers and JSON Schema semantic matching", async () => {
+    const ts = await import("typescript");
+    const { parse: parseJsonc } = await import("jsonc-parser");
+    const { createTaxonomyPathMatcher } = await import("../../🔍️discovery/🟦️component.ts");
+    expect(parseJsonc(readFileSync(join(inputRoot, "🔣️.json"), "utf8"))).toEqual(vector);
+    const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
+    const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "canonicalDirectory"]);
+    const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
+    expect(declarations).toHaveLength(names.size);
+    const code = declarations.map((node) => node.getText(syntax)).join("\n") + "\nreturn canonicalDirectory;";
+    const compilers = [
+      new Bun.Transpiler({ loader: "ts" }).transformSync(code),
+      ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
+    ];
+    const operations = compilers.map((javascript) => new Function("basename", "dirname", "SEGMENTER", javascript)(basename, dirname, new Intl.Segmenter("und", { granularity: "grapheme" })));
+    const cases = [
+      ...vector.languages.flatMap((language: { id: string; name: string }) => [language.name, fold(language.name)].map((name) => ({ id: name, steps: [{ name, parentKindId: "packages", kindId: language.id, canonicalName: language.name, violationCodes: [] }] }))),
+      ...vector.cases,
+    ];
+    const ajv = new Ajv({ strict: true });
+    const oracleValidators = new Map<string, ReturnType<Ajv["compile"]>>();
+    const oracleCompilationCounts = new Map<string, number>();
+    let oracleCompileCalls = 0;
+    for (const scenario of cases) {
+      const registry = structuredClone(schema);
+      registry.fixedDirectoryContracts = {};
+      if (scenario.removeKind) delete registry.semanticDirectoryKinds[scenario.removeKind];
+      if (scenario.duplicateKind) registry.semanticDirectoryKinds["duplicate-kind"] = registry.semanticDirectoryKinds[scenario.duplicateKind];
+      if (scenario.duplicateBoundary) registry.packageBoundaryRules[fold(scenario.duplicateBoundary)] = registry.packageBoundaryRules[scenario.duplicateBoundary];
+      const directoryKinds = Object.entries(registry.semanticDirectoryKinds).map(([id, entry]) => ({ id, ...(entry as Record<string, unknown>), slugRegex: new RegExp((entry as { slugPattern: string }).slugPattern, "u") }));
+      const predicates = Object.entries(registry.semanticDirectoryKinds).map(([id, entry]) => {
+        const spec = entry as { emoji: string; slugPattern: string; parentKindIds?: string[] };
+        const predicateSchema = { type: "object", required: ["emoji", "slug", "parentKindId"], properties: { emoji: { const: fold(spec.emoji) }, slug: { type: "string", pattern: spec.slugPattern }, parentKindId: spec.parentKindIds ? { enum: spec.parentKindIds } : {} } };
+        const identity = JSON.stringify(predicateSchema);
+        let validate = oracleValidators.get(identity);
+        if (!validate) {
+          validate = ajv.compile(JSON.parse(identity));
+          oracleValidators.set(identity, validate);
+          const count = (oracleCompilationCounts.get(identity) ?? 0) + 1;
+          oracleCompilationCounts.set(identity, count);
+          oracleCompileCalls++;
+          expect(count, JSON.stringify({ pid: process.pid, scenario: scenario.id, kind: id, compileCalls: oracleCompileCalls, uniqueSchemas: oracleCompilationCounts.size })).toBeLessThanOrEqual(vector.oracleCompilation.maxCompilationsPerIdentity);
+        }
+        return { id, emoji: spec.emoji, validate };
+      });
+      const observed = operations.map((operation) => {
+        let parentCanonical = "📦️packages", previousKind: string | undefined;
+        return scenario.steps.map((step: { name: string; parentKindId: string; kindId: string | null; canonicalName: string; violationCodes: string[] }) => {
+          const parentKindId = step.parentKindId === "previous" ? previousKind : step.parentKindId;
+          const result = operation(parentCanonical + "/" + step.name, parentCanonical, parentKindId, ["packages"], { schema: registry, directoryKinds, pathMatcher: createTaxonomyPathMatcher() });
+          const expected = { path: parentCanonical + "/" + step.canonicalName, kindId: step.kindId, violationCodes: step.violationCodes };
+          const actual = { path: result.path, kindId: result.kindId, violationCodes: result.violations.map((row: { code: string }) => row.code) };
+          const slug = step.name.replace(/^[^\p{L}]*/u, ""), emoji = step.name.slice(0, step.name.length - slug.length);
+          const matches = predicates.filter((candidate) => candidate.validate({ emoji: fold(emoji), slug, parentKindId }));
+          const exact = matches.filter((candidate) => candidate.id === slug), selected = exact.length ? exact : matches;
+          const duplicateBoundary = parentKindId === "packages" && Object.keys(registry.packageBoundaryRules).filter((name) => fold(name) === fold(step.name)).length > 1;
+          const oracle = duplicateBoundary ? { path: parentCanonical + "/" + step.name, kindId: null, violationCodes: ["package-language-ambiguous"] } : selected.length === 1 ? { path: parentCanonical + "/" + selected[0].emoji + slug, kindId: selected[0].id, violationCodes: [] } : { path: parentCanonical + "/" + step.name, kindId: null, violationCodes: [selected.length > 1 ? "directory-kind-ambiguous" : "directory-kind-unresolved"] };
+          expect(oracle, scenario.id).toEqual(expected);
+          expect(actual, scenario.id).toEqual(expected);
+          parentCanonical = result.path;
+          previousKind = result.kindId ?? undefined;
+          return actual;
+        });
+      });
+      expect(observed[0], scenario.id).toEqual(observed[1]);
+    }
+    expect(oracleCompileCalls).toBe(oracleCompilationCounts.size);
+    console.info("[DEBUG] Package classifier oracle compilation", JSON.stringify({ pid: process.pid, scenarios: cases.length, compilers: operations.length, compileCalls: oracleCompileCalls, uniqueSchemas: oracleCompilationCounts.size }));
+  });
+
+  test("resident native metadata binds the exact semantic owner and one Cargo identity", async () => {
+    const { parse: parseJsonc } = await import("jsonc-parser");
+    const { win32 } = await import("node:path");
+    const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️component.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🧪️resident-package");
+    const text = readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"), expected = JSON.parse(text);
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
+    expect(parseJsonc(text)).toEqual(expected);
+    for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, ownerPath: "foreign" }, { ...expected, cargo: { ...expected.cargo, lib: { ...expected.cargo.lib, path: "../../../🦀️.rs" } } }, { ...expected, cargo: { ...expected.cargo, dependencies: { serde_json: { workspace: true } } } }, { ...expected, wasmTargets: [...expected.wasmTargets].reverse() }]) expect(validate(invalid)).toBe(false);
+    expect(validateTaxonomy(schema)).toEqual([]);
+    expect(canonicalPrimaryFilenameForKind("rust-source", schema)).toBe("🦀️.rs");
+    expect(semanticDirectoryKindId(basename(fixtureRoot), schema, { parentKindId: "test-case" })).toBe("test-fixture-member");
+    expect(semanticDirectoryKindId("🔨️modules", schema)).toBe("modules");
+    expect(semanticDirectoryKindId("🌱️value", schema, { parentKindId: "modules" })).toBe("members-of-modules");
+    expect(semanticDirectoryKindId(expected.member.name, schema, { parentKindId: expected.member.ownerKindId })).toBe(expected.member.registry);
+    expect(schema.semanticDirectoryMemberKinds[expected.member.registry].memberNames.filter((name: string) => name === expected.member.name)).toHaveLength(1);
+    expect(semanticDirectoryKindId("📦️packages", schema, { parentKindId: expected.member.registry })).toBe("packages");
+    expect(semanticDirectoryKindId("🦀️rust", schema, { parentKindId: "packages" })).toBe("rust-language");
+    expect(semanticDirectoryKindId("🧪️tests", schema, { parentKindId: expected.member.registry })).toBe("tests");
+    expect(semanticDirectoryKindId(expected.member.name, schema, { parentKindId: "packages" })).toBeNull();
+    const source = semanticOwnedInputFileSnapshot(root, expected.sourcePath), nativeTests = semanticOwnedInputFileSnapshot(root, expected.testPath);
+    expect(source?.nodeKind).toBe("file");
+    expect(nativeTests?.nodeKind).toBe("file");
+    expect(source!.bytes.toString()).toContain('#[path = "🧪️tests/🦀️.rs"]');
+    expect(nativeTests!.bytes.toString()).toContain('include_str!("../🧪️fixture.json")');
+    expect(semanticOwnedInputFileSnapshot(root, expected.ownerPath + "/🧪️missing/🦀️.rs")).toBeNull();
+    for (const path of [expected.sourcePath, expected.testPath]) expect(basename(path)).toBe(canonicalPrimaryFilenameForKind("rust-source", schema));
+    const packageRoot = join(root, expected.packagePath);
+    expect(readdirSync(packageRoot).sort()).toEqual([...expected.packageFiles].sort());
+    const manifestText = readFileSync(join(packageRoot, "Cargo.toml"), "utf8"), manifest = toml.parse(manifestText);
+    expect(Bun.TOML.parse(manifestText)).toEqual(manifest);
+    expect(manifest).toEqual(expected.cargo);
+    expect(readSemioMarker(join(packageRoot, "Cargo.toml"), "🦀️rust", schema)).toEqual({ role: "framework", id: "value-resident" });
+    const libPath = (manifest.lib as { path: string }).path;
+    expect(posix.normalize(posix.join(expected.packagePath, libPath))).toBe(expected.sourcePath);
+    expect(win32.normalize(win32.join(expected.packagePath, libPath)).replaceAll("\\", "/")).toBe(expected.sourcePath);
+    for (const path of expected.rejectedEntryPaths) {
+      expect(posix.normalize(posix.join(expected.packagePath, path))).not.toBe(expected.sourcePath);
+      expect(win32.normalize(win32.join(expected.packagePath, path)).replaceAll("\\", "/")).not.toBe(expected.sourcePath);
+    }
+    const workspaceText = readFileSync(join(root, "Cargo.toml"), "utf8"), workspace = toml.parse(workspaceText).workspace as { members: string[]; dependencies: Record<string, unknown>; package: Record<string, unknown> };
+    expect(Bun.TOML.parse(workspaceText).workspace).toEqual(workspace);
+    expect(workspace.members.filter(path => path === expected.packagePath)).toHaveLength(1);
+    expect(workspace.dependencies[expected.cargo.package.name]).toEqual({ path: expected.packagePath });
+    expect(workspace.package).toMatchObject({ version: "0.1.0", edition: "2021", "rust-version": "1.88" });
+    const projectText = readFileSync(join(packageRoot, "📋️project.json"), "utf8"), project = JSON.parse(projectText);
+    expect(parseJsonc(projectText)).toEqual(project);
+    expect(project).toEqual(expected.project);
+    expect(resolve(packageRoot, project.$schema)).toBe(join(root, "node_modules/nx/schemas/project-schema.json"));
+    const toolchainText = readFileSync(join(root, "rust-toolchain.toml"), "utf8"), toolchain = toml.parse(toolchainText);
+    expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
+    for (const target of expected.wasmTargets) expect((toolchain.toolchain as { targets: string[] }).targets).toContain(target);
+    expect(JSON.parse(readFileSync(join(root, expected.ownerPath, "📋️project.json"), "utf8")).name).toBe(expected.existingTs.projectName);
+    for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
+      const errors: import("jsonc-parser").ParseError[] = [], launch = parseJsonc(readFileSync(join(root, path), "utf8"), errors, { allowTrailingComma: true });
+      expect(errors).toEqual([]);
+      const rows = launch.configurations as { name: string; presentation?: { order?: number } }[];
+      expect(rows.filter(row => row.name === expected.existingTs.launch.name)).toEqual([expected.existingTs.launch]);
+      for (const row of expected.launch) {
+        expect(rows.filter(entry => entry.name === row.name)).toEqual([row]);
+        expect(rows.filter(entry => entry.presentation?.order === row.presentation.order)).toEqual([row]);
+      }
+    }
+    const runs = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️native-resident-package-metadata/🧾️runs");
+    mkdirSync(runs, { recursive: true });
+    const fixture = mkdtempSync(join(runs, "🔖️")), target = join(fixture, "🧫️target");
+    mkdirSync(target);
+    writeFileSync(join(target, "🦀️.rs"), "pub fn neutral_fixture() {}\n");
+    symlinkSync(target, join(fixture, "🧫️link"), process.platform === "win32" ? "junction" : "dir");
+    expect(() => semanticOwnedInputFileSnapshot(fixture, "🧫️link/🦀️.rs")).toThrow("no-follow");
+    expect(semanticOwnedInputFileSnapshot(fixture, "🧫️target/🦀️.rs")?.bytes.toString()).toBe("pub fn neutral_fixture() {}\n");
+    writeFileSync(join(fixture, "📝️.md"), "# Resident Metadata No-Follow Fixture\n\nAuthored neutral Rust input and ancestor-link rejection only; no native compilation.\n");
+    console.info("[DEBUG] Resident native metadata", JSON.stringify({ pid: process.pid, package: expected.cargo.package.name, nativeExecuted: false, fixture }));
+  });
+
+  test("resident native metadata router preserves exact sequential bounded commands without executing Cargo", async () => {
+    const ts = await import("typescript"), { spyOn } = await import("bun:test"), library = await import("./📦️index.ts");
+    const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🧪️resident-package/🔣️.json"), "utf8"));
+    const packageRoot = join(root, expected.packagePath), sourcePath = join(packageRoot, "📜️script.ts");
+    expect(existsSync(sourcePath)).toBe(true);
+    const source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    expect(source.split(/\r?\n/u)[0]).toBe("#!/usr/bin/env bun");
+    const imports = syntax.statements.filter(ts.isImportDeclaration);
+    expect(imports).toHaveLength(1);
+    expect((imports[0]!.moduleSpecifier as import("typescript").StringLiteral).text).toBe("@semio-tech/repo-lib");
+    const named = imports[0]!.importClause?.namedBindings;
+    expect(named && ts.isNamedImports(named)).toBe(true);
+    expect(named && ts.isNamedImports(named) ? named.elements.map(node => node.name.text).sort() : []).toEqual([...expected.imports].sort());
+    expect(syntax.statements.every(node => ts.isImportDeclaration(node) || ts.isClassDeclaration(node) || ts.isVariableStatement(node) || ts.isIfStatement(node))).toBe(true);
+    expect(syntax.statements.filter(ts.isClassDeclaration).map(node => node.name?.text)).toEqual(["TestScript", "CheckWasmScript"]);
+    const transformed = ts.transform(syntax, [(context) => {
+      const visit: import("typescript").Visitor = (node) => {
+        if (ts.isImportDeclaration(node)) return undefined;
+        if (ts.isPropertyAccessExpression(node) && ts.isMetaProperty(node.expression)) {
+          if (node.name.text === "dir") return ts.factory.createStringLiteral(packageRoot);
+          if (node.name.text === "url") return ts.factory.createStringLiteral("resident-source-only");
+          if (node.name.text === "main") return ts.factory.createTrue();
+          throw new Error("Unexpected import.meta dependency");
+        }
+        return ts.visitEachChild(node, visit, context);
+      };
+      return node => ts.visitNode(node, visit) as import("typescript").SourceFile;
+    }]);
+    const code = ts.createPrinter().printFile(transformed.transformed[0]!); transformed.dispose();
+    const compiled = [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText];
+    const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
+    for (const javascript of compiled) {
+      let router: ScriptRouter | undefined, active = 0, refuse = false;
+      const calls: unknown[][] = [], events: string[] = [];
+      const dependencies = {
+        BundleScript, ScriptRouter, buildBudgetMs: library.buildBudgetMs,
+        runBundleScriptMain: async (value: ScriptRouter, url: string, ...rest: unknown[]) => { expect(url).toBe("resident-source-only"); expect(rest).toEqual([]); router = value; },
+        runCargoTestBudgeted: async (...args: unknown[]) => { calls.push(args); },
+        runTestBudgeted: async (command: string, args: string[], options: { cwd: string; budgetMs: number; env?: NodeJS.ProcessEnv }) => {
+          expect(++active).toBe(1); calls.push([command, args, options]); events.push("start:" + args.at(-1));
+          await Promise.resolve(); active--; events.push("end:" + args.at(-1));
+          if (refuse) throw new Error("command refused");
+        },
+      };
+      const body = javascript.replace(/^#!\/usr\/bin\/env bun\r?\n/u, "");
+      expect(body.startsWith("#!")).toBe(false);
+      await new AsyncFunction(...Object.keys(dependencies), body)(...Object.values(dependencies));
+      expect(router).toBeInstanceOf(ScriptRouter);
+      expect(router!.usage()).toBe("bun ./📜️script.ts <test|check-wasm> [args…]");
+      await router!.run(["test"]);
+      expect(calls).toEqual([[[expected.cargo.package.name], root, ["--lib"]]]);
+      calls.length = 0;
+      await router!.run(["check-wasm"]);
+      expect(calls).toEqual(expected.wasmTargets.map((target: string) => ["cargo", ["check", "-p", expected.cargo.package.name, "--lib", "--target", target], { cwd: root, budgetMs: library.buildBudgetMs() }]));
+      expect(events).toEqual(expected.wasmTargets.flatMap((target: string) => ["start:" + target, "end:" + target]));
+      calls.length = 0;
+      for (const command of ["test", "check-wasm"]) await expect(router!.run([command, "unexpected"])).rejects.toThrow("accepts no arguments");
+      expect(calls).toEqual([]);
+      const exit = spyOn(process, "exit").mockImplementation((() => { throw new Error("rejected command"); }) as never);
+      try { await expect(router!.run(["unknown"])).rejects.toThrow("rejected command"); } finally { exit.mockRestore(); }
+      expect(calls).toEqual([]);
+      refuse = true;
+      await expect(router!.run(["check-wasm"])).rejects.toThrow("command refused");
+      expect(calls).toHaveLength(1);
+      expect((calls[0]![1] as string[]).at(-1)).toBe(expected.wasmTargets[0]);
+    }
+    console.info("[DEBUG] Resident command source parity", JSON.stringify({ pid: process.pid, compilers: compiled.length, nativeExecuted: false }));
+  });
+});
 
 //#region 🛡️ActiveTicketCleanProtection
 describe("active ticket clean protection", () => {
@@ -212,8 +451,9 @@ describe("mutation metadata source provider", () => {
   test("proves independent canonical derive and lower contract routes from one consumer declaration", () => {
     const fixture = JSON.parse(readFileSync(MUTATION_METADATA_SOURCE_FIXTURE, "utf8")) as { schemaVersion: 1; cases: readonly { id: string; derive: string; contract: string; facadeSource: string; manualImpl: string; binding?: "direct" | "inherited"; consumerPrefix?: string; consumerSuffix?: string; originModulePath?: readonly string[]; accepted: boolean }[] };
     expect(new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(MUTATION_METADATA_SOURCE_SCHEMA, "utf8")))(fixture)).toBe(true);
-    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for metadata source provider artifacts.");
+    const artifactDirectory = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactDirectory) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for metadata source provider artifacts.");
+    const artifactRoot = resolve(getWorkspaceRoot(), artifactDirectory);
     mkdirSync(artifactRoot, { recursive: true });
     const root = mkdtempSync(join(artifactRoot, "semio-metadata-source-provider-"));
     try {
@@ -227,7 +467,7 @@ describe("mutation metadata source provider", () => {
         add(source(lower), "pub trait MutationLeaf {}\n");
         add(manifest(derive), "[package]\nname = 'semio-framework-os-kernel-dsl-derive'\n\n[lib]\nname = 'dsl_derive'\npath = '📦️glue.rs'\nproc-macro = true\n");
         add(source(derive), "pub fn marker() {}\n");
-        add(manifest(facade), `[package]\nname = 'semio-framework-os-kernel'\n\n[lib]\nname = 'semio_framework_os_kernel'\npath = '📦️glue.rs'\n\n[dependencies]\nlower = { package = 'semio-framework-replication', path = '${relativePath(manifest(facade), lower)}' }\n`);
+        add(manifest(facade), `[package]\nname = 'semio-framework-os-kernel'\n\n[lib]\nname = 'semio_framework_os_kernel'\npath = '📦️glue.rs'\n\n[dependencies]\nlower = { package = 'semio-framework-replication', path = '${relativePath(manifest(facade), lower)}' }\nderive = { package = 'semio-framework-os-kernel-dsl-derive', path = '${relativePath(manifest(facade), derive)}' }\n`);
         add(source(facade), vector.facadeSource);
         add(manifest(consumer), `[package]\nname = 'consumer'\n\n[lib]\nname = 'consumer'\npath = '📦️glue.rs'\n\n[dependencies]\n${vector.binding === "inherited" ? "derive = { workspace = true }\nfacade = { workspace = true }\nlower = { workspace = true }" : dependencyRows(manifest(consumer))}\n`);
         add(source(consumer), `extern crate derive;\n${vector.consumerPrefix ?? ""}${vector.manualImpl}#[derive(${vector.derive})]\n#[mutation_leaf(contract = ${vector.contract})]\npub struct Payload;\n${vector.consumerSuffix ?? ""}`);
@@ -248,7 +488,7 @@ describe("mutation metadata source provider", () => {
 
   test("proves current STDIO TXT and GLTF wrapped origins through kernel aliases", () => {
     const repositoryRoot = getWorkspaceRoot();
-    const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs";
+    const consumerManifest = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml", consumerLibrary = "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs", facadeManifest = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml", facadeLibrary = "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📦️glue.rs", dslSource = "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🦀️component.rs", sprSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️component.rs", commandSource = "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️component.rs";
     const leaves = [
       { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-line/🦀️.rs" },
       { root: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs", sourcePath: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️🔘️change-node-name/🦀️.rs" },
@@ -258,13 +498,15 @@ describe("mutation metadata source provider", () => {
       expect(declarations, sourcePath).toHaveLength(1);
       return { sourcePath, declarationName: declarations[0]!.name, modulePath: declarations[0]!.modulePath };
     });
-    const files = [consumerManifest, consumerLibrary, facadeManifest, facadeLibrary, dslSource, ...leaves.flatMap(({ root, sourcePath }) => [root, sourcePath])];
+    const files = [consumerManifest, consumerLibrary, facadeManifest, facadeLibrary, dslSource, sprSource, commandSource, ...leaves.flatMap(({ root, sourcePath }) => [root, sourcePath])];
     expect(files.every((path) => !path.split("/").some((segment) => segment.toLocaleLowerCase("en-US") === "compose") && !lstatSync(join(repositoryRoot, path)).isSymbolicLink())).toBe(true);
     const source = new Map(files.map((path) => [path, readFileSync(join(repositoryRoot, path), "utf8")]));
     const graph = inspectRustModuleGraph([...source.keys()], (path) => source.get(path), { strictManifests: true });
     expect((graph.contexts.get(facadeLibrary) ?? []).filter((context) => context.manifestPath === facadeManifest && context.modulePath.length === 0)).toHaveLength(1);
     expect(graph.targets.get(`${facadeLibrary}\0os_dsl`)).toBe(facadeLibrary);
     expect(graph.targets.get(`${facadeLibrary}\0os_dsl::component`)).toBe(dslSource);
+    expect(graph.targets.get(`${facadeLibrary}\0os_spr::component`)).toBe(sprSource);
+    expect(graph.targets.get(`${facadeLibrary}\0os_spr::command`)).toBe(commandSource);
     expect((graph.contexts.get(facadeLibrary) ?? []).filter((context) => context.manifestPath === facadeManifest && context.modulePath.join("\0") === "os_dsl")).toHaveLength(1);
     expect((graph.contexts.get(dslSource) ?? []).filter((context) => context.manifestPath === facadeManifest && context.modulePath.join("\0") === "os_dsl\0component")).toHaveLength(1);
     expect(resolveCargoProviderBinding({ workspaceRoot: repositoryRoot, consumerManifestLocator: facadeManifest, dependencyKey: "dsl_derive" })).toMatchObject({ providerManifestLocator: "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml", libraryName: "dsl_derive", procMacro: true });
@@ -1848,11 +2090,11 @@ describe("nextest execution filters", () => {
     };
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🔣️schema.json"), "utf8")));
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    const runtimeKeys = ["filter-expr", "partition", "run-ignored", "ignore-default-filter"];
+    const runtimeKeys = ["filter-expr", "partition", "run-ignored", "ignore-default-filter", "no-fail-fast"];
     for (const row of fixture.cases) {
       const options = {
         lib: { type: "boolean" }, release: { type: "boolean" }, "no-default-features": { type: "boolean" }, package: { type: "string", short: "p", multiple: true }, features: { type: "string", short: "F", multiple: true }, target: { type: "string" }, "target-dir": { type: "string" }, "build-jobs": { type: "string" }, "cargo-profile": { type: "string" }, "cargo-message-format": { type: "string", multiple: true }, timings: { type: row.input.some((arg) => arg.startsWith("--timings=")) ? "string" : "boolean" }, config: { type: "string", multiple: true }, Z: { type: "string", short: "Z", multiple: true }, test: { type: "string", multiple: true }, bin: { type: "string", multiple: true }, bench: { type: "string", multiple: true }, example: { type: "string", multiple: true },
-        "filter-expr": { type: "string", short: "E", multiple: true }, partition: { type: "string" }, "run-ignored": { type: "string" }, "ignore-default-filter": { type: "boolean" },
+        "filter-expr": { type: "string", short: "E", multiple: true }, partition: { type: "string" }, "run-ignored": { type: "string" }, "ignore-default-filter": { type: "boolean" }, "no-fail-fast": { type: "boolean" },
       } as const;
       const actual = partitionNextestExecutionFilters(row.input);
       expect(actual, row.name).toEqual({ buildArgs: row.build, executionArgs: row.execution, libtestArgs: row.libtest });
@@ -2018,11 +2260,43 @@ describe("loadTaxonomy", () => {
     expect(taxonomyCliJsonWritePreparationProblems({ parentKindId: "transaction-journal-write", directoryName: write, leafNames: ["⏮️.json", "⏮️.json"] }, taxonomy)).not.toEqual([]);
   });
 
-  test("requires every owned generator to expose one exact read-only preview target", () => {
+  test("requires every owned generator to expose one exact read-only preview target", async () => {
     const taxonomy = loadTaxonomy();
     const owned = Object.entries(taxonomy.generatorContracts).filter(([, contract]) => contract.ownership === "owned");
     const external = Object.values(taxonomy.generatorContracts).filter((contract) => contract.ownership === "external");
-    expect(owned).toHaveLength(14);
+    const inputRoot = join(import.meta.dir, "../../🧪️tests/🧪️owned-generator-preview-inventory"), input = readFileSync(join(inputRoot, "🔣️.json"), "utf8");
+    const vector = JSON.parse(input) as { schemaVersion: number; contract: string; ownedGeneratorIds: string[] };
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    for (const invalid of [{ ...vector, schemaVersion: 2 }, { ...vector, extra: true }, { ...vector, ownedGeneratorIds: [] }, { ...vector, ownedGeneratorIds: [""] }, { ...vector, ownedGeneratorIds: ["duplicate", "duplicate"] }]) expect(validate(invalid)).toBe(false);
+    expect(vector.ownedGeneratorIds).toEqual([...vector.ownedGeneratorIds].sort());
+    const jsonc = await import("jsonc-parser"), inputErrors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(input, inputErrors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(inputErrors).toEqual([]);
+    const members = (node: import("jsonc-parser").Node | undefined): Map<string, import("jsonc-parser").Node> => {
+      if (node?.type !== "object") throw new Error("Expected an exact JSON object");
+      const result = new Map<string, import("jsonc-parser").Node>();
+      for (const property of node.children ?? []) {
+        const [key, value] = property.children ?? [];
+        if (property.type !== "property" || key?.type !== "string" || !value || result.has(key.value)) throw new Error("Duplicate or malformed JSON property");
+        result.set(key.value, value);
+      }
+      return result;
+    };
+    const oracleIds = (source: string): string[] => {
+      const errors: import("jsonc-parser").ParseError[] = [], tree = jsonc.parseTree(source, errors, { disallowComments: true, allowTrailingComma: false });
+      if (errors.length) throw new Error("Invalid JSON authority");
+      return [...members(members(tree).get("generatorContracts"))].flatMap(([id, contract]) => {
+        const ownership = members(contract).get("ownership");
+        if (ownership?.type !== "string") throw new Error("Missing ownership authority");
+        return ownership.value === "owned" ? [id] : [];
+      }).sort();
+    };
+    const expectedIds = vector.ownedGeneratorIds, actualIds = owned.map(([id]) => id).sort();
+    expect(actualIds).toEqual(expectedIds);
+    expect(oracleIds(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8"))).toEqual(expectedIds);
+    for (const altered of [actualIds.slice(1), [...actualIds, "unexpected-generator"], ["unexpected-generator", ...actualIds.slice(1)]]) expect(altered.sort()).not.toEqual(expectedIds);
+    for (const malformed of ['{"generatorContracts":{},"generatorContracts":{}}', '{"generatorContracts":{"duplicate":{"ownership":"owned"},"duplicate":{"ownership":"owned"}}}', '{"generatorContracts":{"single":{"ownership":"external","ownership":"owned"}}}']) expect(() => oracleIds(malformed)).toThrow("Duplicate or malformed JSON property");
     for (const [, contract] of owned) {
       const project = contract.target!.slice(0, contract.target!.lastIndexOf(":"));
       expect(contract.previewTarget).toBe(`${project}:preview-generated`);
@@ -3175,12 +3449,15 @@ const ARTIFACT_PROJECTION_GOLDEN = JSON.parse(readFileSync(join(import.meta.dir,
 type DrawSourceScenario = Readonly<{
   schemaVersion: 1;
   contractId: "draw-source-scenario-input-v1";
-  registryImplementation: Readonly<{ format: "typescript"; content: string }>;
+  producerContext: Readonly<{ generatorId: string; compilerRoots: readonly string[]; workspaceInputs: readonly string[]; runtimePackages: readonly string[]; authority: string; workspaceBindings: string; initialOutputs: string; registryNodeCount: number }>;
+  catalogContext: readonly DrawSourceScenarioInput[];
+  launchSeed: DrawSourceScenarioInput;
   cargoModuleRoot: DrawSourceScenarioInput;
+  cadConsumerMount: Readonly<{ sourcePath: string; path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
   members: readonly DrawSourceScenarioInput[];
   consumers: readonly DrawSourceScenarioInput[];
-  retention: Readonly<{ parentSegments: readonly string[]; recordFilename: string; disposition: string; cases: readonly Readonly<{ kind: "directory" | "symlink" | "file" | "missing" | "unreadable"; allowed: boolean; creates: number }>[] }>;
+  retention: Readonly<{ fixtureOwnerSegments: readonly string[]; transactionTicketSegments: readonly string[]; parentSegments: readonly string[]; recordFilename: string; disposition: string; cases: readonly Readonly<{ kind: "directory" | "symlink" | "file" | "missing" | "unreadable"; allowed: boolean; creates: number }>[] }>;
   oracle: Readonly<{
     sourceDirectoryCount: number;
     destinationDirectoryCount: number;
@@ -3192,12 +3469,12 @@ type DrawSourceScenario = Readonly<{
     workspaceGlobCount: number;
     rootCollectionCount: number;
     externalModuleCount: number;
-    pluginRegistryRegenerationCount: number;
-    cargoModuleMount: Readonly<{ manifestPath: string; packageName: string; libraryEntry: string; moduleName: string; moduleTarget: string }>;
+    activatedGeneratorIds: readonly string[];
+    cargoModuleMount: Readonly<{ manifestPath: string; packageName: string; libraryEntry: string; moduleName: string; moduleTarget: string; canonicalModuleTarget: string }>;
   }>;
 }>;
 
-type DrawSourceScenarioInput = Readonly<{ path: string; format: "json" | "toml" | "typescript" | "rust"; content: string }>;
+type DrawSourceScenarioInput = Readonly<{ path: string; format: "json" | "jsonc" | "toml" | "typescript" | "rust"; content: string }>;
 
 const DRAW_SOURCE_SCENARIO_ROOT = join(import.meta.dir, "../../🧪️tests/🧪️draw-source-scenario");
 const DRAW_SOURCE_SCENARIO = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️.json"), "utf8")) as DrawSourceScenario;
@@ -3255,6 +3532,221 @@ function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = 
 }
 
 describe("artifact path projection authority", () => {
+  test("authored Draw preflight context preserves absent evidence and foreign ticket inputs", async () => {
+    const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️preflight-context"), text = readFileSync(join(root, "🔣️.json"), "utf8"), vector = JSON.parse(text);
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...vector, cases: vector.cases.slice(1) })).toBe(false);
+    const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(text, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(errors).toEqual([]);
+    const ts = await import("typescript"), source = readFileSync(join(getWorkspaceRoot(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"), "utf8");
+    const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const names = ["sourceTreeDigest", "inheritReferenceInventoryContext", "inventoryWithoutTransactionEvidence", "repositoryReferenceCandidatePaths"];
+    const functions = names.map((name) => {
+      const nodes = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
+      expect(nodes).toHaveLength(1);
+      return nodes[0]!.getText(syntax);
+    });
+    const code = `${functions.join("\n")}\nreturn { sourceTreeDigest, inventoryWithoutTransactionEvidence, repositoryReferenceCandidatePaths };`;
+    for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
+      for (const row of vector.cases) {
+        const context = new WeakMap<object, unknown>(), transactionRoot = `${vector.ticketDir}/${vector.transactionDirectory}`, exactPlan = `${vector.ticketDir}/${vector.planPath}`;
+        const foreign = `${vector.ticketDir}/${vector.foreignPath}`, unrelated = `${vector.ticketDir}/${vector.unrelatedPath}`, transactionFile = `${transactionRoot}/🔣️.json`;
+        const ticketPaths = [foreign, unrelated, ...(row.transactionExists ? [transactionFile] : []), ...(row.planExists ? [exactPlan] : [])];
+        const engine = new Function("referenceInventoryContexts", "canonicalJson", "sha256", "checkCancellation", "isExcluded", "gitRows", "untrackedGitPaths", "explicitTicketRows", "generatorPathCompare", javascript)(context, canonicalJson, (bytes: string) => createHash("sha256").update(bytes).digest("hex"), () => {}, () => false, () => [{ path: vector.sourcePath }], () => [], (_root: string, ticket: string) => { expect(ticket).toBe(vector.ticketDir); return ticketPaths.map((path) => ({ path })); }, projectionByteSort);
+        const entry = (sourcePath: string, referencesIn: string[] = []) => ({ sourcePath, nodeKind: "file", contentHash: "a".repeat(64), mode: 420, size: 1, referencesIn, referencesOut: [] });
+        const original = { entries: [entry(vector.sourcePath, [foreign, ...(row.transactionExists ? [transactionFile] : [])]), ...(row.transactionExists ? [entry(transactionFile)] : [])], violations: [], sourceTreeDigest: "" };
+        original.sourceTreeDigest = engine.sourceTreeDigest(original.entries);
+        const originalContext = { ticketDir: vector.ticketDir, transactionRoots: [], exactEvidencePaths: [] };
+        context.set(original, originalContext);
+        const filtered = engine.inventoryWithoutTransactionEvidence(original, transactionRoot, row.planExists ? exactPlan : undefined);
+        expect(filtered.entries.map(({ sourcePath }: { sourcePath: string }) => sourcePath)).toEqual([vector.sourcePath]);
+        expect(filtered.entries[0].referencesIn).toEqual([foreign]);
+        expect(filtered.sourceTreeDigest === original.sourceTreeDigest).toBe(row.sourceDigestUnchanged);
+        expect(engine.repositoryReferenceCandidatePaths("/fixture", {}, context.get(filtered))).toEqual([vector.sourcePath, foreign, unrelated].sort(projectionByteSort));
+        expect(context.get(original)).toEqual(originalContext);
+        if (!row.transactionExists && !row.planExists) expect(filtered).toEqual(original);
+      }
+    }
+  });
+
+  test("authored Draw submitted proof has exact canonical bytes and a closed single-case budget", async () => {
+    const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof"), text = readFileSync(join(root, "🔣️.json"), "utf8"), vector = JSON.parse(text);
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    for (const changed of [{ ...vector, schemaVersion: 2 }, { ...vector, fileMode: 420 }, { ...vector, writePolicy: "overwrite" }, { ...vector, singleCase: { ...vector.singleCase, budgetMs: 120001 } }, { ...vector, singleCase: { ...vector.singleCase, extraArguments: true } }]) expect(validate(changed)).toBe(false);
+    const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(text, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(errors).toEqual([]);
+    const plan = { ...vector.unsignedPlan, planDigest: createHash("sha256").update(JSON.stringify(vector.unsignedPlan, Object.keys(vector.unsignedPlan).sort())).digest("hex") };
+    const bytes = artifactProjectionSubmittedPlanBytes(plan);
+    expect(bytes.toString()).toBe(`${JSON.stringify(plan, Object.keys(plan).sort())}\n`);
+    expect(jsonc.parse(bytes.toString(), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(plan);
+    expect(errors).toEqual([]);
+    expect(() => artifactProjectionSubmittedPlanBytes({ ...plan, planDigest: "0".repeat(64) })).toThrow();
+    expect(() => artifactProjectionSubmittedPlanBytes({ ...plan, unowned: true })).toThrow();
+    let now = 0;
+    const retained: unknown[] = [], report = artifactProjectionProgressSampler((row) => retained.push(row), () => now);
+    for (const row of vector.progress.cases) {
+      now = row.at;
+      report({ operation: row.operation, phase: row.phase, current: row.current, total: row.total, path: "unretained/old-source.ts" });
+    }
+    expect(retained).toEqual(vector.progress.cases.filter((row: { retain: boolean }) => row.retain).map(({ at, operation, phase, current, total }: { at: number; operation: string; phase: string; current: number; total: number }) => ({ elapsedMs: at, operation, phase, current, total })));
+    expect(JSON.stringify(retained)).not.toContain("old-source");
+  });
+
+  test("authored Draw submitted proof is exclusive, synced, and retained without following links", async () => {
+    const fixture = normalizationFixture("artifact-projection-submitted-proof", {}, undefined, ARTIFACT_PROJECTION_RUN_PARENT);
+    let passed = false;
+    try {
+      const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8"));
+      const unsigned = { ...vector.unsignedPlan, baselineCommit: fixture.baselineCommit }, plan = { ...unsigned, planDigest: createHash("sha256").update(JSON.stringify(unsigned, Object.keys(unsigned).sort())).digest("hex") };
+      const path = artifactProjectionCaptureSubmittedPlan(fixture, plan);
+      expect(path).toBe(join(fixture.ticketDir, vector.directoryName, `🔖️${plan.planDigest}`, vector.filename));
+      const bytes = readFileSync(path), node = lstatSync(path), jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+      expect(jsonc.parse(bytes.toString(), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(plan);
+      expect(errors).toEqual([]);
+      expect(node.isFile() && !node.isSymbolicLink()).toBe(true);
+      if (process.platform !== "win32") expect(node.mode & 0o7777).toBe(vector.fileMode);
+      expect(artifactProjectionCaptureSubmittedPlan(fixture, plan)).toBe(path);
+      expect(lstatSync(path).ino).toBe(node.ino);
+      expect(readFileSync(path)).toEqual(bytes);
+      for (const row of vector.invalidContracts) {
+        const mutable = DRAW_SUBMITTED_PROOF as unknown as Record<string, unknown>, before = mutable[row.field];
+        try { mutable[row.field] = row.value; expect(() => artifactProjectionCaptureSubmittedPlan(fixture, plan)).toThrow(); }
+        finally { mutable[row.field] = before; }
+      }
+      if (process.platform !== "win32") {
+        chmodSync(path, 0o644);
+        expect(() => artifactProjectionCaptureSubmittedPlan(fixture, plan)).toThrow();
+        expect(lstatSync(path).mode & 0o7777).toBe(0o644);
+        chmodSync(path, vector.fileMode);
+      }
+      const stage = artifactProjectionRecordedStage(fixture, "plan", (progress) => { progress({ operation: "plan", phase: "complete", current: 1, total: 1, path: "unretained/old-source.ts" }); return 7; });
+      expect(stage).toBe(7);
+      expect(() => artifactProjectionRecordedStage(fixture, "apply", () => { throw new Error("fixture boundary"); })).toThrow("fixture boundary");
+      const progressRecord = artifactProjectionProgressRecord(fixture), progressText = readFileSync(progressRecord.path, "utf8");
+      expect(progressRecord.path.startsWith(`${fixture.root}${sep}`)).toBe(false);
+      expect(progressRecord.path).toBe(join(getWorkspaceRoot(), NORMALIZATION_TICKET_REL, ...vector.progress.externalParentSegments, basename(fixture.root), "📝️.md"));
+      const records = progressText.split("\n").filter((line) => line.startsWith("- ")).map((line) => jsonc.parse(line.slice(2), errors, { disallowComments: true, allowTrailingComma: false }));
+      expect(errors).toEqual([]);
+      expect(records.filter((record) => record.state).map((record) => record.state)).toEqual(["started", "completed", "started", "failed"]);
+      expect(progressText).not.toContain("old-source");
+      for (const { kind } of vector.nodeCases.filter((row: { kind: string }) => row.kind.endsWith("-symlink"))) {
+        const alternate = { ...unsigned, sourceTreeDigest: (kind === "file-symlink" ? "3" : "4").repeat(64) };
+        const other = { ...alternate, planDigest: createHash("sha256").update(JSON.stringify(alternate, Object.keys(alternate).sort())).digest("hex") };
+        const owner = join(fixture.ticketDir, vector.directoryName, `🔖️${other.planDigest}`);
+        if (kind === "file-symlink") { mkdirSync(owner); symlinkSync(path, join(owner, vector.filename)); }
+        else symlinkSync(dirname(path), owner, process.platform === "win32" ? "junction" : "dir");
+        expect(() => artifactProjectionCaptureSubmittedPlan(fixture, other)).toThrow();
+        expect(readFileSync(path)).toEqual(bytes);
+      }
+      writeFileSync(path, "unexpected retained evidence\n");
+      expect(() => artifactProjectionCaptureSubmittedPlan(fixture, plan)).toThrow();
+      expect(readFileSync(path, "utf8")).toBe("unexpected retained evidence\n");
+      expect(() => artifactProjectionCaptureSubmittedPlan({ ...fixture, ticketDir: dirname(fixture.ticketDir) }, plan)).toThrow();
+      writeFileSync(progressRecord.path, `${progressText}foreign retained diagnostic\n`);
+      expect(() => artifactProjectionRecordedStage(fixture, "plan", () => 1)).toThrow();
+      expect(readFileSync(progressRecord.path, "utf8")).toBe(`${progressText}foreign retained diagnostic\n`);
+      passed = true;
+    } finally {
+      retainArtifactProjectionFixture(fixture, passed);
+    }
+  });
+
+  test("authored Draw submitted proof precedes every artifact apply", async () => {
+    const ts = await import("typescript"), text = readFileSync(import.meta.filename, "utf8"), source = ts.createSourceFile(import.meta.filename, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const calls: import("typescript").CallExpression[] = [];
+    const visit = (node: import("typescript").Node): void => { if (ts.isCallExpression(node)) calls.push(node); ts.forEachChild(node, visit); };
+    visit(source);
+    for (const title of ["rolls back and atomically applies CAD and Draw projections to an empty second plan", "rejects ignored and unplanned residual children in a projected source owner without following links"]) {
+      const testCall = calls.find((call) => ts.isIdentifier(call.expression) && call.expression.text === "test" && ts.isStringLiteral(call.arguments[0]!) && call.arguments[0].text === title)!;
+      expect(testCall).toBeDefined();
+      const scoped = calls.filter((call) => call.pos > testCall.pos && call.end < testCall.end);
+      expect(scoped.filter((call) => ts.isIdentifier(call.expression) && call.expression.text === "applyTaxonomyPlan").map((call) => source.getLineAndCharacterOfPosition(call.getStart(source)).line + 1)).toEqual([]);
+      expect(scoped.filter((call) => ts.isIdentifier(call.expression) && call.expression.text === "artifactProjectionApply").length).toBeGreaterThan(0);
+    }
+    const planner = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "normalizationPlan")!;
+    expect(calls.some((call) => call.pos > planner.pos && call.end < planner.end && ts.isIdentifier(call.expression) && call.expression.text === "artifactProjectionCaptureSubmittedPlan")).toBe(true);
+    const wrapper = source.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "artifactProjectionApply")!;
+    const owned = calls.filter((call) => call.pos > wrapper.pos && call.end < wrapper.end && ts.isIdentifier(call.expression));
+    expect(owned.findIndex((call) => call.expression.getText(source) === "artifactProjectionCaptureSubmittedPlan")).toBeLessThan(owned.findIndex((call) => call.expression.getText(source) === "applyTaxonomyPlan"));
+    expect(wrapper.getText(source)).toContain("planArtifactPath,");
+  });
+
+  test("authored Draw residue route enforces its registered single-case parent budget", async () => {
+    const vector = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8")).singleCase;
+    await assertArtifactProjectionSingleCaseRoute(vector);
+  });
+
+  test("authored Draw commit route enforces its registered single-case parent budget", async () => {
+    const inputRoot = join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️commit-route"), bytes = readFileSync(join(inputRoot, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    for (const changed of [{ ...vector, budgetMs: 120001 }, { ...vector, bunTimeoutMs: 120001 }, { ...vector, testName: "other" }, { ...vector, extraArguments: true }, { ...vector, runner: "other" }]) expect(validate(changed)).toBe(false);
+    const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(errors).toEqual([]);
+    await assertArtifactProjectionSingleCaseRoute(vector);
+  });
+
+  test("authored Draw residue recovery checkpoints have closed language-neutral ownership", async () => {
+    const root = join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️residue-recovery"), bytes = readFileSync(join(root, "🔣️.json"), "utf8");
+    const vector = JSON.parse(bytes), validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    for (const changed of [{ ...vector, schemaVersion: 2 }, { ...vector, generatorStarts: 1 }, { ...vector, preservation: "owned-only" }, { ...vector, cases: vector.cases.slice(1) }, { ...vector, cases: vector.cases.map((row: Record<string, unknown>, index: number) => index === 2 ? { ...row, phase: "transaction-journal-canonical-exchanged" } : row) }]) expect(validate(changed)).toBe(false);
+    const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(errors).toEqual([]);
+    expect(vector.cases.filter((row: { cancel: boolean }) => row.cancel)).toHaveLength(1);
+    expect(new Set(vector.cases.map((row: { phase: string }) => row.phase)).size).toBe(3);
+  });
+
+  test("authored Draw residue ignore authority outranks inherited negation before injection", async () => {
+    const inputRoot = join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️residue-ignore"), bytes = readFileSync(join(inputRoot, "🔣️.json"), "utf8"), vector = JSON.parse(bytes);
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(inputRoot, "🧬️schema/🔣️.json"), "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    for (const changed of [{ ...vector, authoritativeSource: vector.lowerPrioritySource }, { ...vector, absentIgnored: false }, { ...vector, writePolicy: "replace-policy" }]) expect(validate(changed)).toBe(false);
+    const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+    expect(jsonc.parse(bytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(vector);
+    expect(errors).toEqual([]);
+    const fixture = normalizationFixture("artifact-projection-residue-ignore", {}, ({ repoRoot }) => writeFileSync(join(repoRoot, vector.authoritativeSource), vector.rootIgnore), ARTIFACT_PROJECTION_RUN_PARENT);
+    let passed = false;
+    try {
+      const residue = join(fixture.workspace, ...vector.residueSegments), leaf = join(residue, vector.leaf), relativeLeaf = relative(fixture.root, leaf).replaceAll("\\", "/");
+      const rule = `/${relative(fixture.root, residue).replaceAll("\\", "/")}/\n`, ignorePath = join(fixture.root, vector.authoritativeSource), beforeMode = lstatSync(ignorePath).mode;
+      mkdirSync(dirname(residue), { recursive: true });
+      writeFileSync(join(fixture.root, vector.lowerPrioritySource), rule);
+      const ignored = (path: string): boolean => {
+        const result = Bun.spawnSync(["git", "check-ignore", "--quiet", "--no-index", "--", path], { cwd: fixture.root, stdout: "pipe", stderr: "pipe" });
+        if (result.exitCode !== 0 && result.exitCode !== 1) throw new Error(result.stderr.toString());
+        return result.exitCode === 0;
+      };
+      expect(ignored(relativeLeaf)).toBe(vector.beforeIgnored);
+      for (const invalid of [join(fixture.root, "🧪️unexpected"), join(fixture.workspace, "*", "🧪️unexpected"), join(fixture.workspace, "🧪️line\nbreak", "🧪️unexpected")]) expect(() => artifactProjectionIgnoreResidue(fixture, invalid)).toThrow();
+      expect(readFileSync(ignorePath, "utf8")).toBe(vector.rootIgnore);
+      artifactProjectionIgnoreResidue(fixture, residue);
+      expect(existsSync(residue)).toBe(false);
+      expect(ignored(relativeLeaf)).toBe(vector.absentIgnored);
+      expect(readFileSync(ignorePath, "utf8")).toBe(vector.rootIgnore + rule);
+      expect(lstatSync(ignorePath).mode).toBe(beforeMode);
+      mkdirSync(residue, { recursive: true });
+      writeFileSync(leaf, vector.content);
+      expect(ignored(relativeLeaf)).toBe(vector.presentIgnored);
+      expect(ignored(relative(fixture.root, join(dirname(residue), "🧪️neighbor", vector.leaf)).replaceAll("\\", "/"))).toBe(vector.siblingIgnored);
+      const oracle = Bun.spawnSync(["git", "check-ignore", "--verbose", "--no-index", "-z", "--stdin"], { cwd: fixture.root, stdin: Buffer.from(`${relativeLeaf}\0`), stdout: "pipe", stderr: "pipe" });
+      expect(oracle.exitCode, oracle.stderr.toString()).toBe(0);
+      expect(oracle.stdout.toString().split("\0").slice(0, 4)).toEqual([vector.authoritativeSource, "3", rule.trim(), relativeLeaf]);
+      expect(readFileSync(join(fixture.root, vector.lowerPrioritySource), "utf8")).toBe(rule);
+      expect(() => artifactProjectionIgnoreResidue(fixture, residue)).toThrow("Residue must be absent");
+      expect(readFileSync(ignorePath, "utf8")).toBe(vector.rootIgnore + rule);
+      passed = true;
+    } finally {
+      retainArtifactProjectionFixture(fixture, passed);
+    }
+  });
+
   test("authored Draw source schema and parser oracles retain the exact eleven-member contract", async () => {
     const schema = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -3267,9 +3759,10 @@ describe("artifact path projection authority", () => {
       { ...DRAW_SOURCE_SCENARIO, members: DRAW_SOURCE_SCENARIO.members.map((row, index) => index === 1 ? { ...row, path: DRAW_SOURCE_SCENARIO.members[0]!.path } : row) },
       { ...DRAW_SOURCE_SCENARIO, consumers: DRAW_SOURCE_SCENARIO.consumers.map((row, index) => index === 0 ? { ...row, path: "../Cargo.toml" } : row) },
       { ...DRAW_SOURCE_SCENARIO, owner: { ...DRAW_SOURCE_SCENARIO.owner, artifactId: "🧪️counterfeit" } },
-      { ...DRAW_SOURCE_SCENARIO, registryImplementation: { format: "typescript", content: 'import "./🧪️undeclared.ts";\n' } },
-      { ...DRAW_SOURCE_SCENARIO, oracle: { ...DRAW_SOURCE_SCENARIO.oracle, pluginRegistryRegenerationCount: 1 } },
+      { ...DRAW_SOURCE_SCENARIO, producerContext: { ...DRAW_SOURCE_SCENARIO.producerContext, compilerRoots: ["../📜️script.ts"] } },
+      { ...DRAW_SOURCE_SCENARIO, oracle: { ...DRAW_SOURCE_SCENARIO.oracle, activatedGeneratorIds: [] } },
       { ...DRAW_SOURCE_SCENARIO, cargoModuleRoot: { ...DRAW_SOURCE_SCENARIO.cargoModuleRoot, path: "../🦀️.rs" } },
+      { ...DRAW_SOURCE_SCENARIO, retention: { ...DRAW_SOURCE_SCENARIO.retention, transactionTicketSegments: ["🧪️tests"] } },
     ]) expect(validate(changed)).toBe(false);
     const projection = projectionGolden("artifact-editor-command-bundle-v1");
     expect(DRAW_SOURCE_SCENARIO.members.map(({ path }) => `${projection.sourceRoot}/${path}`)).toEqual(projection.mappings.map(({ sourcePath }) => sourcePath));
@@ -3278,7 +3771,7 @@ describe("artifact path projection authority", () => {
     const jsonc = await import("jsonc-parser"), ts = await import("typescript");
     const render = (content: string): string => content.replaceAll("{{sourceRoot}}", projection.sourceRoot).replaceAll("{{artifactSourceRoot}}", artifactProjectionFixturePath(projection.sourceRoot));
     let projectCwds = 0, workspaceGlobs = 0;
-    for (const row of [...DRAW_SOURCE_SCENARIO.members, ...DRAW_SOURCE_SCENARIO.consumers, { path: "📜️script.ts", ...DRAW_SOURCE_SCENARIO.registryImplementation }]) {
+    for (const row of [...DRAW_SOURCE_SCENARIO.members, ...DRAW_SOURCE_SCENARIO.consumers]) {
       const content = render(row.content);
       expect(content).not.toContain("{{");
       if (row.format === "json") {
@@ -3305,8 +3798,98 @@ describe("artifact path projection authority", () => {
     }
     expect(projectCwds).toBe(DRAW_SOURCE_SCENARIO.oracle.projectCwdCount);
     expect(workspaceGlobs).toBe(DRAW_SOURCE_SCENARIO.oracle.workspaceGlobCount);
-    const { registryStaticImports } = await import("../../🔍️discovery/🟦️component.ts");
-    expect(registryStaticImports(DRAW_SOURCE_SCENARIO.registryImplementation.content, "📜️script.ts")).toEqual([]);
+    const host = DRAW_SOURCE_SCENARIO.catalogContext.find(({ format }) => format === "toml")!;
+    const parsedHost = toml.parse(host.content);
+    expect(Bun.TOML.parse(host.content)).toEqual(parsedHost);
+    expect(parsedHost.package).toEqual({ name: "draw-fixture-host", version: "0.1.0", edition: "2021", metadata: { component: { package: "semio:draw-fixture-host" }, semio: { role: "plugin", host: { landing: "fixture-landing", shell: "fixture-shell" }, playground: [{ variant: "draw-fixture-host", ports: { react: 6197, wgpu: 6198 } }] } } });
+    expect(DRAW_SOURCE_SCENARIO.catalogContext.find(({ path }) => path === `${dirname(host.path)}/${(parsedHost.lib as { path: string }).path}`)?.content).toBe("pub fn fixture_host() {}\n");
+  });
+
+  test("authored Draw source launch seed matches its host and preserves unknown-variant rejection", async () => {
+    const jsonc = await import("jsonc-parser"), ts = await import("typescript");
+    const { generateLaunchJson } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts");
+    const seed = DRAW_SOURCE_SCENARIO.launchSeed, errors: import("jsonc-parser").ParseError[] = [];
+    const document = jsonc.parse(seed.content, errors);
+    expect(errors).toEqual([]);
+    expect(ts.parseConfigFileTextToJson(seed.path, seed.content).config).toEqual(document);
+    const host = DRAW_SOURCE_SCENARIO.catalogContext.find(({ format }) => format === "toml")!;
+    const parsed = toml.parse(host.content) as { package: { metadata: { component: { package: string }; semio: { playground: { variant: string; ports: { react: number; wgpu: number } }[] } } } };
+    const declaration = parsed.package.metadata.semio.playground[0]!;
+    expect(Object.keys(document.devLaunchers)).toEqual([declaration.variant]);
+    const playground = { ...declaration, pluginId: parsed.package.metadata.component.package.slice("semio:".length), cratePath: dirname(host.path), aliases: [], examples: [], engines: [], assets: [] };
+    const rendered = generateLaunchJson("", [playground], () => seed.content), output = jsonc.parse(rendered);
+    expect(ts.parseConfigFileTextToJson("launch.json", rendered).config).toEqual(output);
+    expect(output.configurations).toHaveLength(3);
+    expect(output.configurations[0].env.FIXTURE_PORT).toBe(String(declaration.ports.react));
+    expect(rendered).not.toContain("@generated:");
+    expect(() => generateLaunchJson("", [], () => seed.content)).toThrow("no matching playground registry entry");
+    expect(() => generateLaunchJson("", [playground], () => seed.content.replace("@generated:draw-fixture-host:react", "@generated:unknown:react"))).toThrow("seed is missing placeholder");
+  });
+
+  test("authored Draw source producer context captures actual implementations with independent import parity", async () => {
+    const ts = await import("typescript"), { registryStaticImports } = await import("../../🔍️discovery/🟦️component.ts");
+    const taxonomy = loadTaxonomy(), readPaths: string[] = [];
+    const context = artifactProjectionProducerInputs(taxonomy, (path: string) => {
+      readPaths.push(path);
+      expect(path).not.toStartWith("✏️s/🔌️plugins/🖍️draw/");
+      return artifactProjectionProducerInput(path);
+    });
+    const contract = taxonomy.generatorContracts[DRAW_SOURCE_SCENARIO.producerContext.generatorId]!;
+    expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).toBe(readFileSync(join(getWorkspaceRoot(), contract.ownerPath!, "📜️script.ts"), "utf8"));
+    expect(context.files[contract.inputDiscovery!.implementationEntryPaths[0]!]?.content).not.toBe("export {};\n");
+    for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs]) expect(context.files[path]?.content).toBe(path === DRAW_SOURCE_SCENARIO.launchSeed.path ? DRAW_SOURCE_SCENARIO.launchSeed.content : readFileSync(join(getWorkspaceRoot(), path), "utf8"));
+    expect(readPaths).not.toContain(DRAW_SOURCE_SCENARIO.launchSeed.path);
+    expect(readPaths).toEqual([...new Set(readPaths)]);
+    const nx = JSON.parse(context.files["nx.json"]!.content);
+    for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("."))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
+    for (const row of context.modules) {
+      if (row.kind === "json-data") {
+        const jsonc = await import("jsonc-parser"), errors: import("jsonc-parser").ParseError[] = [];
+        expect(jsonc.parse(context.files[row.path]!.content, errors, { disallowComments: true, allowTrailingComma: false }), row.path).toEqual(JSON.parse(context.files[row.path]!.content));
+        expect(errors, row.path).toEqual([]);
+        expect(row.imports, row.path).toEqual([]);
+        continue;
+      }
+      const source = ts.createSourceFile(row.path, context.files[row.path]!.content, ts.ScriptTarget.Latest, true, row.path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+      const oracle = [...new Set(source.statements.flatMap((statement) => {
+        if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement) || ts.isImportDeclaration(statement) && statement.importClause?.isTypeOnly || ts.isExportDeclaration(statement) && statement.isTypeOnly) return [];
+        return statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier) ? [statement.moduleSpecifier.text] : [];
+      }))].sort();
+      expect(registryStaticImports(context.files[row.path]!.content, row.path), row.path).toEqual(oracle);
+      expect(row.imports, row.path).toEqual(oracle);
+    }
+    for (const [name, binding] of Object.entries(contract.inputDiscovery!.workspaceImports)) {
+      expect(JSON.parse(context.files[binding.manifestPath]!.content).name).toBe(name);
+      expect(context.files[binding.entryPath]).toBeDefined();
+    }
+  });
+
+  test("authored Draw source producer retains imported JSON bytes and rejects invalid data", () => {
+    const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧪️registry-import-language/🧪️imported-data/🔣️.json"), "utf8")) as { graph: { entries: string[]; dataPath: string; files: { path: string; content: string; mode: number }[] } };
+    const taxonomy = JSON.parse(readFileSync(join(getWorkspaceRoot(), NORMALIZATION_SCHEMA_REL), "utf8")) as Taxonomy;
+    Object.assign(taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery!, { implementationEntryPaths: vector.graph.entries, workspaceImports: {} });
+    const source = new Map(vector.graph.files.map((row) => [row.path, row])), reads: string[] = [];
+    const read = (path: string): ArtifactProducerInput => {
+      reads.push(path);
+      const row = source.get(path);
+      if (!row && ![...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...taxonomy.generatorContracts["plugin-registry"]!.inputPatterns].includes(path)) throw new Error("Missing authored compiler input: " + path);
+      const content = row?.content ?? (path === "nx.json" ? '{"plugins":[]}' : "{}"), mode = row?.mode ?? 0o644;
+      return { content, mode, sha256: createHash("sha256").update(content).digest("hex"), origin: "authored-scenario" };
+    };
+    const captured = artifactProjectionProducerInputs(taxonomy, read);
+    const data = source.get(vector.graph.dataPath)!;
+    expect(captured.files[data.path]).toEqual({ content: data.content, mode: data.mode, sha256: createHash("sha256").update(data.content).digest("hex"), origin: "authored-scenario" });
+    expect(captured.modules.find(({ path }) => path === data.path)).toEqual({ path: data.path, kind: "json-data", imports: [] });
+    expect(reads.filter((path) => path === data.path)).toHaveLength(1);
+    expect(reads.some((path) => path.includes("never.ts"))).toBe(false);
+    source.set(data.path, { ...data, content: "{" });
+    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("imported JSON is invalid");
+    source.delete(data.path);
+    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("Missing authored compiler input");
+    source.set(data.path.replace(".json", ".txt"), { ...data, path: data.path.replace(".json", ".txt") });
+    const entry = source.get(vector.graph.entries[0]!)!;
+    source.set(entry.path, { ...entry, content: entry.content.replaceAll(".json", ".txt") });
+    expect(() => artifactProjectionProducerInputs(taxonomy, read)).toThrow("language is not supported");
   });
 
   test("authored Draw source authority never reads live Draw leaves or reconstructs canonical input", () => {
@@ -3348,10 +3931,13 @@ describe("artifact path projection authority", () => {
     const virtualRoot = resolve("/draw-source-fixture");
     expect(resolve(virtualRoot, dirname(mount.manifestPath), mount.libraryEntry)).toBe(resolve(virtualRoot, root.path));
     const modulePath = relative(virtualRoot, resolve(virtualRoot, dirname(root.path), mount.moduleTarget)).replaceAll("\\", "/");
-    const { inspectRustModuleGraph } = await import("../../🔍️discovery/🟦️component.ts");
+    const { inspectRustModuleGraph, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences } = await import("../../🔍️discovery/🟦️component.ts");
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { conventionalRoots: false, strictManifests: true });
     expect([...new Set(graph.contexts.get(modulePath)?.map(({ manifestPath }) => manifestPath))]).toEqual([mount.manifestPath]);
     expect(graph.contexts.get(modulePath)?.filter(({ modulePath: segments }) => segments.join("::") === mount.moduleName).map(({ manifestPath }) => manifestPath)).toEqual([mount.manifestPath]);
+    const expectedRoot = `../../${artifactProjectionFixturePath(projectionGolden("artifact-example-model-catalog-v1").sourceRoot)}`;
+    expect(inspectRustManifestPathReferences(files[modulePath]!).map(({ value, base }) => ({ value, base }))).toEqual([{ value: expectedRoot, base: [] }]);
+    expect(inspectRustJoinArgumentSpans(files[modulePath]!).map(({ value }) => value)).toEqual([expectedRoot]);
     const parser = spawnSync("rustc", ["-Zunpretty=ast-tree", "--crate-name", "draw_source_mount", "--edition=2021", "--crate-type=lib", "-"], { input: root.content, encoding: "utf8", timeout: 10_000 });
     expect({ status: parser.status, signal: parser.signal, stderr: parser.stderr }).toEqual({ status: 0, signal: null, stderr: "" });
     expect(parser.stdout.match(/kind: Mod\(/gu)).toHaveLength(1);
@@ -3371,11 +3957,24 @@ describe("artifact path projection authority", () => {
     expect(reads).toHaveLength(projectionGolden("artifact-example-model-catalog-v1").sourceFileCount + 4);
     for (const row of DRAW_SOURCE_SCENARIO.members) expect(files[`${artifactProjectionFixturePath(projection.sourceRoot)}/${row.path}`]).toBe(drawSourceScenarioContent(row.content, projection));
     for (const row of DRAW_SOURCE_SCENARIO.consumers) expect(files[row.path]).toBe(drawSourceScenarioContent(row.content, projection));
+    expect(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path]).toBeDefined();
+    expect(createHash("sha256").update(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path]!).digest("hex")).toBe(createHash("sha256").update(readFileSync(join(getWorkspaceRoot(), DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath))).digest("hex"));
+    expect(files[DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath]).toBeUndefined();
   });
 
-  test("authored Draw source run parent is exact and rejects unsafe ancestry before allocation", () => {
+  test("authored Draw source run parent is exact and rejects unsafe ancestry before allocation", async () => {
     const expected = [NORMALIZATION_TICKET_REL, ...DRAW_SOURCE_SCENARIO.retention.parentSegments].join("/");
     expect(expected).toBe(ARTIFACT_PROJECTION_RUN_PARENT);
+    const taxonomy = loadTaxonomy(), { registryCatalogPathMayAffect } = await import("../../🔍️discovery/🟦️component.ts");
+    const fixtureOwner = DRAW_SOURCE_SCENARIO.retention.fixtureOwnerSegments.join("/");
+    expect(fixtureOwner).toBe("🧪️tests");
+    expect(registryCatalogPathMayAffect(`${fixtureOwner}/🧪️fixture/🗿️artifacts/🖍️draw/🦀️.rs`, taxonomy)).toBe(true);
+    const parsed = (await import("jsonc-parser")).parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🔣️.json"), "utf8")) as DrawSourceScenario;
+    expect(parsed.retention).toEqual(DRAW_SOURCE_SCENARIO.retention);
+    const virtualRoot = resolve("/draw-source-ownership"), locations = artifactProjectionFixtureLocations(virtualRoot);
+    expect(relative(virtualRoot, locations.workspace).replaceAll("\\", "/")).toBe(`${parsed.retention.fixtureOwnerSegments.join("/")}/🧪️fixture`);
+    expect(relative(virtualRoot, locations.ticketDir).replaceAll("\\", "/")).toBe(parsed.retention.transactionTicketSegments.join("/"));
+    expect(registryCatalogPathMayAffect(`${parsed.retention.transactionTicketSegments.join("/")}/🧾️taxonomy-transaction`, taxonomy)).toBe(false);
     for (const vector of DRAW_SOURCE_SCENARIO.retention.cases) {
       let created = 0;
       const inspect = (path: string) => {
@@ -3543,6 +4142,8 @@ type MutationProjectionGolden = Readonly<{
 const NORMALIZATION_TICKET_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION";
 const ARTIFACT_PROJECTION_RUN_PARENT = `${NORMALIZATION_TICKET_REL}/📓️draw-source-scenarios/🧪️runs`;
 const ARTIFACT_PROJECTION_RETAINED_RUNS = new Map<string, Readonly<{ device: number; inode: number; reportHash: string; name: string; startedAt: string }>>();
+const DRAW_SUBMITTED_PROOF = JSON.parse(readFileSync(join(DRAW_SOURCE_SCENARIO_ROOT, "🧪️submitted-proof/🔣️.json"), "utf8")) as Readonly<{ directoryName: string; filename: string; fileMode: number; progress: Readonly<{ externalParentSegments: readonly string[]; intervalMs: number }> }>;
+const ARTIFACT_PROJECTION_PROGRESS_RECORDS = new Map<string, { path: string; bytes: Buffer; ordinal: number }>();
 const NORMALIZATION_SCHEMA_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 const TICKET_IMPORTANT_HISTORY_ROOT_REL = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/SCOPED-HISTORY-APPLY";
 const TICKET_IMPORTANT_HISTORY_SOURCE_REL = `${TICKET_IMPORTANT_HISTORY_ROOT_REL}/📌️important.md`;
@@ -3553,6 +4154,198 @@ const SCOPED_INVENTORY_PATHSPEC_GOLDEN = JSON.parse(readFileSync(join(import.met
   opaqueExclusions: readonly string[];
   cases: readonly Readonly<{ id: string; inputScope: string | null; normalizedScope: string | null; conservativePrefix: string; positivePathspec: string; exclusionPathspecs: readonly string[] }>[];
 }>;
+
+/** 🧾️ Captures precisely the typed, digest-bound bytes that apply will authenticate. */
+function artifactProjectionSubmittedPlanBytes(value: unknown): Buffer {
+  const plan = parseTaxonomyPlan(value);
+  if (taxonomyPlanDigest(plan) !== plan.planDigest) throw new Error("Submitted artifact plan has an invalid self digest");
+  return Buffer.from(`${canonicalJson(plan)}\n`);
+}
+
+/** ⏱️ Retains bounded phase/count evidence without introducing source-coordinate references. */
+function artifactProjectionProgressSampler(retain: (row: Readonly<{ elapsedMs: number; operation: TaxonomyProgress["operation"]; phase: string; current: number; total: number }>) => void, now: () => number = performance.now.bind(performance)): (event: TaxonomyProgress) => void {
+  const started = now(), prior = new Map<string, Readonly<{ at: number; complete: boolean }>>();
+  return (event) => {
+    const at = now(), key = `${event.operation}:${event.phase}`, previous = prior.get(key), complete = event.current === event.total;
+    if (previous && at - previous.at < DRAW_SUBMITTED_PROOF.progress.intervalMs && (!complete || previous.complete)) return;
+    prior.set(key, { at, complete });
+    retain({ elapsedMs: Math.round(at - started), operation: event.operation, phase: event.phase, current: event.current, total: event.total });
+  };
+}
+
+/** 🔐️ Revalidates the unique retained run and its exact source/ticket coordinates. */
+function artifactProjectionAssertRun(fixture: NormalizationFixture): void {
+  if (DRAW_SUBMITTED_PROOF.directoryName !== "📓️submitted-plans" || DRAW_SUBMITTED_PROOF.filename !== "🔣️.json" || DRAW_SUBMITTED_PROOF.fileMode !== 0o600 || DRAW_SUBMITTED_PROOF.progress.intervalMs !== 1000 || JSON.stringify(DRAW_SUBMITTED_PROOF.progress.externalParentSegments) !== JSON.stringify(["📓️draw-source-scenarios", "📓️progress"])) throw new Error("Artifact proof contract changed outside its exact evidence authority");
+  const owner = normalizationRetainedRunParent(ARTIFACT_PROJECTION_RUN_PARENT), record = ARTIFACT_PROJECTION_RETAINED_RUNS.get(fixture.root);
+  if (!record || dirname(fixture.root) !== owner || fixture.repoRoot !== fixture.root) throw new Error("Artifact proof has no retained run authority");
+  const node = lstatSync(fixture.root), locations = artifactProjectionFixtureLocations(fixture.root);
+  if (!node.isDirectory() || node.isSymbolicLink() || node.dev !== record.device || node.ino !== record.inode || fixture.ticketDir !== locations.ticketDir || fixture.workspace !== locations.workspace) throw new Error("Artifact proof run identity changed");
+}
+
+/** 💾️ Synchronizes directory entries where the host supports directory descriptors. */
+function artifactProjectionSyncDirectory(path: string): void {
+  if (process.platform === "win32") return;
+  const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try { fsyncSync(descriptor); } finally { closeSync(descriptor); }
+}
+
+/** 🗂️ Creates only requested evidence descendants after no-follow ancestor checks. */
+function artifactProjectionEvidenceDirectory(root: string, segments: readonly string[], create: boolean): string {
+  let path = root;
+  for (const segment of ["", ...segments]) {
+    if (segment && (segment !== basename(segment) || segment === "." || segment === ".." || segment.includes("\\") || segment.includes("\0"))) throw new Error("Artifact evidence segment is not a leaf");
+    if (segment) path = join(path, segment);
+    let node;
+    try { node = lstatSync(path); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT" || !segment || !create) throw error;
+      mkdirSync(path);
+      artifactProjectionSyncDirectory(dirname(path));
+      node = lstatSync(path);
+    }
+    if (!node.isDirectory() || node.isSymbolicLink()) throw new Error("Artifact evidence ancestor is not a no-follow directory: " + path);
+  }
+  return path;
+}
+
+/** 📖️ Reads evidence through a no-follow descriptor bound to its inspected identity. */
+function artifactProjectionReadEvidence(path: string): Buffer {
+  const before = lstatSync(path);
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error("Artifact evidence is not a regular no-follow file");
+  const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const opened = fstatSync(descriptor), bytes = readFileSync(descriptor), after = lstatSync(path);
+    if (!opened.isFile() || after.isSymbolicLink() || opened.dev !== before.dev || opened.ino !== before.ino || after.dev !== before.dev || after.ino !== before.ino || after.mode !== before.mode || after.size !== before.size || after.mtimeMs !== before.mtimeMs || bytes.length !== before.size) throw new Error("Artifact evidence changed while reading");
+    return bytes;
+  } finally { closeSync(descriptor); }
+}
+
+/** 🧾️ Publishes exclusive file-synced evidence or verifies an identical prior publication. */
+function artifactProjectionWriteEvidence(path: string, bytes: Buffer): void {
+  let exists = true;
+  try { lstatSync(path); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; exists = false; }
+  if (exists) {
+    if (process.platform !== "win32" && (lstatSync(path).mode & 0o7777) !== DRAW_SUBMITTED_PROOF.fileMode) throw new Error("Existing artifact evidence mode changed; retained without overwrite");
+    if (!artifactProjectionReadEvidence(path).equals(bytes)) throw new Error("Existing artifact evidence differs; retained without overwrite");
+    return;
+  }
+  const descriptor = openSync(path, "wx", DRAW_SUBMITTED_PROOF.fileMode);
+  try { writeFileSync(descriptor, bytes); fsyncSync(descriptor); } finally { closeSync(descriptor); }
+  artifactProjectionSyncDirectory(dirname(path));
+  if (!artifactProjectionReadEvidence(path).equals(bytes)) throw new Error("Published artifact evidence differs from submitted bytes");
+}
+
+/** 📌️ Persists the exact submitted plan before apply without reconstructing prior lost plans. */
+function artifactProjectionCaptureSubmittedPlan(fixture: NormalizationFixture, value: unknown): string {
+  artifactProjectionAssertRun(fixture);
+  const bytes = artifactProjectionSubmittedPlanBytes(value), plan = JSON.parse(bytes.toString()) as TaxonomyPlan;
+  if (plan.baselineCommit !== fixture.baselineCommit || plan.scope !== fixture.scope) throw new Error("Submitted plan is outside its fixture identity");
+  const ticket = artifactProjectionEvidenceDirectory(fixture.root, relative(fixture.root, fixture.ticketDir).split(sep), false);
+  const owner = artifactProjectionEvidenceDirectory(ticket, [DRAW_SUBMITTED_PROOF.directoryName, `🔖️${plan.planDigest}`], true), path = join(owner, DRAW_SUBMITTED_PROOF.filename);
+  artifactProjectionWriteEvidence(path, bytes);
+  return path;
+}
+
+/** 📡️ Keeps mutable diagnostics outside the fixture repository's reference/read universe. */
+function artifactProjectionProgressRecord(fixture: NormalizationFixture): { path: string; bytes: Buffer; ordinal: number } {
+  artifactProjectionAssertRun(fixture);
+  const ticket = artifactProjectionEvidenceDirectory(getWorkspaceRoot(), NORMALIZATION_TICKET_REL.split("/"), false);
+  const owner = artifactProjectionEvidenceDirectory(ticket, [...DRAW_SUBMITTED_PROOF.progress.externalParentSegments, basename(fixture.root)], true);
+  let record = ARTIFACT_PROJECTION_PROGRESS_RECORDS.get(fixture.root);
+  if (!record) {
+    const path = join(owner, "📝️.md"), bytes = Buffer.from(`# Retained Draw Phase Evidence\n\nWorker PID: ${process.pid}\n\nRun: ${basename(fixture.root)}\n\n`);
+    if (existsSync(path)) throw new Error("Artifact progress owner already has an unbound record");
+    artifactProjectionWriteEvidence(path, bytes);
+    record = { path, bytes, ordinal: 0 };
+    ARTIFACT_PROJECTION_PROGRESS_RECORDS.set(fixture.root, record);
+  }
+  return record;
+}
+
+/** 📝️ Appends only to the exact previously observed progress file and synchronizes its bytes. */
+function artifactProjectionAppendProgress(fixture: NormalizationFixture, value: unknown): void {
+  const record = artifactProjectionProgressRecord(fixture), before = lstatSync(record.path);
+  if (!before.isFile() || before.isSymbolicLink()) throw new Error("Artifact progress record is not a regular file");
+  const descriptor = openSync(record.path, constants.O_RDWR | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const opened = fstatSync(descriptor), bytes = readFileSync(descriptor), current = lstatSync(record.path);
+    if (opened.dev !== before.dev || opened.ino !== before.ino || current.isSymbolicLink() || current.dev !== before.dev || current.ino !== before.ino || current.mode !== before.mode || !bytes.equals(record.bytes)) throw new Error("Artifact progress evidence changed before append");
+    const suffix = Buffer.from(`- ${JSON.stringify(value)}\n`);
+    writeFileSync(descriptor, suffix);
+    fsyncSync(descriptor);
+    record.bytes = Buffer.concat([bytes, suffix]);
+  } finally { closeSync(descriptor); }
+  if (!artifactProjectionReadEvidence(record.path).equals(record.bytes)) throw new Error("Artifact progress evidence changed after append");
+}
+
+/** 🧭️ Records a bounded phase stream and terminal state around one synchronous fixture operation. */
+function artifactProjectionRecordedStage<T>(fixture: NormalizationFixture, stage: "plan" | "apply", run: (progress: (event: TaxonomyProgress) => void) => T): T {
+  const ordinal = ++artifactProjectionProgressRecord(fixture).ordinal;
+  artifactProjectionAppendProgress(fixture, { stage, ordinal, state: "started" });
+  const progress = artifactProjectionProgressSampler((row) => artifactProjectionAppendProgress(fixture, { stage, ordinal, ...row }));
+  try {
+    const result = run(progress);
+    artifactProjectionAppendProgress(fixture, { stage, ordinal, state: "completed" });
+    return result;
+  } catch (error) {
+    artifactProjectionAppendProgress(fixture, { stage, ordinal, state: "failed" });
+    throw error;
+  }
+}
+
+/** 🛡️ Binds every artifact apply to its retained submitted-plan bytes and external phase evidence. */
+function artifactProjectionApply(fixture: NormalizationFixture, plan: TaxonomyPlan, options: Omit<TaxonomyApplyOptions, "repoRoot" | "ticketDir" | "expectedBaselineCommit" | "expectedPlanDigest" | "planArtifactPath"> = {}): TaxonomyApplyResult {
+  const planArtifactPath = artifactProjectionCaptureSubmittedPlan(fixture, plan);
+  return artifactProjectionRecordedStage(fixture, "apply", (progress) => applyTaxonomyPlan(plan, { ...options, repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, planArtifactPath, progress: (event) => { progress(event); options.progress?.(event); } }));
+}
+
+/** 🧹️ Gives one absent fixture residue an exact repository-local ignore rule. */
+function artifactProjectionIgnoreResidue(fixture: NormalizationFixture, residue: string): void {
+  artifactProjectionAssertRun(fixture);
+  const path = relative(fixture.root, residue).replaceAll("\\", "/");
+  if (!path.startsWith(`${fixture.scope}/`) || basename(residue) !== "🧪️unexpected" || /[\r\n\0*?[\]\\]/u.test(path) || path.split("/").some((part) => !part || part === "." || part === "..")) throw new Error("Residue ignore rule is outside its exact fixture scope");
+  try { lstatSync(residue); throw new Error("Residue must be absent before ignore authority is installed"); } catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
+  artifactProjectionEvidenceDirectory(fixture.root, path.split("/").slice(0, -1), false);
+  const ignorePath = join(fixture.root, ".gitignore"), before = lstatSync(ignorePath), bytes = artifactProjectionReadEvidence(ignorePath);
+  const suffix = Buffer.from(`${bytes.length && bytes.at(-1) !== 10 ? "\n" : ""}/${path}/\n`), descriptor = openSync(ignorePath, constants.O_RDWR | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const opened = fstatSync(descriptor), observed = readFileSync(descriptor), current = lstatSync(ignorePath);
+    if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino || current.isSymbolicLink() || current.dev !== before.dev || current.ino !== before.ino || current.mode !== before.mode || !observed.equals(bytes)) throw new Error("Fixture ignore authority changed before append");
+    writeFileSync(descriptor, suffix);
+    fsyncSync(descriptor);
+  } finally { closeSync(descriptor); }
+  if (lstatSync(ignorePath).mode !== before.mode || !artifactProjectionReadEvidence(ignorePath).equals(Buffer.concat([bytes, suffix]))) throw new Error("Fixture ignore authority changed after append");
+}
+
+/** 🎛️ Compares actual fixed-budget routes through independent compilers and launch parsers. */
+async function assertArtifactProjectionSingleCaseRoute(vector: Readonly<{ command: string; target: string; budgetMs: number; bunTimeoutMs: number; testName: string; launchName: string; launchOrder: number }>): Promise<void> {
+  const project = JSON.parse(readFileSync(join(import.meta.dir, "📋️project.json"), "utf8"));
+  expect(project.targets[vector.target]).toBeDefined();
+  expect(project.targets[vector.target].executor).toBe("nx:run-commands");
+  expect(project.targets[vector.target].options).toEqual({ cwd: relative(getWorkspaceRoot(), import.meta.dir).replaceAll("\\", "/"), command: `bun ./📜️script.ts test ${vector.command}` });
+  const ts = await import("typescript"), sourcePath = join(import.meta.dir, "📜️script.ts"), source = readFileSync(sourcePath, "utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
+  expect(declarations).toHaveLength(1);
+  const code = `${declarations[0]!.getText(syntax)}\nreturn new TestScript();`;
+  const expectedArgs = ["test", join(import.meta.dir, "🧪️index.test.ts"), "--timeout", String(vector.bunTimeoutMs), "-t", vector.testName];
+  for (const javascript of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText]) {
+    const invocations: { command: string; args: string[]; options: { cwd: string; budgetMs: number } }[] = [];
+    class FixtureBundle { root = import.meta.dir; repoRoot = getWorkspaceRoot(); }
+    const router = new Function("BundleScript", "join", "runTestBudgeted", "resolveTestLevel", javascript)(FixtureBundle, join, async (command: string, args: string[], options: { cwd: string; budgetMs: number }) => { invocations.push({ command, args, options }); }, () => { throw new Error("Dedicated case fell through to generic test routing"); });
+    await router.run([vector.command]);
+    expect(invocations.map(({ command, args, options }) => ({ command, args, cwd: options.cwd, budgetMs: options.budgetMs }))).toEqual([{ command: process.execPath, args: expectedArgs, cwd: getWorkspaceRoot(), budgetMs: vector.budgetMs }]);
+    await expect(router.run([vector.command, "--test-name-pattern=other"])).rejects.toThrow();
+    expect(invocations).toHaveLength(1);
+  }
+  const jsonc = await import("jsonc-parser");
+  for (const filename of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
+    const errors: import("jsonc-parser").ParseError[] = [], launch = jsonc.parse(readFileSync(join(getWorkspaceRoot(), filename), "utf8"), errors);
+    expect(errors).toEqual([]);
+    const entries = launch.configurations.filter((row: { name: string }) => row.name === vector.launchName);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${vector.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: "4_gate", order: vector.launchOrder } });
+  }
+}
 
 /** 🧭️ Discovers mutation catalog files without third-party glob semantics. */
 function nativeMutationCatalogPaths(workspace: string): string[] {
@@ -3622,6 +4415,14 @@ function retainArtifactProjectionFixture(fixture: NormalizationFixture, passed: 
   writeFileSync(reportPath, `# Retained Artifact Projection Run\n\nScenario: ${record.name}\n\nStarted: ${record.startedAt}\n\nFinished: ${new Date().toISOString()}\n\nOutcome: ${passed ? "passed" : "failed or interrupted before completion"}\n\nAll authored inputs and generated/recovery evidence remain retained pending exact review. No output or fixture input was deleted by the finalizer.\n`);
 }
 
+/** 🗂️ Keeps the authored source owner distinct from its metadata transaction ticket. */
+function artifactProjectionFixtureLocations(root: string): Readonly<{ ticketDir: string; workspace: string }> {
+  return {
+    ticketDir: join(root, ...DRAW_SOURCE_SCENARIO.retention.transactionTicketSegments),
+    workspace: join(root, ...DRAW_SOURCE_SCENARIO.retention.fixtureOwnerSegments, "🧪️fixture"),
+  };
+}
+
 function normalizationFixture(name: string, files: Readonly<Record<string, string>>, configure?: (fixture: { repoRoot: string; ticketDir: string; workspace: string }) => void, retainedRunParent?: string): NormalizationFixture {
   const owner = retainedRunParent === undefined ? resolve(getWorkspaceRoot(), NORMALIZATION_TICKET_REL) : normalizationRetainedRunParent(retainedRunParent);
   mkdirSync(owner, { recursive: true });
@@ -3633,12 +4434,12 @@ function normalizationFixture(name: string, files: Readonly<Record<string, strin
     writeFileSync(join(root, "📝️.md"), report, { flag: "wx" });
     ARTIFACT_PROJECTION_RETAINED_RUNS.set(root, { device: node.dev, inode: node.ino, reportHash: createHash("sha256").update(report).digest("hex"), name, startedAt });
   }
-  const ticketDir = join(root, "🧪️tests");
-  const workspace = join(ticketDir, "🧪️fixture");
+  const { ticketDir, workspace } = retainedRunParent === undefined ? { ticketDir: join(root, "🧪️tests"), workspace: join(root, "🧪️tests", "🧪️fixture") } : artifactProjectionFixtureLocations(root);
   const schemaPath = join(root, NORMALIZATION_SCHEMA_REL);
   mkdirSync(resolve(schemaPath, ".."), { recursive: true });
   mkdirSync(join(root, "compose"), { recursive: true });
   mkdirSync(workspace, { recursive: true });
+  if (retainedRunParent !== undefined) mkdirSync(ticketDir, { recursive: true });
   writeFileSync(schemaPath, readFileSync(resolve(getWorkspaceRoot(), NORMALIZATION_SCHEMA_REL), "utf8"));
   writeFileSync(join(root, "compose", "keep.txt"), "opaque\n");
   normalizationWriteFiles(workspace, files);
@@ -3665,13 +4466,14 @@ function normalizationFixture(name: string, files: Readonly<Record<string, strin
 }
 
 function normalizationPlan(fixture: NormalizationFixture): { inventory: TaxonomyInventory; plan: TaxonomyPlan } {
-  const inventory = inventoryTaxonomy(fixture.options);
-  const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
-  if (ARTIFACT_PROJECTION_RETAINED_RUNS.has(fixture.root)) expect(plan.regenerations.filter(({ contractId }) => contractId === "plugin-registry")).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.pluginRegistryRegenerationCount);
-  return {
-    inventory,
-    plan,
+  const retained = ARTIFACT_PROJECTION_RETAINED_RUNS.has(fixture.root);
+  const build = (progress?: (event: TaxonomyProgress) => void) => {
+    const inventory = inventoryTaxonomy(progress ? { ...fixture.options, progress } : fixture.options);
+    const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [], progress });
+    if (retained) artifactProjectionCaptureSubmittedPlan(fixture, plan);
+    return { inventory, plan };
   };
+  return retained ? artifactProjectionRecordedStage(fixture, "plan", build) : build();
 }
 
 function normalizationWorkspaceSnapshot(workspace: string): Readonly<Record<string, string>> {
@@ -3725,11 +4527,10 @@ function artifactProjectionSourceFiles(references: boolean, readLive: (path: str
     const cadRuntime = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts";
     const cadInteraction = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️component.rs";
     const interactionSpec = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs";
-    const spatialKernel = "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts";
     files[artifactProjectionFixturePath(cadRuntime)] = readLive(cadRuntime);
     files[artifactProjectionFixturePath(cadInteraction)] = readLive(cadInteraction);
     files[artifactProjectionFixturePath(interactionSpec)] = readLive(interactionSpec);
-    files[spatialKernel] = readLive(spatialKernel);
+    files[DRAW_SOURCE_SCENARIO.cadConsumerMount.path] = readLive(DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath);
     const draw = projectionGolden("artifact-editor-command-bundle-v1");
     for (const row of DRAW_SOURCE_SCENARIO.consumers) files[row.path] = drawSourceScenarioContent(row.content, draw);
     files[DRAW_SOURCE_SCENARIO.cargoModuleRoot.path] = DRAW_SOURCE_SCENARIO.cargoModuleRoot.content;
@@ -3737,21 +4538,112 @@ function artifactProjectionSourceFiles(references: boolean, readLive: (path: str
   return files;
 }
 
+type ArtifactProducerInput = Readonly<{ content: string; mode: number; sha256: string; origin: "current-compiler-context" | "authored-scenario" }>;
+
+/** 🔒️ Reads one exact current compiler input after checking every no-follow path component. */
+function artifactProjectionProducerInput(path: string): ArtifactProducerInput {
+  if (!path || path.startsWith("/") || path.includes("\\") || path.split("/").some((part) => !part || part === "." || part === "..") || path === "compose" || path.startsWith("compose/") || path === "temp/compose" || path.startsWith("temp/compose/")) throw new Error("Producer input must be an exact nonopaque repository-relative file");
+  const root = getWorkspaceRoot(), segments = path.split("/");
+  for (let index = 1; index <= segments.length; index++) {
+    const selected = join(root, ...segments.slice(0, index)), stat = lstatSync(selected);
+    if (stat.isSymbolicLink() || (index === segments.length ? !stat.isFile() : !stat.isDirectory())) throw new Error("Producer input must have no-follow regular ancestry: " + path);
+  }
+  const absolute = join(root, path), before = lstatSync(absolute), bytes = readFileSync(absolute), after = lstatSync(absolute);
+  if (!after.isFile() || after.isSymbolicLink() || before.dev !== after.dev || before.ino !== after.ino || before.mode !== after.mode || before.mtimeMs !== after.mtimeMs || before.size !== after.size || bytes.byteLength !== after.size) throw new Error("Producer input changed during capture: " + path);
+  const content = bytes.toString("utf8");
+  if (!Buffer.from(content).equals(bytes)) throw new Error("Producer input is not exact UTF-8: " + path);
+  return { content, mode: after.mode & 0o7777, sha256: createHash("sha256").update(bytes).digest("hex"), origin: "current-compiler-context" };
+}
+
+/** 📦️ Captures current producer inputs from exact contracts and static imports without repository traversal. */
+function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: string) => ArtifactProducerInput = artifactProjectionProducerInput) {
+  const context = DRAW_SOURCE_SCENARIO.producerContext, contract = taxonomy.generatorContracts[context.generatorId], authority = contract?.inputDiscovery;
+  if (!contract?.ownerPath || !authority || authority.kind !== "registry-catalog") throw new Error("Authored Draw producer requires exact registry catalog authority");
+  const seed = DRAW_SOURCE_SCENARIO.launchSeed;
+  if (!contract.inputPatterns.includes(seed.path)) throw new Error("Authored launch seed must be an exact declared producer input");
+  const files: Record<string, ArtifactProducerInput> = { [seed.path]: { content: seed.content, mode: 0o644, sha256: createHash("sha256").update(seed.content).digest("hex"), origin: "authored-scenario" } };
+  const read = (path: string): ArtifactProducerInput => files[path] ??= readInput(path);
+  for (const path of [...context.workspaceInputs, ...contract.inputPatterns]) {
+    if (/[*?[\]]/u.test(path)) throw new Error("Draw producer context requires exact declared input files");
+    read(path);
+  }
+  const nx = JSON.parse(read("nx.json").content) as { plugins: { plugin: string }[] };
+  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
+  const modules = new Map<string, { path: string; kind: "module" | "json-data"; imports: readonly string[] }>();
+  while (pending.length) {
+    const { path, role } = pending.shift()!, previous = modules.get(path);
+    if (previous) {
+      if (role === "implementation-entry" && previous.kind === "json-data") registryCompilerInputDependencies(files[path]!.content, path, role);
+      continue;
+    }
+    const input = read(path), dependencies = registryCompilerInputDependencies(input.content, path, role), { imports } = dependencies;
+    modules.set(path, { path, ...dependencies });
+    for (const specifier of imports) {
+      if (specifier.startsWith("node:") || specifier.startsWith("bun:")) continue;
+      if (specifier.startsWith(".")) pending.push({ path: posix.normalize(posix.join(posix.dirname(path), specifier)), role: "static-import" });
+      else {
+        const binding = authority.workspaceImports[specifier];
+        if (!binding) throw new Error("Producer static import lacks exact workspace authority: " + path + " -> " + specifier);
+        read(binding.manifestPath);
+        pending.push({ path: binding.entryPath, role: "implementation-entry" });
+      }
+    }
+  }
+  return { files, modules: [...modules.values()].sort((left, right) => projectionByteSort(left.path, right.path)), bindings: authority.workspaceImports };
+}
+
+/** 🏭️ Produces the fixture baseline through the unchanged Nx generator and freshness commands. */
+function artifactProjectionPrepareProducer(repoRoot: string, taxonomy: Taxonomy, captured: ReturnType<typeof artifactProjectionProducerInputs>): void {
+  const context = DRAW_SOURCE_SCENARIO.producerContext, contract = taxonomy.generatorContracts[context.generatorId]!;
+  const reportRoot = join(repoRoot, "📇️producer");
+  mkdirSync(reportRoot);
+  const reportPath = join(reportRoot, "📝️.md"), evidence: { target: string; status: number | null; signal: string | null; stdout: string; stderr: string }[] = [];
+  const inputs = Object.entries(captured.files).sort(([left], [right]) => projectionByteSort(left, right)).map(([path, input]) => ({ path, origin: input.origin, mode: input.mode, bytes: Buffer.byteLength(input.content), sourceSha256: input.sha256, materializedSha256: createHash("sha256").update(readFileSync(join(repoRoot, path))).digest("hex") }));
+  const writeReport = (): void => { const fence = String.fromCharCode(96).repeat(3); writeFileSync(reportPath, "# Draw Fixture Producer Context\n\nCurrent exact compiler inputs are copied into this isolated repository; source scenario members remain independently authored. No production generator runs in the real workspace.\n\n" + fence + "json\n" + JSON.stringify({ inputs, modules: captured.modules, evidence }, null, 2) + "\n" + fence + "\n"); };
+  writeReport();
+  for (const target of [contract.target!, contract.checkTarget!]) {
+    const result = spawnSync(process.execPath, ["nx", "run", target, "--skip-nx-cache"], { cwd: repoRoot, encoding: "utf8", timeout: 60_000, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, REPO_ROOT: repoRoot, NX_DAEMON: "false" } });
+    evidence.push({ target, status: result.status, signal: result.signal, stdout: result.stdout, stderr: result.stderr });
+    writeReport();
+    if (result.error || result.status !== 0) throw new Error("Actual Draw fixture producer failed: " + target + "\n" + (result.error?.message ?? "") + result.stderr + result.stdout);
+  }
+  const outputNodes = contract.outputRoots.map(({ path }) => noFollowTreeDigest(repoRoot, path));
+  expect(outputNodes.reduce((count, row) => count + row.files + row.directories, 0)).toBe(context.registryNodeCount);
+  expect(outputNodes.every((row) => row.symlinks === 0 && row.others === 0)).toBe(true);
+  for (const [path, input] of Object.entries(captured.files)) {
+    if (input.origin === "authored-scenario") continue;
+    const current = artifactProjectionProducerInput(path);
+    if (current.sha256 !== input.sha256 || current.mode !== input.mode) throw new Error("Live producer input changed after capture: " + path);
+  }
+}
+
 /** 🏗️ Materializes the permanent language-neutral CAD/Draw authority under one isolated normalization scope. */
 function artifactProjectionNormalizationFixture(name: string, references = false): NormalizationFixture {
   const files = artifactProjectionSourceFiles(references);
-  return normalizationFixture(`artifact-projection-${name}`, files, references ? ({ repoRoot, workspace }) => {
+  return normalizationFixture(`artifact-projection-${name}`, files, references ? ({ repoRoot, ticketDir, workspace }) => {
+    expect(lstatSync(ticketDir).isDirectory()).toBe(true);
+    expect(lstatSync(ticketDir).isSymbolicLink()).toBe(false);
+    expect(existsSync(join(repoRoot, ".git"))).toBe(false);
     const scope = relative(repoRoot, workspace).replaceAll("\\", "/");
     const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
-    const schema = JSON.parse(readFileSync(schemaPath, "utf8")) as { generatorContracts: Record<string, { inputDiscovery?: { implementationEntryPaths: readonly string[] } }>; fixedFilenameContracts: Record<string, unknown>; semanticPathProjectionReferenceConsumerContracts: Record<string, { sourcePathIdentities: string[]; sourcePathPattern: string }> };
-    const entries = schema.generatorContracts["plugin-registry"]?.inputDiscovery?.implementationEntryPaths;
-    if (!entries || entries.length !== 1) throw new Error("Authored artifact fixture requires one declared registry implementation entry");
-    normalizationWriteFiles(repoRoot, { [entries[0]!]: DRAW_SOURCE_SCENARIO.registryImplementation.content });
+    const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
+    const producer = artifactProjectionProducerInputs(schema);
+    if (producer.files[NORMALIZATION_SCHEMA_REL]!.content !== readFileSync(schemaPath, "utf8")) throw new Error("Producer taxonomy changed during fixture preparation");
+    normalizationWriteFiles(repoRoot, Object.fromEntries(Object.entries(producer.files).map(([path, input]) => [path, input.content])));
+    normalizationWriteFiles(repoRoot, Object.fromEntries(DRAW_SOURCE_SCENARIO.catalogContext.map(({ path, content }) => [path, content])));
+    for (const [path, input] of Object.entries(producer.files)) chmodSync(join(repoRoot, path), input.mode);
+    const links = [...Object.entries(producer.bindings).map(([name, binding]) => [name, join(repoRoot, dirname(binding.manifestPath))] as const), ...DRAW_SOURCE_SCENARIO.producerContext.runtimePackages.map((name) => [name, realpathSync(join(getWorkspaceRoot(), "node_modules", name))] as const)];
+    for (const [name, target] of links) {
+      const destination = join(repoRoot, "node_modules", name);
+      mkdirSync(dirname(destination), { recursive: true });
+      symlinkSync(target, destination, process.platform === "win32" ? "junction" : "dir");
+    }
+    if (!schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathIdentities.includes(DRAW_SOURCE_SCENARIO.cadConsumerMount.sourcePath)) throw new Error("Authored CAD consumer mount has no exact source identity");
     const fixtureConsumerPaths: Readonly<Record<string, readonly string[]>> = {
       "draw-workspace-cargo": [`${scope}/Cargo.toml`],
       "draw-dependency-registry": [`${scope}/🔣️.json`],
       "draw-workspace-script": [`${scope}/📜️script.ts`],
-      "cad-spatial-kernel-geometry": schema.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.sourcePathIdentities.map((path) => `${scope}/${path}`),
+      "cad-spatial-kernel-geometry": [`${scope}/${DRAW_SOURCE_SCENARIO.cadConsumerMount.path}`],
     };
     const escaped = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     for (const [id, paths] of Object.entries(fixtureConsumerPaths)) {
@@ -3781,6 +4673,7 @@ function artifactProjectionNormalizationFixture(name: string, references = false
     }
     const rootScript = join(workspace, "📜️script.ts");
     writeFileSync(rootScript, readFileSync(rootScript, "utf8").replaceAll("__SCOPE__", scope));
+    artifactProjectionPrepareProducer(repoRoot, schema, producer);
   } : undefined, ARTIFACT_PROJECTION_RUN_PARENT);
 }
 
@@ -3983,6 +4876,9 @@ describe("taxonomy normalization", () => {
     let passed = false;
     try {
       const { plan } = normalizationPlan(fixture);
+      expect(plan.unresolved).toEqual([]);
+      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
+      expect(plan.edits.some(({ path }) => path === NORMALIZATION_SCHEMA_REL)).toBe(false);
       const cad = projectionGolden("artifact-example-model-catalog-v1");
       const draw = projectionGolden("artifact-editor-command-bundle-v1");
       expect(artifactProjectionTail(`${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}`)).toStartWith("🗿️artifacts/");
@@ -4015,7 +4911,10 @@ describe("taxonomy normalization", () => {
         const matches = cad.mappings.filter((mapping) => edit.oldValue.endsWith(mapping.sourcePath.slice(cad.sourceRoot.length + 1)) && edit.newValue.endsWith(mapping.destinationPath.slice(cad.destinationRoot.length + 1)));
         expect(matches).toHaveLength(1);
       }
-      const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.oldValue !== "📦️glue.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
+      const cadMount = plan.edits.filter(({ path }) => path === `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}`);
+      expect(cadMount.map(({ adapter, structuredLocation, oldValue, newValue }) => ({ adapter, structuredLocation, oldValue, newValue }))).toEqual([{ adapter: "rust", structuredLocation: "rust-string-path:1:11@10", oldValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.moduleTarget, newValue: DRAW_SOURCE_SCENARIO.oracle.cargoModuleMount.canonicalModuleTarget }]);
+      expect(cadMount[0]!.preimage.contentHash).toBe(createHash("sha256").update(DRAW_SOURCE_SCENARIO.cargoModuleRoot.content).digest("hex"));
+      const drawExact = plan.edits.filter((edit) => (edit.oldValue.includes(`${fixture.scope}/${artifactProjectionFixturePath(draw.sourceRoot)}`) || edit.path.startsWith(`${fixture.scope}/📦️packages/🦀️rust/`) || edit.path.includes("/🧪️tests/🧪️reference/")) && edit.path !== `${fixture.scope}/${DRAW_SOURCE_SCENARIO.cargoModuleRoot.path}` && edit.oldValue !== "📦️glue.rs" && !edit.oldValue.includes("workspaceRoot") && !edit.structuredLocation.startsWith("path-collection:") && !edit.path.includes(`/${artifactProjectionFixturePath(cad.destinationRoot)}/`));
       expect(drawExact).toHaveLength(20);
       expect(drawExact.some((edit) => edit.path.endsWith("📦️packages/🦀️rust/Cargo.toml") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🔄️fsm/📦️packages/🦀️rust")).toBe(true);
       expect(drawExact.some((edit) => edit.path.endsWith("🧪️tests/🧪️reference/🦀️.rs") && edit.newValue === "../../🗿️artifacts/🖍️draw/✏️editor/🪆️1-any/🎮️commands/🖱️canvas-pointer-down/🦀️.rs")).toBe(true);
@@ -4034,6 +4933,7 @@ describe("taxonomy normalization", () => {
     const fixture = artifactProjectionNormalizationFixture("negative", true);
     let passed = false;
     try {
+      expect(normalizationPlan(fixture).plan.unresolved).toEqual([]);
       const cad = projectionGolden("artifact-example-model-catalog-v1");
       const draw = projectionGolden("artifact-editor-command-bundle-v1");
       const unowned = join(fixture.workspace, "✏️s", "🔨️modules", "🧪️unowned", "🟦️.ts");
@@ -4077,7 +4977,7 @@ describe("taxonomy normalization", () => {
       if (process.platform !== "win32") for (const path of [...sourceRoots.map((path) => join(fixture.workspace, path)), retainedDirectory]) chmodSync(path, 0o750);
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
       const plan = normalizationPlan(fixture).plan;
-      expect(plan.unresolved.filter((entry) => entry.severity === "error")).toEqual([]);
+      expect(plan.unresolved).toEqual([]);
       const projectedNodes = new Set(Object.keys(before));
       const candidateDirectories = new Set<string>();
       for (const move of plan.moves) {
@@ -4092,16 +4992,15 @@ describe("taxonomy normalization", () => {
         projectedNodes.delete(path);
         expectedPruned.push(path);
       }
-      const rolledBack = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, injectFailureAt: "after-edits" });
+      const rolledBack = artifactProjectionApply(fixture, plan, { injectFailureAt: "after-edits" });
       expect(rolledBack.state).toBe("rolled-back");
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
       const cancelFile = join(fixture.ticketDir, "🛑️cancel");
       writeFileSync(cancelFile, "cancel\n");
-      expectNormalizationApplyFailure(() => applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, cancelFile }));
+      expectNormalizationApplyFailure(() => artifactProjectionApply(fixture, plan, { cancelFile }));
       rmSync(cancelFile);
       expect(normalizationWorkspaceSnapshot(fixture.workspace)).toEqual(before);
-      const retryTicket = fixture.ticketDir;
-      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest });
+      const applied = artifactProjectionApply(fixture, plan);
       expect({ state: applied.state, error: JSON.parse(readFileSync(applied.journalPath, "utf8")).error ?? null }).toEqual({ state: "committed", error: null });
       expect(JSON.parse(readFileSync(applied.journalPath, "utf8")).attemptOrdinal).toBe("000002");
       for (const path of sourceRoots) expect(existsSync(join(fixture.workspace, path))).toBe(false);
@@ -4111,9 +5010,10 @@ describe("taxonomy normalization", () => {
       expect(after[retainedRelative]).toBe(before[retainedRelative]);
       for (const [path, entry] of Object.entries(before).filter(([, entry]) => entry.startsWith("directory|"))) if (after[path]) expect(after[path]).toBe(entry);
       expect(lstatSync(fixture.ticketDir).isDirectory()).toBe(true);
-      expect(applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: retryTicket, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, resumeJournal: applied.journalPath }).state).toBe("committed");
+      expect(artifactProjectionApply(fixture, plan, { resumeJournal: applied.journalPath }).state).toBe("committed");
       for (const edit of plan.edits.filter((candidate) => /artifact-catalog|workspace-glob|path-collection/u.test(candidate.structuredLocation))) expect(readFileSync(join(fixture.repoRoot, edit.path), "utf8")).not.toContain(edit.oldValue);
       const second = normalizationPlan(fixture).plan;
+      expect(second.unresolved).toEqual([]);
       expect(second.moves.filter((move) => move.rationaleRule === "artifact-example-model-catalog-projection-v1" || move.rationaleRule === "artifact-editor-command-projection-v1")).toEqual([]);
       expect(second.edits.filter((edit) => /artifact-catalog|workspace-glob|path-collection/u.test(edit.structuredLocation))).toEqual([]);
       expect(second.unresolved.filter((entry) => /projection/u.test(entry.code))).toEqual([]);
@@ -4142,14 +5042,25 @@ describe("taxonomy normalization", () => {
       const linkTarget = join(fixture.ticketDir, "🧪️link-target");
       mkdirSync(linkTarget);
       writeFileSync(join(linkTarget, "📝️.md"), "not followed\n");
-      writeFileSync(join(fixture.root, ".git", "info", "exclude"), `/${relative(fixture.root, residue).replaceAll("\\", "/")}/\n`);
+      artifactProjectionIgnoreResidue(fixture, residue);
+      normalizationGit(fixture.root, ["check-ignore", "--quiet", "--no-index", "--", relative(fixture.root, join(residue, "📝️.md")).replaceAll("\\", "/")]);
       const { plan } = normalizationPlan(fixture);
       expect(plan.moves.length).toBeGreaterThan(0);
-      expect(plan.unresolved.filter(({ severity }) => severity === "error")).toEqual([]);
+      expect(plan.unresolved).toEqual([]);
+      expect(plan.regenerations.map(({ contractId }) => contractId)).toEqual(["plugin-registry"]);
       const before = normalizationWorkspaceSnapshot(fixture.workspace);
       const targetBefore = normalizationWorkspaceSnapshot(linkTarget);
-      let injected = false;
-      const applied = applyTaxonomyPlan(plan, { repoRoot: fixture.repoRoot, ticketDir: fixture.ticketDir, expectedBaselineCommit: plan.baselineCommit, expectedPlanDigest: plan.planDigest, progress: (event) => {
+      const outputsBefore = plan.regenerations.flatMap(({ outputRoots }) => outputRoots.map((path) => noFollowTreeDigest(fixture.repoRoot, path)));
+      const started = new Set<string>();
+      let injected = false, journalSnapshots = 0;
+      const applied = artifactProjectionApply(fixture, plan, { progress: (event) => {
+        if (event.phase === "transaction-journal-candidate-written" && event.path) {
+          const snapshot = JSON.parse(readFileSync(resolve(fixture.repoRoot, event.path), "utf8"));
+          if (snapshot.planDigest === plan.planDigest) {
+            journalSnapshots++;
+            for (const id of snapshot.startedRegenerationIds) started.add(id);
+          }
+        }
         if (event.phase !== "moves" || event.current !== event.total || injected) return;
         injected = true;
         mkdirSync(join(residue, "🧪️empty"), { recursive: true });
@@ -4157,8 +5068,12 @@ describe("taxonomy normalization", () => {
         symlinkSync(process.platform === "win32" ? linkTarget : relative(residue, linkTarget), join(residue, "🧪️link"), process.platform === "win32" ? "junction" : "dir");
       } });
       expect(injected).toBe(true);
-      normalizationGit(fixture.root, ["check-ignore", "--quiet", "--", relative(fixture.root, join(residue, "📝️.md"))]);
-      expect({ state: applied.state, error: JSON.parse(readFileSync(applied.journalPath, "utf8")).error }).toEqual({ state: "rolled-back", error: expect.stringContaining("projection-source-directory-stale") });
+      normalizationGit(fixture.root, ["check-ignore", "--quiet", "--", relative(fixture.root, join(residue, "📝️.md")).replaceAll("\\", "/")]);
+      const residueRelative = relative(fixture.repoRoot, residue).replaceAll("\\", "/");
+      expect({ state: applied.state, error: JSON.parse(readFileSync(applied.journalPath, "utf8")).error }).toEqual({ state: "rolled-back", error: `resume-state-drift: regeneration input membership ${plan.regenerations[0]!.id}; missing(0)=[]; added(2)=${JSON.stringify([residueRelative, `${residueRelative}/🧪️empty`])}` });
+      expect(journalSnapshots).toBeGreaterThan(0);
+      expect([...started]).toEqual([]);
+      expect(plan.regenerations.flatMap(({ outputRoots }) => outputRoots.map((path) => noFollowTreeDigest(fixture.repoRoot, path)))).toEqual(outputsBefore);
       expect(readFileSync(join(residue, "📝️.md"), "utf8")).toBe("ignored residual source\n");
       expect(lstatSync(join(residue, "🧪️empty")).isDirectory()).toBe(true);
       expect(lstatSync(join(residue, "🧪️link")).isSymbolicLink()).toBe(true);
@@ -4177,6 +5092,8 @@ describe("taxonomy normalization", () => {
     try {
       const first = normalizationPlan(fixture);
       const second = normalizationPlan(fixture);
+      expect(first.plan.unresolved).toEqual([]);
+      expect(second.plan.unresolved).toEqual([]);
       const sourceRows = (inventory: TaxonomyInventory) => inventory.entries.map(({ sourcePath, nodeKind, contentHash, mode, size, symlinkTarget }) => ({ sourcePath, nodeKind, contentHash, mode, size, symlinkTarget }));
       expect(sourceRows(second.inventory)).toEqual(sourceRows(first.inventory));
       expect(second.plan.sourceTreeDigest).toBe(first.plan.sourceTreeDigest);
@@ -4547,6 +5464,7 @@ describe("taxonomy normalization", () => {
     const fixture = artifactProjectionNormalizationFixture("declared-external", true);
     let passed = false;
     try {
+      expect(normalizationPlan(fixture).plan.unresolved).toEqual([]);
       const cad = projectionGolden("artifact-example-model-catalog-v1");
       const exactScope = `${fixture.scope}/${artifactProjectionFixturePath(cad.sourceRoot)}`;
       const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
@@ -4559,7 +5477,7 @@ describe("taxonomy normalization", () => {
       writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
       const inventory = inventoryTaxonomy({ ...fixture.options, scope: exactScope });
       const plan = planTaxonomy(inventory, { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
-      expect(plan.regenerations.filter(({ contractId }) => contractId === "plugin-registry")).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.pluginRegistryRegenerationCount);
+      expect(plan.regenerations.map(({ contractId }) => contractId).sort()).toEqual(DRAW_SOURCE_SCENARIO.oracle.activatedGeneratorIds);
       expect(plan.unresolved.filter((entry) => entry.code === "projection-old-token-stale" && entry.path === declaredStalePath)).toHaveLength(1);
       expect(plan.moves.filter((move) => move.rationaleRule === cad.rationaleRule)).toHaveLength(cad.sourceFileCount);
       expect(plan.edits.some((edit) => !inScopeForTest(edit.path, exactScope))).toBe(true);
@@ -5216,6 +6134,125 @@ describe("taxonomy transaction dispositions v2", () => {
 //#region 🧬️DirectMutationOwnership
 describe("direct mutation ownership", () => {
   const mutationRoot = (root: string, area = "✏️s") => join(root, area, "🔌️plugins", "🧪️probe", "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "🧬️schema", "🧬️mutations");
+
+  //#region 🔍️MutationRootDiscovery
+  test("mutation root discovery includes authored facets and rejects unsafe virtual traversal", async () => {
+    const ts = await import("typescript");
+    const { win32 } = await import("node:path");
+    const inputRoot = join(import.meta.dir, "../../🧪️tests/🧬️mutation-root-discovery");
+    const vectorPath = join(inputRoot, "🔣️.json");
+    const schemaPath = join(inputRoot, "🧬️schema/🔣️.json");
+    const vector = JSON.parse(readFileSync(vectorPath, "utf8")) as { ownedRoots: string[]; includedRoots: string[]; excludedRoots: string[]; filePaths: string[]; rejections: { name: string; path: string; kind: string; roots?: string[] }[] };
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(schemaPath, "utf8")));
+    expect(validate(vector), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({ ...vector, extra: true })).toBe(false);
+    const sourcePath = join(getWorkspaceRoot(), "📜️script.ts");
+    const source = readFileSync(sourcePath, "utf8");
+    const inputs = [sourcePath, vectorPath, schemaPath, import.meta.path].map((path) => ({ path, sha256: createHash("sha256").update(readFileSync(path)).digest("hex") }));
+    const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const functionNames = new Set(["policyFindAllMutationsDirs", "policyReaddirSafe"]);
+    const constantNames = new Set(["MUTATION_TAXONOMY_SOURCE_SKIP", "POLICY_SKIP_DIRS"]);
+    const functions = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && functionNames.has(node.name?.text ?? ""));
+    const constants = syntax.statements.filter((node) => ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => ts.isIdentifier(declaration.name) && constantNames.has(declaration.name.text)));
+    expect(functions).toHaveLength(functionNames.size);
+    expect(constants).toHaveLength(constantNames.size);
+    const code = [...constants, ...functions].map((node) => node.getText(syntax)).join("\n") + "\nreturn policyFindAllMutationsDirs;";
+    const compilers = [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
+    const forbidden = (path: string): boolean => path.split("/").some((segment) => segment === "compose" || segment.startsWith(".") || ["node_modules", "target", "dist", "build", "coverage"].includes(segment));
+    const observations: { platform: string; compiler: number; scenario: string; roots: string[]; error: string | null; forbiddenAccess: string[]; followedRejectedPath: boolean; passed: boolean }[] = [];
+    for (const platform of [posix, win32]) {
+      const workspace = platform === posix ? "/virtual-workspace" : "C:\\virtual-workspace";
+      for (const [compiler, javascript] of compilers.entries()) {
+        for (const rejection of [null, ...vector.rejections]) {
+          const nodes = new Map<string, string>();
+          const add = (path: string, kind: string): void => {
+            const segments = path.split("/");
+            for (let index = 1; index < segments.length; index += 1) nodes.set(segments.slice(0, index).join("/"), "directory");
+            nodes.set(path, kind);
+          };
+          if (rejection) add(rejection.path, rejection.kind);
+          else {
+            for (const path of [...vector.includedRoots, ...vector.excludedRoots]) add(path, "directory");
+            for (const path of vector.filePaths) add(path, "file");
+          }
+          const accesses: { operation: string; path: string }[] = [];
+          const record = (operation: string, absolute: string): string => {
+            const path = platform.relative(workspace, absolute).replaceAll("\\", "/");
+            accesses.push({ operation, path });
+            if (forbidden(path)) throw new Error(`Forbidden virtual access: ${path}`);
+            return path;
+          };
+          const state = (path: string) => ({ isDirectory: () => ["directory", "unreadable", "vanished"].includes(nodes.get(path) ?? ""), isSymbolicLink: () => nodes.get(path) === "symlink", isFile: () => nodes.get(path) === "file" });
+          const stat = (absolute: string) => {
+            const path = record("lstat", absolute);
+            if (!nodes.has(path) || nodes.get(path) === "vanished") throw Object.assign(new Error(`ENOENT ${path}`), { code: "ENOENT" });
+            return state(path);
+          };
+          const read = (absolute: string) => {
+            const path = record("readdir", absolute);
+            if (!nodes.has(path)) throw Object.assign(new Error(`ENOENT ${path}`), { code: "ENOENT" });
+            if (nodes.get(path) === "unreadable") throw Object.assign(new Error(`EACCES ${path}`), { code: "EACCES" });
+            return [...nodes.keys()].filter((child) => posix.dirname(child) === path).reverse().map((child) => ({ name: posix.basename(child), ...state(child) }));
+          };
+          const operation = new Function("join", "lstatSync", "readdirSync", "policyRepositoryOwnedRoots", "POLICY_MUTATIONS_FACET", javascript)(platform.join, stat, read, () => rejection ? rejection.roots ?? ["✏️s"] : vector.ownedRoots, "🧬️mutations") as (root: string) => string[];
+          let roots: string[] = [], error: string | null = null;
+          try { roots = operation(workspace); } catch (failure) { error = String(failure); }
+          const forbiddenAccess = accesses.filter((entry) => forbidden(entry.path)).map((entry) => `${entry.operation}:${entry.path}`);
+          const followedRejectedPath = rejection?.kind === "symlink" && accesses.some((entry) => entry.operation === "readdir" && (entry.path === rejection.path || entry.path.startsWith(`${rejection.path}/`)));
+          const passed = forbiddenAccess.length === 0 && !followedRejectedPath && (rejection ? error !== null && /symlink|no-follow|EACCES|ENOENT/u.test(error) : error === null && JSON.stringify(roots) === JSON.stringify([...vector.includedRoots].sort()));
+          observations.push({ platform: platform === posix ? "posix" : "win32", compiler, scenario: rejection?.name ?? "authored-facets", roots, error, forbiddenAccess, followedRejectedPath: Boolean(followedRejectedPath), passed });
+        }
+      }
+    }
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for retained mutation discovery evidence.");
+    mkdirSync(artifactRoot, { recursive: true });
+    const run = mkdtempSync(join(artifactRoot, "🧫️discovery-virtual-"));
+    const sourceStable = readFileSync(sourcePath, "utf8") === source;
+    const inputsStable = inputs.every((entry) => createHash("sha256").update(readFileSync(entry.path)).digest("hex") === entry.sha256);
+    writeFileSync(join(run, "🔣️.json"), JSON.stringify({ sourceHash: createHash("sha256").update(source).digest("hex"), helperHash: createHash("sha256").update(code).digest("hex"), sourceStable, inputs, inputsStable, observations }, null, 2) + "\n");
+    console.log(`[DEBUG] mutation root discovery virtual ${observations.filter((row) => row.passed).length}/${observations.length}: ${run}`);
+    expect(sourceStable).toBe(true);
+    expect(inputsStable).toBe(true);
+    expect(observations.filter((row) => !row.passed)).toEqual([]);
+  });
+
+  test("mutation root discovery actual filesystem agrees with independent directory enumeration", async () => {
+    const ts = await import("typescript");
+    const inputRoot = join(import.meta.dir, "../../🧪️tests/🧬️mutation-root-discovery");
+    const vector = JSON.parse(readFileSync(join(inputRoot, "🔣️.json"), "utf8")) as { physicalOwners: string[]; includedRoots: string[] };
+    const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required for retained mutation discovery evidence.");
+    mkdirSync(artifactRoot, { recursive: true });
+    const run = mkdtempSync(join(artifactRoot, "🧫️discovery-physical-"));
+    const workspace = join(run, "workspace");
+    const expected = vector.includedRoots.filter((path) => vector.physicalOwners.includes(path.split("/")[0])).sort();
+    for (const path of expected) {
+      mkdirSync(join(workspace, path), { recursive: true });
+      writeFileSync(join(workspace, path, "🦀️.rs"), "pub enum ProbeMutation {}\n");
+    }
+    const sourcePath = join(getWorkspaceRoot(), "📜️script.ts");
+    const source = readFileSync(sourcePath, "utf8");
+    const inputs = [sourcePath, join(inputRoot, "🔣️.json"), join(inputRoot, "🧬️schema/🔣️.json"), import.meta.path].map((path) => ({ path, sha256: createHash("sha256").update(readFileSync(path)).digest("hex") }));
+    const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const names = new Set(["policyFindAllMutationsDirs", "policyRepositoryOwnedRoots", "policyReaddirSafe"]);
+    const constants = new Set(["MUTATION_TAXONOMY_SOURCE_SKIP", "POLICY_SKIP_DIRS"]);
+    const declarations = syntax.statements.filter((node) => (ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? "")) || (ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => ts.isIdentifier(declaration.name) && constants.has(declaration.name.text))));
+    expect(declarations).toHaveLength(names.size + constants.size);
+    const code = declarations.map((node) => node.getText(syntax)).join("\n") + "\nreturn policyFindAllMutationsDirs;";
+    const compilers = [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText];
+    const oracle = fastGlob.sync("**/🧬️mutations", { cwd: workspace, onlyDirectories: true, followSymbolicLinks: false }).sort();
+    const observed = compilers.map((javascript) => new Function("join", "lstatSync", "readdirSync", "loadTaxonomy", "POLICY_MUTATIONS_FACET", javascript)(join, lstatSync, readdirSync, () => ({ areas: Object.fromEntries(vector.physicalOwners.map((owner) => [owner, {}])) }), "🧬️mutations")(workspace));
+    const sourceStable = readFileSync(sourcePath, "utf8") === source;
+    const inputsStable = inputs.every((entry) => createHash("sha256").update(readFileSync(entry.path)).digest("hex") === entry.sha256);
+    writeFileSync(join(run, "🔣️.json"), JSON.stringify({ sourceHash: createHash("sha256").update(source).digest("hex"), sourceStable, inputs, inputsStable, expected, oracle, observed }, null, 2) + "\n");
+    console.log(`[DEBUG] mutation root discovery physical ${observed.map((roots: string[]) => roots.length).join(",")}/${expected.length}: ${run}`);
+    expect(sourceStable).toBe(true);
+    expect(inputsStable).toBe(true);
+    expect(oracle).toEqual(expected);
+    for (const roots of observed) expect(roots).toEqual(expected);
+  });
+  //#endregion 🔍️MutationRootDiscovery
 
   test("fails closed for missing, opaque, escaped, and symlinked explicit scopes", () => {
     const golden = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️tests/🧬️mutation-scope/🧫️fixtures/🔣️.json"), "utf8")) as {

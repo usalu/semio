@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSolid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "solid"
+  ],
+  "properties": {
+    "solid": {
+      "title": "FemSolid",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseZ",
+        "height",
+        "holes",
+        "id",
+        "layers",
+        "materialId",
+        "meshSize",
+        "name",
+        "outline"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        },
+        "baseZ": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "layers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meshSize": {
+          "type": "number"
+        },
+        "materialId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+# Workflow And Run Vocabulary Gate
+
+The neutral vocabulary fixture now includes `append/Appended`, `start/Started`, `finish/Finished` and `seal/Sealed` alongside the five prior vectors. Before changing the approved table, a fresh public-client compile succeeded against the demonstrator's surviving kernel artifact. Runtime correctly rejected the four missing verbs (exit101); the five existing cases matched. Ajv accepted the nine-vector fixture. The kernel hash remained `00c7fb17b3c0ed3220038393633a0f6d92a624491aa951dc2418feb639259303` throughout.
+
+Retained red evidence: `🧪️workflow-run-vocabulary-31/🧫️run-nOUtJb/🔣️result.json` and `🧪️compiler-runtime.log`. The exact root command was `bun ./node_modules/nx/bin/nx.js exec --projects=workspace --skipNxCache -- bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/🧪️workflow-run-vocabulary-31/📜️script.ts`.
+
+The shared table now declares those four genuine imperative verbs. The subsequent fresh kernel build completed successfully, and the public-client replay in `🧪️workflow-run-vocabulary-31/🧫️run-ufT2NH` compiled and ran with exit 0. Its surviving compiler/runtime log records all nine exact expected vocabulary results, including the four new verbs and both rejected names. The observed kernel rlib was `3093e2079441bbb95dcaa978cc066d01daf612e93c7df7ff0248533a4e86638c`, stable across that replay. This accepts the bounded vocabulary addition, not Workflow/Run compiler readiness, leaf acceptance or full registry verification.
+
+On the later retention check, the two compiler/runtime logs still existed, but the controller and result JSON files were absent. The observed earlier run is not being reconstructed; the surviving log is the current raw evidence location. A subsequent framework build may change the borrowed kernel artifacts, so the earlier hash must not be reused as a current-build assertion.

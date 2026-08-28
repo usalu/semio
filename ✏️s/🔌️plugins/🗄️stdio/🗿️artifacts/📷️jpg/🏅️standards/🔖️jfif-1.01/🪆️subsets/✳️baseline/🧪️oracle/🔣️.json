@@ -1,14 +1,19 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🔮️ This subset's own contribution. The ✳️any sibling registers `image` 0.25 for the DOCUMENT vocabulary; this conformance-class vocabulary registers no oracle, because `image`'s public surface cannot see any of the five T.81 Annex F axes it addresses — see noOracleDecisions for the full reasoning, including why a byte-level differential would be vacuous here even with a perfect one.",
   "oracles": [],
   "noOracleDecisions": [
     {
       "id": "jpg-jfif-1-01-baseline-conformance-class-semantics",
-      "capabilities": ["jpg-jfif-1-01-baseline-mutate"],
+      "capabilities": [
+        "jpg-jfif-1-01-baseline-mutate"
+      ],
       "rationale": "Two independent reasons, and the first is the decisive one. (1) NO CANDIDATE CAN SEE THE AXES. This vocabulary addresses the SOF marker byte, the frame's sample precision, whether a DAC arithmetic-conditioning segment is present, the per-class Huffman table count and each component's sampling factors — every one of them a field of the frame header or the entropy-coding mode. `image` 0.25 is registered by the sibling ✳️any subset and is the right reference for a JPEG raster, but its public API hands back pixels, dimensions and a colour type; it exposes no frame header, no SOFn discriminant, no DAC flag and no DHT view, and it offers no way to WRITE any of them either. `jpeg-decoder` exposes only an `ImageInfo`. A reference that cannot express the mutation cannot adjudicate it, and registering one anyway to satisfy the workflow would be selecting a weak oracle mechanically. (2) EVEN A PERFECT ORACLE WOULD BE MEASURING NOTHING AT THE BYTE LEVEL, because this repository's own `encode_jpg` writes a conforming baseline file and no other kind of JPEG at all: it emits `FF C0` for the frame marker, precision 8, a fixed three-component 4:2:0 sampling array, exactly four DHT segments and never a DAC — so every axis this vocabulary moves is normalized away on re-serialization. That is a real, documented property of the codec (stated in the vocabulary's own module docstring), not a gap. The substitutes are therefore the standard's own tables — ITU-T T.81 Table B.1 for the SOFn marker codes, §4.2 for the 8-bit precision mandate, Annex F for Huffman-only entropy coding, §B.2.4.2 for the four-table-per-class ceiling and §B.2.2 for the 1..=4 sampling factors — read against `check_baseline_conformance`, which is where the class verdict actually lives; plus the inverse law as a metamorphic property over the decoded snapshot. `mutate-jpg-jfif-1-01-baseline` measures the vocabulary there and says in as many words that it makes no byte-level claim, except in `identity-round-trip`, which does re-encode and reads both sides through the INDEPENDENT `image` reader the ✳️any subset registers.",
-      "substitutes": ["specification-vectors", "metamorphic-laws"]
+      "substitutes": [
+        "specification-vectors",
+        "metamorphic-laws"
+      ]
     }
   ],
   "mutationCatalogs": [
@@ -18,7 +23,18 @@
       "standardDirectoryName": "🔖️jfif-1.01",
       "subsetDirectoryName": "✳️baseline",
       "vectors": [],
-      "kinds": ["no-mutation", "set-snapshot", "set-sof-marker", "set-sample-precision", "set-arithmetic", "insert-huffman-table", "remove-huffman-table", "insert-frame-component", "remove-frame-component", "set-component-sampling"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-sof-marker",
+        "set-sample-precision",
+        "set-arithmetic",
+        "insert-huffman-table",
+        "remove-huffman-table",
+        "insert-frame-component",
+        "remove-frame-component",
+        "set-component-sampling"
+      ]
     }
   ]
 }

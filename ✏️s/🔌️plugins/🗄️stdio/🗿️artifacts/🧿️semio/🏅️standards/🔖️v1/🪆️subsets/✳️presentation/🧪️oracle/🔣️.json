@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. The reference is an independent Python implementation of the semio-native carrier and the fifteen verbs, written from this subset's own committed grammar and protocol documents.",
   "oracles": [
     {
       "id": "semio-presentation-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-presentation-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-presentation-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-presentation-mutation-semantics` decision's survey of `python-pptx` still stands on its merits: it cannot create slide masters or slide layouts at all, which removes a third of the vocabulary, and reaching a `SemioPresentationSnapshot` from pptx bytes needs THIS repository's own pptx bridge, so a differential would run our importer against our exporter. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-presentation/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, document's own recursive `DocBlock` union and all fifteen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️any/📚️examples/📽️deck` artifact byte for byte in both encodings and reaches all fifteen committed after-snapshots. The pptx fixture is still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `🎞️semio-talk.pptx` was read once by an independent `zipfile`+`xml.etree` OOXML reader — never our own bridge — to derive the real seven-slide deck both implementations now mutate."
+      "rationale": "🔮️ No third party reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, and the earlier `semio-presentation-mutation-semantics` decision's survey of `python-pptx` still stands on its merits: it cannot create slide masters or slide layouts at all, which removes a third of the vocabulary, and reaching a `SemioPresentationSnapshot` from pptx bytes needs THIS repository's own pptx bridge, so a differential would run our importer against our exporter. What has changed is that a second producer no longer has to be a third-party library: `🧪️tests/mutate-semio-presentation/🐍️component.py` is an independent Python implementation of the carrier, the DSL grammar, the pack frame, document's own recursive `DocBlock` union and all fifteen verbs, written from the committed specification documents alone — the snapshot and mutation text grammars, the binary protocol and its Kaitai mirror, and the semio envelope in the framework carrier module. It imports nothing from and transliterates nothing of the Rust it judges. It was pinned before use: it reproduces the committed `✳️any/📚️examples/📽️deck` artifact byte for byte in both encodings and reaches all fifteen committed after-snapshots. The pptx fixture is still in the picture, but on the INPUT side only, where the old objection does not apply: the real committed `🎞️semio-talk.pptx` was read once by an independent `zipfile`+`xml.etree` OOXML reader — never our own bridge — to derive the real seven-slide deck both implementations now mutate.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-presentation-mutate`'s external-oracle requirement for its 15-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [

@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform — the CSV RFC 4180 `any` mutation vocabulary and the reference implementation that exercises it. The shared stdio manifest already registers `csv` under the `tabular-csv` capability for creation/projection; that entry cannot cover mutation because it never declared the capability, so this subset registers its own oracle id against the SAME package for the `csv-rfc4180-mutate` capability instead of reusing the shared one (would fail the contract with oracle-capability-mismatch).",
   "oracles": [
     {
@@ -17,7 +17,15 @@
       "license": "MIT OR Unlicense",
       "testOnly": true,
       "homepage": "https://github.com/BurntSushi/rust-csv",
-      "rationale": "The reference RFC 4180 CSV reader/writer of the Rust ecosystem, read with `has_headers(false)` and `flexible(true)` so it models the format the same way this subset's own schema does: no structural header/data distinction (only the `has_header` convention, which is metadata, not bytes) and per-record field counts as real information rather than an assumed rectangular grid. Used here to perform every declared `CsvMutation` kind independently of this repository's own codec."
+      "rationale": "The reference RFC 4180 CSV reader/writer of the Rust ecosystem, read with `has_headers(false)` and `flexible(true)` so it models the format the same way this subset's own schema does: no structural header/data distinction (only the `has_header` convention, which is metadata, not bytes) and per-record field counts as real information rather than an assumed rectangular grid. Used here to perform every declared `CsvMutation` kind independently of this repository's own codec.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "csv",
+        "implementation": "csv Rust RFC 4180 reader/writer",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [

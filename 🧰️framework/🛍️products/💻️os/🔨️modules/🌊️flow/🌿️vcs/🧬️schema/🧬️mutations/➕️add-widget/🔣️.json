@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/➕️add-widget",
+  "semanticKind": "add-widget",
+  "displayName": "Add Widget",
+  "emoji": "➕️",
+  "aggregateVariant": "AddWidget",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-widget",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateStainlessInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newStainlessFYMpa",
+    "newStainlessMEdKnm",
+    "newStainlessWPlMm3"
+  ],
+  "properties": {
+    "newStainlessMEdKnm": {
+      "type": "number"
+    },
+    "newStainlessWPlMm3": {
+      "type": "number"
+    },
+    "newStainlessFYMpa": {
+      "type": "number"
+    }
+  }
+}

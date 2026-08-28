@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateSavedCamera",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "savedCamera"
+  ],
+  "properties": {
+    "savedCamera": {
+      "title": "ShootingSavedCamera",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "camera",
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "camera": {
+          "title": "ShootingCamera",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fov",
+            "position",
+            "target",
+            "zoom"
+          ],
+          "properties": {
+            "position": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "target": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "zoom": {
+              "type": "number"
+            },
+            "fov": {
+              "type": "number"
+            },
+            "up": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "projection": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

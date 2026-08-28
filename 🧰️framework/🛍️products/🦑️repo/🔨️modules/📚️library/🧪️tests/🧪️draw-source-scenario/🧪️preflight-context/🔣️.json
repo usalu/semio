@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "contractId": "draw-preflight-evidence-context-v1",
+  "ticketDir": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/DRAW-SOURCE-SCENARIOS",
+  "transactionDirectory": "🧾️taxonomy-transaction",
+  "planPath": "📊️taxonomy-plan/🔣️.json",
+  "sourcePath": "🧪️tests/🧪️fixture/🦀️.rs",
+  "foreignPath": "🧪️link-target/📝️.md",
+  "unrelatedPath": "📓️unrelated/📝️.md",
+  "cases": [
+    { "id": "absent-transaction-and-plan", "transactionExists": false, "planExists": false, "sourceDigestUnchanged": true },
+    { "id": "existing-transaction-only", "transactionExists": true, "planExists": false, "sourceDigestUnchanged": false },
+    { "id": "existing-exact-plan-only", "transactionExists": false, "planExists": true, "sourceDigestUnchanged": true },
+    { "id": "existing-transaction-and-exact-plan", "transactionExists": true, "planExists": true, "sourceDigestUnchanged": false }
+  ]
+}

@@ -2,6 +2,7 @@
   "declaredOutcome": "applied",
   "solids": 1,
   "empty": false,
+  "measuredFrom": "expected.step, re-imported",
   "volume": 1999.9999999999993,
   "area": 1000,
   "boundingBox": {
@@ -17,6 +18,7 @@
   "edges": 20,
   "vertices": 12,
   "validSolid": true,
+  "tessellationTolerance": 0.0007348469326329125,
   "meshVertexCount": 40,
   "meshTriangleCount": 20
 }

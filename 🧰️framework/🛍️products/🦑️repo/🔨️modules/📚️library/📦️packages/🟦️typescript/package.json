@@ -8,7 +8,22 @@
   },
   "scripts": {
     "lint": "nx run @semio-tech/repo-lib:lint",
-    "test": "nx run @semio-tech/repo-lib:test"
+    "test": "nx run @semio-tech/repo-lib:test",
+    "test-rust-writable-path-authority": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
+    "test-artifact-source-commit": "nx run @semio-tech/repo-lib:test-artifact-source-commit",
+    "test-readme-move-source-authority": "nx run @semio-tech/repo-lib:test-readme-move-source-authority",
+    "test-artifact-empty-facet-authority": "nx run @semio-tech/repo-lib:test-artifact-empty-facet-authority",
+    "test-rust-divergence-callback-source": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source",
+    "test-rust-divergence-callback-native": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native",
+    "test-rust-divergence-callback-syn": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn",
+    "test-readme-current-source-activation": "nx run @semio-tech/repo-lib:test-readme-current-source-activation",
+    "test-artifact-empty-facet-authoring": "nx run @semio-tech/repo-lib:test-artifact-empty-facet-authoring",
+    "test-readme-reviewed-fixture-inputs": "nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs",
+    "test-taxonomy-pattern-compiler-reuse": "nx run @semio-tech/repo-lib:test-taxonomy-pattern-compiler-reuse",
+    "test-reference-coverage-selection": "nx run @semio-tech/repo-lib:test-reference-coverage-selection",
+    "test-taxonomy-leading-grapheme": "nx run @semio-tech/repo-lib:test-taxonomy-leading-grapheme",
+    "test-reference-coordinate-progress": "nx run @semio-tech/repo-lib:test-reference-coordinate-progress",
+    "test-draw-destination-observation": "nx run @semio-tech/repo-lib:test-draw-destination-observation"
   },
   "nx": {
     "includedScripts": []

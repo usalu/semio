@@ -169,9 +169,9 @@ mod tests {
 
     #[test]
     fn every_real_document_feature_row_is_observable_and_invertible() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️base/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf");
         let base = std::fs::read(path).unwrap();
-        let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-4-a/component.feature");
+        let feature = include_str!("../../../../../🧪️tests/mutate-pdf-1-4-a/🥒️.feature");
         let rows = crate::law::feature_rows(feature);
         assert_eq!(rows.len(), KINDS.len());
         for (kind, params) in rows {

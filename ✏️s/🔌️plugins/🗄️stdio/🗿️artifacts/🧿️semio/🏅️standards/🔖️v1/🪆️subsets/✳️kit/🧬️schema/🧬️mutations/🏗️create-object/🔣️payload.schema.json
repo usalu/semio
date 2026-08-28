@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateObject",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "childId",
+    "target"
+  ],
+  "properties": {
+    "childId": {
+      "type": "string"
+    },
+    "target": {
+      "title": "ArtifactRef",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "dialect"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "dialect": {
+          "title": "ArtifactDialect",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "artifactKind",
+            "standard",
+            "subset"
+          ],
+          "properties": {
+            "artifactKind": {
+              "type": "string"
+            },
+            "standard": {
+              "type": "string"
+            },
+            "subset": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

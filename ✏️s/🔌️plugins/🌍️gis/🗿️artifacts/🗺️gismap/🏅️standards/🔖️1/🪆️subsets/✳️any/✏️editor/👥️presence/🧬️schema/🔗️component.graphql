@@ -1,8 +1,3 @@
 type Gis2dPresence {
-  selectedIds: [String!]! @state(class: PRESENCE)
   cameraJson: String! @state(class: PRESENCE)
-  featureSelectionJson: String! @state(class: PRESENCE)
-  hoverJson: String! @state(class: PRESENCE)
-  selectionMethod: String! @state(class: PRESENCE)
-  selectionMode: String! @state(class: PRESENCE)
 }

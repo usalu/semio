@@ -1,0 +1,338 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "contract",
+    "semantics",
+    "cases",
+    "oracle",
+    "retention",
+    "registration",
+    "attributeCompilerCases",
+    "scope"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "contract": {
+      "const": "rust-divergence-error-callback-v1"
+    },
+    "semantics": {
+      "const": {
+        "authority": "candidate-only-never-editable",
+        "failure": "unproven-never-complete-empty",
+        "callback": "one-immutable-identifier-unwrap-or-else-direct-standard-panic",
+        "captures": "unescaped-normal-literal-simple-named-immutable-loop-label-or-error-only",
+        "maxExpandedIterations": 256,
+        "physicalAuthority": "unchanged-separate-source-chain-and-global-cargo-proof",
+        "writableSharedLabels": "always-rejected",
+        "unknownSyntax": "invalidate-active-candidate-state"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 38,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "reason",
+          "selectedValues",
+          "expectedCandidates",
+          "expectedCallbacks",
+          "native"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "enum": [
+              "closed",
+              "mutation",
+              "rebinding",
+              "unknown-call",
+              "nested-closure",
+              "nonstandard-macro",
+              "shadowed-macro",
+              "shadowed-environment",
+              "unproved-import",
+              "unproved-attribute",
+              "type-shadow",
+              "parameter-shape",
+              "closure-qualifier",
+              "body-shape",
+              "unproved-capture",
+              "escaped-capture",
+              "dynamic-capture",
+              "capture-shape",
+              "constructor",
+              "overflow"
+            ]
+          },
+          "selectedValues": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expectedCandidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end",
+                "value",
+                "targets"
+              ],
+              "properties": {
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "targets": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 256,
+                  "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expectedCallbacks": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end",
+                "bodyStart",
+                "bodyEnd",
+                "parameter",
+                "macroPath",
+                "captures",
+                "freeVariables"
+              ],
+              "properties": {
+                "start": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "bodyStart": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "bodyEnd": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "parameter": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "start",
+                    "end"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    },
+                    "start": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "end": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "macroPath": {
+                  "enum": [
+                    "panic",
+                    "std::panic",
+                    "::std::panic"
+                  ]
+                },
+                "captures": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "start",
+                      "end"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                      },
+                      "start": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "end": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "freeVariables": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  }
+                }
+              }
+            }
+          },
+          "native": {
+            "enum": [
+              null,
+              "ordinary-and-error",
+              "nondivergent-shadow",
+              "compiler-rejection"
+            ]
+          }
+        }
+      }
+    },
+    "oracle": {
+      "const": {
+        "manifestInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧫️fixtures/🧪️rust-physical-reference-context/🧪️oracle/⚙️.toml",
+        "sourceInput": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🦀️.rs"
+      }
+    },
+    "retention": {
+      "const": {
+        "parentSegments": [
+          "📓️energy-rust-reference-diagnostics",
+          "🧭️divergence-callback",
+          "🧾️runs"
+        ],
+        "dispose": "none-during-initial-red-review"
+      }
+    },
+    "registration": {
+      "const": {
+        "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+        "routerPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+        "packagePath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+        "testPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️rust-divergence-callback/🟦️.ts",
+        "launchPaths": [
+          ".vscode/🧩️launch.seed.jsonc",
+          ".vscode/launch.json"
+        ],
+        "execution": [
+          {
+            "phase": "source",
+            "route": "rust-divergence-callback-source",
+            "pattern": "^(closed divergence|shared callback|candidate-only callback)",
+            "budgetMs": 15000,
+            "launchOrder": 410.201,
+            "target": "test-rust-divergence-callback-source",
+            "command": "bun ./📜️script.ts test rust-divergence-callback-source",
+            "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source",
+            "launchName": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-source",
+            "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-source --skip-nx-cache"
+          },
+          {
+            "phase": "native",
+            "route": "rust-divergence-callback-native",
+            "pattern": "^actual rustc",
+            "budgetMs": 15000,
+            "launchOrder": 410.202,
+            "target": "test-rust-divergence-callback-native",
+            "command": "bun ./📜️script.ts test rust-divergence-callback-native",
+            "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native",
+            "launchName": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-native",
+            "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-native --skip-nx-cache"
+          },
+          {
+            "phase": "syn",
+            "route": "rust-divergence-callback-syn",
+            "pattern": "^independent syn callback",
+            "budgetMs": 120000,
+            "launchOrder": 410.203,
+            "target": "test-rust-divergence-callback-syn",
+            "command": "bun ./📜️script.ts test rust-divergence-callback-syn",
+            "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn",
+            "launchName": "🧹clean🧩️taxonomy🧪️rust-divergence-callback-syn",
+            "launchCommand": "bun nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn --skip-nx-cache"
+          }
+        ]
+      }
+    },
+    "attributeCompilerCases": {
+      "const": [
+        {
+          "id": "unknown-expression-attribute",
+          "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(#[unknown] |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+          "compileExit": 1,
+          "runtimeExit": null
+        },
+        {
+          "id": "builtin-allow-expression-attribute",
+          "source": "fn inspect() {\n    let artifact_root = std::path::PathBuf::from(env!(\"CARGO_MANIFEST_DIR\")).join(\"../foreign\");\n    for relative in [\"facet.json\", \"snapshot.rs\"] {\n        let facet = std::fs::read_to_string(artifact_root.join(relative)).unwrap_or_else(#[allow(unused_variables)] |error| panic!(\"{relative}: {error}\"));\n        assert_eq!(facet, relative, \"{relative}\");\n        \n    }\n}\n",
+          "compileExit": 0,
+          "runtimeExit": 101
+        }
+      ]
+    },
+    "scope": {
+      "const": {
+        "productionEdits": false,
+        "actualDwgRows": 9,
+        "liveEnergyRowsRemovedClaim": 0,
+        "unresolvedPrerequisites": [
+          "governing-procedural-attributes",
+          "stdio-ancestor-macro-namespace",
+          "complete-global-cargo-owner-admission"
+        ]
+      }
+    }
+  }
+}

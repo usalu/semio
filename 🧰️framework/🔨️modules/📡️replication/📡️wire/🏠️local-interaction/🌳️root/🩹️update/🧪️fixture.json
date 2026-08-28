@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "cases": ["sparse-anchor-comma-private-preserved", "sparse-remove-domain", "empty-selection-not-absent", "anchor-outside-current-selection"],
+  "grants": [1, 64, 4096],
+  "cancelSourceCase": "sparse-anchor-comma-private-preserved",
+  "cancelOwnedStringBytes": 101,
+  "largeSourceCase": "semantic-unicode-over-page",
+  "domainKeyCopies": 0,
+  "partialCandidateReadable": false,
+  "cancelPublishesCandidate": false,
+  "comparisonBytesAreRetiredBytes": false,
+  "zeroGrantMutates": false,
+  "absentFieldsRemoveOnlyTargetDomain": true,
+  "publishedCandidateUsesOriginalPayloadPointers": true
+}

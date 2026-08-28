@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveBlock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newX",
+    "newY"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

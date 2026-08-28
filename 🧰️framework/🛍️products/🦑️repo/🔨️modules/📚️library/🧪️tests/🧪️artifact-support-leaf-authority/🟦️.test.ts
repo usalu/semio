@@ -15,7 +15,7 @@ type Mapping = Readonly<{ id: string; source: string; destination: string; kindI
 type Negative = Readonly<{ id: string; omitDescriptor?: boolean; descriptorPatch?: Record<string, unknown>; extraDescriptor?: boolean; payload?: string; payloadPath?: string }>;
 type FixtureKind = "support" | "oracle" | "unowned";
 type FixtureRetention = Readonly<{ ownerPath: string; prefixes: Readonly<Record<FixtureKind, string>>; rejectedChildren: readonly string[] }>;
-type Vector = Readonly<{ schemaVersion: number; owner: string; subset: string; ownerReadiness: { nodes: number; physicalNodes: number; files: number; sourceBytes: number; sourceTreeDigest: string; contextSources: readonly { path: string; size: number; sha256: string }[] }; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number; generatorEnvironment: { name: string; value: string }; oracleRetention: { rootPrefix: string; retainedInputs: readonly string[]; disposableOutputs: readonly string[]; retainOnFailure: boolean }; fixtureRetention: FixtureRetention }; sourceInputs: Readonly<Record<string, string>>; cases: readonly Mapping[]; payloadAuthority: unknown; payloadDescriptor: string; documentationCases: readonly { id: string; content: string; values: readonly string[] }[]; negativeCases: readonly Negative[] }>;
+type Vector = Readonly<{ schemaVersion: number; owner: string; subset: string; ownerReadiness: { nodes: number; physicalNodes: number; files: number; sourceBytes: number; sourceTreeDigest: string; alreadyCanonicalSources: readonly string[]; contextSources: readonly { path: string; size: number; sha256: string }[] }; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number; generatorEnvironment: { name: string; value: string }; oracleRetention: { rootPrefix: string; retainedInputs: readonly string[]; disposableOutputs: readonly string[]; retainOnFailure: boolean }; fixtureRetention: FixtureRetention }; sourceInputs: Readonly<Record<string, string>>; cases: readonly Mapping[]; payloadAuthority: unknown; payloadDescriptor: string; documentationCases: readonly { id: string; content: string; values: readonly string[] }[]; negativeCases: readonly Negative[] }>;
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
@@ -337,6 +337,41 @@ describe("artifact support leaf authority", () => {
     expect([empty.moves.length, empty.edits.length, empty.regenerations.length, empty.evidenceRemovals.length, empty.unresolved.length]).toEqual([0, 0, 0, 0, 0]);
   }, 120_000);
 
+  test("scoped mutation references preserve foreign audit values and rewrite only exact moving targets", () => {
+    const row = lifecycleFixture();
+    const source = `${vector.subset}/🧬️schema/🧬️mutations/♻️replace-model/🧪️tests/replaces-a-model/🎯️outcome/🔣️component.json`;
+    const destination = "🧪️tests/🪆️1-any/♻️replace-model/🧪️replaces-a-model/🎯️outcome/🔣️.json";
+    const foreignOwner = "✏️s/🔌️plugins/🧊️cube/🗿️artifacts/🧊️cube";
+    const auditPath = "🧪️audit/🔣️.json", foreignPath = `${foreignOwner}/🧪️tests/🧪️reference/🔣️.json`;
+    const put = (path: string, value: unknown): void => {
+      mkdirSync(dirname(join(row.root, path)), { recursive: true });
+      writeFileSync(join(row.root, path), JSON.stringify(value) + "\n");
+    };
+    const bundle = JSON.parse(readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🧫️fixtures/🧪️mutation-path-projection/🔣️.json"), "utf8")).bundle as readonly { source: string }[];
+    const scenario = source.slice(0, -"/🎯️outcome/🔣️component.json".length);
+    for (const owner of [vector.owner, foreignOwner]) for (const leaf of bundle) {
+      const path = `${owner}/${scenario}/${leaf.source}`;
+      put(path, {});
+      if (leaf.source.endsWith(".rs")) writeFileSync(join(row.root, path), "pub fn fixture() {}\n");
+    }
+    put(`${subset}/🧪️oracle/🔣️.json`, { schemaVersion: 1, oracles: [], noOracleDecisions: [], mutationCatalogs: [{ id: "energy-model-1-any", capability: "energy-model-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: [], vectors: [{ mutationId: "replace-model", sourceMutationDirectoryName: "♻️replace-model", mutationDirectoryName: "♻️replace-model", scenarios: [{ id: "replaces-a-model", directoryName: "🧪️replaces-a-model" }] }] }] });
+    put(auditPath, [{ owner: foreignOwner, uri: `asset://${source}`, path: `${foreignOwner}/${source}` }, { path: `${vector.owner}/${source}` }]);
+    put(foreignPath, { uri: `asset://${source}` });
+    const before = [auditPath, foreignPath].map((path) => readFileSync(join(row.root, path)));
+    const plan = planTaxonomy(inventoryTaxonomy({ repoRoot: row.root, scope: vector.owner, ticketDir: row.ticketDir, workers: 1 }), { baselineCommit: row.baselineCommit, excludedTreeDigests: [] });
+    put("🧪️tests/🧾️scope-plan/🔣️.json", plan);
+    expect(plan.unresolved).toEqual([]);
+    expect(plan.moves.find((move) => move.sourcePath === `${vector.owner}/${source}`)?.destinationPath).toBe(`${vector.owner}/${destination}`);
+    expect(plan.edits.filter((edit) => edit.path === foreignPath)).toEqual([]);
+    const edits = plan.edits.filter((edit) => edit.path === auditPath);
+    expect(edits).toHaveLength(1);
+    expect(edits[0].oldValue).toBe(`${vector.owner}/${source}`);
+    expect(edits[0].newValue).toBe(`${vector.owner}/${destination}`);
+    expect(parseJsonc(before[0].toString())).toEqual(JSON.parse(before[0].toString()));
+    expect([auditPath, foreignPath].map((path) => readFileSync(join(row.root, path)))).toEqual(before);
+    console.log("[DEBUG] scoped mutation reference plan", JSON.stringify({ root: row.root, moves: plan.moves.length, exactAuditEdits: edits.length, foreignEdits: 0, unresolved: plan.unresolved.length }));
+  }, 120_000);
+
   test("plans the complete real Energy owner with exact Cargo mounting context", async () => {
     const row = lifecycleFixture();
     const expected = vector.ownerReadiness;
@@ -365,12 +400,13 @@ describe("artifact support leaf authority", () => {
     expect(inventory.entries).toHaveLength(expected.nodes);
     expect(inventory.sourceTreeDigest).toBe(expected.sourceTreeDigest);
     expect(inventory.violations).toEqual([]);
+    expect(inventory.entries.filter((entry) => entry.nodeKind === "file" && entry.sourcePath === entry.normalizedPath).map((entry) => entry.sourcePath.slice(vector.owner.length + 1)).sort()).toEqual([...expected.alreadyCanonicalSources].sort());
     const plan = planTaxonomy(inventory, { baselineCommit: row.baselineCommit, excludedTreeDigests: [] });
     const planPath = join(row.ticketDir, "🧾️energy-owner-plan/🔣️.json");
     mkdirSync(dirname(planPath), { recursive: true });
     writeFileSync(planPath, `${canonicalJson(plan)}\n`);
     expect(plan.unresolved).toEqual([]);
-    expect(plan.moves).toHaveLength(expected.files);
+    expect(plan.moves).toHaveLength(expected.files - expected.alreadyCanonicalSources.length);
     expect(plan.edits.some((entry) => entry.path === expected.contextSources[1].path)).toBe(true);
     expect(plan.regenerations.map((entry) => entry.contractId)).toEqual(["fixture-generator"]);
     const options = { repoRoot: row.root, scope: vector.owner, ticketDir: row.ticketDir, workers: 1, expectedBaselineCommit: row.baselineCommit, expectedPlanDigest: plan.planDigest, planArtifactPath: planPath };

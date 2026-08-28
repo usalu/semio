@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "text": "A😀äZ",
+  "utf8Hex": "41f09f9880c3a45a",
+  "ranges": [{"offset": 0, "length": 0, "hex": ""}, {"offset": 0, "length": 8, "hex": "41f09f9880c3a45a"}, {"offset": 1, "length": 4, "hex": "f09f9880"}, {"offset": 2, "length": 2, "hex": "9f98"}, {"offset": 5, "length": 2, "hex": "c3a4"}, {"offset": 8, "length": 0, "hex": ""}],
+  "invalid": [{"offset": -1, "length": 1}, {"offset": 0, "length": -1}, {"offset": 9, "length": 0}, {"offset": 7, "length": 2}],
+  "repeat": 1000,
+  "maximumChunkBytes": 256
+}

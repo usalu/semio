@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "state": "semio:local-interaction#/$defs/state",
+  "domainPatch": "semio:local-interaction#/$defs/domainPatch",
+  "changeKind": "localInteractionDomain",
+  "domainOrder": "utf16-code-unit-lexicographic",
+  "ordering": "Compare domain names as unsigned 16-bit code-unit sequences, without locale or normalization; shorter equal prefixes sort first. Implementations with Unicode scalar strings encode each scalar as UTF-16 before comparison.",
+  "nullPatchField": "Remove that domain entry in the corresponding map",
+  "unmentionedDomain": "Preserve all three map entries exactly",
+  "captureIdentityStoredInTutorial": false,
+  "coldCompositionConfersRestoreAuthority": false,
+  "coldTraversalIsRetainedWork": false
+}

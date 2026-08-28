@@ -1,0 +1,8 @@
+{
+  "maximumFeedBytes":1,
+  "maximumPayloadCopies":0,
+  "maximumBufferedPayloadBytes":0,
+  "pageOffsetBasis":"resultStart",
+  "formatMintsAuthority":false,
+  "failureIsSticky":true
+}

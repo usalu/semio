@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateRepresentation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "representation"
+  ],
+  "properties": {
+    "representation": {
+      "title": "BlockRepresentation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attributes",
+        "description",
+        "id",
+        "name",
+        "tags"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "meshUrl": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lod": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "title": "BlockAttribute",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "value"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

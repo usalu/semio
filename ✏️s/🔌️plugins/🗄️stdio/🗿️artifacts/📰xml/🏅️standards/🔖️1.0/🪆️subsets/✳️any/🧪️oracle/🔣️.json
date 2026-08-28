@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform. `quick-xml` reads AND writes real XML 1.0 documents, so it is registered here under a distinct id and the `xml-1-0-mutate` capability this subset's exhaustive mutation case (`mutate-xml-1-0`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
       "rationale": "The reference streaming XML reader/writer of the Rust ecosystem, and the only registered crate that both parses and re-serializes XML, so it can independently produce a second result for every one of this subset's 8 `XmlMutation` kinds rather than merely reading. Registered under its own id/capability so this subset's catalog is measured against a reference surveyed for exactly this vocabulary.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml Rust streaming XML reader/writer",
+        "version": "0.42"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -35,44 +43,7 @@
       "capability": "xml-1-0-mutate",
       "standardDirectoryName": "🔖️1.0",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-declaration",
-          "sourceMutationDirectoryName": "✏️set-declaration",
-          "mutationDirectoryName": "✏️set-declaration",
-          "scenarios": []
-        },
-        {
-          "mutationId": "set-doctype",
-          "sourceMutationDirectoryName": "✏️set-doctype",
-          "mutationDirectoryName": "✏️set-doctype",
-          "scenarios": []
-        },
-        {
-          "mutationId": "insert-element",
-          "sourceMutationDirectoryName": "📥️insert-element",
-          "mutationDirectoryName": "📥️insert-element",
-          "scenarios": []
-        },
-        {
-          "mutationId": "remove-element",
-          "sourceMutationDirectoryName": "🗑️remove-element",
-          "mutationDirectoryName": "🗑️remove-element",
-          "scenarios": []
-        },
-        {
-          "mutationId": "set-attribute",
-          "sourceMutationDirectoryName": "✏️set-attribute",
-          "mutationDirectoryName": "✏️set-attribute",
-          "scenarios": []
-        },
-        {
-          "mutationId": "set-text",
-          "sourceMutationDirectoryName": "✏️set-text",
-          "mutationDirectoryName": "✏️set-text",
-          "scenarios": []
-        }
-      ],
+      "vectors": [],
       "kinds": [
         "set-declaration",
         "set-doctype",

@@ -42,81 +42,24 @@ async fn decode(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     serde_json::to_vec(&(request.artifact_kind, request.mutation_id)).map_err(|error| super::fault("job.mutation-plan.decode", error.to_string()))
 }
 
+//#region 🧬️JobTestMutationFixtureMount
+#[cfg(test)]
+#[path = "🧪️tests/🧬️job-test-mutations/🦀️.rs"]
+mod job_test_mutation_fixture;
+//#endregion 🧬️JobTestMutationFixtureMount
+
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    use super::job_test_mutation_fixture::{AddValue,JobTestOp,JobTestSnapshot};
     use store::{ArtifactPack, OpBinary};
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct JobTestSnapshot {
-        value: i32,
-    }
-    impl ArtifactPack for JobTestSnapshot {
-        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-            serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
-        }
-        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
-        }
-    }
-
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct JobTestDiff {
-        delta: i32,
-    }
-    impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
-        fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
-            Ok(JobTestSnapshot { value: base.value + self.delta })
-        }
-        fn absorb(&mut self, other: Self) {
-            self.delta += other.delta;
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    enum JobTestOp {
-        Add(i32),
-    }
-    impl protocol::Mutation<JobTestSnapshot> for JobTestOp {
-        type Diff = JobTestDiff;
-        fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
-            let JobTestOp::Add(delta) = self;
-            protocol::MutationOutcome::new(JobTestDiff { delta: *delta })
-        }
-        fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
-            let JobTestOp::Add(delta) = self;
-            vec![JobTestOp::Add(-delta)]
-        }
-    }
-    impl OpBinary for JobTestOp {
-        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-            Ok(serde_json::to_vec(self).expect("job test op always encodes"))
-        }
-        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-            serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
-        }
-    }
-
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    struct JobTestMutationKind {
-        delta: i32,
-    }
-    impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for JobTestMutationKind {
-        const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-        fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
-            planner.call(JobTestOp::Add(self.delta))
-        }
-        fn label(&self) -> String {
-            format!("Add {} to value", self.delta)
-        }
-    }
 
     /// 🪪️ Commits one contributed mutation kind into the SAME process-global registry
     /// `job_mutation_plan`'s `execute` phase reads from, mirroring `🔌️plugin/🦀️component.rs`'s own
     /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
     /// private to its own test module, so this is a from-scratch copy, not a shared import).
     async fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
-        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).await.build();
+        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, AddValue>(target_document_schema, 1, 1).await.build();
         let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
         crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
@@ -135,7 +78,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_two_slice_mutation_plan_job_decodes_then_dispatches_to_the_registered_kind() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-echo", "jobtest.mutation-echo.document", "jobtest-contributor-a").await;
-        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 5 }).await;
+        let payload = crate::app::encode_contributed_wire(&AddValue { delta: 5 }).await;
         let input = request_wire_bytes("s.jobtest.mutation-echo", &mutation_id, payload).await;
         start_job(300, JOB_KIND_MUTATION_PLAN, &input).await;
 
@@ -160,7 +103,7 @@ mod tests {
                 assert_eq!(result.label, "Add 5 to value");
                 assert_eq!(result.owner_ops.len(), 1);
                 let op = JobTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
-                assert_eq!(op, JobTestOp::Add(5));
+                assert_eq!(op, JobTestOp::AddValue(AddValue { delta: 5 }));
             }
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
@@ -175,7 +118,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn mutation_plan_job_checkpoint_restore_matches_an_uninterrupted_run() {
         let mutation_id = commit_job_test_contribution("s.jobtest.mutation-checkpoint", "jobtest.mutation-checkpoint.document", "jobtest-contributor-b").await;
-        let payload = crate::app::encode_contributed_wire(&JobTestMutationKind { delta: 3 }).await;
+        let payload = crate::app::encode_contributed_wire(&AddValue { delta: 3 }).await;
         let input = request_wire_bytes("s.jobtest.mutation-checkpoint", &mutation_id, payload).await;
 
         start_job(301, JOB_KIND_MUTATION_PLAN, &input).await;

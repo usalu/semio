@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["domainOrder", "cases", "captureIdentityIsHistoricalContent", "restoreUsesCurrentIdentity", "fullRestoreClearsAbsentDomains", "absentCaptureDefaultsToEmpty"],
+  "properties": {
+    "domainOrder": { "const": "utf16-code-unit-lexicographic" },
+    "cases": { "type": "array", "minItems": 5, "items": {
+      "type": "object", "additionalProperties": false, "required": ["name", "before", "after", "changes"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "before": { "$ref": "semio:local-interaction#/$defs/state" }, "after": { "$ref": "semio:local-interaction#/$defs/state" },
+        "changes": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["kind", "domainId", "patch"], "properties": { "kind": { "const": "localInteractionDomain" }, "domainId": { "type": "string", "minLength": 1 }, "patch": { "$ref": "semio:local-interaction#/$defs/domainPatch" } } } }
+      }
+    } },
+    "captureIdentityIsHistoricalContent": { "const": false }, "restoreUsesCurrentIdentity": { "const": true }, "fullRestoreClearsAbsentDomains": { "const": true }, "absentCaptureDefaultsToEmpty": { "const": false }
+  }
+}

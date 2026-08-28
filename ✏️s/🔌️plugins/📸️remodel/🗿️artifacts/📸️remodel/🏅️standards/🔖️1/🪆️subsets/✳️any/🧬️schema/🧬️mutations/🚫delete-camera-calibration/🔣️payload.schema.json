@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DeleteCameraCalibration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cameraId"
+  ],
+  "properties": {
+    "cameraId": {
+      "type": "string"
+    }
+  }
+}

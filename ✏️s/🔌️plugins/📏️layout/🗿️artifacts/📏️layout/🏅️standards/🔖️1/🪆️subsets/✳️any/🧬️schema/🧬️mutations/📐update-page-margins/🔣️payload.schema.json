@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdatePageMargins",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bottom",
+    "id",
+    "left",
+    "right",
+    "top"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "top": {
+      "type": "number"
+    },
+    "right": {
+      "type": "number"
+    },
+    "bottom": {
+      "type": "number"
+    },
+    "left": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "node",
+        "index"
+      ],
+      "properties": {
+        "node": {
+          "$ref": "../../../🔣️.json#/$defs/DagNodeSpec"
+        },
+        "index": {
+          "$ref": "../../../🔣️.json#/$defs/U64"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "unevaluatedProperties": false
+}

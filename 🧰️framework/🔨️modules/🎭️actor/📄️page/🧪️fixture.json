@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "maximumBytes": 4096,
+  "blockCount": 64,
+  "wordsPerBlock": 8,
+  "wordByteOrder": "little-endian",
+  "canonicalTailByte": 0,
+  "bytePattern": {
+    "multiplier": 37,
+    "addend": 11,
+    "modulus": 256
+  },
+  "vectors": [
+    {
+      "length": 0,
+      "firstWord": "0",
+      "lastUsedWord": "0"
+    },
+    {
+      "length": 1,
+      "firstWord": "11",
+      "lastUsedWord": "11"
+    },
+    {
+      "length": 7,
+      "firstWord": "65799858804830219",
+      "lastUsedWord": "65799858804830219"
+    },
+    {
+      "length": 8,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "1074606175335821323"
+    },
+    {
+      "length": 9,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "51"
+    },
+    {
+      "length": 63,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "524155970471971"
+    },
+    {
+      "length": 64,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "2738712729411733539"
+    },
+    {
+      "length": 65,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "75"
+    },
+    {
+      "length": 4095,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "54496706798880995"
+    },
+    {
+      "length": 4096,
+      "firstWord": "1074606175335821323",
+      "lastUsedWord": "16627743335522306275"
+    }
+  ],
+  "invalidLengths": [
+    -1,
+    4097,
+    0.5
+  ],
+  "invalidWords": [
+    "-1",
+    "+1",
+    "00",
+    "01",
+    "1.0",
+    "1e0",
+    "18446744073709551616"
+  ],
+  "padding": [
+    {
+      "length": 0,
+      "byteOffset": 0,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "length": 1,
+      "byteOffset": 1,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "length": 7,
+      "byteOffset": 7,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "length": 8,
+      "byteOffset": 8,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "length": 4095,
+      "byteOffset": 4095,
+      "value": 1,
+      "accepted": false
+    },
+    {
+      "length": 4096,
+      "byteOffset": 4095,
+      "value": 1,
+      "accepted": true
+    }
+  ],
+  "ownership": {
+    "confersAuthority": false,
+    "buildsPageArray": false,
+    "readsUnknownKeys": false,
+    "copyMaximumBytes": 4096
+  }
+}

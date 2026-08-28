@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-curated-item",
+  "semanticKind": "delete-curated-item",
+  "displayName": "Delete Curated Item",
+  "emoji": "🗑️",
+  "aggregateVariant": "DeleteCuratedItem",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "delete-curated-item",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text"
+  ]
+}

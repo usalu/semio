@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/♻️replace-flow-fixture",
+  "semanticKind": "replace-flow-fixture",
+  "displayName": "Replace Flow Fixture",
+  "emoji": "♻️",
+  "aggregateVariant": "ReplaceFlowFixture",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "replace-flow-fixture",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

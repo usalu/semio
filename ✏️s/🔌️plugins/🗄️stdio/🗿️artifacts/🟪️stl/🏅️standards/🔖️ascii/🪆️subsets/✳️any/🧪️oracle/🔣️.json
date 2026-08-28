@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform — the STL ascii `any` mutation vocabulary and the reference implementation that exercises it. The shared stdio manifest already registers `stl-io` under the `stl-mesh` capability for creation/projection; that entry cannot cover mutation because it never declared the capability, so this subset registers its own oracle id against the SAME package for the `stl-ascii-mutate` capability instead of reusing the shared one (would fail the contract with oracle-capability-mismatch).",
   "oracles": [
     {
@@ -18,15 +18,27 @@
       "testOnly": true,
       "homepage": "https://github.com/hmeyer/stl_io",
       "rationale": "The reference binary/ASCII STL reader of the Rust ecosystem. Its READER is what this oracle relies on: `read_stl` parses the real committed ascii fixture into an `IndexedMesh`, every declared `StlMutation` kind is performed on that independent triangle soup, and the result is projected back through the same reader. Its WRITER cannot serve. `stl_io` 0.8's own top-level doc comment states 'Writing is limited to binary STL' -- confirmed in its source, where `writer.rs` hardcodes a zeroed 80-byte header -- and binary STL has no solid-name field at all, so emitting through it would silently discard the solid name on every kind, leave `set-solid-name` unobservable, and leave this `ascii` subset's oracle never once producing the grammar it is filed under. The ascii document is therefore written by the oracle module itself, the same precedent the OBJ subset already follows for a format whose Rust reference is a reader; `stl_io` remains the independent reader every oracle and subject result is read back through, and nothing in the module touches this repository's `decode_stl_ascii`/`encode_stl_ascii`. `no-mutation` is a real parse and re-emission for the same reason -- it used to hand the input bytes straight back, which proved nothing about either half.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stl-io",
+        "implementation": "stl_io Rust STL reader/writer",
+        "version": "0.8"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "comparisonProfiles": [
     {
       "id": "semantic-stl-ascii-v1",
       "description": "ASCII STL documents compared by the resolved corner positions of every facet in order, PLUS the two fields a triangle-soup reading cannot carry: the `solid <name>` header and the EXPLICIT per-facet normal. STL states its normals rather than deriving them from winding, so set-triangle-normal is a real change to the document even when every corner stays put; and set-solid-name's whole payload is the header name. The shared semantic-mesh-v1 profile treats both as writer freedom -- correct for mesh CREATION, where a producer picks its own solid name and recomputes normals, but it would leave 2 of this subset's 7 declared kinds unobservable, so this profile makes them normative. Byte length and decimal precision stay producer freedom: `stl_io` resolves coordinates through f32 while the committed fixture carries f64 decimals.",
-      "tolerance": 1e-5,
-      "ignoreKeys": ["byteLength", "fileSize", "precision"]
+      "tolerance": 1e-05,
+      "ignoreKeys": [
+        "byteLength",
+        "fileSize",
+        "precision"
+      ]
     }
   ],
   "mutationCatalogs": [

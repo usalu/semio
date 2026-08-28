@@ -219,8 +219,18 @@ async function probeSources(): Promise<void> {
     "Cargo.toml", "Cargo.lock", ".cargo/config.toml",
     "🧰️framework/🔨️modules/🧵️job/🦀️component.rs",
     "🧰️framework/🔨️modules/⏳️async/⏱️clock/🦀️component.rs",
+    "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
+    "🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🟦️component.ts",
+    "🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🦀️component.rs",
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️fixture.json",
+    "🧰️framework/🔨️modules/🎭️actor/🪪️activation/📨️inbound/🧪️schema.json",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️component.wit",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🧪️fixtures/🔣️host-activation.schema.json",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🦀️component.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📔️registry/🦀️component.rs",
@@ -233,7 +243,9 @@ async function probeSources(): Promise<void> {
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🦀️component.rs",
     "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx"
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🟦️typescript/🐚️plugin-bridge.ts"
   ];
   const sources = paths.map((path) => {
     const absolute = resolve(root, path);

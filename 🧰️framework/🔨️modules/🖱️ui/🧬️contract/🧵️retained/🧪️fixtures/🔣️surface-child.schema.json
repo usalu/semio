@@ -1,0 +1,9 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "type": "object", "additionalProperties": false,
+  "required": ["layers", "refusals", "childBytes", "queueBytes", "leaseBytes", "earlyReaderClose"],
+  "properties": {
+    "layers": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["lookup", "reader-retirement", "node-retirement", "binding-retirement", "patch-close"] } },
+    "refusals": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["blocked", "rejected"] } },
+    "childBytes": { "const": 4096 }, "queueBytes": { "const": 64 }, "leaseBytes": { "const": 512 }, "earlyReaderClose": { "const": false }
+  }
+}

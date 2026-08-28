@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "📰 XML 1.0/✳️valid's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for THIS subset's own 9-kind `XmlValidMutation` vocabulary, and the comparison profile that vocabulary is measured under. A distinct id and capability from the sibling `✳️any` registration: a mutation vocabulary belongs to the subset that declares it, and reusing an approved oracle outside its surveyed capability fails the contract's oracle-capability-mismatch check.",
   "oracles": [
     {
@@ -8,13 +8,25 @@
       "ecosystem": "rust",
       "package": "quick-xml",
       "version": "0.42",
-      "capabilities": ["xml-1-0-valid-mutate"],
-      "comparisonProfiles": ["semantic-xml-valid-1-0-v1"],
+      "capabilities": [
+        "xml-1-0-valid-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-xml-valid-1-0-v1"
+      ],
       "license": "MIT",
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
       "rationale": "quick-xml is a general streaming XML reader AND writer, not a validating processor: it hands the DOCTYPE back as one raw string and never looks at it again, which is exactly what makes it usable as the independent producer for a VALIDITY vocabulary. This subset's oracle (../🧪️oracle/🦀️component.rs) builds its document tree from quick-xml's event stream through the shared 📰markup family module, then decomposes that raw DOCTYPE with its OWN hand-rolled XML 1.0 §2.8/§4.2 grammar, applies each declared XmlValidMutation kind, derives the four §2.8/§2.9 verdicts straight from the W3C text, and re-serializes with quick-xml's Writer. It never imports this repository's own parse_doctype/xml_document_to_text codec, nor its check_valid_conformance. Both encode the same normative rules; neither is derived from the other, which is the point. Registered by this subset rather than shared with ✳️any because the two catalogs have exactly one kind in common (set-text) and disagree about what the DOCTYPE is for.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml Rust streaming XML reader/writer",
+        "version": "0.42"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],

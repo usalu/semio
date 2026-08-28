@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSystemLossesKwh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSystemLossesKwh"
+  ],
+  "properties": {
+    "newSystemLossesKwh": {
+      "type": "number"
+    }
+  }
+}

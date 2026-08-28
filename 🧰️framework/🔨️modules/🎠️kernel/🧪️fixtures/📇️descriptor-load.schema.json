@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pluginId",
+    "moduleUrl",
+    "descriptorUrl",
+    "descriptor",
+    "rejected"
+  ],
+  "properties": {
+    "pluginId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moduleUrl": {
+      "type": "string",
+      "minLength": 1
+    },
+    "descriptorUrl": {
+      "type": "string",
+      "minLength": 1
+    },
+    "descriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pluginId",
+            "label",
+            "version",
+            "apps"
+          ],
+          "properties": {
+            "pluginId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "apps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "status",
+          "contentType",
+          "body",
+          "fault"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 200,
+            "maximum": 599
+          },
+          "contentType": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "plugin.descriptor-unavailable",
+              "plugin.descriptor-invalid",
+              "plugin.descriptor-identity-mismatch"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

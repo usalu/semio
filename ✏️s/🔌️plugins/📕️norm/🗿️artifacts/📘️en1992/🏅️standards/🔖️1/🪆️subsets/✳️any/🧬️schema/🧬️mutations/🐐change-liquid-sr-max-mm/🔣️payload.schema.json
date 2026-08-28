@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeLiquidSRMaxMm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newLiquidSRMaxMm"
+  ],
+  "properties": {
+    "newLiquidSRMaxMm": {
+      "type": "number"
+    }
+  }
+}

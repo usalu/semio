@@ -122,6 +122,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
 ]
 
 resolver = "2"
@@ -143,6 +144,7 @@ semio-framework-geometry = { path = "🧰️framework/🔨️modules/📐️geom
 semio-framework-graph = { path = "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust" }
 semio-framework-actor = { path = "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-value-resident = { path = "🧰️framework/🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }

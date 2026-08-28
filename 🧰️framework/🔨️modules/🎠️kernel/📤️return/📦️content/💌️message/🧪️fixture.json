@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "payloadHex": "00ff07",
+  "vectors": [
+    {"endpoint": {"kind": "shell", "instance": "7"}, "recordHex": "05070000070300ff07"},
+    {"endpoint": {"kind": "backbone", "uri": "根,1"}, "recordHex": "050c000105e6a0b92c310300ff07"},
+    {"endpoint": {"kind": "pluginInstance", "id": "4294967295"}, "recordHex": "050b0002ffffffff0f0300ff07"},
+    {"endpoint": {"kind": "extension", "id": "Ü"}, "recordHex": "0509000302c39c0300ff07"},
+    {"endpoint": {"kind": "topic", "name": ""}, "recordHex": "05070004000300ff07"}
+  ],
+  "invalidInstances": ["", "01", "-1", "4294967296", "00000000000", "7x"],
+  "largePayload": {"length": 8193, "pattern": "mod37plus11", "prefixHex": "0586400000078140"},
+  "grants": [0, 1, 64, 4096],
+  "laws": {"sourceCopiedAtConstruction": false, "sourcePointerChanges": false, "opaquePayloadParsed": false, "zeroGrantMutates": false, "cancelDropsSource": false, "sourceRetirementClaimed": false}
+}

@@ -1,15 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object", "additionalProperties": false,
-  "required": ["version", "vectors", "reopen", "completion", "leaseReceipts", "nativeCases", "leaseFailures", "publishedClose"],
+  "required": ["version", "vectors", "turnResults", "reopen", "completion", "leaseReceipts", "nativeCases", "leaseFailures", "publishedClose"],
   "properties": {
     "version": {"const": 1},
-    "vectors": {"type": "array", "minItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["value", "hex"], "properties": {"value": {"$ref": "semio.actor.instance-lifetime-close.v1"}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$", "maxLength": 68}}}},
+    "vectors": {"type": "array", "minItems": 9, "items": {"type": "object", "additionalProperties": false, "required": ["value", "hex"], "properties": {"value": {"$ref": "semio.actor.instance-lifetime-close.v1"}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$", "maxLength": 88}}}},
+    "turnResults": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["vector", "hex"], "properties": {"vector": {"enum": [null, 1, 4, 8]}, "hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$", "maxLength": 150}}}},
     "reopen": {"type": "object", "additionalProperties": false, "required": ["prior", "current", "oldRequestAccepted", "oldReceiptAccepted"], "properties": {"prior": {"$ref": "semio.actor.instance-lifetime-close.v1#/definitions/lifetime"}, "current": {"$ref": "semio.actor.instance-lifetime-close.v1#/definitions/lifetime"}, "oldRequestAccepted": {"const": false}, "oldReceiptAccepted": {"const": false}}},
     "completion": {"type": "object", "additionalProperties": false, "required": ["participants", "acceptedIsTerminal", "idleIsTerminal", "mapRemovalIsTerminal", "allExactOwnersRetiredIsTerminal"], "properties": {"participants": {"const": ["app", "reactor", "nativeUi", "hostUi", "ingress", "publication", "transport"]}, "acceptedIsTerminal": {"const": false}, "idleIsTerminal": {"const": false}, "mapRemovalIsTerminal": {"const": false}, "allExactOwnersRetiredIsTerminal": {"const": true}}},
     "nativeCases": {"type": "object", "additionalProperties": false, "required": ["sameIdReplacementRejected", "overflowPreservesLiveOwner", "quarantineRemovalPreservesTerminalWitness", "repeatCloseKeepsReplacement", "scopeAfterSurfaceClear"], "properties": {"sameIdReplacementRejected": {"const": true}, "overflowPreservesLiveOwner": {"const": true}, "quarantineRemovalPreservesTerminalWitness": {"const": true}, "repeatCloseKeepsReplacement": {"const": true}, "scopeAfterSurfaceClear": {"const": true}}},
     "leaseFailures": {"const": ["postMessage-throw", "worker-error"]},
-    "publishedClose": {"type": "object", "additionalProperties": false, "required": ["owners", "remaining", "complete"], "properties": {"owners": {"const": ["surface", "credit", "handback"]}, "remaining": {"const": [["credit", "handback"], ["handback"], [], []]}, "complete": {"const": [false, false, false, true]}}},
+    "publishedClose": {"type": "object", "additionalProperties": false, "required": ["granularity", "owners", "remaining", "complete"], "properties": {"granularity":{"const":"owner-transition"}, "owners": {"const": ["metadata", "credit", "handback"]}, "remaining": {"const": [["credit", "handback"], ["handback"], [], []]}, "complete": {"const": [false, false, false, true]}}},
     "leaseReceipts": {"type": "array", "minItems": 8, "items": {"type": "object", "additionalProperties": false, "required": ["name", "events", "settled"], "properties": {"name": {"type": "string", "minLength": 1}, "events": {"type": "array", "minItems": 1, "maxItems": 3, "items": {"enum": ["accepted", "retired", "foreign-worker-accepted", "old-activation-accepted", "wrong-request-accepted", "wrong-generation-retired"]}}, "settled": {"type": "boolean"}}}}
   }
 }

@@ -1,0 +1,527 @@
+{
+  "schemaVersion": 1,
+  "contract": "typescript-immutable-path-collection-for-of-v1",
+  "semantics": {
+    "source": "exact-node-path-join-and-node-fs-readFileSync",
+    "root": "unshadowed-immutable-process-cwd",
+    "collection": "local-immutable-unescaped-static-string-array",
+    "consumer": "same-scope-const-for-of-direct-or-local-const-alias-read",
+    "arrayCopy": "spread-into-new-array-only",
+    "template": "known-immutable-string-sibling-does-not-emit-edit-span",
+    "rejectedForOf": "never-fallback-to-distant-map",
+    "offsets": "raw-utf16",
+    "target": "exact-repository-relative-physical-leaf",
+    "lifetime": "one-source-buffer"
+  },
+  "scanBoundarySchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "prefix", "repeat", "count", "suffix", "expected", "maxMilliseconds"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "prefix": { "type": "string" },
+      "repeat": { "type": "string", "minLength": 1 },
+      "count": { "type": "integer", "minimum": 1, "maximum": 3000000 },
+      "suffix": { "type": "string" },
+      "expected": { "type": "boolean" },
+      "maxMilliseconds": { "type": "integer", "minimum": 1, "maximum": 2000 }
+    }
+  },
+  "scanBoundaryCases": [
+    { "id": "large-comment-after-real-for-of", "prefix": "for (const item of items) {}\n/*", "repeat": "x", "count": 2800000, "suffix": "*/\n", "expected": true, "maxMilliseconds": 2000 },
+    { "id": "repeated-for-with-no-of", "prefix": "", "repeat": "for (let index = 0; index < 1; index++) {}\n", "count": 40000, "suffix": "", "expected": false, "maxMilliseconds": 2000 },
+    { "id": "only-of-precedes-all-for", "prefix": "const label = 'of';\n", "repeat": "for (let index = 0; index < 1; index++) {}\n", "count": 40000, "suffix": "", "expected": false, "maxMilliseconds": 2000 },
+    { "id": "ordered-words-only-in-comment", "prefix": "/* for ", "repeat": "before office ", "count": 150000, "suffix": " of */\n", "expected": false, "maxMilliseconds": 2000 },
+    { "id": "word-fragments-not-tokens", "prefix": "/* ", "repeat": "before office ", "count": 150000, "suffix": "*/\n", "expected": false, "maxMilliseconds": 2000 },
+    { "id": "late-for-of-after-large-comment", "prefix": "/*", "repeat": "x", "count": 2800000, "suffix": "*/\nfor (const item of items) {}\n", "expected": true, "maxMilliseconds": 2000 }
+  ],
+  "caseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "source",
+      "expected"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "source": {
+        "type": "string"
+      },
+      "expected": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "start",
+            "end",
+            "physicalTargets"
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "start": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "physicalTargets": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "direct-reader",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "local-const-alias-and-sibling-declarator",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const absolute = join(repoRoot, item), size = 1; readFileSync(absolute, \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mixed-known-const-template-sibling",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst library = \"🧰️library\";\nconst items = [`${library}/🔣️taxonomy.json`, \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const absolute = join(repoRoot, item); readFileSync(absolute); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 183,
+          "end": 203,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "read-only-array-spread-copy",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nconst copied = collect([\"other\", ...items]);\nfor (const item of items) { readFileSync(join(repoRoot, item)); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "renamed-import-bindings",
+      "source": "import { join as combine } from \"node:path\";\nimport { readFileSync as read } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { read(combine(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 141,
+          "end": 161,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "same-nested-block-with-outer-root",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nif (enabled) {\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 137,
+          "end": 157,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "comments-and-regex-do-not-declare-bindings",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst irrelevant = /[{}]/u;\n/* let repoRoot = fake; */\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 177,
+          "end": 197,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "plain-single-quoted-literal",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = ['🧪️targets/🟦️old.ts'];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "immutable-const-assertion",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"] as const;\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "duplicate-owned-literal-spans",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\", \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": [
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 122,
+          "end": 142,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        },
+        {
+          "value": "🧪️targets/🟦️old.ts",
+          "start": 146,
+          "end": 166,
+          "physicalTargets": [
+            "🧪️targets/🟦️old.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "data-only-array",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nconsole.log(sourcePaths);\n",
+      "expected": []
+    },
+    {
+      "id": "foreign-path-import",
+      "source": "import { join } from \"foreign-path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "foreign-fs-import",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"foreign-fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "namespace-reader",
+      "source": "import { join } from \"node:path\";\nimport * as fs from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { fs.readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "reader-shadow-parameter",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nfunction run(readFileSync) {\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "join-shadow-parameter",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nfunction run(join) {\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "process-shadow-parameter",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nfunction run(process) { const repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "mutable-root",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nlet repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "root-reassignment",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nrepoRoot = elsewhere;\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "destructured-root-assignment",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\n[repoRoot] = other;\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "unknown-root",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = getRoot();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "mutable-array",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nlet items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "array-method-mutation",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nitems.push(other);\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "array-index-mutation",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nitems[0] = other;\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "array-alias-escape",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nconst escaped = items;\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "array-call-escape",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nconsume(items);\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "array-call-spread-unproved",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nconsume(...items);\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "declaration-spread",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [...other, \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "dynamic-element",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [compute(), \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "unknown-template-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [`${unknown}/file.ts`, \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "mutable-template-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nlet library = \"🧰️library\";\nconst items = [`${library}/file.ts`, \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "changed-template-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst library = \"🧰️library\";\nlibrary += \"/other\";\nconst items = [`${library}/file.ts`, \"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "escaped-literal-offsets",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/\\\\u{1f7e6}️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "mutable-loop-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (let item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "loop-binding-reassigned",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { item = other; readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "mutable-local-alias",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { let absolute = join(repoRoot, item), size = 1; readFileSync(absolute, \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "local-alias-reassigned",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const absolute = join(repoRoot, item), size = 1; absolute = other; readFileSync(absolute, \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "read-outside-loop",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const absolute = join(repoRoot, item); }\nreadFileSync(absolute);\n",
+      "expected": []
+    },
+    {
+      "id": "reader-in-nested-function",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const deferred = () => readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "destructured-loop-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const [item] of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "same-name-foreign-loop-array",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst sourcePaths = [\"🧪️targets/🟦️old.ts\"];\n{ const sourcePaths = dynamic; for (const item of sourcePaths) { readFileSync(join(repoRoot, item)); } }\n",
+      "expected": []
+    },
+    {
+      "id": "rejected-for-of-does-not-use-distant-map",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nfor (let item of sourcePaths) { readFileSync(join(repoRoot, item), \"utf8\"); }\n\nconst unrelated = other.map(item => readFileSync(item));\n",
+      "expected": []
+    },
+    {
+      "id": "unbalanced-program",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); ",
+      "expected": []
+    },
+    {
+      "id": "parent-traversal",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"../outside/old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "absolute-collection-path",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"/outside/old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "writer-is-not-reader",
+      "source": "import { join } from \"node:path\";\nimport { writeFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { writeFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "escaped-binding-identifier",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst i\\u0074ems = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of i\\u0074ems) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "default-import-shadows-global-process",
+      "source": "import process from \"node:process\";\nimport { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "default-import-collides-with-join",
+      "source": "import join from \"foreign-path\";\nimport { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "computed-working-directory-method-write",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nprocess[\"cwd\"] = elsewhere;\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "exported-array-escapes-owner",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nexport const items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "collection-and-loop-different-blocks",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\n{ for (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "template-expression-mutates-original-array",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nconst ignored = `${items.pop()}`;\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "template-expression-reassigns-loop-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { const text = `${item = \"elsewhere\"}`; readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "typed-function-parameter-shadows-process",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nfunction run(process: { cwd(): string }): void {\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "typed-function-parameter-shadows-reader",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nfunction run(readFileSync: (path: string) => string): void {\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n}\n",
+      "expected": []
+    },
+    {
+      "id": "mixed-default-named-import-shadows-process",
+      "source": "import other, { process } from \"foreign-process\";\nimport { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "rejected-for-of-parenthesized-does-not-use-distant-map",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of (sourcePaths)) { readFileSync(join(repoRoot, item), \"utf8\"); }\nsourcePaths.map(() => readFileSync(\"irrelevant\", \"utf8\"));\n",
+      "expected": []
+    },
+    {
+      "id": "unsigned-shift-assignment-mutates-loop-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { item >>>= 1; readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    },
+    {
+      "id": "member-reader-is-not-import-binding",
+      "source": "import { join } from \"node:path\";\nimport { readFileSync } from \"node:fs\";\nconst repoRoot = process.cwd();\nconst items = [\"🧪️targets/🟦️old.ts\"];\nfor (const item of items) { fake.readFileSync(join(repoRoot, item), \"utf8\"); }\n",
+      "expected": []
+    }
+  ],
+  "liveInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️reference-parser-profile/📜️script.ts",
+  "mapBoundaryCases": [
+    {
+      "id": "map-only-preserved",
+      "source": "const sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nsourcePaths.map(() => readFileSync(\"irrelevant\", \"utf8\"));\n",
+      "expected": [
+        "🧪️targets/🟦️old.ts"
+      ]
+    },
+    {
+      "id": "independent-map-in-for-of-source-conservatively-suppressed",
+      "source": "const sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nsourcePaths.map(() => readFileSync(\"irrelevant\", \"utf8\"));\nfor (const key of values) { use(key); }\n",
+      "expected": []
+    },
+    {
+      "id": "aliased-rejected-for-of-cannot-reenter-map-authority",
+      "source": "const sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nsourcePaths.map(() => readFileSync(\"irrelevant\", \"utf8\"));\nconst alias = sourcePaths;\nfor (const item of alias) { use(item); }\n",
+      "expected": []
+    },
+    {
+      "id": "inert-for-of-comment-does-not-change-map-only-authority",
+      "source": "const sourcePaths = [\"🧪️targets/🟦️old.ts\"];\nsourcePaths.map(() => readFileSync(\"irrelevant\", \"utf8\"));\n// for (const key of values) { use(key); }\n",
+      "expected": [
+        "🧪️targets/🟦️old.ts"
+      ]
+    }
+  ],
+  "execution": {
+    "target": "test-typescript-path-collection",
+    "command": "bun ./📜️script.ts test typescript-path-collection",
+    "route": "typescript-path-collection",
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️typescript-path-collection/🟦️.ts",
+    "launchName": "🧹clean🧩️taxonomy🧪️typescript-path-collection",
+    "launchCommand": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
+    "launchGroup": "4_gate",
+    "launchOrder": 410.17
+  }
+}

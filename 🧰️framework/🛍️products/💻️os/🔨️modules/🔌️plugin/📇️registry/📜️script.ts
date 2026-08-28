@@ -14,8 +14,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import type { AreaState, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
-import { BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 
 //#region 🔖️PluginRegistryEntry
@@ -1650,63 +1650,43 @@ function scaffoldLeafContentForLang(lang: string, label: string): string {
   return lang === "🦀️rust" ? scaffoldRustLeaf(label) : scaffoldTsLeaf(label);
 }
 
-type SurfaceScaffoldResult = { created: string[]; skipped: string[] };
-
-/** 📝️ Authors an absent leaf exclusively; an existing or concurrently created leaf is preserved. */
-function scaffoldWriteIfAbsent(repoRoot: string, relPath: string, content: string, result: SurfaceScaffoldResult, dryRun: boolean): void {
-  const abs = join(repoRoot, relPath);
-  if (existsSync(abs)) {
-    result.skipped.push(relPath);
-    return;
-  }
-  if (dryRun) {
-    result.created.push(relPath);
-    return;
-  }
-  mkdirSync(dirname(abs), { recursive: true });
-  try {
-    writeFileSync(abs, content, { flag: "wx" });
-    result.created.push(relPath);
-  } catch (error) {
-    if ((error as { code?: string }).code !== "EEXIST") throw error;
-    result.skipped.push(relPath);
-  }
-}
+type SurfaceScaffoldResult = ArtifactScaffoldResult;
 
 /**
  * 🏗️ Creates one surface's full scaffold shape under `<subsetRel>/<viewerDirName|editorDirName>` per
  * the frozen tree (ticket Deliverable A): 2 surface leaves + 4 surface facets + 1 mode leaf + 4 mode
  * facets + 2 window leaves + 6 window facets = 19 files. Idempotent — never overwrites.
  */
-export function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, dryRun: boolean): SurfaceScaffoldResult {
-  const result: SurfaceScaffoldResult = { created: [], skipped: [] };
+export function scaffoldSurfaceTree(repoRoot: string, subsetRel: string, role: string, dryRun: boolean, options: ArtifactScaffoldOptions = {}): SurfaceScaffoldResult {
+  const leaves: ArtifactScaffoldLeaf[] = [];
+  const add = (path: string, content: string): void => { leaves.push({ path, content }); };
   const surfaceRel = `${subsetRel}/${TAXONOMY.surfaceDirNames[role]}`;
   const label = `${role} surface`;
 
   for (const lang of TAXONOMY.surfaceComponentLangs) {
-    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, label), result, dryRun);
+    add(`${surfaceRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, label));
   }
   for (const facet of TAXONOMY.surfaceRequiredChildDirs) {
     if (facet === TAXONOMY.modesDirName) continue;
-    scaffoldWriteIfAbsent(repoRoot, `${surfaceRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`), result, dryRun);
+    add(`${surfaceRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Surface ${facet}`));
   }
 
   const modeRel = `${surfaceRel}/${TAXONOMY.modesDirName}/${SURFACE_DEFAULT_MODE_DIRNAME[role]}`;
-  scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${scaffoldLeafFilename("🦀️rust")}`, scaffoldRustLeaf(`${role} mode`), result, dryRun);
+  add(`${modeRel}/${scaffoldLeafFilename("🦀️rust")}`, scaffoldRustLeaf(`${role} mode`));
   for (const facet of TAXONOMY.modeRequiredChildDirs ?? []) {
     if (facet === TAXONOMY.windowsDirName) continue;
-    scaffoldWriteIfAbsent(repoRoot, `${modeRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`), result, dryRun);
+    add(`${modeRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Mode ${facet}`));
   }
 
   const windowRel = `${modeRel}/${TAXONOMY.windowsDirName}/${SURFACE_DEFAULT_WINDOW_DIRNAME}`;
   for (const lang of TAXONOMY.windowLeafLangs) {
-    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, `${role} window`), result, dryRun);
+    add(`${windowRel}/${scaffoldLeafFilename(lang)}`, scaffoldLeafContentForLang(lang, `${role} window`));
   }
   for (const facet of TAXONOMY.windowRequiredChildDirs) {
-    scaffoldWriteIfAbsent(repoRoot, `${windowRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`), result, dryRun);
+    add(`${windowRel}/${facet}/${WINDOW_EMPTY_FACET_FILENAME}`, scaffoldEmptyFacetMarkdown(`Window ${facet}`));
   }
 
-  return result;
+  return authorArtifactScaffold(repoRoot, { kind: "surface", subsetPath: subsetRel, role }, leaves, TAXONOMY, { ...options, dryRun });
 }
 
 function reportSurfaceScaffoldResult(label: string, result: SurfaceScaffoldResult, dryRun: boolean): void {

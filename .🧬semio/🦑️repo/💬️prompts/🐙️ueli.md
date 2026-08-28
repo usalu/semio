@@ -20,7 +20,7 @@ Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
-Plan for a main Opus 5 High agent for plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
+Plan for a main Opus 5 High agent for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Everything end to end (ignore everything inside ./compose folder).
 Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
 
@@ -38,6 +38,8 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 ---
 
+Use a work fleet of maximum possible parallel agents.
+The main Opus 5 High chat is for plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
 
@@ -72,6 +74,35 @@ Everything end to end.
 # 🔍️ Web
 
 ##
+
+The current codebase is polluted and doesnt follow the clean multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree as it should.
+
+Schemas should not appear inside examples, tests, fixtures, mutations, etc
+
+violations e.g.
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️draw-source-scenario/🧬️schema/🔣️.json
+should be:
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️.json # json schema
+🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️draw-source-scenario/🔣️.json # following the json schema
+
+---
+
+The io mechanism for 
+
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio
+
+---
+
+e.g.
+semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🔣️typed.json
+semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/🔣️typed.schema.json
+should be:
+semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧪️fixtures/📜typed/🔣️.json # json serialization following the json schema
+semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧬schema/🔣️.json # json schema
+
+---
+
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UiDocumentStore/🟦️component.tsx
 
 ---
 

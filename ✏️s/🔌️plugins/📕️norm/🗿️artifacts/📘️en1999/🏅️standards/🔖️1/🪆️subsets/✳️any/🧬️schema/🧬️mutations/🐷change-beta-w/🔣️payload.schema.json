@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeBetaW",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBetaW"
+  ],
+  "properties": {
+    "newBetaW": {
+      "type": "number"
+    }
+  }
+}

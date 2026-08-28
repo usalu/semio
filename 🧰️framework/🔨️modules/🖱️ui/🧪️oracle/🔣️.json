@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ The UI module's contribution to the repository test platform. `clsx` and `class-variance-authority` are the published contracts this module's own cn() and styleVariants() re-implement, so they belong to this owner rather than to the test framework.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/lukeed/clsx",
       "rationale": "The de-facto specification of recursive class-name flattening: nested arrays, truthy object keys, falsey suppression and numeric coercion. Deterministic, dependency-free, no network, no system dependencies, runs on every platform. Deliberately scoped to the FLATTENING half of the repository's cn() — clsx knows nothing about conflicting utility families, so it is not, and must not be used as, an oracle for conflict resolution.",
-      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "clsx",
+        "implementation": "clsx",
+        "version": "2.1.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "cva",
@@ -35,7 +43,15 @@
       "testOnly": true,
       "homepage": "https://github.com/joe-bell/cva",
       "rationale": "The published contract that this repository's styleVariants() re-implements: base class, finite variant schema, defaultVariants, boolean choices, compoundVariants with array conditions, and caller class/className overrides. Deterministic, dependency-light, no network. Valid only over UNCLASSIFIED class tokens: styleVariants() finishes through cn(), which additionally resolves repository-owned utility conflicts that cva knows nothing about — the vectors are scoped accordingly.",
-      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "cva",
+        "implementation": "class-variance-authority",
+        "version": "0.7.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [

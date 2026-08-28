@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","$defs":{"payload":{"type":"object","required":["nodeId","level","message","at"],"properties":{"nodeId":{"type":"string"},"level":{"type":"string"},"message":{"type":"string"},"at":{"type":"string"}}}},"allOf":[{"$ref":"#/$defs/payload"}],"unevaluatedProperties":false}

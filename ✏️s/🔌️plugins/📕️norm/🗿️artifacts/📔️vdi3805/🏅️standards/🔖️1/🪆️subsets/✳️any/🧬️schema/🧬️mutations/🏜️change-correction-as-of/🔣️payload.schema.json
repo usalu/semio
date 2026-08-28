@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeCorrectionAsOf",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCorrectionAsOf"
+  ],
+  "properties": {
+    "newCorrectionAsOf": {
+      "title": "EditionId",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "month",
+        "year"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times",
+  "semanticKind": "add-counter-four-times",
+  "displayName": "Add Counter Four Times",
+  "emoji": "4️⃣",
+  "aggregateVariant": "AddCounterFourTimes",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-counter-four-times",
+  "binaryTag": 2,
+  "invertibility": "plan",
+  "diffParticipation": "plan",
+  "outcomeClasses": [
+    "applied",
+    "fatal"
+  ],
+  "composition": "composite",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

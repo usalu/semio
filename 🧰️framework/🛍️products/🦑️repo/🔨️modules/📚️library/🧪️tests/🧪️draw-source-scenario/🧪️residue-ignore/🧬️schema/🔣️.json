@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Draw Residue Ignore Precedence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contractId", "rootIgnore", "residueSegments", "leaf", "content", "lowerPrioritySource", "authoritativeSource", "writePolicy", "beforeIgnored", "absentIgnored", "presentIgnored", "siblingIgnored"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contractId": { "const": "draw-residue-ignore-precedence-v1" },
+    "rootIgnore": { "const": "*.cache\n!**/🔖️*/**\n" },
+    "residueSegments": { "const": ["🔖️1", "🧪️subject", "🧪️unexpected"] },
+    "leaf": { "const": "📝️.md" },
+    "content": { "const": "ignored residual source\n" },
+    "lowerPrioritySource": { "const": ".git/info/exclude" },
+    "authoritativeSource": { "const": ".gitignore" },
+    "writePolicy": { "const": "append-exact-anchored-directory-rule" },
+    "beforeIgnored": { "const": false },
+    "absentIgnored": { "const": true },
+    "presentIgnored": { "const": true },
+    "siblingIgnored": { "const": false }
+  }
+}

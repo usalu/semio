@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["selection", "hover", "activeMode", "activeGranularity"],
+  "properties": {
+    "selection": { "type": "object", "additionalProperties": { "$ref": "#/$defs/selection" } },
+    "hover": { "type": "object", "additionalProperties": { "$ref": "#/$defs/hover" } },
+    "activeMode": { "type": "object", "additionalProperties": { "enum": ["single", "multiple"] } },
+    "activeGranularity": { "type": "object", "additionalProperties": { "type": "string" } }
+  },
+  "$defs": {
+    "selection": {
+      "type": "object", "additionalProperties": false, "required": ["granularity", "ids"],
+      "properties": {
+        "granularity": { "type": "string" },
+        "ids": { "type": "array", "items": { "type": "string" } },
+        "anchorId": { "type": "string" }
+      }
+    },
+    "hover": {
+      "type": "object", "additionalProperties": false, "required": ["channel", "ids"],
+      "properties": { "channel": { "type": "string" }, "ids": { "type": "array", "items": { "type": "string" } } }
+    }
+  }
+}

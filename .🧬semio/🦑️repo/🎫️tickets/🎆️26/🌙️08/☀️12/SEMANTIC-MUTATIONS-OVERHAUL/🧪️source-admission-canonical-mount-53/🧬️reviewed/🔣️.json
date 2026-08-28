@@ -1,0 +1,983 @@
+{
+  "cases": [
+    {
+      "id": "empty-null-scope-is-a-valid-empty-result",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": []
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "empty-string-scope-keeps-result-schema-valid",
+      "input": {
+        "scope": "",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": []
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": "",
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [
+          {
+            "code": "invalid-scope",
+            "path": "$",
+            "message": "Scope is not a safe repository-relative slash path"
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-string-scope-with-candidate-keeps-result-schema-valid",
+      "input": {
+        "scope": "",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "safe/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "nonignored-untracked"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": "",
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [
+          {
+            "code": "invalid-scope",
+            "path": "$",
+            "message": "Scope is not a safe repository-relative slash path"
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-cancellation-phase-still-rejects",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [],
+        "cancelledDuring": ""
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [
+          {
+            "code": "cancelled",
+            "path": "$",
+            "message": "Cancellation prevents a partial-success admission result"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unsafe-ancestor-cannot-claim-observed-file",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "safe/link/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "unsafeAncestor": true
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "safe/link/leaf.rs",
+            "observedKind": "unobserved",
+            "worktreeMode": null,
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "generatorOutputs": []
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "unsafe-ancestor",
+            "path": "safe/link/leaf.rs",
+            "message": "A symlink or non-directory ancestor prevented observation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-safe-and-unsafe-physical-claims-do-not-select-file",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "safe/link/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "unsafeAncestor": false
+          },
+          {
+            "sourcePath": "safe/link/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "explicit-ticket"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": true
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "safe/link/leaf.rs",
+            "observedKind": "unobserved",
+            "worktreeMode": null,
+            "explicitDirectory": false,
+            "origins": [
+              "tracked",
+              "explicit-ticket"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "generatorOutputs": []
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "unsafe-ancestor",
+            "path": "safe/link/leaf.rs",
+            "message": "A symlink or non-directory ancestor prevented observation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "same-generator-contract-root-conflicting-inclusion-rejects",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "tracked"
+          },
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "ignored-generator"
+            ],
+            "indexEntries": [],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              },
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "tracked"
+              }
+            ]
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "contradictory-generator-output",
+            "path": "generated",
+            "message": "One generator contract/root identity declares conflicting inclusion policies"
+          }
+        ]
+      }
+    },
+    {
+      "id": "identical-generator-tuples-merge-once",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          },
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "ignored-generator"
+            ],
+            "indexEntries": [],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              }
+            ]
+          }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "different-generator-contracts-preserve-distinct-authorities",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "z-generator",
+            "rootPath": "generated",
+            "inclusion": "tracked"
+          },
+          {
+            "contractId": "a-generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [
+          {
+            "sourcePath": "generated/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "ignored-generator"
+            ],
+            "indexEntries": [],
+            "generatorOutputs": [
+              {
+                "contractId": "a-generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              },
+              {
+                "contractId": "z-generator",
+                "rootPath": "generated",
+                "inclusion": "tracked"
+              }
+            ]
+          }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "physically-distinct-unicode-generator-roots-remain-distinct",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated/café",
+            "inclusion": "tracked"
+          },
+          {
+            "contractId": "generator",
+            "rootPath": "generated/café",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "ignored-generator"
+            ],
+            "indexEntries": [],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated/café",
+                "inclusion": "ignored"
+              },
+              {
+                "contractId": "generator",
+                "rootPath": "generated/café",
+                "inclusion": "tracked"
+              }
+            ]
+          }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "unicode-physical-source-distinction-keeps-all-four-origins",
+      "input": {
+        "scope": "generated/café",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100755",
+            "explicitDirectory": false,
+            "origins": [
+              "explicit-ticket",
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ],
+            "unsafeAncestor": false
+          },
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "unsafeAncestor": false
+          },
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100755",
+            "explicitDirectory": false,
+            "origins": [
+              "nonignored-untracked"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          },
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "nonignored-untracked",
+              "explicit-ticket"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": "generated/café",
+        "status": "complete",
+        "observations": [
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked",
+              "nonignored-untracked",
+              "ignored-generator",
+              "explicit-ticket"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              }
+            ]
+          },
+          {
+            "sourcePath": "generated/café/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100755",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked",
+              "nonignored-untracked",
+              "ignored-generator",
+              "explicit-ticket"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              }
+            ]
+          }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "contradictory-stage-zero-keeps-both-exact-index-identities",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "conflict/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "conflict/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              }
+            ],
+            "generatorOutputs": []
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "contradictory-index-entry",
+            "path": "conflict/leaf.rs",
+            "message": "Duplicate rows disagree on an exact Git index stage identity"
+          }
+        ]
+      }
+    },
+    {
+      "id": "all-index-stages-and-all-origins-survive-rejection",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/conflict.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "explicit-ticket",
+              "tracked",
+              "nonignored-untracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 3,
+                "mode": "100644",
+                "objectId": "dddddddddddddddddddddddddddddddddddddddd"
+              },
+              {
+                "stage": 2,
+                "mode": "100644",
+                "objectId": "cccccccccccccccccccccccccccccccccccccccc"
+              },
+              {
+                "stage": 1,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              }
+            ],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "generated/conflict.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked",
+              "nonignored-untracked",
+              "ignored-generator",
+              "explicit-ticket"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+              },
+              {
+                "stage": 1,
+                "mode": "100644",
+                "objectId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+              },
+              {
+                "stage": 2,
+                "mode": "100644",
+                "objectId": "cccccccccccccccccccccccccccccccccccccccc"
+              },
+              {
+                "stage": 3,
+                "mode": "100644",
+                "objectId": "dddddddddddddddddddddddddddddddddddddddd"
+              }
+            ],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              }
+            ]
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "conflicted-index",
+            "path": "generated/conflict.rs",
+            "message": "Nonzero Git index stages prevent unambiguous source admission"
+          }
+        ]
+      }
+    },
+    {
+      "id": "physical-conflict-keeps-all-provenance-without-kind-selection",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [
+          {
+            "contractId": "generator",
+            "rootPath": "generated",
+            "inclusion": "ignored"
+          }
+        ],
+        "candidates": [
+          {
+            "sourcePath": "generated/conflict.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "cccccccccccccccccccccccccccccccccccccccc"
+              }
+            ],
+            "unsafeAncestor": false
+          },
+          {
+            "sourcePath": "generated/conflict.rs",
+            "observedKind": "symlink",
+            "worktreeMode": "120000",
+            "explicitDirectory": false,
+            "origins": [
+              "explicit-ticket",
+              "nonignored-untracked"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "rejected",
+        "observations": [
+          {
+            "sourcePath": "generated/conflict.rs",
+            "observedKind": "unobserved",
+            "worktreeMode": null,
+            "explicitDirectory": false,
+            "origins": [
+              "tracked",
+              "nonignored-untracked",
+              "ignored-generator",
+              "explicit-ticket"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "100644",
+                "objectId": "cccccccccccccccccccccccccccccccccccccccc"
+              }
+            ],
+            "generatorOutputs": [
+              {
+                "contractId": "generator",
+                "rootPath": "generated",
+                "inclusion": "ignored"
+              }
+            ]
+          }
+        ],
+        "diagnostics": [
+          {
+            "code": "contradictory-physical-observation",
+            "path": "generated/conflict.rs",
+            "message": "Duplicate rows disagree on observed physical kind, mode, or directory status"
+          }
+        ]
+      }
+    },
+    {
+      "id": "safe-symlink-leaf-remains-an-observed-link",
+      "input": {
+        "scope": null,
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "safe/link",
+            "observedKind": "symlink",
+            "worktreeMode": "120000",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "120000",
+                "objectId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            ],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": null,
+        "status": "complete",
+        "observations": [
+          {
+            "sourcePath": "safe/link",
+            "observedKind": "symlink",
+            "worktreeMode": "120000",
+            "explicitDirectory": false,
+            "origins": [
+              "tracked"
+            ],
+            "indexEntries": [
+              {
+                "stage": 0,
+                "mode": "120000",
+                "objectId": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+              }
+            ],
+            "generatorOutputs": []
+          }
+        ],
+        "diagnostics": []
+      }
+    },
+    {
+      "id": "invalid-traversal-scope-returns-rejection-not-exception",
+      "input": {
+        "scope": "../outside",
+        "opaquePrefixes": [],
+        "generatorOutputRoots": [],
+        "candidates": [
+          {
+            "sourcePath": "safe/leaf.rs",
+            "observedKind": "file",
+            "worktreeMode": "100644",
+            "explicitDirectory": false,
+            "origins": [
+              "nonignored-untracked"
+            ],
+            "indexEntries": [],
+            "unsafeAncestor": false
+          }
+        ]
+      },
+      "expected": {
+        "schemaVersion": 1,
+        "scope": "../outside",
+        "status": "rejected",
+        "observations": [],
+        "diagnostics": [
+          {
+            "code": "invalid-scope",
+            "path": "../outside",
+            "message": "Scope is not a safe repository-relative slash path"
+          }
+        ]
+      }
+    }
+  ],
+  "schemaRejections": [
+    {
+      "id": "unsafe-ancestor-must-be-boolean",
+      "candidate": {
+        "sourcePath": "safe/leaf.rs",
+        "observedKind": "file",
+        "worktreeMode": "100644",
+        "explicitDirectory": false,
+        "origins": [
+          "nonignored-untracked"
+        ],
+        "indexEntries": [],
+        "unsafeAncestor": "true"
+      },
+      "expectedKeyword": "type"
+    },
+    {
+      "id": "claimed-physical-kind-cannot-be-unknown",
+      "candidate": {
+        "sourcePath": "safe/leaf.rs",
+        "observedKind": "device",
+        "worktreeMode": "100644",
+        "explicitDirectory": false,
+        "origins": [
+          "nonignored-untracked"
+        ],
+        "indexEntries": [],
+        "unsafeAncestor": false
+      },
+      "expectedKeyword": "enum"
+    }
+  ]
+}

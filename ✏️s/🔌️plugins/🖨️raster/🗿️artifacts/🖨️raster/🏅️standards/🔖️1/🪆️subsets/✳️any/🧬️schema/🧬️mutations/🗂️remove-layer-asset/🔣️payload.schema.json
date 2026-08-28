@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveLayerAsset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assetId"
+  ],
+  "properties": {
+    "assetId": {
+      "type": "string"
+    }
+  }
+}

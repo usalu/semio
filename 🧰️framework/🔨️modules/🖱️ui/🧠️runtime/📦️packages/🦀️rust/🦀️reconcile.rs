@@ -19,6 +19,10 @@ use std::collections::HashSet;
 use std::mem::{size_of, take};
 use std::sync::{LazyLock, Mutex};
 
+#[path = "../../📤️output/🦀️component.rs"]
+mod output;
+pub use output::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputs, SurfaceReconcileOutputTransfer};
+
 //#region 🔖️Identity
 
 /// 🔑️ A node's reconciliation identity: which parent it hangs under (`None` only for the root, which
@@ -47,7 +51,7 @@ impl<T, const N: usize> Default for SurfaceFixedVec<T, N> {
 
 impl<T, const N: usize> SurfaceFixedVec<T, N> {
     fn try_push(&mut self, value: T) -> Result<(), T> {
-        if self.len == N {
+        if self.len == N || self.len == self.entries.len() {
             return Err(value);
         }
         self.entries[self.len] = Some(value);
@@ -94,7 +98,7 @@ impl<T, const N: usize> SurfaceFixedVec<T, N> {
     }
 
     fn take_all(&mut self) -> Self {
-        take(self)
+        std::mem::replace(self, Self { entries: Box::new([]), len: 0 })
     }
 }
 
@@ -126,6 +130,12 @@ struct SurfaceLinearMap<K, V, const N: usize> {
 impl<K, V, const N: usize> Default for SurfaceLinearMap<K, V, N> {
     fn default() -> Self {
         Self { entries: SurfaceFixedVec::default() }
+    }
+}
+
+impl<K, V, const N: usize> SurfaceLinearMap<K, V, N> {
+    fn take_all(&mut self) -> Self {
+        Self { entries: self.entries.take_all() }
     }
 }
 
@@ -248,11 +258,13 @@ pub struct SurfaceReconciler {
     surface: ui_contract::SurfaceId,
     revision: ui_contract::UiRevision,
     allocator: ui_contract::UiNodeIdAllocator,
-    retained: SurfaceLinearMap<ui_contract::UiNodeId, ui_contract::UiNodeRecord, SURFACE_RECONCILE_FIXED_NODES>,
+    document: Option<ui_contract::UiDocumentLease>,
+    assembly: ui_contract::UiDocumentAssembly,
+    ordinals: SurfaceLinearMap<ui_contract::UiNodeId, usize, SURFACE_RECONCILE_FIXED_NODES>,
     key_index: SurfaceLinearMap<NodeIdentity, ui_contract::UiNodeId, SURFACE_RECONCILE_FIXED_NODES>,
     root: Option<ui_contract::UiNodeId>,
     retire_scalar: u8,
-    persistent_credit: Option<SurfaceReconcileCredit>,
+    seal_phase: u8,
     handback: Option<SurfaceReconcileHandbackReservation>,
     retirement_armed: bool,
 }
@@ -278,11 +290,13 @@ impl SurfaceReconciler {
             surface,
             revision: ui_contract::UiRevision::default(),
             allocator: ui_contract::UiNodeIdAllocator::default(),
-            retained: SurfaceLinearMap::default(),
+            document: None,
+            assembly: ui_contract::UiDocumentAssembly::default(),
+            ordinals: SurfaceLinearMap::default(),
             key_index: SurfaceLinearMap::default(),
             root: None,
             retire_scalar: 0,
-            persistent_credit: None,
+            seal_phase: 0,
             handback: None,
             retirement_armed: true,
         }
@@ -296,24 +310,10 @@ impl SurfaceReconciler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub fn reconcile(&mut self, tree: &crate::ComponentTree) -> Option<ui_contract::UiPatch> {
-        let mut ops = ui_contract::UiPatchOps::default();
-        let previous_root = self.root;
-        let new_root_id = self.diff_node(None, &tree.root, &mut ops);
-
-        if previous_root != Some(new_root_id) {
-            if let Some(stale_root) = previous_root {
-                self.remove_subtree(None, stale_root, &mut ops);
-            }
-            ops.try_push(ui_contract::UiPatchOp::SetRoot { id: new_root_id }).expect("test patch remains bounded");
-            self.root = Some(new_root_id);
-        }
-
-        if ops.is_empty() {
-            return None;
-        }
-        let base_revision = self.revision;
-        self.revision = self.revision.try_next().expect("test revision fixture remains below u64::MAX");
-        Some(ui_contract::UiPatch { surface: self.surface.clone(), base_revision, revision: self.revision, ops })
+        let mut oracle = SurfaceReconcileOracle::from_current(self);
+        let patch = oracle.reconcile(tree);
+        if patch.is_some() { self.install_oracle(oracle); }
+        patch
     }
 
     /// 📸️ The complete current state as a fresh [`ui_contract::UiSnapshot`] — what a new subscriber
@@ -324,8 +324,11 @@ impl SurfaceReconciler {
     #[cfg(test)]
     pub fn snapshot(&self) -> ui_contract::UiSnapshot {
         let mut nodes = ui_contract::UiSnapshotNodes::default();
-        for record in self.retained.values() {
-            nodes.try_push(record.credited_clone().expect("test snapshot alias credit")).expect("test snapshot remains bounded");
+        if let Some(document) = self.document.as_ref() {
+            let read = document.try_read().expect("cold snapshot owns readable canonical root");
+            for ordinal in 0..read.len() {
+                nodes.try_push(read.node_at(ordinal).unwrap().credited_clone().expect("test snapshot alias credit")).expect("test snapshot remains bounded");
+            }
         }
         ui_contract::UiSnapshot { surface: self.surface.clone(), revision: self.revision, root: self.root.unwrap_or_default(), nodes, layout_epoch: 0 }
     }
@@ -340,6 +343,58 @@ impl SurfaceReconciler {
         &self.surface
     }
 
+    /// 📖️ Captures the canonical root without a second payload tree or reservation.
+    pub fn capture_document(&self, target: &mut Option<ui_contract::UiDocumentLease>, admitted_bytes: usize) -> Result<bool, ui_contract::UiDocumentLeaseError> {
+        match self.document.as_ref() {
+            Some(document) => document.try_alias_into(target, admitted_bytes),
+            None => Ok(false),
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn transaction_reader(&self) -> Self {
+        let mut reader = Self::from_surface_id(self.surface.clone());
+        reader.revision = self.revision;
+        reader.allocator = self.allocator.clone();
+        reader.root = self.root;
+        reader.seal_phase = self.seal_phase;
+        self.capture_document(&mut reader.document, SURFACE_RECONCILE_PAGE_BYTES).expect("test transaction captures the original canonical root");
+        if let Some((source, captured)) = self.document.as_ref().zip(reader.document.as_ref()) { assert!(source.same_root(captured)); }
+        for (id, ordinal) in self.ordinals.entries.iter() { reader.ordinals.try_insert(*id, *ordinal).unwrap(); }
+        for (identity, id) in self.key_index.entries.iter() { reader.key_index.try_insert(identity.clone(), *id).unwrap(); }
+        reader
+    }
+
+    #[cfg(test)]
+    pub(crate) fn close_transaction_oracle(&mut self) {
+        while !self.retire_one() {}
+    }
+
+    fn read_record(&self, id: ui_contract::UiNodeId) -> Result<Option<SurfaceRecordRead<'_>>, ui_contract::UiDocumentLeaseError> {
+        let Some(ordinal) = self.ordinals.get(&id).copied() else { return Ok(None); };
+        let document = self.document.as_ref().ok_or(ui_contract::UiDocumentLeaseError::StaleHandle)?;
+        let read = document.try_read()?;
+        read.exact_node(ordinal, id)?;
+        Ok(Some(SurfaceRecordRead { read, ordinal, id }))
+    }
+
+    fn seal_step(&mut self, usage: SurfaceReconcileUsage, output: &mut Option<ui_contract::UiResidentPermit>, has_output: bool) -> Result<bool, ui_contract::UiDocumentAssemblyError> {
+        if self.document.is_some() { return Ok(true); }
+        let progress = match self.seal_phase {
+            0 => {
+                let fixed = size_of::<Self>() + std::mem::size_of_val(self.ordinals.entries.entries.as_ref()) + std::mem::size_of_val(self.key_index.entries.entries.as_ref()) + ui_contract::UiDocumentAssembly::required_open_bytes();
+                let allocated = self.assembly.allocated_bytes()?;
+                let bytes = usage.bytes.checked_add(fixed).and_then(|bytes| bytes.checked_add(allocated)).unwrap_or(usize::MAX);
+                self.assembly.shrink_resident(ui_contract::UiResidentLimits { items: usage.items.max(self.ordinals.len()).max(1), bytes }, 1, SURFACE_RECONCILE_PAGE_BYTES)?
+            }
+            1 if has_output => self.assembly.split_resident_output(output, 1, SURFACE_RECONCILE_PAGE_BYTES)?,
+            1 => { self.seal_phase = 2; return Ok(false); }
+            _ => self.assembly.finish_into(&mut self.document, self.revision, 1, SURFACE_RECONCILE_PAGE_BYTES)?,
+        };
+        if progress.complete { self.seal_phase += 1; }
+        Ok(self.document.is_some())
+    }
+
     /// 🔄️ Forces the next [`Self::reconcile`] to emit a full re-send — the recovery path for the
     /// existing `patch-rejected` wire event. Drops every retained node and resets the assumed receiver
     /// revision to zero (mirroring the fresh, empty document a rejection leaves the receiver at); the
@@ -349,16 +404,24 @@ impl SurfaceReconciler {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     #[cfg(test)]
     pub fn mark_rejected(&mut self) {
-        self.retained.clear();
+        if let Some(document) = self.document.as_mut() { while !document.close_read_step_with_grant(1, 4096).unwrap().complete {} }
+        self.document = None;
+        self.ordinals.clear();
         self.key_index.clear();
         self.root = None;
         self.revision = ui_contract::UiRevision::default();
     }
 
     fn retire_one(&mut self) -> bool {
-        let retained_id = self.retained.keys().next().copied();
-        if let Some(id) = retained_id {
-            self.retained.remove(&id);
+        if let Some(document) = self.document.as_mut() {
+            if document.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("canonical read retirement preserves exact fault authority").complete { self.document = None; }
+            return false;
+        }
+        if !self.assembly.terminal_is_empty() {
+            self.assembly.close_step(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("canonical assembly retirement preserves exact fault authority");
+            return false;
+        }
+        if self.ordinals.take_first().is_some() {
             return false;
         }
         let indexed_identity = self.key_index.keys().next().cloned();
@@ -371,11 +434,7 @@ impl SurfaceReconciler {
             1 => self.surface.0 = ui_contract::UiText::default(),
             2 => self.revision = ui_contract::UiRevision::default(),
             3 => self.allocator = ui_contract::UiNodeIdAllocator::default(),
-            4 => {
-                if let Some(credit) = self.persistent_credit.take() {
-                    release_surface_reconcile(credit);
-                }
-            }
+            4 => self.seal_phase = 0,
             5 => {
                 if let Some(handback) = self.handback.take() {
                     release_surface_reconcile_handback(handback);
@@ -394,10 +453,7 @@ impl Drop for SurfaceReconciler {
             return;
         }
         self.retirement_armed = false;
-        if self.retained.is_empty() && self.key_index.is_empty() {
-            if let Some(credit) = self.persistent_credit.take() {
-                release_surface_reconcile(credit);
-            }
+        if self.document.is_none() && self.assembly.terminal_is_empty() && self.ordinals.is_empty() && self.key_index.is_empty() {
             if let Some(handback) = self.handback.take() {
                 release_surface_reconcile_handback(handback);
             }
@@ -408,23 +464,25 @@ impl Drop for SurfaceReconciler {
             surface: take(&mut self.surface),
             revision: take(&mut self.revision),
             allocator: take(&mut self.allocator),
-            retained: take(&mut self.retained),
-            key_index: take(&mut self.key_index),
+            document: self.document.take(),
+            assembly: take(&mut self.assembly),
+            ordinals: self.ordinals.take_all(),
+            key_index: self.key_index.take_all(),
             root: self.root.take(),
             retire_scalar: self.retire_scalar,
-            persistent_credit: self.persistent_credit.take(),
+            seal_phase: self.seal_phase,
             handback: None,
             retirement_armed: false,
         };
         let state = Box::new(SurfaceReconcileRetained {
+            output_handback: None,
             generation,
             phase: SurfaceReconcileJobPhase::Closing,
             current: Some(owner),
             source: None,
             cursor: None,
             candidate: None,
-            patch: None,
-            published_surface: None,
+            patch: ui_contract::UiPendingPatch::default(),
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
             usage: SurfaceReconcileUsage::default(),
@@ -433,6 +491,49 @@ impl Drop for SurfaceReconciler {
         });
         handback_surface_reconcile(state);
     }
+}
+
+struct SurfaceRecordRead<'a> {
+    read: ui_contract::UiDocumentRead<'a>,
+    ordinal: usize,
+    id: ui_contract::UiNodeId,
+}
+
+#[cfg(test)]
+impl SurfaceReconciler {
+    fn install_oracle(&mut self, mut oracle: SurfaceReconcileOracle) {
+        if let Some(document) = self.document.as_mut() { while !document.close_read_step_with_grant(1, 4096).unwrap().complete {} }
+        self.document = None;
+        self.ordinals.clear();
+        let mut credit = reserve_surface_reconcile(SurfaceReconcileLimits { max_bytes: 1024 * 1024, ..Default::default() });
+        let mut surface = Some(self.surface.clone());
+        let mut assembly = ui_contract::UiDocumentAssembly::default();
+        assert!(assembly.open_with_permit(&mut credit, &mut surface, oracle.revision.0.checked_add(1).unwrap(), oracle.revision, oracle.root, 0, 1, SURFACE_RECONCILE_PAGE_BYTES).unwrap().progressed);
+        while let Some((id, record)) = oracle.retained.take_first() {
+            let mut source = Some(record);
+            let ordinal = self.ordinals.len();
+            while source.is_some() { assembly.place_one(&mut source, 1, SURFACE_RECONCILE_PAGE_BYTES).unwrap(); }
+            self.ordinals.try_insert(id, ordinal).unwrap();
+        }
+        while !assembly.finish_into(&mut self.document, oracle.revision, 1, SURFACE_RECONCILE_PAGE_BYTES).unwrap().complete {}
+        self.root = oracle.root;
+        self.revision = oracle.revision;
+        self.allocator = oracle.allocator;
+        self.key_index = oracle.key_index;
+    }
+
+    fn install_fixture_record(&mut self, record: ui_contract::UiNodeRecord) {
+        let mut oracle = SurfaceReconcileOracle::from_current(self);
+        oracle.root = Some(record.id);
+        oracle.key_index.try_insert((None, record.key.clone()), record.id).unwrap();
+        oracle.retained.try_insert(record.id, record).unwrap();
+        self.install_oracle(oracle);
+    }
+}
+
+impl std::ops::Deref for SurfaceRecordRead<'_> {
+    type Target = ui_contract::UiNodeRecord;
+    fn deref(&self) -> &Self::Target { self.read.exact_node(self.ordinal, self.id).expect("held canonical identity was checked before exposing the read") }
 }
 
 impl<K, V, const N: usize> SurfaceLinearMap<K, V, N> {
@@ -520,6 +621,7 @@ impl SurfaceReconcileUsage {
 /// 🚫️ Typed terminal reason retaining the exact in-progress authority.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SurfaceReconcileFault {
+    PublicationAuthority(&'static str),
     AliasCapacity,
     CounterOverflow,
     DuplicateSiblingKey,
@@ -547,11 +649,62 @@ struct RemovalFrame {
     next_child: usize,
 }
 
+enum RecordOwnedCopy {
+    Bindings(ui_contract::UiBindingsCopy),
+    Component(ui_contract::UiComponentCopy),
+    Comparison(ExistingComponentComparison),
+    Changed(bool),
+}
+
+#[derive(Default)]
+struct ExistingComponentComparison {
+    cursor: ui_contract::UiComponentComparisonCursor,
+    lease: Option<ui_contract::UiDocumentLease>,
+    changed: Option<bool>,
+}
+
+impl ExistingComponentComparison {
+    fn close_step(&mut self) -> bool {
+        self.cursor.release_reads();
+        if let Some(lease) = self.lease.as_mut() {
+            if lease.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).is_ok_and(|step| step.complete) { self.lease = None; }
+            return false;
+        }
+        true
+    }
+}
+
+impl RecordOwnedCopy {
+    fn bindings(&self) -> Option<&ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
+    fn bindings_mut(&mut self) -> Option<&mut ui_contract::UiBindingsCopy> { if let Self::Bindings(value) = self { Some(value) } else { None } }
+    fn component(&self) -> Option<&ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
+    fn component_mut(&mut self) -> Option<&mut ui_contract::UiComponentCopy> { if let Self::Component(value) = self { Some(value) } else { None } }
+    fn close_step(&mut self) -> bool {
+        match self {
+            Self::Bindings(value) => value.close_step(1, SURFACE_RECONCILE_PAGE_BYTES).is_ok_and(|step| step.complete),
+            Self::Component(value) => value.close_step(1, SURFACE_COMPONENT_COPY_WORK_BYTES).is_ok_and(|step| step.complete),
+            Self::Comparison(value) => value.close_step(),
+            Self::Changed(_) => true,
+        }
+    }
+}
+
 struct RecordDiffCursor {
     id: ui_contract::UiNodeId,
-    record: ui_contract::UiNodeRecord,
+    record: RecordSource,
     field: u8,
     fresh: Option<FreshRecordClone>,
+    owned_copy: Option<RecordOwnedCopy>,
+}
+
+struct RecordSource(Option<ui_contract::UiNodeRecord>);
+impl From<ui_contract::UiNodeRecord> for RecordSource { fn from(record: ui_contract::UiNodeRecord) -> Self { Self(Some(record)) } }
+impl std::ops::Deref for RecordSource {
+    type Target = ui_contract::UiNodeRecord;
+    fn deref(&self) -> &Self::Target { self.0.as_ref().expect("unplaced record remains in its structural source slot") }
+}
+impl std::ops::DerefMut for RecordSource {
+    fn deref_mut(&mut self) -> &mut Self::Target { self.0.as_mut().expect("unplaced record remains in its structural source slot") }
 }
 
 struct FreshRecordClone {
@@ -638,6 +791,11 @@ impl Default for SurfaceSemanticCensusCursor {
 }
 
 impl SurfaceSemanticCensusCursor {
+    /// 📏️ UiText storage is inline in the already-counted enclosing payload; traversal remains work.
+    fn inline_text(&self, _value: &ui_contract::UiText) -> SurfaceSemanticUsage {
+        SurfaceSemanticUsage { items: 1, bytes: 0 }
+    }
+
     fn owner(&mut self, bytes: usize) -> SurfaceSemanticUsage {
         self.string_byte = bytes.checked_mul(SURFACE_RECONCILE_SEMANTIC_COPIES).unwrap_or(usize::MAX);
         SurfaceSemanticUsage { items: SURFACE_RECONCILE_SEMANTIC_COPIES, bytes: 0 }
@@ -726,8 +884,8 @@ impl SurfaceSemanticCensusCursor {
             return SurfaceSemanticCensusStep::Complete;
         };
         let usage = match self.action {
-            0 => self.owner(binding.action.scope.capacity()),
-            1 => self.owner(binding.action.name.capacity()),
+            0 => self.inline_text(&binding.action.scope),
+            1 => self.inline_text(&binding.action.name),
             2 => {
                 if let Some(args) = &binding.args {
                     if let Err(fault) = self.push_value(args) {
@@ -736,7 +894,7 @@ impl SurfaceSemanticCensusCursor {
                 }
                 SurfaceSemanticUsage::default()
             }
-            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
+            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
             _ => {
                 self.binding += 1;
                 self.action = 0;
@@ -749,8 +907,8 @@ impl SurfaceSemanticCensusCursor {
 
     fn binding_step(&mut self, binding: &ui_contract::ActionBinding) -> SurfaceSemanticCensusStep {
         let usage = match self.action {
-            0 => self.owner(binding.action.scope.capacity()),
-            1 => self.owner(binding.action.name.capacity()),
+            0 => self.inline_text(&binding.action.scope),
+            1 => self.inline_text(&binding.action.name),
             2 => {
                 if let Some(args) = &binding.args {
                     if let Err(fault) = self.push_value(args) {
@@ -759,7 +917,7 @@ impl SurfaceSemanticCensusCursor {
                 }
                 SurfaceSemanticUsage::default()
             }
-            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
+            3 => binding.capability.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
             _ => {
                 self.action = 0;
                 return SurfaceSemanticCensusStep::Complete;
@@ -775,12 +933,12 @@ impl SurfaceSemanticCensusCursor {
         match component {
             Container(props) => {
                 let usage = match self.container {
-                    0 => props.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())),
-                    1 => props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
-                    2 => props.error.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
-                    3 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.title.0.capacity())),
-                    4 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.hint.0.capacity())),
-                    5 => props.drop_overlay.as_ref().and_then(|value| value.accept.as_ref()).map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
+                    0 => props.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
+                    1 => props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    2 => props.error.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    3 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.title.0)),
+                    4 => props.drop_overlay.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.hint.0)),
+                    5 => props.drop_overlay.as_ref().and_then(|value| value.accept.as_ref()).map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -789,7 +947,7 @@ impl SurfaceSemanticCensusCursor {
             Text(props) => match self.container {
                 0 => {
                     self.container = 1;
-                    progress(self.owner(props.value.0.capacity()))
+                    progress(self.inline_text(&props.value.0))
                 }
                 1 => {
                     self.container = 2;
@@ -799,11 +957,11 @@ impl SurfaceSemanticCensusCursor {
                     let Some((key, value)) = props.data_attributes.as_ref().and_then(|values| values.get(self.entry)) else { return SurfaceSemanticCensusStep::Complete };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.owner(key.capacity())
+                        self.inline_text(&key)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.owner(value.capacity())
+                        self.inline_text(&value)
                     };
                     progress(usage)
                 }
@@ -811,8 +969,8 @@ impl SurfaceSemanticCensusCursor {
             },
             Button(props) => {
                 let usage = match self.container {
-                    0 => self.owner(props.icon.capacity()),
-                    1 => self.owner(props.label.0.capacity()),
+                    0 => self.inline_text(&props.icon),
+                    1 => self.inline_text(&props.label.0),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -821,10 +979,10 @@ impl SurfaceSemanticCensusCursor {
             Separator(_) | NumberStepper(_) => SurfaceSemanticCensusStep::Complete,
             Input(props) => {
                 let usage = match self.container {
-                    0 => self.owner(props.value.capacity()),
-                    1 => props.placeholder.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())),
-                    2 => props.commit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
-                    3 => props.accept.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())),
+                    0 => self.inline_text(&props.value),
+                    1 => props.placeholder.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
+                    2 => props.commit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
+                    3 => props.accept.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -833,7 +991,7 @@ impl SurfaceSemanticCensusCursor {
             Select(props) => match self.container {
                 0 => {
                     self.container = 1;
-                    progress(self.owner(props.value.capacity()))
+                    progress(self.inline_text(&props.value))
                 }
                 1 => {
                     self.container = 2;
@@ -846,24 +1004,24 @@ impl SurfaceSemanticCensusCursor {
                     };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.owner(item.value.capacity())
+                        self.inline_text(&item.value)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.owner(item.label.0.capacity())
+                        self.inline_text(&item.label.0)
                     };
                     progress(usage)
                 }
                 3 => {
                     self.container = 4;
-                    progress(props.placeholder.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())))
+                    progress(props.placeholder.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
                 }
                 _ => SurfaceSemanticCensusStep::Complete,
             },
             Toggle(props) => {
                 let usage = match self.container {
-                    0 => self.owner(props.icon.capacity()),
-                    1 => props.text.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())),
+                    0 => self.inline_text(&props.icon),
+                    1 => props.text.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -878,11 +1036,11 @@ impl SurfaceSemanticCensusCursor {
                     let Some(entry) = props.entries.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.owner(entry.label.0.capacity())
+                        self.inline_text(&entry.label.0)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.owner(entry.value.capacity())
+                        self.inline_text(&entry.value)
                     };
                     progress(usage)
                 }
@@ -891,7 +1049,7 @@ impl SurfaceSemanticCensusCursor {
             Slider(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(props.unit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())))
+                    progress(props.unit.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
@@ -899,15 +1057,15 @@ impl SurfaceSemanticCensusCursor {
             Ring(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(self.owner(props.orb_id.capacity()))
+                    progress(self.inline_text(&props.orb_id))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
             }
             IconSelect(props) => {
                 let usage = match self.container {
-                    0 => self.owner(props.value.capacity()),
-                    1 => self.owner(props.classifier_kind.capacity()),
+                    0 => self.inline_text(&props.value),
+                    1 => self.inline_text(&props.classifier_kind),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -916,7 +1074,7 @@ impl SurfaceSemanticCensusCursor {
             Tree(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(props.interaction_domain.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())))
+                    progress(props.interaction_domain.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
@@ -924,7 +1082,7 @@ impl SurfaceSemanticCensusCursor {
             TreeSection(props) => {
                 self.container += 1;
                 if self.container == 1 {
-                    progress(props.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())))
+                    progress(props.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
                 } else {
                     SurfaceSemanticCensusStep::Complete
                 }
@@ -932,15 +1090,15 @@ impl SurfaceSemanticCensusCursor {
             TreeItem(props) => match self.container {
                 0 => {
                     self.container = 1;
-                    progress(self.owner(props.label.0.capacity()))
+                    progress(self.inline_text(&props.label.0))
                 }
                 1 => {
                     self.container = 2;
-                    progress(props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())))
+                    progress(props.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
                 }
                 2 => {
                     self.container = 3;
-                    progress(props.icon.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())))
+                    progress(props.icon.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
                 }
                 3 => {
                     self.container = 4;
@@ -954,11 +1112,11 @@ impl SurfaceSemanticCensusCursor {
                     };
                     let usage = if self.data_attribute == 0 {
                         self.data_attribute = 1;
-                        self.owner(key.capacity())
+                        self.inline_text(&key)
                     } else {
                         self.data_attribute = 0;
                         self.entry += 1;
-                        self.owner(value.capacity())
+                        self.inline_text(&value)
                     };
                     progress(usage)
                 }
@@ -969,8 +1127,8 @@ impl SurfaceSemanticCensusCursor {
                 6 => {
                     let Some(action) = props.row_actions.get(self.entry) else { return SurfaceSemanticCensusStep::Complete };
                     let step = match self.data_attribute {
-                        0 => progress(self.owner(action.icon.capacity())),
-                        1 => progress(action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity()))),
+                        0 => progress(self.inline_text(&action.icon)),
+                        1 => progress(action.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0))),
                         _ => self.binding_step(&action.action),
                     };
                     if matches!(step, SurfaceSemanticCensusStep::Complete) {
@@ -985,8 +1143,8 @@ impl SurfaceSemanticCensusCursor {
             },
             Image(props) => {
                 let usage = match self.container {
-                    0 => self.owner(props.src.capacity()),
-                    1 => props.alt.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())),
+                    0 => self.inline_text(&props.src),
+                    1 => props.alt.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)),
                     _ => return SurfaceSemanticCensusStep::Complete,
                 };
                 self.container += 1;
@@ -995,7 +1153,7 @@ impl SurfaceSemanticCensusCursor {
             Surface(props) => match self.container {
                 0 => {
                     self.container = 1;
-                    progress(self.owner(props.doc_schema.capacity()))
+                    progress(self.inline_text(&props.doc_schema))
                 }
                 1 => {
                     self.container = 2;
@@ -1011,7 +1169,7 @@ impl SurfaceSemanticCensusCursor {
             Extension(props) => match self.container {
                 0 => {
                     self.container = 1;
-                    progress(self.owner(props.extension.capacity()))
+                    progress(self.inline_text(&props.extension))
                 }
                 1 => {
                     self.container = 2;
@@ -1042,7 +1200,7 @@ impl SurfaceSemanticCensusCursor {
             }
             1 => {
                 self.field = 2;
-                SurfaceSemanticCensusStep::Progress(self.owner(node.key.capacity()))
+                SurfaceSemanticCensusStep::Progress(self.inline_text(&node.key))
             }
             2 => match self.component_step(&node.component) {
                 SurfaceSemanticCensusStep::Complete => {
@@ -1058,15 +1216,15 @@ impl SurfaceSemanticCensusCursor {
             },
             3 => {
                 self.field = 4;
-                SurfaceSemanticCensusStep::Progress(node.accessibility.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())))
+                SurfaceSemanticCensusStep::Progress(node.accessibility.label.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
             }
             4 => {
                 self.field = 5;
-                SurfaceSemanticCensusStep::Progress(node.accessibility.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.0.capacity())))
+                SurfaceSemanticCensusStep::Progress(node.accessibility.description.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value.0)))
             }
             5 => {
                 self.field = 6;
-                SurfaceSemanticCensusStep::Progress(node.accessibility.shortcut.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.owner(value.capacity())))
+                SurfaceSemanticCensusStep::Progress(node.accessibility.shortcut.as_ref().map_or_else(SurfaceSemanticUsage::default, |value| self.inline_text(&value)))
             }
             6 => {
                 self.field = 7;
@@ -1081,7 +1239,7 @@ impl SurfaceSemanticCensusCursor {
             },
             8 => {
                 self.field = 9;
-                SurfaceSemanticCensusStep::Progress(node.menu.as_ref().map_or_else(SurfaceSemanticUsage::default, |menu| self.owner(menu.id.capacity())))
+                SurfaceSemanticCensusStep::Progress(node.menu.as_ref().map_or_else(SurfaceSemanticUsage::default, |menu| self.inline_text(&menu.id)))
             }
             9 => {
                 self.field = 10;
@@ -1120,12 +1278,18 @@ pub(crate) struct SurfaceReconcileCursor {
     allocate_index: usize,
     diff_index: usize,
     record_diff: Option<RecordDiffCursor>,
-    new_retained: SurfaceLinearMap<ui_contract::UiNodeId, ui_contract::UiNodeRecord, SURFACE_RECONCILE_FIXED_NODES>,
+    assembly: ui_contract::UiDocumentAssembly,
+    assembly_open: bool,
+    assembly_surface: Option<ui_contract::SurfaceId>,
+    assembly_credit: Option<ui_contract::UiResidentPermit>,
+    assembly_generation: u64,
+    new_ordinals: SurfaceLinearMap<ui_contract::UiNodeId, usize, SURFACE_RECONCILE_FIXED_NODES>,
     new_key_index: SurfaceLinearMap<NodeIdentity, ui_contract::UiNodeId, SURFACE_RECONCILE_FIXED_NODES>,
     remove_next: Option<ui_contract::UiNodeId>,
     removal: SurfaceFixedVec<RemovalFrame, SURFACE_RECONCILE_FIXED_NODES>,
     ops: ui_contract::UiPatchOps,
-    pending_op: Option<ui_contract::UiPatchOp>,
+    pending_op: ui_contract::UiPendingPatchOp,
+    root_patch_prepared: bool,
     limits: SurfaceReconcileLimits,
     usage: SurfaceReconcileUsage,
     held_node: Option<(Option<usize>, crate::TreeNode)>,
@@ -1135,6 +1299,10 @@ pub(crate) struct SurfaceReconcileCursor {
     retire_tree: SurfaceTreeRetireCursor,
     retire_fresh_field: u8,
     retire_record_field: u8,
+    #[cfg(test)]
+    fail_binding_step: bool,
+    #[cfg(test)]
+    fail_component_step: bool,
 }
 
 impl SurfaceReconcileCursor {
@@ -1143,6 +1311,11 @@ impl SurfaceReconcileCursor {
     }
 
     pub(crate) fn new_with_limits(tree: crate::ComponentTree, current: &SurfaceReconciler, limits: SurfaceReconcileLimits) -> Self {
+        let credit = reserve_surface_reconcile(limits);
+        Self::new_admitted(tree, current, limits, current.revision.0.checked_add(1).unwrap_or(0), credit)
+    }
+
+    fn new_admitted(tree: crate::ComponentTree, current: &SurfaceReconciler, limits: SurfaceReconcileLimits, generation: u64, credit: Option<ui_contract::UiResidentPermit>) -> Self {
         Self {
             stage: SurfaceReconcileStage::TraversePresentation,
             surface: current.surface.clone(),
@@ -1159,12 +1332,18 @@ impl SurfaceReconcileCursor {
             allocate_index: 0,
             diff_index: 0,
             record_diff: None,
-            new_retained: SurfaceLinearMap::default(),
+            assembly: ui_contract::UiDocumentAssembly::default(),
+            assembly_open: false,
+            assembly_surface: Some(current.surface.clone()),
+            assembly_credit: credit,
+            assembly_generation: generation,
+            new_ordinals: SurfaceLinearMap::default(),
             new_key_index: SurfaceLinearMap::default(),
             remove_next: None,
             removal: SurfaceFixedVec::default(),
             ops: ui_contract::UiPatchOps::default(),
-            pending_op: None,
+            pending_op: ui_contract::UiPendingPatchOp::default(),
+            root_patch_prepared: false,
             limits,
             usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: 0 },
             held_node: None,
@@ -1174,6 +1353,10 @@ impl SurfaceReconcileCursor {
             retire_tree: SurfaceTreeRetireCursor::default(),
             retire_fresh_field: 0,
             retire_record_field: 0,
+            #[cfg(test)]
+            fail_binding_step: false,
+            #[cfg(test)]
+            fail_component_step: false,
         }
     }
 
@@ -1185,6 +1368,13 @@ impl SurfaceReconcileCursor {
             let fault = SurfaceReconcileFault::StaleGeneration { expected: self.base_revision.0, actual: current.revision.0 };
             self.fault = Some(fault.clone());
             return SurfaceReconcileStep::Fault(fault);
+        }
+        if self.pending_op.get().is_some() {
+            let returning_component = self.record_diff.as_ref().is_some_and(|diff| diff.fresh.is_none() && diff.field == 0 && diff.owned_copy.as_ref().and_then(RecordOwnedCopy::component).is_some_and(ui_contract::UiComponentCopy::terminal_is_empty));
+            let step = if returning_component { self.advance_existing_component(current) } else { self.advance_pending_patch() };
+            #[cfg(test)]
+            if self.fail_component_step { panic!("injected retained component output callback unwind"); }
+            return step;
         }
         let step = match self.stage {
             SurfaceReconcileStage::TraversePresentation => {
@@ -1382,6 +1572,25 @@ impl SurfaceReconcileCursor {
                 }
             }
             SurfaceReconcileStage::DiffRecords => {
+                if self.record_diff.as_ref().is_some_and(|diff| diff.field >= 8 && diff.fresh.is_none()) { return self.advance_record_assembly(); }
+                if self.record_diff.as_ref().is_some_and(|diff| diff.fresh.is_none() && diff.field == 0) {
+                    let step = self.advance_existing_component(current);
+                    #[cfg(test)]
+                    if self.fail_component_step { panic!("injected existing component callback unwind"); }
+                    return step;
+                }
+                if self.record_diff.as_ref().is_some_and(|diff| diff.fresh.is_some() && diff.field == 1) {
+                    let step = Self::advance_fresh_component(self.record_diff.as_mut().expect("checked retained record"), &mut self.usage, self.limits, &mut self.fault);
+                    #[cfg(test)]
+                    if self.fail_component_step { panic!("injected component callback unwind"); }
+                    return step;
+                }
+                if self.record_diff.as_ref().is_some_and(|diff| diff.fresh.is_some() && diff.field == 5) {
+                    let step = Self::advance_fresh_bindings(self.record_diff.as_mut().expect("checked retained record"), &mut self.usage, self.limits, &mut self.fault);
+                    #[cfg(test)]
+                    if self.fail_binding_step { panic!("injected binding callback unwind"); }
+                    return step;
+                }
                 if let Some(mut diff) = self.record_diff.take() {
                     if let Some(fresh) = diff.fresh.as_mut() {
                         let copied = match diff.field {
@@ -1389,13 +1598,6 @@ impl SurfaceReconcileCursor {
                                 fresh.key = Some(diff.record.key.clone());
                                 true
                             }
-                            1 => match diff.record.component.credited_clone() {
-                                Some(component) => {
-                                    fresh.component = Some(component);
-                                    true
-                                }
-                                None => false,
-                            },
                             2 => {
                                 fresh.layout = Some(diff.record.layout.clone());
                                 true
@@ -1408,13 +1610,6 @@ impl SurfaceReconcileCursor {
                                 fresh.accessibility = Some(diff.record.accessibility.clone());
                                 true
                             }
-                            5 => match ui_contract::credited_bindings(&diff.record.bindings) {
-                                Some(bindings) => {
-                                    fresh.bindings = Some(bindings);
-                                    true
-                                }
-                                None => false,
-                            },
                             6 => match diff.record.menu.as_ref() {
                                 Some(menu) => match menu.credited_clone() {
                                     Some(menu) => {
@@ -1511,13 +1706,7 @@ impl SurfaceReconcileCursor {
                                     menu,
                                     children,
                                 });
-                                if let Err(op) = self.ops.try_push(op) {
-                                    self.pending_op = Some(op);
-                                    self.record_diff = Some(diff);
-                                    let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
-                                    self.fault = Some(fault.clone());
-                                    return SurfaceReconcileStep::Fault(fault);
-                                }
+                                *self.pending_op.source_mut().expect("active cursor owns writable pending patch") = Some(op);
                                 true
                             }
                         };
@@ -1528,15 +1717,19 @@ impl SurfaceReconcileCursor {
                         }
                         diff.field += 1;
                         self.record_diff = Some(diff);
-                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 };
+                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: if self.pending_op.get().is_some() { size_of::<ui_contract::UiPatchOp>() } else { 0 } };
                     }
                     if diff.field < 8 {
-                        let Some(old) = current.retained.get(&diff.id) else {
+                        let old = match current.read_record(diff.id) {
+                            Ok(Some(old)) => old,
+                            Err(ui_contract::UiDocumentLeaseError::Contended) => { self.record_diff = Some(diff); return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+                            _ => {
                             self.record_diff = Some(diff);
                             self.fault = Some(SurfaceReconcileFault::AliasCapacity);
                             return SurfaceReconcileStep::Fault(SurfaceReconcileFault::AliasCapacity);
+                            }
                         };
-                        let op = match diff_record_field(old, &diff.record, diff.field) {
+                        let op = match diff_record_field(&old, &diff.record, diff.field) {
                             Ok(op) => op,
                             Err(fault) => {
                                 self.record_diff = Some(diff);
@@ -1545,37 +1738,25 @@ impl SurfaceReconcileCursor {
                             }
                         };
                         diff.field += 1;
-                        if let Some(op) = op {
-                            if let Err(op) = self.ops.try_push(op) {
-                                self.pending_op = Some(op);
-                                diff.field -= 1;
-                                self.record_diff = Some(diff);
-                                let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
-                                self.fault = Some(fault.clone());
-                                return SurfaceReconcileStep::Fault(fault);
-                            }
-                        }
+                        *self.pending_op.source_mut().expect("active cursor owns writable pending patch") = op;
                         self.record_diff = Some(diff);
-                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 };
+                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: if self.pending_op.get().is_some() { size_of::<ui_contract::UiPatchOp>() } else { 0 } };
                     }
-                    if let Err((_, record)) = self.new_retained.try_insert(diff.id, diff.record) {
-                        diff.record = record;
-                        self.record_diff = Some(diff);
-                        let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
-                        self.fault = Some(fault.clone());
-                        return SurfaceReconcileStep::Fault(fault);
-                    }
-                    self.diff_index += 1;
-                    SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }
+                    self.record_diff = Some(diff);
+                    self.advance_record_assembly()
                 } else if self.diff_index < self.flat.len() {
                     let index = self.postorder[self.diff_index];
                     let id = self.ids[index];
                     let children = take(&mut self.flat[index].child_ids);
-                    let transition = current.retained.get(&id).and_then(|record| record.transition);
+                    let transition = match current.read_record(id) {
+                        Ok(record) => record.and_then(|record| record.transition),
+                        Err(ui_contract::UiDocumentLeaseError::Contended) => { self.flat[index].child_ids = children; return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+                        Err(_) => { self.flat[index].child_ids = children; return self.fail(SurfaceReconcileFault::AliasCapacity); }
+                    };
                     let node = std::mem::replace(&mut self.flat[index].node, crate::TreeNode::empty_separator());
                     let record = build_record_owned(id, node, children, transition);
-                    let fresh = (!current.retained.contains_key(&id)).then(FreshRecordClone::default);
-                    self.record_diff = Some(RecordDiffCursor { id, record, field: 0, fresh });
+                    let fresh = (!current.ordinals.contains_key(&id)).then(FreshRecordClone::default);
+                    self.record_diff = Some(RecordDiffCursor { id, record: record.into(), field: 0, fresh, owned_copy: None });
                     SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }
                 } else {
                     self.remove_next = self.old_root;
@@ -1585,7 +1766,7 @@ impl SurfaceReconcileCursor {
             }
             SurfaceReconcileStage::RemoveStale => {
                 if let Some(id) = self.remove_next.take() {
-                    if self.new_retained.contains_key(&id) {
+                    if self.new_ordinals.contains_key(&id) {
                         if self.removal.try_push(RemovalFrame { id, next_child: 0 }).is_err() {
                             self.remove_next = Some(id);
                             let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: self.limits.max_nodes.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
@@ -1594,17 +1775,16 @@ impl SurfaceReconcileCursor {
                         }
                     } else {
                         let op = ui_contract::UiPatchOp::Remove { id };
-                        if let Err(op) = self.ops.try_push(op) {
-                            self.pending_op = Some(op);
-                            self.remove_next = Some(id);
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
-                            self.fault = Some(fault.clone());
-                            return SurfaceReconcileStep::Fault(fault);
-                        }
+                        *self.pending_op.source_mut().expect("active cursor owns writable pending patch") = Some(op);
+                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiPatchOp>() };
                     }
                     SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiNodeId>() }
                 } else if let Some(frame) = self.removal.last_mut() {
-                    let child = current.retained.get(&frame.id).and_then(|record| record.children.get(frame.next_child)).copied();
+                    let child = match current.read_record(frame.id) {
+                        Ok(record) => record.and_then(|record| record.children.get(frame.next_child).copied()),
+                        Err(ui_contract::UiDocumentLeaseError::Contended) => return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+                        Err(_) => return self.fail(SurfaceReconcileFault::AliasCapacity),
+                    };
                     if let Some(child) = child {
                         frame.next_child += 1;
                         self.remove_next = Some(child);
@@ -1619,15 +1799,11 @@ impl SurfaceReconcileCursor {
             }
             SurfaceReconcileStage::Finalize => {
                 let new_root = self.ids.first().copied();
-                if self.old_root != new_root {
+                if !self.root_patch_prepared && self.old_root != new_root {
+                    self.root_patch_prepared = true;
                     if let Some(id) = new_root {
-                        let op = ui_contract::UiPatchOp::SetRoot { id };
-                        if let Err(op) = self.ops.try_push(op) {
-                            self.pending_op = Some(op);
-                            let fault = SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { items: self.limits.max_items.checked_add(1).unwrap_or(usize::MAX), ..self.usage }, limits: self.limits };
-                            self.fault = Some(fault.clone());
-                            return SurfaceReconcileStep::Fault(fault);
-                        }
+                        *self.pending_op.source_mut().expect("active cursor owns writable pending patch") = Some(ui_contract::UiPatchOp::SetRoot { id });
+                        return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiPatchOp>() };
                     }
                 }
                 let revision = if self.ops.is_empty() {
@@ -1644,11 +1820,13 @@ impl SurfaceReconcileCursor {
                     surface: self.surface.clone(),
                     revision,
                     allocator: self.allocator.clone(),
-                    retained: take(&mut self.new_retained),
-                    key_index: take(&mut self.new_key_index),
+                    document: None,
+                    assembly: take(&mut self.assembly),
+                    ordinals: self.new_ordinals.take_all(),
+                    key_index: self.new_key_index.take_all(),
                     root: new_root,
                     retire_scalar: 0,
-                    persistent_credit: None,
+                    seal_phase: 0,
                     handback: None,
                     retirement_armed: true,
                 };
@@ -1678,6 +1856,280 @@ impl SurfaceReconcileCursor {
         self.fault = None;
     }
 
+    fn fail(&mut self, fault: SurfaceReconcileFault) -> SurfaceReconcileStep {
+        self.fault = Some(fault.clone());
+        SurfaceReconcileStep::Fault(fault)
+    }
+
+    fn advance_existing_component(&mut self, current: &SurfaceReconciler) -> SurfaceReconcileStep {
+        self.advance_existing_component_with_grant(current, SURFACE_COMPONENT_COPY_WORK_BYTES)
+    }
+
+    fn advance_existing_component_with_grant(&mut self, current: &SurfaceReconciler, work: usize) -> SurfaceReconcileStep {
+        if work == 0 { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+        let required = size_of::<ExistingComponentComparison>();
+        if self.record_diff.as_ref().unwrap().owned_copy.is_none() {
+            let mut projected = self.usage;
+            if !projected.include(0, 1, required) || !projected.fits(self.limits) {
+                return self.fail(SurfaceReconcileFault::Credits { usage: projected, limits: self.limits });
+            }
+            if required > work { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            self.record_diff.as_mut().unwrap().owned_copy = Some(RecordOwnedCopy::Comparison(ExistingComponentComparison::default()));
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: required };
+        }
+        let diff = self.record_diff.as_mut().unwrap();
+        if let Some(RecordOwnedCopy::Comparison(comparison)) = diff.owned_copy.as_mut() {
+            if comparison.changed.is_none() {
+                if let Some(equal) = comparison.cursor.result() {
+                    comparison.cursor.release_reads();
+                    comparison.changed = Some(!equal);
+                    return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<bool>() };
+                }
+                if comparison.lease.is_none() {
+                    return match current.capture_document(&mut comparison.lease, work) {
+                        Ok(true) => SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiDocumentLease>() },
+                        Ok(false) | Err(ui_contract::UiDocumentLeaseError::Contended) => SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+                        Err(_) => self.fail(SurfaceReconcileFault::AliasCapacity),
+                    };
+                }
+                let Some(ordinal) = current.ordinals.get(&diff.id).copied() else { return self.fail(SurfaceReconcileFault::AliasCapacity); };
+                let progress = (|| {
+                    let read = comparison.lease.as_ref().unwrap().try_read()?;
+                    let old = read.exact_node(ordinal, diff.id)?;
+                    comparison.cursor.advance(&old.component, &diff.record.component, work).map_err(|_| ui_contract::UiDocumentLeaseError::NodeIdentity)
+                })();
+                return match progress {
+                    Ok(progress) => SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.compared_bytes },
+                    Err(ui_contract::UiDocumentLeaseError::Contended) => SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+                    Err(_) => self.fail(SurfaceReconcileFault::AliasCapacity),
+                };
+            }
+            if let Some(lease) = comparison.lease.as_mut() {
+                if lease.terminal_is_empty() {
+                    if work < size_of::<ui_contract::UiDocumentLease>() { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+                    comparison.lease = None;
+                    return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiDocumentLease>() };
+                }
+                return match lease.close_read_step_with_grant(1, work) {
+                    Ok(progress) => SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.released_bytes },
+                    Err(_) => self.fail(SurfaceReconcileFault::AliasCapacity),
+                };
+            }
+            if work < required { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            let changed = comparison.changed.unwrap();
+            diff.owned_copy = Some(RecordOwnedCopy::Changed(changed));
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: required };
+        }
+        if let Some(RecordOwnedCopy::Changed(changed)) = diff.owned_copy.as_ref() {
+            if !changed { diff.owned_copy = None; diff.field = 1; return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<bool>() }; }
+            let initialized = size_of::<ui_contract::UiComponentCopy>() + size_of::<ui_contract::Component>();
+            if initialized > SURFACE_RECONCILE_PAGE_BYTES || work < size_of::<ui_contract::Component>() { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            let source = std::mem::replace(&mut diff.record.component, ui_contract::Component::Separator(ui_contract::SeparatorProps {}));
+            diff.owned_copy = Some(RecordOwnedCopy::Component(ui_contract::UiComponentCopy::new(source)));
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: initialized };
+        }
+        let copy = diff.owned_copy.as_mut().and_then(RecordOwnedCopy::component_mut).expect("changed component retains its copy cursor");
+        if copy.terminal_is_empty() {
+            diff.owned_copy = None;
+            diff.field = 1;
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiComponentCopy>() };
+        }
+        if copy.candidate().is_some() {
+            if work < size_of::<ui_contract::Component>() { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            if let Some(source) = copy.take_completed_source_with_grant(work) {
+                diff.record.component = source;
+                return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::Component>() };
+            }
+            let target = self.pending_op.source_mut().expect("active pending operation is writable");
+            if target.is_some() || size_of::<ui_contract::UiPatchOp>() > SURFACE_RECONCILE_PAGE_BYTES { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            let candidate = copy.take_completed_candidate_with_grant(work).expect("completed candidate remains in its exact owner");
+            *target = Some(ui_contract::UiPatchOp::SetComponent { id: diff.id, component: candidate });
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiPatchOp>() };
+        }
+        let requested = match copy.next_allocation_bytes() { Ok(bytes) => bytes, Err(_) => return self.fail(SurfaceReconcileFault::CounterOverflow) };
+        let mut projected = self.usage;
+        if requested > SURFACE_RECONCILE_PAGE_BYTES || !projected.include(0, usize::from(requested != 0), requested) || !projected.fits(self.limits) {
+            return self.fail(SurfaceReconcileFault::Credits { usage: projected, limits: self.limits });
+        }
+        let child = if requested == 0 { copy.advance(1, 0, work) } else { copy.reserve_next(requested) };
+        let progress = match child {
+            Ok(progress) => progress,
+            Err(error) => { self.usage.include(0, usize::from(error.allocated_bytes != 0), error.allocated_bytes); return self.fail(SurfaceReconcileFault::AliasCapacity); }
+        };
+        if !self.usage.include(0, usize::from(progress.allocated_bytes != 0), progress.allocated_bytes) || !self.usage.fits(self.limits) {
+            return self.fail(SurfaceReconcileFault::Credits { usage: self.usage, limits: self.limits });
+        }
+        SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.allocated_bytes + progress.copied_bytes }
+    }
+
+    fn advance_record_assembly(&mut self) -> SurfaceReconcileStep {
+        if !self.assembly_open {
+            if self.assembly_credit.is_none() { return self.fail(SurfaceReconcileFault::Credits { usage: self.usage, limits: self.limits }); }
+            let root = self.ids.first().copied().or_else(|| self.record_diff.as_ref().map(|record| record.id));
+            match self.assembly.open_with_permit(&mut self.assembly_credit, &mut self.assembly_surface, self.assembly_generation, self.base_revision, root, 0, 1, SURFACE_RECONCILE_PAGE_BYTES) {
+                Ok(progress) => { self.assembly_open = progress.progressed; return SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.initialized_bytes + progress.moved_bytes }; }
+                Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+                Err(_) => return self.fail(SurfaceReconcileFault::AliasCapacity),
+            }
+        }
+        let id = self.record_diff.as_ref().unwrap().id;
+        let requested = match self.assembly.next_allocation_bytes() {
+            Ok(bytes) => bytes,
+            Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+            Err(_) => return self.fail(SurfaceReconcileFault::AliasCapacity),
+        };
+        let mut projected = self.usage;
+        if requested > SURFACE_RECONCILE_PAGE_BYTES || !projected.include(0, usize::from(requested != 0), requested) || !projected.fits(self.limits) {
+            return self.fail(SurfaceReconcileFault::Credits { usage: projected, limits: self.limits });
+        }
+        let progress = match self.assembly.place_one(&mut self.record_diff.as_mut().unwrap().record.0, 1, SURFACE_RECONCILE_PAGE_BYTES) {
+            Ok(progress) => progress,
+            Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 },
+            Err(error) => { self.usage.include(0, usize::from(error.allocated_bytes != 0), error.allocated_bytes); return self.fail(SurfaceReconcileFault::AliasCapacity); }
+        };
+        if !self.usage.include(0, usize::from(progress.allocated_bytes != 0), progress.allocated_bytes) || !self.usage.fits(self.limits) {
+            return self.fail(SurfaceReconcileFault::Credits { usage: self.usage, limits: self.limits });
+        }
+        if self.record_diff.as_ref().unwrap().record.0.is_none() {
+            if self.new_ordinals.try_insert(id, self.diff_index).is_err() { return self.fail(SurfaceReconcileFault::CounterOverflow); }
+            self.record_diff = None;
+            self.diff_index += 1;
+        }
+        SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.allocated_bytes + progress.initialized_bytes + progress.compared_bytes + progress.moved_bytes }
+    }
+
+    fn advance_fresh_component(diff: &mut RecordDiffCursor, usage: &mut SurfaceReconcileUsage, limits: SurfaceReconcileLimits, fault_owner: &mut Option<SurfaceReconcileFault>) -> SurfaceReconcileStep {
+        if diff.owned_copy.is_none() {
+            let source = std::mem::replace(&mut diff.record.component, ui_contract::Component::Separator(ui_contract::SeparatorProps {}));
+            diff.owned_copy = Some(RecordOwnedCopy::Component(ui_contract::UiComponentCopy::new(source)));
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiComponentCopy>() + size_of::<ui_contract::Component>() };
+        }
+        let copy = diff.owned_copy.as_mut().and_then(RecordOwnedCopy::component_mut).expect("component copy retained in its cursor");
+        if copy.candidate().is_some() {
+            if let Some(source) = copy.take_completed_source_with_grant(SURFACE_COMPONENT_COPY_WORK_BYTES) {
+                diff.record.component = source;
+                return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::Component>() };
+            }
+            let target = &mut diff.fresh.as_mut().expect("fresh component field retained").component;
+            if target.is_some() { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+            *target = copy.take_completed_candidate_with_grant(SURFACE_COMPONENT_COPY_WORK_BYTES);
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: if target.is_some() { size_of::<ui_contract::Component>() } else { 0 } };
+        }
+        if copy.terminal_is_empty() {
+            diff.owned_copy = None;
+            diff.field += 1;
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiComponentCopy>() };
+        }
+        let requested = match copy.next_allocation_bytes() {
+            Ok(bytes) => bytes,
+            Err(_) => { *fault_owner = Some(SurfaceReconcileFault::CounterOverflow); return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow); }
+        };
+        let mut projected = *usage;
+        if requested > SURFACE_RECONCILE_PAGE_BYTES || !projected.include(0, usize::from(requested != 0), requested) || !projected.fits(limits) {
+            let fault = SurfaceReconcileFault::Credits { usage: projected, limits };
+            *fault_owner = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        let progress = match if requested == 0 { copy.advance(1, 0, SURFACE_COMPONENT_COPY_WORK_BYTES) } else { copy.reserve_next(requested) } {
+            Ok(progress) => progress,
+            Err(error) => {
+                let counted = usage.include(0, usize::from(error.allocated_bytes != 0), error.allocated_bytes);
+                let fault = if !counted { SurfaceReconcileFault::CounterOverflow } else if error.allocated_bytes != 0 { SurfaceReconcileFault::Credits { usage: *usage, limits } } else { SurfaceReconcileFault::AliasCapacity };
+                *fault_owner = Some(fault.clone());
+                return SurfaceReconcileStep::Fault(fault);
+            }
+        };
+        if !usage.include(0, usize::from(progress.allocated_bytes != 0), progress.allocated_bytes) || !usage.fits(limits) {
+            let fault = SurfaceReconcileFault::Credits { usage: *usage, limits };
+            *fault_owner = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.allocated_bytes + progress.copied_bytes }
+    }
+
+    fn advance_fresh_bindings(diff: &mut RecordDiffCursor, usage: &mut SurfaceReconcileUsage, limits: SurfaceReconcileLimits, fault_owner: &mut Option<SurfaceReconcileFault>) -> SurfaceReconcileStep {
+        let fresh = diff.fresh.as_mut().expect("fresh binding copy owns the field");
+        if diff.owned_copy.is_none() {
+            diff.owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(std::mem::take(&mut diff.record.bindings))));
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiBindingsCopy>() };
+        }
+        let copy = diff.owned_copy.as_mut().and_then(RecordOwnedCopy::bindings_mut).expect("binding copy retained above");
+        if copy.is_complete() {
+            if let Some(source) = copy.take_completed_source_with_grant(SURFACE_RECONCILE_PAGE_BYTES) {
+                diff.record.bindings = source;
+                return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiNodeBindings>() };
+            }
+            if copy.candidate().is_some() {
+                if fresh.bindings.is_some() { return SurfaceReconcileStep::Yield { nodes: 0, bytes: 0 }; }
+                fresh.bindings = copy.take_completed_candidate_with_grant(SURFACE_RECONCILE_PAGE_BYTES);
+                return SurfaceReconcileStep::Yield { nodes: 0, bytes: if fresh.bindings.is_some() { size_of::<ui_contract::UiNodeBindings>() } else { 0 } };
+            }
+            diff.owned_copy = None;
+            diff.field += 1;
+            return SurfaceReconcileStep::Yield { nodes: 0, bytes: size_of::<ui_contract::UiBindingsCopy>() };
+        }
+        let requested = match copy.next_allocation_bytes() {
+            Ok(bytes) => bytes,
+            Err(_) => { *fault_owner = Some(SurfaceReconcileFault::CounterOverflow); return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow); }
+        };
+        let mut projected = *usage;
+        if requested > SURFACE_RECONCILE_PAGE_BYTES || !projected.include(0, usize::from(requested != 0), requested) || !projected.fits(limits) {
+            let fault = SurfaceReconcileFault::Credits { usage: projected, limits };
+            *fault_owner = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        let progress = match copy.advance(1, requested, if requested == 0 { SURFACE_RECONCILE_PAGE_BYTES } else { 0 }) {
+            Ok(progress) => progress,
+            Err(error) => {
+                let counted = usage.include(0, usize::from(error.allocated_bytes != 0), error.allocated_bytes);
+                let fault = if !counted { SurfaceReconcileFault::CounterOverflow } else if error.allocated_bytes != 0 { SurfaceReconcileFault::Credits { usage: *usage, limits } } else { SurfaceReconcileFault::AliasCapacity };
+                *fault_owner = Some(fault.clone());
+                return SurfaceReconcileStep::Fault(fault);
+            }
+        };
+        if !usage.include(0, usize::from(progress.allocated_bytes != 0), progress.allocated_bytes) || !usage.fits(limits) {
+            let fault = SurfaceReconcileFault::Credits { usage: *usage, limits };
+            *fault_owner = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        SurfaceReconcileStep::Yield { nodes: 0, bytes: progress.allocated_bytes + progress.copied_bytes + progress.placed_bytes }
+    }
+
+    fn advance_pending_patch(&mut self) -> SurfaceReconcileStep {
+        if self.ops.has_reserved_slot() {
+            return match self.pending_op.place_into(&mut self.ops, SURFACE_RECONCILE_PAGE_BYTES) {
+                Ok(bytes) => SurfaceReconcileStep::Yield { nodes: 0, bytes },
+                Err(_) => {
+                    self.fault = Some(SurfaceReconcileFault::CounterOverflow);
+                    SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow)
+                }
+            };
+        }
+        let requested = match self.ops.next_allocation_bytes() {
+            Ok(bytes) => bytes,
+            Err(_) => {
+                self.fault = Some(SurfaceReconcileFault::CounterOverflow);
+                return SurfaceReconcileStep::Fault(SurfaceReconcileFault::CounterOverflow);
+            }
+        };
+        let mut projected = self.usage;
+        if requested > SURFACE_RECONCILE_PAGE_BYTES || !projected.include(0, 1, requested) || !projected.fits(self.limits) {
+            let fault = SurfaceReconcileFault::Credits { usage: projected, limits: self.limits };
+            self.fault = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        let (allocated, failed) = match self.ops.try_reserve_one(requested) {
+            Ok(bytes) => (bytes, false),
+            Err(error) => (error.allocated_bytes, true),
+        };
+        if !self.usage.include(0, usize::from(allocated != 0), allocated) || !self.usage.fits(self.limits) || failed {
+            let fault = SurfaceReconcileFault::Credits { usage: self.usage, limits: self.limits };
+            self.fault = Some(fault.clone());
+            return SurfaceReconcileStep::Fault(fault);
+        }
+        SurfaceReconcileStep::Yield { nodes: 0, bytes: allocated }
+    }
+
     fn retire_one(&mut self) -> bool {
         if let Some((_, node)) = self.held_node.take() {
             self.retire_tree.begin(crate::ComponentTree { root: node });
@@ -1699,18 +2151,20 @@ impl SurfaceReconcileCursor {
             }
             return false;
         }
-        if self.pending_op.take().is_some() {
+        if !self.pending_op.terminal_is_empty() {
+            let _ = self.pending_op.close_step(1, SURFACE_RECONCILE_PAGE_BYTES);
             return false;
         }
         if let Some(diff) = self.record_diff.as_mut() {
+            if diff.record.0.is_none() { self.record_diff = None; return false; }
             if let Some(fresh) = diff.fresh.as_mut() {
-                if retire_fresh_record_one(fresh, &mut self.retire_fresh_field) {
+                if retire_fresh_record_one(fresh, &mut self.retire_fresh_field, &mut diff.owned_copy) {
                     diff.fresh = None;
                     self.retire_fresh_field = 0;
                 }
                 return false;
             }
-            if retire_record_one(&mut diff.record, &mut self.retire_record_field) {
+            if retire_record_one(&mut diff.record, &mut self.retire_record_field, &mut diff.owned_copy) {
                 self.record_diff = None;
                 self.retire_record_field = 0;
             }
@@ -1725,13 +2179,25 @@ impl SurfaceReconcileCursor {
             self.traversal.pop();
             return false;
         }
-        if self.flat.pop().is_some() || self.postorder.pop().is_some() || self.ids.pop().is_some() || self.removal.pop().is_some() || self.ops.pop().is_some() {
+        if !self.ops.terminal_is_empty() {
+            let _ = self.ops.close_step(1, SURFACE_RECONCILE_PAGE_BYTES);
+            return false;
+        }
+        if self.flat.pop().is_some() || self.postorder.pop().is_some() || self.ids.pop().is_some() || self.removal.pop().is_some() {
             return false;
         }
         if self.seen.pop().is_some() {
             return false;
         }
-        if self.new_retained.take_first().is_some() {
+        if !self.assembly.terminal_is_empty() {
+            self.assembly.close_step(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("retained assembly close preserves exact fault");
+            return false;
+        }
+        if self.new_ordinals.take_first().is_some() {
+            return false;
+        }
+        if self.assembly_credit.is_some() {
+            release_surface_reconcile_one(&mut self.assembly_credit).expect("unattached candidate permit remains exact");
             return false;
         }
         if self.new_key_index.take_first().is_some() {
@@ -1745,132 +2211,68 @@ impl SurfaceReconcileCursor {
 
 //#region 🎟️RetainedAuthority
 
-pub const SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64;
+pub const SURFACE_RECONCILE_ADMISSION_SLOTS: usize = ui_contract::UI_RESIDENT_SLOTS;
 pub const SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024;
-pub const SURFACE_RECONCILE_SURFACE_BYTES: usize = 8 * 1_024 * 1_024;
-pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = SURFACE_RECONCILE_SURFACE_BYTES * 4;
-pub const SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = 131_076;
+const SURFACE_COMPONENT_COPY_WORK_BYTES: usize = 4096;
+const _: () = assert!(size_of::<ui_contract::Component>() <= SURFACE_COMPONENT_COPY_WORK_BYTES);
+const _: () = assert!(size_of::<ui_contract::UiComponentCopy>() <= SURFACE_RECONCILE_PAGE_BYTES);
+const _: () = assert!(2 * size_of::<ui_contract::Component>() + SURFACE_COMPONENT_COPY_WORK_BYTES <= SURFACE_RECONCILE_PAGE_BYTES);
+const _: () = assert!(size_of::<ui_contract::UiPatchOp>() <= SURFACE_RECONCILE_PAGE_BYTES);
+const _: () = assert!(size_of::<ui_contract::UiBindingsCopy>() <= SURFACE_RECONCILE_PAGE_BYTES);
+pub const SURFACE_RECONCILE_SURFACE_BYTES: usize = ui_contract::UI_RESIDENT_SURFACE_BYTES;
+pub const SURFACE_RECONCILE_AGGREGATE_BYTES: usize = ui_contract::UI_RESIDENT_AGGREGATE_BYTES;
+pub const SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = ui_contract::UI_RESIDENT_AGGREGATE_ITEMS;
 
-#[derive(Clone, Copy, Debug, Default)]
-struct SurfaceReconcileAdmissionSlot {
-    epoch: u64,
-    items: usize,
-    bytes: usize,
-    occupied: bool,
-    owners: u8,
-}
-
-struct SurfaceReconcileAdmissionLedger {
-    slots: [SurfaceReconcileAdmissionSlot; SURFACE_RECONCILE_ADMISSION_SLOTS],
-    items: usize,
-    bytes: usize,
-}
-
-impl Default for SurfaceReconcileAdmissionLedger {
-    fn default() -> Self {
-        Self { slots: [SurfaceReconcileAdmissionSlot::default(); SURFACE_RECONCILE_ADMISSION_SLOTS], items: 0, bytes: 0 }
-    }
-}
-
-#[derive(Debug)]
-struct SurfaceReconcileCredit {
-    slot: usize,
-    epoch: u64,
-    items: usize,
-    bytes: usize,
-    owner: u8,
-}
-
-static SURFACE_RECONCILE_ADMISSION: LazyLock<Mutex<SurfaceReconcileAdmissionLedger>> = LazyLock::new(|| Mutex::new(SurfaceReconcileAdmissionLedger::default()));
-
-fn reserve_surface_reconcile(limits: SurfaceReconcileLimits) -> Option<SurfaceReconcileCredit> {
+fn reserve_surface_reconcile(limits: SurfaceReconcileLimits) -> Option<ui_contract::UiResidentPermit> {
     if limits.max_nodes > SurfaceReconcileLimits::default().max_nodes
         || limits.max_items > SurfaceReconcileLimits::default().max_items
         || limits.max_bytes > SurfaceReconcileLimits::default().max_bytes
         || limits.max_identifier_bytes > SurfaceReconcileLimits::default().max_identifier_bytes
-    {
-        return None;
-    }
-    let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let next_items = ledger.items.checked_add(limits.max_items)?;
-    let next_bytes = ledger.bytes.checked_add(limits.max_bytes)?;
-    if next_items > SURFACE_RECONCILE_AGGREGATE_ITEMS || next_bytes > SURFACE_RECONCILE_AGGREGATE_BYTES {
-        return None;
-    }
-    let slot = ledger.slots.iter().position(|slot| !slot.occupied)?;
-    let epoch = ledger.slots[slot].epoch.checked_add(1)?;
-    if epoch == 0 {
-        return None;
-    }
-    ledger.slots[slot] = SurfaceReconcileAdmissionSlot { epoch, items: limits.max_items, bytes: limits.max_bytes, occupied: true, owners: 1 };
-    ledger.items = next_items;
-    ledger.bytes = next_bytes;
-    Some(SurfaceReconcileCredit { slot, epoch, items: limits.max_items, bytes: limits.max_bytes, owner: 1 })
+    { return None; }
+    if !register_surface_reconcile_backing(SURFACE_RECONCILE_PAGE_BYTES).ok()? { return None; }
+    let mut permit = None;
+    ui_contract::UiResidentPermit::try_reserve(ui_contract::UiResidentLimits { items: limits.max_items, bytes: limits.max_bytes }, &mut permit, SURFACE_RECONCILE_PAGE_BYTES).ok()?;
+    permit
 }
 
-fn split_surface_reconcile(credit: SurfaceReconcileCredit) -> Result<(SurfaceReconcileCredit, SurfaceReconcileCredit), SurfaceReconcileCredit> {
-    let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let Some(slot) = ledger.slots.get_mut(credit.slot) else { return Err(credit) };
-    if !slot.occupied || slot.epoch != credit.epoch || slot.items != credit.items || slot.bytes != credit.bytes || slot.owners != credit.owner || credit.owner != 1 {
-        return Err(credit);
-    }
-    slot.owners = 3;
-    let SurfaceReconcileCredit { slot, epoch, items, bytes, owner: _ } = credit;
-    Ok((SurfaceReconcileCredit { slot, epoch, items, bytes, owner: 1 }, SurfaceReconcileCredit { slot, epoch, items, bytes, owner: 2 }))
+fn register_surface_reconcile_backing(admitted_bytes: usize) -> Result<bool, ui_contract::UiResidentFault> {
+    ui_contract::UiResidentPermit::try_register_runtime_backing(size_of::<LazyLock<Mutex<SurfaceReconcileHandbackRegistry>>>() + SurfaceReconcileOutputs::static_backing_bytes(), admitted_bytes)
+}
+
+fn split_surface_reconcile(mut credit: ui_contract::UiResidentPermit) -> Result<(ui_contract::UiResidentPermit, ui_contract::UiResidentPermit), ui_contract::UiResidentPermit> {
+    let mut output = None;
+    if !matches!(credit.split_output_into(&mut output, SURFACE_RECONCILE_PAGE_BYTES), Ok(true)) { return Err(credit); }
+    Ok((credit, output.expect("successful resident split installs the exact output owner")))
 }
 
 /// 📉️ Returns unused aggregate admission capacity once reconciliation has measured its retained owners.
-fn shrink_surface_reconcile(mut credit: SurfaceReconcileCredit, usage: SurfaceReconcileUsage) -> Result<SurfaceReconcileCredit, SurfaceReconcileCredit> {
-    if usage.items > credit.items || usage.bytes > credit.bytes {
-        return Err(credit);
+fn shrink_surface_reconcile(mut credit: ui_contract::UiResidentPermit, usage: SurfaceReconcileUsage) -> Result<ui_contract::UiResidentPermit, ui_contract::UiResidentPermit> {
+    match credit.try_shrink(ui_contract::UiResidentLimits { items: usage.items, bytes: usage.bytes }) {
+        Ok(true) => Ok(credit),
+        _ => Err(credit),
     }
-    let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let Some(slot) = ledger.slots.get(credit.slot) else { return Err(credit) };
-    if !slot.occupied || slot.epoch != credit.epoch || slot.items != credit.items || slot.bytes != credit.bytes || slot.owners != credit.owner {
-        return Err(credit);
-    }
-    let Some(next_items) = ledger.items.checked_sub(credit.items).and_then(|items| items.checked_add(usage.items)) else { return Err(credit) };
-    let Some(next_bytes) = ledger.bytes.checked_sub(credit.bytes).and_then(|bytes| bytes.checked_add(usage.bytes)) else { return Err(credit) };
-    let slot = &mut ledger.slots[credit.slot];
-    slot.items = usage.items;
-    slot.bytes = usage.bytes;
-    ledger.items = next_items;
-    ledger.bytes = next_bytes;
-    credit.items = usage.items;
-    credit.bytes = usage.bytes;
-    Ok(credit)
 }
 
-fn release_surface_reconcile(credit: SurfaceReconcileCredit) {
-    let mut ledger = SURFACE_RECONCILE_ADMISSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let Some(slot) = ledger.slots.get(credit.slot) else { return };
-    if !slot.occupied || slot.epoch != credit.epoch || slot.items != credit.items || slot.bytes != credit.bytes || slot.owners & credit.owner == 0 {
-        return;
+fn release_surface_reconcile(mut credit: ui_contract::UiResidentPermit) {
+    if let Err(error) = credit.close_step(1) {
+        if !std::thread::panicking() { panic!("{}", error.reason()); }
     }
-    let remaining_owners = slot.owners & !credit.owner;
-    if remaining_owners != 0 {
-        ledger.slots[credit.slot].owners = remaining_owners;
-        return;
-    }
-    let items = slot.items;
-    let bytes = slot.bytes;
-    let Some(next_items) = ledger.items.checked_sub(items) else { return };
-    let Some(next_bytes) = ledger.bytes.checked_sub(bytes) else { return };
-    let slot = &mut ledger.slots[credit.slot];
-    slot.occupied = false;
-    slot.items = 0;
-    slot.bytes = 0;
-    slot.owners = 0;
-    ledger.items = next_items;
-    ledger.bytes = next_bytes;
+}
+
+fn release_surface_reconcile_one(owner: &mut Option<ui_contract::UiResidentPermit>) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+    let Some(credit) = owner.as_mut() else { return Ok(ui_contract::UiValueRetirementStep { complete: true, ..Default::default() }); };
+    let step = credit.close_step(1).map_err(|error| error.reason())?;
+    if step.complete { owner.take(); }
+    Ok(ui_contract::UiValueRetirementStep { complete: step.complete, progressed: step.progressed, released_items: step.released_permits, released_bytes: 0 })
 }
 
 /// 🎫️ Pre-materialization aggregate reservation transferred into exactly one live job.
 pub struct SurfaceReconcileReservation {
     generation: u64,
     limits: SurfaceReconcileLimits,
-    credit: Option<SurfaceReconcileCredit>,
+    credit: Option<ui_contract::UiResidentPermit>,
     handback: Option<SurfaceReconcileHandbackReservation>,
+    output_handback: Option<SurfaceReconcileHandbackReservation>,
 }
 
 impl SurfaceReconcileReservation {
@@ -1884,7 +2286,12 @@ impl SurfaceReconcileReservation {
             release_surface_reconcile(credit);
             return None;
         };
-        Some(Self { generation, limits, credit: Some(credit), handback: Some(handback) })
+        let Some(output_handback) = reserve_surface_reconcile_handback(generation) else {
+            release_surface_reconcile_handback(handback);
+            release_surface_reconcile(credit);
+            return None;
+        };
+        Some(Self { generation, limits, credit: Some(credit), handback: Some(handback), output_handback: Some(output_handback) })
     }
 
     pub fn generation(&self) -> u64 {
@@ -1900,6 +2307,9 @@ impl Drop for SurfaceReconcileReservation {
         if let Some(handback) = self.handback.take() {
             release_surface_reconcile_handback(handback);
         }
+        if let Some(handback) = self.output_handback.take() {
+            release_surface_reconcile_handback(handback);
+        }
     }
 }
 
@@ -1908,6 +2318,7 @@ enum SurfaceReconcileJobPhase {
     Drive,
     RetireCursor,
     RetirePrevious,
+    SealCandidate,
     Ready,
     Fault,
     Closing,
@@ -2058,6 +2469,24 @@ fn release_surface_reconcile_handback(reservation: SurfaceReconcileHandbackReser
     }
 }
 
+fn release_surface_reconcile_handback_one(owner: &mut Option<SurfaceReconcileHandbackReservation>) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+    let Some(reservation) = owner.as_ref() else { return Ok(ui_contract::UiValueRetirementStep { complete: true, ..Default::default() }); };
+    let mut registry = match SURFACE_RECONCILE_HANDBACKS.try_lock() {
+        Ok(registry) => registry,
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(Default::default()),
+        Err(std::sync::TryLockError::Poisoned(_)) => return Err("surface handback registry is poisoned"),
+    };
+    let slot = registry.slots.get(reservation.key.slot).ok_or("surface handback slot is invalid")?;
+    if !slot.reserved || slot.epoch != reservation.key.epoch || slot.generation != reservation.key.generation || slot.state.is_some() { return Err("surface handback is not the exact retained owner"); }
+    let free = !slot.queued;
+    if free && registry.free_len >= SURFACE_RECONCILE_HANDBACK_SLOTS { return Err("surface handback free list exhausted"); }
+    let slot = &mut registry.slots[reservation.key.slot];
+    slot.reserved = false; slot.generation = 0;
+    if free { let index = registry.free_len; registry.free[index] = reservation.key.slot; registry.free_len += 1; }
+    owner.take();
+    Ok(ui_contract::UiValueRetirementStep { complete: true, progressed: true, released_items: 1, released_bytes: 0 })
+}
+
 fn rebind_surface_reconcile_handback(mut reservation: SurfaceReconcileHandbackReservation, generation: u64) -> Result<SurfaceReconcileHandbackReservation, SurfaceReconcileHandbackReservation> {
     let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let Some(slot) = registry.slots.get_mut(reservation.key.slot) else { return Err(reservation) };
@@ -2094,30 +2523,29 @@ struct SurfaceReconcileRetained {
     source: Option<crate::ComponentTree>,
     cursor: Option<SurfaceReconcileCursor>,
     candidate: Option<SurfaceReconciler>,
-    patch: Option<ui_contract::UiPatch>,
-    published_surface: Option<ui_contract::SurfaceId>,
+    patch: ui_contract::UiPendingPatch,
     retire_tree: SurfaceTreeRetireCursor,
     fault: Option<SurfaceReconcileFault>,
     usage: SurfaceReconcileUsage,
-    credit: Option<SurfaceReconcileCredit>,
+    credit: Option<ui_contract::UiResidentPermit>,
     handback: Option<SurfaceReconcileHandbackReservation>,
+    output_handback: Option<SurfaceReconcileHandbackReservation>,
 }
 
 impl SurfaceReconcileRetained {
+    fn refuse_publication(&mut self, reason: &'static str) -> Result<bool, &'static str> {
+        self.fault = Some(SurfaceReconcileFault::PublicationAuthority(reason));
+        self.phase = SurfaceReconcileJobPhase::Fault;
+        Err(reason)
+    }
+
     fn close_step(&mut self) -> bool {
         self.phase = SurfaceReconcileJobPhase::Closing;
         if self.fault.take().is_some() {
             return false;
         }
-        if let Some(patch) = self.patch.as_mut() {
-            if patch.ops.pop().is_some() {
-                return false;
-            }
-            self.patch = None;
-            return false;
-        }
-        if self.published_surface.is_some() {
-            self.published_surface = None;
+        if !self.patch.terminal_is_empty() {
+            let _ = self.patch.close_step(1, SURFACE_RECONCILE_PAGE_BYTES);
             return false;
         }
         if let Some(candidate) = self.candidate.as_mut() {
@@ -2156,6 +2584,10 @@ impl SurfaceReconcileRetained {
             release_surface_reconcile_handback(handback);
             return false;
         }
+        if let Some(handback) = self.output_handback.take() {
+            release_surface_reconcile_handback(handback);
+            return false;
+        }
         true
     }
 
@@ -2164,18 +2596,18 @@ impl SurfaceReconcileRetained {
             && self.source.is_none()
             && self.cursor.is_none()
             && self.candidate.is_none()
-            && self.patch.is_none()
-            && self.published_surface.is_none()
+            && self.patch.terminal_is_empty()
             && self.retire_tree.is_empty()
             && self.fault.is_none()
             && self.credit.is_none()
             && self.handback.is_none()
+            && self.output_handback.is_none()
     }
 }
 
 fn handback_surface_reconcile(mut state: Box<SurfaceReconcileRetained>) {
     if state.handback.is_none() {
-        state.handback = state.current.as_mut().and_then(|owner| owner.handback.take()).or_else(|| state.candidate.as_mut().and_then(|owner| owner.handback.take()));
+        state.handback = state.current.as_mut().and_then(|owner| owner.handback.take()).or_else(|| state.candidate.as_mut().and_then(|owner| owner.handback.take())).or_else(|| state.output_handback.take());
     }
     let Some(reservation) = state.handback.take() else { return };
     let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -2223,104 +2655,53 @@ pub enum SurfaceDocumentProducerStep {
 /// 🧵️ Generation-qualified producer which admits one retained node page per opportunity.
 pub struct SurfaceDocumentProducer {
     generation: u64,
-    surface: ui_contract::SurfaceId,
     revision: ui_contract::UiRevision,
-    root: Option<ui_contract::UiNodeId>,
-    node_count: usize,
-    next_node: usize,
-    builder: Option<ui_contract::UiDocumentBuilder>,
+    lease: Option<ui_contract::UiDocumentLease>,
     ready: bool,
     fault: Option<SurfaceDocumentFault>,
 }
 
 impl SurfaceDocumentProducer {
-    pub fn try_new(current: &SurfaceReconciler, generation: u64, layout_epoch: u64) -> Result<Self, (ui_contract::UiDocumentBuildError, ui_contract::SurfaceId)> {
-        let surface = current.surface.clone();
-        let builder = ui_contract::UiDocumentBuilder::try_new(generation, surface.clone(), current.revision, current.root, layout_epoch)?;
-        Ok(Self { generation, surface, revision: current.revision, root: current.root, node_count: current.retained.len(), next_node: 0, builder: Some(builder), ready: false, fault: None })
+    pub fn try_new(current: &SurfaceReconciler, generation: u64) -> Result<Self, ui_contract::UiDocumentLeaseError> {
+        if generation == 0 { return Err(ui_contract::UiDocumentLeaseError::StaleHandle); }
+        let mut lease = None;
+        if !current.capture_document(&mut lease, SURFACE_RECONCILE_PAGE_BYTES)? { return Err(ui_contract::UiDocumentLeaseError::StaleHandle); }
+        Ok(Self { generation, revision: current.revision, lease, ready: false, fault: None })
     }
 
-    pub fn generation(&self) -> u64 {
-        self.generation
-    }
-
-    pub fn fault(&self) -> Option<&SurfaceDocumentFault> {
-        self.fault.as_ref()
-    }
+    pub fn generation(&self) -> u64 { self.generation }
+    pub fn fault(&self) -> Option<&SurfaceDocumentFault> { self.fault.as_ref() }
 
     pub fn drive_one(&mut self, current: &SurfaceReconciler, cx: &mut semio_framework_job::StepContext<'_>) -> SurfaceDocumentProducerStep {
-        if self.ready {
-            return SurfaceDocumentProducerStep::Ready;
-        }
-        if self.fault.is_some() {
-            return SurfaceDocumentProducerStep::Fault;
-        }
+        if self.fault.is_some() { return SurfaceDocumentProducerStep::Fault; }
         if cx.generation().0 != self.generation {
             self.fault = Some(SurfaceDocumentFault::StaleGeneration { expected: self.generation, actual: cx.generation().0 });
             return SurfaceDocumentProducerStep::Fault;
         }
-        if cx.is_cancelled() {
-            self.fault = Some(SurfaceDocumentFault::Cancelled);
-            return SurfaceDocumentProducerStep::Fault;
-        }
-        if cx.should_yield() {
-            return SurfaceDocumentProducerStep::MoreWork;
-        }
-        if current.revision != self.revision || current.root != self.root || current.retained.len() != self.node_count || current.surface != self.surface {
+        if cx.is_cancelled() { self.fault = Some(SurfaceDocumentFault::Cancelled); return SurfaceDocumentProducerStep::Fault; }
+        if cx.should_yield() { return SurfaceDocumentProducerStep::MoreWork; }
+        if !current.document.as_ref().zip(self.lease.as_ref()).is_some_and(|(current, captured)| current.same_root(captured)) {
             self.fault = Some(SurfaceDocumentFault::StaleRevision { expected: self.revision, actual: current.revision });
             return SurfaceDocumentProducerStep::Fault;
         }
-        if self.next_node == self.node_count {
-            self.ready = true;
-            cx.consume_fuel(1);
-            return SurfaceDocumentProducerStep::Ready;
-        }
-        let Some((_, record)) = current.retained.get_index(self.next_node) else {
-            self.fault = Some(SurfaceDocumentFault::StaleRevision { expected: self.revision, actual: current.revision });
-            return SurfaceDocumentProducerStep::Fault;
-        };
-        let Some(record) = record.credited_clone() else {
-            self.fault = Some(SurfaceDocumentFault::Build(ui_contract::UiDocumentBuildError::NodeCapacity));
-            return SurfaceDocumentProducerStep::Fault;
-        };
-        let Some(builder) = self.builder.as_mut() else {
-            self.fault = Some(SurfaceDocumentFault::Build(ui_contract::UiDocumentBuildError::StaleHandle));
-            return SurfaceDocumentProducerStep::Fault;
-        };
-        if let Err((error, record)) = builder.try_push(record) {
-            drop(record);
-            self.fault = Some(SurfaceDocumentFault::Build(error));
-            return SurfaceDocumentProducerStep::Fault;
-        }
-        let Some(next_node) = self.next_node.checked_add(1) else {
-            self.fault = Some(SurfaceDocumentFault::Build(ui_contract::UiDocumentBuildError::NodeCapacity));
-            return SurfaceDocumentProducerStep::Fault;
-        };
-        self.next_node = next_node;
+        self.ready = true;
         cx.consume_fuel(1);
-        if cx.is_cancelled() {
-            self.fault = Some(SurfaceDocumentFault::Cancelled);
-            return SurfaceDocumentProducerStep::Fault;
-        }
-        SurfaceDocumentProducerStep::MoreWork
+        SurfaceDocumentProducerStep::Ready
     }
 
     pub fn take_ready(mut self) -> Result<SurfaceDocumentOutcome, Self> {
-        if !self.ready || self.fault.is_some() {
-            return Err(self);
-        }
-        let Some(builder) = self.builder.take() else { return Err(self) };
-        match builder.finish() {
-            Ok(lease) => Ok(SurfaceDocumentOutcome { generation: self.generation, lease }),
-            Err((error, builder)) => {
-                self.builder = Some(builder);
-                self.fault = Some(SurfaceDocumentFault::Build(error));
-                Err(self)
-            }
-        }
+        if !self.ready || self.fault.is_some() { return Err(self); }
+        let Some(lease) = self.lease.take() else { return Err(self); };
+        Ok(SurfaceDocumentOutcome { generation: self.generation, lease })
+    }
+
+    pub fn close_step(&mut self, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+        let Some(lease) = self.lease.as_mut() else { return Ok(ui_contract::UiValueRetirementStep { complete: true, ..Default::default() }); };
+        let progress = lease.close_read_step_with_grant(items, bytes)?;
+        if progress.complete { self.lease = None; }
+        Ok(progress)
     }
 }
-
 /// 📬️ Complete generation-qualified fixed document transferred to a renderer consumer.
 pub struct SurfaceDocumentOutcome {
     generation: u64,
@@ -2336,12 +2717,14 @@ impl SurfaceDocumentOutcome {
         self.lease.header()
     }
 
-    pub fn read_node_page(&self, index: usize) -> Result<Option<ui_contract::UiDocumentNodePage>, ui_contract::UiDocumentLeaseError> {
-        self.lease.read_node_page(index)
+    pub fn try_read(&self) -> Result<ui_contract::UiDocumentRead<'_>, ui_contract::UiDocumentLeaseError> {
+        self.lease.try_read()
     }
 
     pub fn try_alias(&self) -> Result<Self, ui_contract::UiDocumentLeaseError> {
-        Ok(Self { generation: self.generation, lease: self.lease.try_alias()? })
+        let mut alias = None;
+        if !self.lease.try_alias_into(&mut alias, SURFACE_RECONCILE_PAGE_BYTES)? { return Err(ui_contract::UiDocumentLeaseError::AliasCapacity); }
+        Ok(Self { generation: self.generation, lease: alias.unwrap() })
     }
 
     pub fn into_lease(self) -> ui_contract::UiDocumentLease {
@@ -2349,17 +2732,40 @@ impl SurfaceDocumentOutcome {
     }
 
     pub fn close_step(&mut self) -> bool {
-        self.lease.close_step()
+        self.lease.close_read_step_with_grant(1, SURFACE_COMPONENT_COPY_WORK_BYTES).expect("document outcome retains exact retirement authority").complete
     }
 }
 
 /// 📨️ Generation-qualified patch owner carrying its share of the live reconciliation credit.
 pub struct SurfaceReconcileReadyPatch {
     generation: u64,
-    patch: Option<ui_contract::UiPatch>,
-    credit: Option<SurfaceReconcileCredit>,
+    patch: ui_contract::UiPendingPatch,
+    credit: Option<ui_contract::UiResidentPermit>,
     handback: Option<SurfaceReconcileHandbackReservation>,
 }
+
+fn pending_surface_patch(patch: Option<ui_contract::UiPatch>) -> ui_contract::UiPendingPatch {
+    let mut owner = ui_contract::UiPendingPatch::default();
+    *owner.source_mut().expect("new pending patch is writable") = patch;
+    owner
+}
+
+fn close_surface_patch_owner(patch: &mut ui_contract::UiPendingPatch, credit: &mut Option<ui_contract::UiResidentPermit>, handback: &mut Option<SurfaceReconcileHandbackReservation>, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+    if items == 0 || bytes == 0 { return Ok(Default::default()); }
+    if !patch.terminal_is_empty() {
+        let mut step = patch.close_step(1, bytes)?;
+        step.complete = false;
+        return Ok(step);
+    }
+    if credit.is_some() { let mut step = release_surface_reconcile_one(credit)?; step.complete = false; return Ok(step); }
+    if handback.is_some() { let mut step = release_surface_reconcile_handback_one(handback)?; step.complete = false; return Ok(step); }
+    Ok(ui_contract::UiValueRetirementStep { complete: true, ..Default::default() })
+}
+
+#[cfg(test)]
+#[path = "../../🩹️patch/🧪️component.rs"]
+mod patch_handoff_tests;
+
 
 impl SurfaceReconcileReadyPatch {
     pub fn generation(&self) -> u64 {
@@ -2367,53 +2773,52 @@ impl SurfaceReconcileReadyPatch {
     }
 
     pub fn surface(&self) -> Option<&ui_contract::SurfaceId> {
-        self.patch.as_ref().map(|patch| &patch.surface)
+        self.patch.get().map(|patch| &patch.surface)
     }
 
     pub fn revision(&self) -> ui_contract::UiRevision {
-        self.patch.as_ref().map_or_else(ui_contract::UiRevision::default, |patch| patch.revision)
+        self.patch.get().map_or_else(ui_contract::UiRevision::default, |patch| patch.revision)
     }
 
-    pub fn publish(mut self) -> Option<(ui_contract::UiPatch, SurfaceReconcilePublishedPatch)> {
-        let patch = self.patch.take()?;
-        let published = SurfaceReconcilePublishedPatch { generation: self.generation, surface: patch.surface.clone(), revision: patch.revision, credit: self.credit.take(), handback: self.handback.take() };
-        Some((patch, published))
+    pub const fn required_publish_bytes() -> usize { size_of::<SurfaceReconcilePublishedPatch>() + size_of::<ui_contract::UiPatch>() + size_of::<ui_contract::SurfaceId>() }
+
+    /// 📬️ Both destination slots and fixed initialization/moves are admitted before detaching the source.
+    pub fn publish_into(&mut self, payload: &mut ui_contract::UiPendingPatch, published: &mut Option<SurfaceReconcilePublishedPatch>, admitted_bytes: usize) -> Result<usize, &'static str> {
+        if admitted_bytes < Self::required_publish_bytes() || published.is_some() || !payload.terminal_is_empty() { return Ok(0); }
+        if payload.source_mut()?.is_some() { return Ok(0); }
+        let Some(source) = self.patch.get() else { return Ok(0); };
+        let metadata = pending_surface_patch(Some(ui_contract::UiPatch { surface: source.surface.clone(), base_revision: source.base_revision, revision: source.revision, ops: ui_contract::UiPatchOps::default() }));
+        let revision = source.revision;
+        *payload.source_mut()? = self.patch.source_mut()?.take();
+        *published = Some(SurfaceReconcilePublishedPatch { generation: self.generation, metadata, revision, credit: self.credit.take(), handback: self.handback.take() });
+        Ok(Self::required_publish_bytes())
     }
 
     pub fn close_step(&mut self) -> bool {
-        if self.patch.as_mut().is_some_and(|patch| patch.ops.pop().is_some()) {
-            return false;
-        }
-        if self.patch.take().is_some() {
-            return false;
-        }
-        if let Some(credit) = self.credit.take() {
-            release_surface_reconcile(credit);
-            return false;
-        }
-        if let Some(handback) = self.handback.take() {
-            release_surface_reconcile_handback(handback);
-            return false;
-        }
-        true
+        self.close_step_with_grant(1, 4096).expect("ready patch retirement remains exact").complete
     }
+
+    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+        close_surface_patch_owner(&mut self.patch, &mut self.credit, &mut self.handback, items, bytes)
+    }
+    pub fn terminal_is_empty(&self) -> bool { self.patch.terminal_is_empty() && self.credit.is_none() && self.handback.is_none() }
 }
 
 impl Drop for SurfaceReconcileReadyPatch {
     fn drop(&mut self) {
-        if self.patch.is_none() && self.credit.is_none() && self.handback.is_none() {
+        if self.terminal_is_empty() {
             return;
         }
         let generation = self.generation;
         handback_surface_reconcile(Box::new(SurfaceReconcileRetained {
+            output_handback: None,
             generation,
             phase: SurfaceReconcileJobPhase::Closing,
             current: None,
             source: None,
             cursor: None,
             candidate: None,
-            patch: self.patch.take(),
-            published_surface: None,
+            patch: take(&mut self.patch),
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
             usage: SurfaceReconcileUsage::default(),
@@ -2426,33 +2831,25 @@ impl Drop for SurfaceReconcileReadyPatch {
 /// 📮️ Credit witness retained by the reactor until the published revision is acknowledged or closed.
 pub struct SurfaceReconcilePublishedPatch {
     generation: u64,
-    surface: ui_contract::SurfaceId,
+    metadata: ui_contract::UiPendingPatch,
     revision: ui_contract::UiRevision,
-    credit: Option<SurfaceReconcileCredit>,
+    credit: Option<ui_contract::UiResidentPermit>,
     handback: Option<SurfaceReconcileHandbackReservation>,
 }
 
 impl SurfaceReconcilePublishedPatch {
     /// ♻️ Releases one exact published owner without handing its terminal into a global queue.
     pub fn close_step(&mut self) -> bool {
-        if !self.surface.0.is_empty() {
-            self.surface = ui_contract::SurfaceId::default();
-            return false;
-        }
-        if let Some(credit) = self.credit.take() {
-            release_surface_reconcile(credit);
-            return false;
-        }
-        if let Some(handback) = self.handback.take() {
-            release_surface_reconcile_handback(handback);
-            return false;
-        }
-        true
+        self.close_step_with_grant(1, 4096).expect("published patch retirement remains exact").complete
+    }
+
+    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> {
+        close_surface_patch_owner(&mut self.metadata, &mut self.credit, &mut self.handback, items, bytes)
     }
 
     /// 🧾️ Verifies this published handle owns neither payload nor admission/handback authority.
     pub fn terminal_is_empty(&self) -> bool {
-        self.surface.0.is_empty() && self.credit.is_none() && self.handback.is_none()
+        self.metadata.terminal_is_empty() && self.credit.is_none() && self.handback.is_none()
     }
 
     pub fn generation(&self) -> u64 {
@@ -2460,22 +2857,24 @@ impl SurfaceReconcilePublishedPatch {
     }
 
     pub fn matches(&self, surface: &str, revision: u64) -> bool {
-        self.surface.0.as_str() == surface && self.revision.0 == revision
+        self.surface().is_some_and(|exact| exact.0.as_str() == surface) && self.revision.0 == revision
     }
 
-    pub fn surface(&self) -> &ui_contract::SurfaceId {
-        &self.surface
+    pub fn surface(&self) -> Option<&ui_contract::SurfaceId> {
+        self.metadata.get().map(|patch| &patch.surface)
     }
 
     pub fn revision(&self) -> ui_contract::UiRevision {
         self.revision
     }
 
-    pub fn acknowledge(self, surface: &str, revision: u64) -> Result<SurfaceReconcilePublishedAck, Self> {
-        if !self.matches(surface, revision) {
-            return Err(self);
-        }
-        Ok(SurfaceReconcilePublishedAck { owner: self })
+    pub const fn required_acknowledge_bytes() -> usize { size_of::<Self>() + size_of::<SurfaceReconcilePublishedAck>() }
+
+    /// ✅️ A mismatched receipt, occupied target, or insufficient grant leaves both slots untouched.
+    pub fn acknowledge_into(source: &mut Option<Self>, target: &mut Option<SurfaceReconcilePublishedAck>, surface: &str, revision: u64, admitted_bytes: usize) -> Result<bool, &'static str> {
+        if admitted_bytes < Self::required_acknowledge_bytes() || target.is_some() || !source.as_ref().is_some_and(|owner| owner.matches(surface, revision)) { return Ok(false); }
+        *target = Some(SurfaceReconcilePublishedAck { owner: source.take().ok_or("published source lost after receipt validation")? });
+        Ok(true)
     }
 }
 
@@ -2490,32 +2889,31 @@ impl SurfaceReconcilePublishedAck {
     }
 
     pub fn surface(&self) -> Option<&ui_contract::SurfaceId> {
-        Some(self.owner.surface())
+        self.owner.surface()
     }
 
     pub fn revision(&self) -> ui_contract::UiRevision {
         self.owner.revision()
     }
 
-    pub fn into_published(self) -> SurfaceReconcilePublishedPatch {
-        self.owner
-    }
+    pub fn close_step_with_grant(&mut self, items: usize, bytes: usize) -> Result<ui_contract::UiValueRetirementStep, &'static str> { self.owner.close_step_with_grant(items, bytes) }
+    pub fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
 }
 
 impl Drop for SurfaceReconcilePublishedPatch {
     fn drop(&mut self) {
-        if self.credit.is_none() && self.handback.is_none() && self.surface.0.is_empty() {
+        if self.terminal_is_empty() {
             return;
         }
         handback_surface_reconcile(Box::new(SurfaceReconcileRetained {
+            output_handback: None,
             generation: self.generation,
             phase: SurfaceReconcileJobPhase::Closing,
             current: None,
             source: None,
             cursor: None,
             candidate: None,
-            patch: None,
-            published_surface: Some(take(&mut self.surface)),
+            patch: take(&mut self.metadata),
             retire_tree: SurfaceTreeRetireCursor::default(),
             fault: None,
             usage: SurfaceReconcileUsage::default(),
@@ -2551,19 +2949,20 @@ impl SurfaceReconcileJob {
         let surface_bytes = current.surface.0.len();
         let handback = acquire_surface_reconcile_handback(&mut current.handback, generation);
         let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) } else { None };
-        let (credit, handback) = match (credit, handback) {
-            (Some(credit), Some(handback)) => (credit, handback),
-            (credit, handback) => {
+        let output_handback = reserve_surface_reconcile_handback(generation);
+        let (credit, handback, output_handback) = match (credit, handback, output_handback) {
+            (Some(credit), Some(handback), Some(output_handback)) => (credit, handback, output_handback),
+            (credit, handback, output_handback) => {
                 return Err(SurfaceReconcileRejected {
                     state: Some(Box::new(SurfaceReconcileRetained {
+                        output_handback,
                         generation,
                         phase: SurfaceReconcileJobPhase::Fault,
                         current: Some(current),
                         source: Some(tree),
                         cursor: None,
                         candidate: None,
-                        patch: None,
-                        published_surface: None,
+                        patch: ui_contract::UiPendingPatch::default(),
                         retire_tree: SurfaceTreeRetireCursor::default(),
                         fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
                         usage: SurfaceReconcileUsage::default(),
@@ -2573,21 +2972,21 @@ impl SurfaceReconcileJob {
                 })
             }
         };
-        let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits);
+        let cursor = SurfaceReconcileCursor::new_admitted(tree, &current, limits, generation, Some(credit));
         Ok(Self {
             state: Some(Box::new(SurfaceReconcileRetained {
+                output_handback: Some(output_handback),
                 generation,
                 phase: SurfaceReconcileJobPhase::Drive,
                 current: Some(current),
                 source: None,
                 cursor: Some(cursor),
                 candidate: None,
-                patch: None,
-                published_surface: None,
+                patch: ui_contract::UiPendingPatch::default(),
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
                 usage: SurfaceReconcileUsage::default(),
-                credit: Some(credit),
+                credit: None,
                 handback: Some(handback),
             })),
         })
@@ -2601,14 +3000,14 @@ impl SurfaceReconcileJob {
         if surface_bytes > limits.max_identifier_bytes {
             return Err(SurfaceReconcileRejected {
                 state: Some(Box::new(SurfaceReconcileRetained {
+                    output_handback: reservation.output_handback.take(),
                     generation,
                     phase: SurfaceReconcileJobPhase::Fault,
                     current: Some(current),
                     source: Some(tree),
                     cursor: None,
                     candidate: None,
-                    patch: None,
-                    published_surface: None,
+                    patch: ui_contract::UiPendingPatch::default(),
                     retire_tree: SurfaceTreeRetireCursor::default(),
                     fault: Some(SurfaceReconcileFault::IdentifierBytes { actual: surface_bytes, max: limits.max_identifier_bytes }),
                     usage: SurfaceReconcileUsage::default(),
@@ -2620,14 +3019,14 @@ impl SurfaceReconcileJob {
         let Some(handback) = handback else {
             return Err(SurfaceReconcileRejected {
                 state: Some(Box::new(SurfaceReconcileRetained {
+                    output_handback: reservation.output_handback.take(),
                     generation,
                     phase: SurfaceReconcileJobPhase::Fault,
                     current: Some(current),
                     source: Some(tree),
                     cursor: None,
                     candidate: None,
-                    patch: None,
-                    published_surface: None,
+                    patch: ui_contract::UiPendingPatch::default(),
                     retire_tree: SurfaceTreeRetireCursor::default(),
                     fault: Some(SurfaceReconcileFault::Credits { usage: SurfaceReconcileUsage { nodes: 0, items: 1, bytes: surface_bytes }, limits }),
                     usage: SurfaceReconcileUsage::default(),
@@ -2636,17 +3035,17 @@ impl SurfaceReconcileJob {
                 })),
             });
         };
-        let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits);
+        let cursor = SurfaceReconcileCursor::new_admitted(tree, &current, limits, generation, reservation.credit.take());
         Ok(Self {
             state: Some(Box::new(SurfaceReconcileRetained {
+                output_handback: reservation.output_handback.take(),
                 generation,
                 phase: SurfaceReconcileJobPhase::Drive,
                 current: Some(current),
                 source: None,
                 cursor: Some(cursor),
                 candidate: None,
-                patch: None,
-                published_surface: None,
+                patch: ui_contract::UiPendingPatch::default(),
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
                 usage: SurfaceReconcileUsage::default(),
@@ -2668,11 +3067,13 @@ impl SurfaceReconcileJob {
         self.state.as_ref().and_then(|state| state.current.as_ref()).map_or(ui_contract::UiRevision::default(), SurfaceReconciler::revision)
     }
 
+    #[cfg(test)]
+    pub(crate) fn transaction_usage(&self) -> SurfaceReconcileUsage {
+        self.state.as_ref().map_or_else(SurfaceReconcileUsage::default, |state| state.cursor.as_ref().map_or(state.usage, |cursor| cursor.usage))
+    }
+
     pub fn drive_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SurfaceReconcileJobStep {
         let Some(state) = self.state.as_mut() else { return SurfaceReconcileJobStep::Fault };
-        if state.phase == SurfaceReconcileJobPhase::Ready {
-            return SurfaceReconcileJobStep::Ready;
-        }
         if state.phase == SurfaceReconcileJobPhase::Fault || state.phase == SurfaceReconcileJobPhase::Closing {
             return SurfaceReconcileJobStep::Fault;
         }
@@ -2689,6 +3090,9 @@ impl SurfaceReconcileJob {
         if cx.should_yield() {
             return SurfaceReconcileJobStep::MoreWork;
         }
+        if state.phase == SurfaceReconcileJobPhase::Ready {
+            return SurfaceReconcileJobStep::Ready;
+        }
         let outcome = match state.phase {
             SurfaceReconcileJobPhase::Drive => {
                 let Some(current) = state.current.as_ref() else {
@@ -2704,7 +3108,7 @@ impl SurfaceReconcileJob {
                     SurfaceReconcileStep::Complete { reconciler, patch } => {
                         state.usage = cursor.usage;
                         state.candidate = Some(reconciler);
-                        state.patch = patch;
+                        *state.patch.source_mut().expect("ready job retains writable patch owner") = patch;
                         state.phase = SurfaceReconcileJobPhase::RetireCursor;
                         SurfaceReconcileJobStep::MoreWork
                     }
@@ -2725,10 +3129,19 @@ impl SurfaceReconcileJob {
             SurfaceReconcileJobPhase::RetirePrevious => {
                 if state.current.as_mut().is_some_and(|current| current.retire_one()) {
                     state.current = None;
-                    state.phase = SurfaceReconcileJobPhase::Ready;
-                    SurfaceReconcileJobStep::Ready
+                    state.phase = SurfaceReconcileJobPhase::SealCandidate;
+                    SurfaceReconcileJobStep::MoreWork
                 } else {
                     SurfaceReconcileJobStep::MoreWork
+                }
+            }
+            SurfaceReconcileJobPhase::SealCandidate => {
+                let candidate = state.candidate.as_mut().expect("completed cursor retains candidate assembly");
+                match candidate.seal_step(state.usage, &mut state.credit, state.patch.get().is_some()) {
+                    Ok(true) => { state.phase = SurfaceReconcileJobPhase::Ready; SurfaceReconcileJobStep::Ready }
+                    Ok(false) => SurfaceReconcileJobStep::MoreWork,
+                    Err(error) if error.kind == ui_contract::UiDocumentAssemblyErrorKind::Contended => SurfaceReconcileJobStep::MoreWork,
+                    Err(_) => { state.fault = Some(SurfaceReconcileFault::AliasCapacity); state.phase = SurfaceReconcileJobPhase::Fault; SurfaceReconcileJobStep::Fault }
                 }
             }
             SurfaceReconcileJobPhase::Ready => SurfaceReconcileJobStep::Ready,
@@ -2747,72 +3160,43 @@ impl SurfaceReconcileJob {
         self.state.as_ref().and_then(|state| state.fault.as_ref())
     }
 
-    pub fn take_ready(mut self) -> Result<(SurfaceReconciler, Option<SurfaceReconcileReadyPatch>), Self> {
-        let ready = self.state.as_ref().is_some_and(|state| state.phase == SurfaceReconcileJobPhase::Ready);
-        if !ready {
-            return Err(self);
+    pub fn is_ready(&self) -> bool { self.state.as_ref().is_some_and(|state| state.phase == SurfaceReconcileJobPhase::Ready) }
+
+    pub const fn required_ready_transfer_bytes() -> usize {
+        2 * size_of::<SurfaceReconciler>() + size_of::<SurfaceReconcileReadyPatch>() + 3 * size_of::<ui_contract::UiPendingPatch>() + 2 * size_of::<ui_contract::UiResidentPermit>() + 4 * size_of::<SurfaceReconcileHandbackReservation>()
+    }
+
+    /// 📬️ Preadmitted receivers take the exact roots while the original job shell remains retained.
+    pub fn take_ready_into(&mut self, current: &mut Option<SurfaceReconciler>, ready: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
+        if admitted_bytes < Self::required_ready_transfer_bytes() || current.is_some() || ready.is_some() { return Ok(false); }
+        let Some(state) = self.state.as_mut() else { return Ok(false); };
+        if state.phase != SurfaceReconcileJobPhase::Ready { return Ok(false); }
+        let Some(candidate) = state.candidate.as_ref() else { return state.refuse_publication("ready job has no canonical candidate"); };
+        if candidate.document.is_none() || candidate.handback.is_some() || state.handback.is_none() { return state.refuse_publication("ready job canonical owner authority is incomplete"); }
+        if state.current.is_some() || state.cursor.is_some() || state.source.is_some() || !state.retire_tree.is_empty() { return state.refuse_publication("ready job still owns unfinished source retirement"); }
+        let has_patch = state.patch.get().is_some();
+        if has_patch && (state.credit.is_none() || state.output_handback.is_none()) { return state.refuse_publication("ready patch is missing its paired publication authority"); }
+        if has_patch {
+            *ready = Some(SurfaceReconcileReadyPatch { generation: state.generation, patch: ui_contract::UiPendingPatch::default(), credit: None, handback: None });
+            let target = ready.as_mut().expect("preadmitted structural output receiver");
+            std::mem::swap(&mut target.patch, &mut state.patch);
+            target.credit = state.credit.take();
+            target.handback = state.output_handback.take();
         }
-        let generation = self.state.as_ref().map_or(0, |state| state.generation);
-        let patch_handback = if self.state.as_ref().is_some_and(|state| state.patch.is_some()) {
-            let Some(handback) = reserve_surface_reconcile_handback(generation) else { return Err(self) };
-            Some(handback)
-        } else {
-            None
-        };
-        let Some(mut state) = self.state.take() else { return Err(self) };
-        let Some(mut reconciler) = state.candidate.take() else {
-            self.state = Some(state);
-            return Err(self);
-        };
-        let patch = state.patch.take();
-        let ready = if let Some(patch) = patch {
-            let Some(reserved_credit) = state.credit.take() else {
-                state.patch = Some(patch);
-                state.candidate = Some(reconciler);
-                self.state = Some(state);
-                return Err(self);
-            };
-            let credit = match shrink_surface_reconcile(reserved_credit, state.usage) {
-                Ok(credit) => credit,
-                Err(credit) => {
-                    state.credit = Some(credit);
-                    state.patch = Some(patch);
-                    state.candidate = Some(reconciler);
-                    self.state = Some(state);
-                    return Err(self);
-                }
-            };
-            let (candidate_credit, patch_credit) = match split_surface_reconcile(credit) {
-                Ok(split) => split,
-                Err(credit) => {
-                    state.credit = Some(credit);
-                    state.patch = Some(patch);
-                    state.candidate = Some(reconciler);
-                    self.state = Some(state);
-                    return Err(self);
-                }
-            };
-            reconciler.persistent_credit = Some(candidate_credit);
-            Some(SurfaceReconcileReadyPatch { generation: state.generation, patch: Some(patch), credit: Some(patch_credit), handback: patch_handback })
-        } else {
-            let Some(reserved_credit) = state.credit.take() else {
-                state.candidate = Some(reconciler);
-                self.state = Some(state);
-                return Err(self);
-            };
-            reconciler.persistent_credit = match shrink_surface_reconcile(reserved_credit, state.usage) {
-                Ok(credit) => Some(credit),
-                Err(credit) => {
-                    state.credit = Some(credit);
-                    state.candidate = Some(reconciler);
-                    self.state = Some(state);
-                    return Err(self);
-                }
-            };
-            None
-        };
-        reconciler.handback = state.handback.take();
-        Ok((reconciler, ready))
+        state.candidate.as_mut().expect("preflight canonical candidate").handback = state.handback.take();
+        *current = state.candidate.take();
+        state.phase = SurfaceReconcileJobPhase::Closing;
+        Ok(true)
+    }
+
+    #[cfg(test)]
+    fn take_ready(mut self) -> Result<(SurfaceReconciler, Option<SurfaceReconcileReadyPatch>), Self> {
+        let mut current = None;
+        let mut ready = None;
+        if self.take_ready_into(&mut current, &mut ready, Self::required_ready_transfer_bytes()) != Ok(true) { return Err(self); }
+        let mut terminal = self.into_terminal();
+        while !terminal.close_step() {}
+        Ok((current.expect("granted exact root transfer"), ready))
     }
 
     pub fn into_terminal(mut self) -> SurfaceReconcileTerminal {
@@ -2850,7 +3234,8 @@ impl SurfaceReconcileRejected {
             self.state = Some(state);
             return Err(self);
         };
-        current.persistent_credit = state.credit.take();
+        if let Some(credit) = state.credit.take() { release_surface_reconcile(credit); }
+        if let Some(handback) = state.output_handback.take() { release_surface_reconcile_handback(handback); }
         current.handback = state.handback.take();
         match SurfaceReconcileJob::try_new_with_limits(current, tree, state.generation, limits) {
             Ok(job) => Ok(job),
@@ -2871,7 +3256,7 @@ impl SurfaceReconcileRejected {
             return None;
         };
         state.fault = None;
-        current.persistent_credit = state.credit.take();
+        if let Some(credit) = state.credit.take() { release_surface_reconcile(credit); }
         current.handback = state.handback.take();
         Some((current, tree))
     }
@@ -2914,14 +3299,14 @@ impl SurfaceReconcileTerminal {
         };
         Ok(Self {
             state: Some(Box::new(SurfaceReconcileRetained {
+                output_handback: reservation.output_handback.take(),
                 generation,
                 phase: SurfaceReconcileJobPhase::Closing,
                 current: Some(current),
                 source: Some(tree),
                 cursor: None,
                 candidate: None,
-                patch: None,
-                published_surface: None,
+                patch: ui_contract::UiPendingPatch::default(),
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
                 usage: SurfaceReconcileUsage::default(),
@@ -2935,17 +3320,17 @@ impl SurfaceReconcileTerminal {
         let Some(handback) = acquire_surface_reconcile_handback(&mut reconciler.handback, generation) else {
             return Err(reconciler);
         };
-        let credit = reconciler.persistent_credit.take();
+        let credit = None;
         Ok(Self {
             state: Some(Box::new(SurfaceReconcileRetained {
+                output_handback: None,
                 generation,
                 phase: SurfaceReconcileJobPhase::Closing,
                 current: Some(reconciler),
                 source: None,
                 cursor: None,
                 candidate: None,
-                patch: None,
-                published_surface: None,
+                patch: ui_contract::UiPendingPatch::default(),
                 retire_tree: SurfaceTreeRetireCursor::default(),
                 fault: None,
                 usage: SurfaceReconcileUsage::default(),
@@ -2995,50 +3380,74 @@ impl Drop for SurfaceReconcileTerminal {
     }
 }
 
-pub fn take_surface_reconcile_terminal(key: SurfaceReconcileHandbackKey) -> Option<SurfaceReconcileTerminal> {
-    let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    let slot = registry.slots.get_mut(key.slot)?;
-    if !slot.reserved || slot.epoch != key.epoch || slot.generation != key.generation {
-        return None;
-    }
-    let mut state = slot.state.take()?;
+pub fn take_surface_reconcile_terminal(key: SurfaceReconcileHandbackKey) -> Result<Option<SurfaceReconcileTerminal>, &'static str> {
+    let mut registry = match SURFACE_RECONCILE_HANDBACKS.try_lock() {
+        Ok(registry) => registry,
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(None),
+        Err(std::sync::TryLockError::Poisoned(_)) => return Err("surface handback registry is poisoned"),
+    };
+    let Some(slot) = registry.slots.get_mut(key.slot) else { return Ok(None); };
+    if !slot.reserved || slot.epoch != key.epoch || slot.generation != key.generation { return Ok(None); }
+    if slot.state.as_ref().is_some_and(|state| state.handback.is_some()) { return Err("queued surface owner retains an external registry reservation"); }
+    let Some(mut state) = slot.state.take() else { return Ok(None); };
     state.handback = Some(SurfaceReconcileHandbackReservation { key });
-    Some(SurfaceReconcileTerminal { state: Some(state) })
+    Ok(Some(SurfaceReconcileTerminal { state: Some(state) }))
 }
 
-pub fn close_surface_reconcile_handback_one() -> bool {
-    let next = {
-        let mut registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-        if registry.retirement_len == 0 {
-            return true;
+pub fn close_surface_reconcile_handback_one() -> Result<bool, &'static str> {
+    static RESIDENT_TURN: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if RESIDENT_TURN.fetch_xor(true, std::sync::atomic::Ordering::Relaxed) && ui_contract::UiResidentPermit::has_pending_returns() {
+        ui_contract::UiResidentPermit::drain_one().map_err(|error| error.reason())?;
+        return Ok(false);
+    }
+    let mut registry = match SURFACE_RECONCILE_HANDBACKS.try_lock() {
+        Ok(registry) => registry,
+        Err(std::sync::TryLockError::WouldBlock) => return Ok(false),
+        Err(std::sync::TryLockError::Poisoned(_)) => return Err("surface handback registry is poisoned"),
+    };
+    if registry.retirement_len == 0 { return Ok(!ui_contract::UiResidentPermit::has_pending_returns()); }
+    let head = registry.retirement_head;
+    let index = registry.retirement[head];
+    let slot = registry.slots.get_mut(index).ok_or("surface retirement queue contains an invalid slot")?;
+    if !slot.queued { return Err("surface retirement queue lost its exact owner"); }
+    let complete = if let Some(state) = slot.state.as_mut() {
+        if state.handback.is_some() || state.current.as_ref().is_some_and(|owner| owner.handback.is_some()) || state.candidate.as_ref().is_some_and(|owner| owner.handback.is_some()) {
+            return Err("queued surface owner retains an external registry reservation");
         }
-        let retirement_head = registry.retirement_head;
-        let index = registry.retirement[retirement_head];
-        registry.retirement[retirement_head] = usize::MAX;
-        registry.retirement_head = (retirement_head + 1) % SURFACE_RECONCILE_HANDBACK_SLOTS;
-        registry.retirement_len -= 1;
-        let (state, key, release) = {
-            let slot = &mut registry.slots[index];
-            slot.queued = false;
-            let key = SurfaceReconcileHandbackKey { slot: index, epoch: slot.epoch, generation: slot.generation };
-            (slot.state.take(), key, !slot.reserved)
-        };
-        if release {
+        if state.fault.is_none() && !state.patch.terminal_is_empty() {
+            state.phase = SurfaceReconcileJobPhase::Closing;
+            state.patch.close_step(1, SURFACE_RECONCILE_PAGE_BYTES)?;
+            false
+        } else { state.close_step() && state.terminal_is_empty() }
+    } else { true };
+    if complete && (slot.state.is_some() || !slot.reserved) && registry.free_len >= SURFACE_RECONCILE_HANDBACK_SLOTS { return Err("surface handback free list exhausted"); }
+    registry.retirement[head] = usize::MAX;
+    registry.retirement_head = (head + 1) % SURFACE_RECONCILE_HANDBACK_SLOTS;
+    registry.retirement_len -= 1;
+    if complete {
+        let slot = &mut registry.slots[index];
+        slot.queued = false;
+        if slot.state.is_some() {
+            slot.state = None;
+            slot.reserved = false;
+            slot.generation = 0;
+        }
+        if !slot.reserved {
             let free = registry.free_len;
             registry.free[free] = index;
             registry.free_len += 1;
         }
-        state.map(|state| (state, key))
-    };
-    let Some((mut state, key)) = next else {
-        return SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).retirement_len == 0;
-    };
-    state.handback = Some(SurfaceReconcileHandbackReservation { key });
-    if !state.close_step() || !state.terminal_is_empty() {
-        handback_surface_reconcile(state);
+    } else {
+        let tail = (registry.retirement_head + registry.retirement_len) % SURFACE_RECONCILE_HANDBACK_SLOTS;
+        registry.retirement[tail] = index;
+        registry.retirement_len += 1;
     }
-    SURFACE_RECONCILE_HANDBACKS.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).retirement_len == 0
+    Ok(registry.retirement_len == 0 && !ui_contract::UiResidentPermit::has_pending_returns())
 }
+
+#[cfg(test)]
+#[path = "../../🚪️handback/🧪️component.rs"]
+mod handback_entry_tests;
 
 //#endregion 🎟️RetainedAuthority
 
@@ -3067,14 +3476,39 @@ fn diff_record_field(old: &ui_contract::UiNodeRecord, new: &ui_contract::UiNodeR
     })
 }
 
-fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8) -> bool {
+fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8, owned_copy: &mut Option<RecordOwnedCopy>) -> bool {
     match *field {
         0 => record.key = ui_contract::UiText::default(),
-        1 => record.component = ui_contract::Component::Separator(ui_contract::SeparatorProps {}),
+        1 => {
+            if let Some(copy) = owned_copy.as_mut() {
+                if !copy.close_step() { return false; }
+                *owned_copy = None;
+            }
+            if !matches!(record.component, ui_contract::Component::Separator(_)) {
+                let source = std::mem::replace(&mut record.component, ui_contract::Component::Separator(ui_contract::SeparatorProps {}));
+                *owned_copy = Some(RecordOwnedCopy::Component(ui_contract::UiComponentCopy::new(source)));
+                return false;
+            }
+        }
         2 => record.layout = ui_contract::LayoutSpec::default(),
-        3 if record.children.pop().is_some() => return false,
+        3 => {
+            if record.children.pop().is_some() { return false; }
+            if !record.children.terminal_is_empty() {
+                let _ = record.children.release_empty_page();
+                return false;
+            }
+        }
         4 => record.accessibility = ui_contract::AccessibilitySpec::default(),
-        5 if record.bindings.pop().is_some() => return false,
+        5 => {
+            if let Some(copy) = owned_copy.as_mut() {
+                if !copy.close_step() { return false; }
+                *owned_copy = None;
+            }
+            if !record.bindings.terminal_is_empty() {
+                *owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(std::mem::take(&mut record.bindings))));
+                return false;
+            }
+        }
         6 => record.menu = None,
         7 => return true,
         _ => return true,
@@ -3083,14 +3517,32 @@ fn retire_record_one(record: &mut ui_contract::UiNodeRecord, field: &mut u8) -> 
     false
 }
 
-fn retire_fresh_record_one(record: &mut FreshRecordClone, field: &mut u8) -> bool {
+fn retire_fresh_record_one(record: &mut FreshRecordClone, field: &mut u8, owned_copy: &mut Option<RecordOwnedCopy>) -> bool {
     match *field {
         0 => record.key = None,
-        1 => record.component = None,
+        1 => {
+            if let Some(copy) = owned_copy.as_mut() {
+                if !copy.close_step() { return false; }
+                *owned_copy = None;
+            }
+            if let Some(component) = record.component.take() {
+                *owned_copy = Some(RecordOwnedCopy::Component(ui_contract::UiComponentCopy::new(component)));
+                return false;
+            }
+        }
         2 => record.layout = None,
         3 => record.children = None,
         4 => record.accessibility = None,
-        5 => record.bindings = None,
+        5 => {
+            if let Some(copy) = owned_copy.as_mut() {
+                if !copy.close_step() { return false; }
+                *owned_copy = None;
+            }
+            if let Some(bindings) = record.bindings.take() {
+                *owned_copy = Some(RecordOwnedCopy::Bindings(ui_contract::UiBindingsCopy::new(bindings)));
+                return false;
+            }
+        }
         6 => record.menu = None,
         7 => return true,
         _ => return true,
@@ -3104,7 +3556,43 @@ fn retire_fresh_record_one(record: &mut FreshRecordClone, field: &mut u8) -> boo
 //#region 🔖️Diff
 
 #[cfg(test)]
-impl SurfaceReconciler {
+struct SurfaceReconcileOracle {
+    surface: ui_contract::SurfaceId,
+    revision: ui_contract::UiRevision,
+    allocator: ui_contract::UiNodeIdAllocator,
+    root: Option<ui_contract::UiNodeId>,
+    retained: SurfaceLinearMap<ui_contract::UiNodeId, ui_contract::UiNodeRecord, SURFACE_RECONCILE_FIXED_NODES>,
+    key_index: SurfaceLinearMap<NodeIdentity, ui_contract::UiNodeId, SURFACE_RECONCILE_FIXED_NODES>,
+}
+
+#[cfg(test)]
+impl SurfaceReconcileOracle {
+    fn from_current(current: &SurfaceReconciler) -> Self {
+        let mut retained = SurfaceLinearMap::default();
+        let mut snapshot = current.snapshot();
+        while let Some(record) = snapshot.nodes.pop() { retained.try_insert(record.id, record).unwrap(); }
+        let mut key_index = SurfaceLinearMap::default();
+        for index in 0..current.key_index.len() {
+            let (identity, id) = current.key_index.get_index(index).unwrap();
+            key_index.try_insert(identity.clone(), *id).unwrap();
+        }
+        Self { surface: current.surface.clone(), revision: current.revision, allocator: current.allocator.clone(), root: current.root, retained, key_index }
+    }
+
+    fn reconcile(&mut self, tree: &crate::ComponentTree) -> Option<ui_contract::UiPatch> {
+        let mut ops = ui_contract::UiPatchOps::default();
+        let previous_root = self.root;
+        let new_root_id = self.diff_node(None, &tree.root, &mut ops);
+        if previous_root != Some(new_root_id) {
+            if let Some(stale_root) = previous_root { self.remove_subtree(None, stale_root, &mut ops); }
+            ops.try_push(ui_contract::UiPatchOp::SetRoot { id: new_root_id }).unwrap();
+            self.root = Some(new_root_id);
+        }
+        if ops.is_empty() { return None; }
+        let base_revision = self.revision;
+        self.revision = self.revision.try_next().unwrap();
+        Some(ui_contract::UiPatch { surface: self.surface.clone(), base_revision, revision: self.revision, ops })
+    }
     /// ♻️ Resolves `node`'s identity under `parent` against [`Self::key_index`]: a hit reuses the
     /// existing id and diffs field-by-field via [`Self::diff_existing`]; a miss mints a fresh id via
     /// the allocator and inserts the node wholesale via one `Upsert` — the only two ways any node ever
@@ -3290,6 +3778,18 @@ fn build_record(id: ui_contract::UiNodeId, node: &crate::TreeNode, children: ui_
 mod tests {
     use super::*;
 
+    mod ownership {
+        include!("../../📏️ownership/🧪️component.rs");
+    }
+
+    mod canonical_document_tests {
+        include!("../../📄️document/🧪️component.rs");
+    }
+
+    mod output_pool_tests {
+        include!("../../📤️output/🧪️component.rs");
+    }
+
     //#region 🔖️Fixtures
     fn ui_text(value: &str) -> ui_contract::UiText {
         ui_contract::UiText::try_from_str(value).expect("bounded fixture text")
@@ -3368,13 +3868,19 @@ mod tests {
         }
     }
 
-    fn reconcile_resumable(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> (SurfaceReconciler, Option<ui_contract::UiPatch>, usize) {
+    fn reconcile_resumable(current: &SurfaceReconciler, component_tree: crate::ComponentTree) -> (SurfaceReconciler, Option<SurfaceReconcileReadyPatch>, usize) {
         let mut cursor = SurfaceReconcileCursor::new(component_tree, current);
         let mut yields = 0;
         loop {
             match cursor.step(current) {
                 SurfaceReconcileStep::Yield { .. } => yields += 1,
-                SurfaceReconcileStep::Complete { reconciler, patch } => return (reconciler, patch, yields),
+                SurfaceReconcileStep::Complete { mut reconciler, patch } => {
+                    let mut output = None;
+                    while !reconciler.seal_step(cursor.usage, &mut output, patch.is_some()).unwrap() {}
+                    let ready = patch.map(|patch| SurfaceReconcileReadyPatch { generation: cursor.assembly_generation, patch: pending_surface_patch(Some(patch)), credit: output, handback: reserve_surface_reconcile_handback(cursor.assembly_generation) });
+                    while !cursor.retire_one() {}
+                    return (reconciler, ready, yields);
+                }
                 SurfaceReconcileStep::Fault(fault) => panic!("unexpected reconcile fault: {fault:?}"),
             }
         }
@@ -3386,18 +3892,29 @@ mod tests {
     fn instance_lifetime_published_patch_close_retains_exact_handback_until_terminal() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🎭️actor/🚪️lifetime/🧪️fixture.json")).unwrap();
         let mut reservation = SurfaceReconcileReservation::try_new(8_971).expect("real published owner reservation");
-        let mut owner = SurfaceReconcilePublishedPatch { generation: 8_971, surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), revision: ui_contract::UiRevision(1), credit: reservation.credit.take(), handback: reservation.handback.take() };
+        let metadata = pending_surface_patch(Some(ui_contract::UiPatch { surface: ui_contract::SurfaceId::try_from("7:retained").unwrap(), base_revision: ui_contract::UiRevision(0), revision: ui_contract::UiRevision(1), ops: ui_contract::UiPatchOps::default() }));
+        let mut owner = SurfaceReconcilePublishedPatch { generation: 8_971, metadata, revision: ui_contract::UiRevision(1), credit: reservation.credit.take(), handback: reservation.handback.take() };
         let key = owner.handback.as_ref().unwrap().key;
         let mut remaining = Vec::new();
         let mut complete = Vec::new();
-        for _ in 0..4 {
-            complete.push(owner.close_step());
-            let fields: Vec<_> = [("surface", !owner.surface.0.is_empty()), ("credit", owner.credit.is_some()), ("handback", owner.handback.is_some())].into_iter().filter_map(|(name, retained)| retained.then_some(name)).collect();
-            remaining.push(fields);
+        let mut prior = vec!["metadata", "credit", "handback"];
+        let mut turns = 0;
+        let mut bytes = 0;
+        assert_eq!(fixture["publishedClose"]["granularity"], "owner-transition");
+        for _ in 0..100_000 {
+            let step = owner.close_step_with_grant(1, 1).unwrap();
+            assert!(step.released_items <= 1 && step.released_bytes <= 1);
+            turns += 1;
+            bytes += step.released_bytes;
+            let fields: Vec<_> = [("metadata", !owner.metadata.terminal_is_empty()), ("credit", owner.credit.is_some()), ("handback", owner.handback.is_some())].into_iter().filter_map(|(name, retained)| retained.then_some(name)).collect();
+            if fields != prior || step.complete { prior = fields.clone(); remaining.push(fields); complete.push(step.complete); }
+            if step.complete { break; }
         }
-        assert_eq!(serde_json::to_value(remaining).unwrap(), fixture["publishedClose"]["remaining"]);
+        assert_eq!(bytes, "7:retained".len());
+        assert_eq!(serde_json::to_value(&remaining).unwrap(), fixture["publishedClose"]["remaining"]);
         assert_eq!(serde_json::to_value(complete).unwrap(), fixture["publishedClose"]["complete"]);
         assert!(owner.terminal_is_empty());
+        eprintln!("[DEBUG] published-close owner-transitions={} physical-turns={turns} semantic-bytes={bytes} grant=1", remaining.len());
         let registry = SURFACE_RECONCILE_HANDBACKS.lock().unwrap();
         let slot = &registry.slots[key.slot];
         assert!(slot.epoch != key.epoch || (!slot.reserved && slot.state.is_none()), "the exact handback was released, not queued and forgotten");
@@ -3407,6 +3924,7 @@ mod tests {
 
     #[test]
     fn fixed_runtime_owners_keep_bounded_state_off_the_stack() {
+        eprintln!("[DEBUG] canonical-owner-layout reconciler={} cursor={} retained={}", size_of::<SurfaceReconciler>(), size_of::<SurfaceReconcileCursor>(), size_of::<SurfaceReconcileRetained>());
         assert!(size_of::<SurfaceReconciler>() <= 1_024);
         assert!(size_of::<SurfaceReconcileCursor>() <= 48 * 1_024);
         assert!(size_of::<SurfaceReconcileRetained>() <= 64 * 1_024);
@@ -3421,9 +3939,10 @@ mod tests {
         let expected_patch = direct.reconcile(&component_tree).expect("initial direct patch");
 
         let current = SurfaceReconciler::new("s");
-        let (resumed, actual_patch, yields) = reconcile_resumable(&current, component_tree);
+        let (resumed, mut actual_patch, yields) = reconcile_resumable(&current, component_tree);
 
-        assert_eq!(actual_patch, Some(expected_patch));
+        assert_eq!(actual_patch.as_ref().and_then(|patch| patch.patch.get()), Some(&expected_patch));
+        if let Some(patch) = actual_patch.as_mut() { while !patch.close_step() {} }
         let actual = resumed.snapshot();
         let expected = direct.snapshot();
         assert_eq!(actual.revision, expected.revision);
@@ -3465,9 +3984,20 @@ mod tests {
                     assert!(nodes <= 1);
                     yields += 1;
                 }
-                SurfaceReconcileStep::Complete { reconciler, patch } => {
+                SurfaceReconcileStep::Complete { mut reconciler, patch } => {
+                    let mut output = None;
+                    loop {
+                        let started = Instant::now();
+                        let complete = reconciler.seal_step(cursor.usage, &mut output, patch.is_some()).unwrap();
+                        assert!(started.elapsed() < Duration::from_millis(8), "canonical seal exceeds one callback contract");
+                        if complete { break; }
+                    }
                     assert_eq!(reconciler.snapshot().nodes.len(), 31);
                     assert!(patch.is_some());
+                    let mut ready = SurfaceReconcileReadyPatch { generation: cursor.assembly_generation, patch: pending_surface_patch(patch), credit: output, handback: reserve_surface_reconcile_handback(cursor.assembly_generation) };
+                    while !ready.close_step() {}
+                    while !cursor.retire_one() {}
+                    while !reconciler.retire_one() {}
                     break;
                 }
                 SurfaceReconcileStep::Fault(fault) => panic!("unexpected reconcile fault: {fault:?}"),
@@ -3510,7 +4040,7 @@ mod tests {
         assert_eq!(retained.1.key.as_str(), "exact");
         assert!(cursor.flat.is_empty());
         assert!(cursor.seen.is_empty());
-        assert!(cursor.new_retained.is_empty());
+        assert!(cursor.new_ordinals.is_empty());
         assert!(cursor.ops.is_empty());
     }
 
@@ -3525,9 +4055,10 @@ mod tests {
         };
         let node = crate::TreeNode::try_new("surface", ui_contract::Component::Surface(props)).expect("bounded surface node");
         let current = SurfaceReconciler::new("s");
-        let (reconciled, patch, _) = reconcile_resumable(&current, tree(node));
+        let (reconciled, mut patch, _) = reconcile_resumable(&current, tree(node));
 
         assert!(patch.is_some(), "the opaque surface publishes through the same transactional patch path");
+        if let Some(patch) = patch.as_mut() { while !patch.close_step() {} }
         let snapshot = reconciled.snapshot();
         let ui_contract::Component::Surface(actual) = &snapshot.nodes[0].component else { panic!("surface component") };
         assert_eq!(actual.doc.bytes.as_slice(), payload);
@@ -3654,12 +4185,12 @@ mod tests {
             Ok(ready) => ready,
             Err(_) => panic!("ready owner"),
         };
-        let retained_credit = reconciler.persistent_credit.as_ref().expect("take_ready transfers rather than releases credit");
+        let retained_credit = reconciler.document.as_ref().expect("take_ready retains original canonical root").try_read().unwrap().resident_limits();
         assert!(retained_credit.items < SurfaceReconcileLimits::default().max_items, "ready reconciliation returns unused aggregate item capacity");
         assert!(retained_credit.bytes < SurfaceReconcileLimits::default().max_bytes, "ready reconciliation returns unused aggregate byte capacity");
         let mut ready_patch = ready_patch.expect("initial reconciliation publishes a patch");
         let patch_credit = ready_patch.credit.as_ref().expect("ready patch shares the retained credit");
-        assert_eq!((patch_credit.items, patch_credit.bytes), (retained_credit.items, retained_credit.bytes));
+        assert_eq!((patch_credit.limits().items, patch_credit.limits().bytes), (retained_credit.items, retained_credit.bytes));
         while !ready_patch.close_step() {}
         let mut terminal = SurfaceReconcileTerminal::try_from_reconciler(reconciler, generation).expect("pre-admitted terminal handback");
         assert!(!terminal.close_step());
@@ -3684,7 +4215,7 @@ mod tests {
         };
         assert_eq!(returned.surface().0.as_str(), "overflow-owner");
         for key in keys {
-            let mut terminal = take_surface_reconcile_terminal(key).expect("every fixed handback owner remains O(1) recoverable");
+            let mut terminal = take_surface_reconcile_terminal(key).expect("valid handback registry").expect("every fixed handback owner remains O(1) recoverable");
             while !terminal.terminal_is_empty() {
                 terminal.close_step();
             }
@@ -3707,7 +4238,7 @@ mod tests {
         assert_eq!(job.drive_one(&mut context), SurfaceReconcileJobStep::Fault);
         let handback_key = job.handback_key().expect("fault retains fixed public handback reservation");
         drop(job);
-        let mut terminal = take_surface_reconcile_terminal(handback_key).expect("drop handback is observable in O(1)");
+        let mut terminal = take_surface_reconcile_terminal(handback_key).expect("valid handback registry").expect("drop handback is observable in O(1)");
         assert!(matches!(terminal.fault(), Some(SurfaceReconcileFault::StaleGeneration { .. })));
         for _ in 0..32 {
             if terminal.close_step() && terminal.terminal_is_empty() {

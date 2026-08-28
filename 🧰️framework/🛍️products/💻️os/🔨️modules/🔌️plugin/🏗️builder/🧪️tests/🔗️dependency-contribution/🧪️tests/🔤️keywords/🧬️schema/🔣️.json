@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/schema/plugin/builder/dependency-contribution/keyword-tests",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["delta", "text"],
+    "properties": {
+      "delta": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 },
+      "text": { "type": "string", "pattern": "^add-value delta=-?(0|[1-9][0-9]*)$" }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateTensionComponentInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTensionComponentFKKn",
+    "newTensionComponentFUkKn",
+    "newTensionComponentNEdKn"
+  ],
+  "properties": {
+    "newTensionComponentFUkKn": {
+      "type": "number"
+    },
+    "newTensionComponentFKKn": {
+      "type": "number"
+    },
+    "newTensionComponentNEdKn": {
+      "type": "number"
+    }
+  }
+}

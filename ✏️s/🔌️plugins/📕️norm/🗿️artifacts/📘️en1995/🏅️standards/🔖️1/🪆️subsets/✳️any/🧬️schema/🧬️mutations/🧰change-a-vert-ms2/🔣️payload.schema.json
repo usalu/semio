@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeAVertMS2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAVertMS2"
+  ],
+  "properties": {
+    "newAVertMS2": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MoveNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newX",
+    "newY",
+    "nodeId"
+  ],
+  "properties": {
+    "nodeId": {
+      "type": "string"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

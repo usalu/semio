@@ -1,0 +1,20 @@
+# 🧭️ Own workspace root. The repository's root Cargo.toml is a shared, leased manifest that concurrent
+# sessions edit; a bridge that had to be a member of it would serialise every agent behind that lease.
+# See the repository test host crate for the same pattern.
+[workspace]
+
+[package]
+name = "semio-step-ap214-cc6-bridge"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🏭️ Production mutation bridge for s.stdio.step@ap214/✳️cc6 — answers listMutations from the dispatch enum itself."
+
+[[bin]]
+name = "semio-step-ap214-cc6-bridge"
+path = "🦀️component.rs"
+
+# 🔒️ TEST-ONLY IN EFFECT, PRODUCTION IN SUBSTANCE: the bridge links the real plugin so its answer comes
+# from production dispatch. It adds no dependency to the plugin itself — the edge points one way.
+[dependencies]
+semio-s-plugin-stdio = { path = "../../../../../../../📦️packages/🦀️rust", default-features = false }

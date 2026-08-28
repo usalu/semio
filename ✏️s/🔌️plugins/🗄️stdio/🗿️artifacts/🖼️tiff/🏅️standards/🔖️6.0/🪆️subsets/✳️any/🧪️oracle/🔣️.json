@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "oracles": [
     {
       "id": "image-tiff-6-0-mutate",
@@ -7,7 +7,7 @@
       "package": "image",
       "version": "0.25",
       "capabilities": [
-        "tiff-6-0-mutate"
+        "tiff-6-0-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-raster-v1"
@@ -15,7 +15,7 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "image::codecs::tiff::TiffEncoder is the real third-party writer used for both derived real-world IFDs of the committed fixture (see ../🧪️oracle/🦀️component.rs's fixture_derivation module) and as an independent cross-check reader for IFD 0. Its public surface is a single-IFD raster codec only (confirmed by reading the vendored crate source), so the multi-IFD/tag-level mutation surface this subset declares (InsertIfd, RemoveIfd, SetTag, RemoveTag, SetByteOrder, SetSnapshot) is served by this module's own independent hand-rolled IFD-chain reader/writer — the same shape the obj/tobj entry below uses (a reference package that only reads or only writes half the surface, with the oracle module supplying the other half honestly rather than silently reusing the subject's own codec).",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
@@ -24,7 +24,15 @@
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
-      }
+      },
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -109,6 +117,132 @@
         "replace-tag",
         "remove-tag",
         "replace-pixels"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "any",
+      "standardDirectoryName": "🔖️6.0",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-byte-order",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-byte-order",
+            "bridgeVersion": 1,
+            "variant": "ChangeByteOrderMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-ifd",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-ifd",
+            "bridgeVersion": 1,
+            "variant": "InsertIfdMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-ifd",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-ifd",
+            "bridgeVersion": 1,
+            "variant": "RemoveIfdMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-tag",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-tag",
+            "bridgeVersion": 1,
+            "variant": "RemoveTagMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-pixels",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-pixels",
+            "bridgeVersion": 1,
+            "variant": "ReplacePixelsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-tag",
+          "capability": "tiff-6-0-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-tag",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTagMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "tiff-6-0-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

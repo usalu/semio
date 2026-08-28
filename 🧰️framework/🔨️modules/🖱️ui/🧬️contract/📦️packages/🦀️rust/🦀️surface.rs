@@ -345,11 +345,13 @@ mod tests {
         let limits = crate::UiDocumentLimits::default();
 
         let surface = crate::Component::Surface(SurfaceProps { kind: SurfaceKind::Canvas2d, doc_schema: ui_text("nonsense@not-a-version"), doc: SurfaceDoc::default(), bindings: Default::default() });
+        let mut ops = crate::UiPatchOps::default();
+        ops.try_push(crate::UiPatchOp::SetComponent { id: crate::UiNodeId(0), component: surface }).unwrap();
         let patch = crate::UiPatch {
             surface: state.surface.clone(),
             base_revision: state.revision,
             revision: state.revision.try_next().expect("bounded revision"),
-            ops: fixed_list([crate::UiPatchOp::SetComponent { id: crate::UiNodeId(0), component: surface }]),
+            ops,
         };
 
         crate::apply_patch(&mut state, &patch, &limits).expect("a patch carrying an unrecognised/unparseable doc_schema must still apply — it is not this crate's job to reject it");

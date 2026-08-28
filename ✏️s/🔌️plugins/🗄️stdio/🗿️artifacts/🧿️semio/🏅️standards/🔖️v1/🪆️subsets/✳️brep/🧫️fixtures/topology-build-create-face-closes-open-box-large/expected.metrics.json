@@ -1,0 +1,28 @@
+{
+  "declaredOutcome": "applied",
+  "kind": "create-face",
+  "hasExpected": true,
+  "solids": 1,
+  "shells": 1,
+  "faces": 6,
+  "edges": 12,
+  "vertices": 8,
+  "boundingBox": {
+    "xMin": -1e-7,
+    "xMax": 2000.0000001,
+    "yMin": -1e-7,
+    "yMax": 2000.0000001,
+    "zMin": -1e-7,
+    "zMax": 2000.0000001
+  },
+  "boundingBoxDiagonal": 3464.101615484165,
+  "volume": 7999999999.999999,
+  "area": 23999999.999999996,
+  "validSolid": true,
+  "eulerCharacteristic": 2,
+  "genus": 0,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.10392304846452495,
+  "meshVertexCount": 24,
+  "meshTriangleCount": 12
+}

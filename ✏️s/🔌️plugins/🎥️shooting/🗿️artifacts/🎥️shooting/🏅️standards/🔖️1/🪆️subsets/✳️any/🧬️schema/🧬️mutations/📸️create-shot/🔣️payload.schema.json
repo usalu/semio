@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CreateShot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "shot"
+  ],
+  "properties": {
+    "shot": {
+      "title": "ShootingShot",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "format",
+        "height",
+        "id",
+        "label",
+        "shape",
+        "width"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "format": {
+          "type": "string"
+        },
+        "shape": {
+          "type": "string"
+        },
+        "background": {
+          "type": "string"
+        },
+        "cameraId": {
+          "type": "string"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

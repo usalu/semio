@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReorderColumns",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "toIndex"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "toIndex": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

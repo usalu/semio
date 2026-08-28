@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangePaintLayerVisible",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "newVisible",
+    "objectId"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newVisible": {
+      "type": "boolean"
+    }
+  }
+}

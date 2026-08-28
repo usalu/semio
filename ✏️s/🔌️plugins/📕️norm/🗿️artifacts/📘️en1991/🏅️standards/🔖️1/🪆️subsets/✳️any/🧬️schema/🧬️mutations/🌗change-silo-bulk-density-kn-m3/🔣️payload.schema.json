@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSiloBulkDensityKnM3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSiloBulkDensityKnM3"
+  ],
+  "properties": {
+    "newSiloBulkDensityKnM3": {
+      "type": "number"
+    }
+  }
+}

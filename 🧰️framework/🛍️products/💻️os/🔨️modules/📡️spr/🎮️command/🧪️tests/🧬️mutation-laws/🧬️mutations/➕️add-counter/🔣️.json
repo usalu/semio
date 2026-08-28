@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️tests/🧬️mutation-laws/🧬️mutations/➕️add-counter",
+  "semanticKind": "add-counter",
+  "displayName": "Add Counter",
+  "emoji": "➕️",
+  "aggregateVariant": "AddCounter",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "add-counter",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

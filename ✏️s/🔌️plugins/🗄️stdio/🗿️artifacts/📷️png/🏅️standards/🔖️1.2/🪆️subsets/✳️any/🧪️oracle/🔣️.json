@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
   "oracles": [
     {
@@ -9,7 +9,7 @@
       "package": "png",
       "version": "0.18",
       "capabilities": [
-        "png-1-2-mutate"
+        "png-1-2-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-raster-v1"
@@ -17,7 +17,7 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-png",
-      "rationale": "The same reference PNG encoder/decoder the shared png-raster entry already approves, registered under its own id and capability so this subset's exhaustive PngMutation catalog (17 kinds: header, palette, transparency, the typed ancillary set, text chunks, pixels and unknown-chunk retention) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's. Every mutation is applied independently against the `png` crate's own Encoder/Decoder API — never by reusing this repository's own decode_png/encode_png — so the comparison stays a genuine cross-check. Two chunk families are the documented exception and are read and written outside the crate's typed surface, because it has none for them: `Info` has no tIME field at all, and no accessor for chunk types it does not recognise. Both are recovered by a fixed-grammar walk over §5.3's length/type/data/crc chain and written back through `Writer::write_chunk`, the crate's own escape hatch. A third caveat is a defect in the crate rather than a gap: `Info::source_gamma` and `Info::source_chromaticities` are documented as the members to prefer over `gama_chunk`/`chrm_chunk` and are assigned nowhere in png 0.18.1, so a caller who follows that advice reads None for every file carrying a gAMA or cHRM chunk. This oracle reads the chunk members.",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
@@ -25,7 +25,15 @@
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
-      }
+      },
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "png",
+        "implementation": "png Rust PNG encoder/decoder",
+        "version": "0.18"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -218,6 +226,303 @@
         "replace-pixels",
         "insert-unknown-chunk",
         "remove-unknown-chunk"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "any",
+      "standardDirectoryName": "🔖️1.2",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-background",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-background",
+            "bridgeVersion": 1,
+            "variant": "ChangeBackgroundMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-chromaticities",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-chromaticities",
+            "bridgeVersion": 1,
+            "variant": "ChangeChromaticitiesMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-gamma",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-gamma",
+            "bridgeVersion": 1,
+            "variant": "ChangeGammaMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-header",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-header",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeaderMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-physical-dims",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-physical-dims",
+            "bridgeVersion": 1,
+            "variant": "ChangePhysicalDimsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-srgb-intent",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-srgb-intent",
+            "bridgeVersion": 1,
+            "variant": "ChangeSrgbIntentMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-timestamp",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-timestamp",
+            "bridgeVersion": 1,
+            "variant": "ChangeTimestampMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "change-transparency",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-transparency",
+            "bridgeVersion": 1,
+            "variant": "ChangeTransparencyMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "InsertTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-unknown-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "InsertUnknownChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-unknown-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-unknown-chunk",
+            "bridgeVersion": 1,
+            "variant": "RemoveUnknownChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-palette",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-palette",
+            "bridgeVersion": 1,
+            "variant": "ReplacePaletteMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-pixels",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-pixels",
+            "bridgeVersion": 1,
+            "variant": "ReplacePixelsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-text-chunk",
+          "capability": "png-1-2-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-text-chunk",
+            "bridgeVersion": 1,
+            "variant": "ReplaceTextChunkMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "png-1-2-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

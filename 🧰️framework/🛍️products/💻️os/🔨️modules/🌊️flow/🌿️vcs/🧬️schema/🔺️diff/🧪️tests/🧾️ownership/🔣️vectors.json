@@ -1,0 +1,25 @@
+{
+  "base": {
+    "schema": "flow.fixture",
+    "camera": { "x": 1, "y": 2, "zoom": 3 },
+    "widgets": [
+      { "kind": "neuron", "id": "a", "neuronKind": "math.add", "params": { "nested": { "number": 42, "text": "retained" } }, "input_ports": ["input"], "output_ports": ["output"], "preview": true },
+      { "kind": "outputPreview", "id": "b", "preview": { "answer": 42 }, "expanded": ["answer"] }
+    ],
+    "synapses": [{ "id": "s", "from": "a", "to": "b", "fromPort": "output", "toPort": "input" }],
+    "layout": { "a": { "x": 1, "y": 2 }, "b": { "x": 3, "y": 4 } }
+  },
+  "cases": [
+    { "name": "identity", "diff": { "deltas": [] }, "expectedWidgetIds": ["a", "b"], "expectedSynapseIds": ["s"], "expectedLayoutIds": ["a", "b"] },
+    { "name": "remove-retained-widget", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": ["a"], "replaced": [], "inserted": [] } }] }, "expectedWidgetIds": ["b"], "expectedSynapseIds": ["s"], "expectedLayoutIds": ["a", "b"] },
+    { "name": "replace-retained-widget", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "replaced": [["a", { "kind": "inputNote", "id": "renamed", "text": "replacement" }]], "inserted": [] } }] }, "expectedWidgetIds": ["renamed", "b"], "expectedSynapseIds": ["s"], "expectedLayoutIds": ["a", "b"] },
+    { "name": "remove-then-reject-missing", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": ["a"], "replaced": [], "inserted": [] } }, { "delta": "widgets", "value": { "removed": ["absent"], "replaced": [], "inserted": [] } }] }, "errorCode": "mutation.apply.missing-target" },
+    { "name": "replace-then-reject-index", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "replaced": [["a", { "kind": "inputNote", "id": "renamed", "text": "replacement" }]], "inserted": [] } }, { "delta": "widgets", "value": { "removed": [], "replaced": [], "inserted": [[4294967295, { "kind": "inputNote", "id": "outside", "text": "invalid" }]] } }] }, "errorCode": "mutation.apply.index-range" },
+    { "name": "insert-retained-then-remove", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "replaced": [], "inserted": [[1, { "kind": "outputPreview", "id": "temporary", "preview": { "nested": { "number": 7 } }, "expanded": ["nested"] }]] } }, { "delta": "widgets", "value": { "removed": ["temporary"], "replaced": [], "inserted": [] } }] }, "expectedWidgetIds": ["a", "b"], "expectedSynapseIds": ["s"], "expectedLayoutIds": ["a", "b"] },
+    { "name": "layout-then-reject-missing", "diff": { "deltas": [{ "delta": "layout", "value": [{ "id": "a", "layout": { "x": 9, "y": 10 } }, { "id": "absent", "layout": null }] }] }, "errorCode": "mutation.apply.missing-target" },
+    { "name": "duplicate-not-cancelled-by-later-removal", "diff": { "deltas": [{ "delta": "widgets", "value": { "removed": [], "replaced": [], "inserted": [[0, { "kind": "inputNote", "id": "a", "text": "duplicate" }]] } }, { "delta": "widgets", "value": { "removed": ["a"], "replaced": [], "inserted": [] } }] }, "errorCode": "mutation.apply.duplicate-target" },
+    { "name": "replace-fixture-then-reject", "diff": { "deltas": [{ "delta": "fixture", "value": { "schema": "flow.fixture", "camera": { "x": 4, "y": 5, "zoom": 6 }, "widgets": [{ "kind": "outputPreview", "id": "imported", "preview": { "retained": true }, "expanded": ["retained"] }], "synapses": [], "layout": {} } }, { "delta": "synapses", "value": { "removed": ["absent"], "replaced": [], "inserted": [] } }] }, "errorCode": "mutation.apply.missing-target" },
+    { "name": "replace-fixture-then-layout", "diff": { "deltas": [{ "delta": "fixture", "value": { "schema": "flow.fixture", "camera": { "x": 4, "y": 5, "zoom": 6 }, "widgets": [{ "kind": "outputPreview", "id": "imported", "preview": { "retained": true }, "expanded": ["retained"] }], "synapses": [], "layout": {} } }, { "delta": "layout", "value": [{ "id": "imported", "layout": { "x": 8, "y": 9 } }] }] }, "expectedWidgetIds": ["imported"], "expectedSynapseIds": [], "expectedLayoutIds": ["imported"] },
+    { "name": "ordered-synapse-replacement", "diff": { "deltas": [{ "delta": "synapses", "value": { "removed": [], "replaced": [["s", { "id": "renamed", "from": "b", "to": "a", "fromPort": "out", "toPort": "in" }]], "inserted": [] } }] }, "expectedWidgetIds": ["a", "b"], "expectedSynapseIds": ["renamed"], "expectedLayoutIds": ["a", "b"] }
+  ]
+}

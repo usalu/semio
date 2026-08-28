@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdatePart2d",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newShape": {
+      "type": "string"
+    },
+    "newRadius": {
+      "type": "number"
+    },
+    "newWidth": {
+      "type": "number"
+    },
+    "newHeight": {
+      "type": "number"
+    },
+    "newColor": {
+      "type": "string"
+    },
+    "newIconKind": {
+      "type": "string"
+    }
+  }
+}

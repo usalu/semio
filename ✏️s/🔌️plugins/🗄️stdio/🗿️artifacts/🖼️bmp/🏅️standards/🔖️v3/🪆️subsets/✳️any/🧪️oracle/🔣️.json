@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's contribution to the repository test platform — the BMP v3 ✳️any mutation catalog and its dedicated mutate oracle. Discovered by convention (`testContributionDirName` in 🔣️taxonomy.json); the shared stdio manifest (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️.json`) already registers `image-bmp` under capability `bmp-raster` for plain create/round-trip coverage — mutation coverage needs its own capability so the two are never conflated, per the wave-7 fleet brief.",
   "oracles": [
     {
@@ -9,7 +9,7 @@
       "package": "image",
       "version": "0.25",
       "capabilities": [
-        "bmp-3-mutate"
+        "bmp-3-mutate-second-implementation"
       ],
       "comparisonProfiles": [
         "semantic-raster-v1"
@@ -17,7 +17,7 @@
       "license": "MIT OR Apache-2.0",
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image",
-      "rationale": "The same reference BMP encoder/decoder already registered as `image-bmp` (shared stdio manifest), given its own capability for the 7 typed BmpMutation kinds this subset declares. The independent decoder reads both this subset's own encode_bmp output and the oracle's own re-encode, so a mutation's effect is judged the same way regardless of which side produced the bytes. The oracle drives the crate's INDEXED layer, not just its resolved raster: `BmpDecoder::set_indexed_color` for the per-pixel index buffer, `get_palette` for the colour table and `BmpEncoder::encode_with_palette` to write both back as a real indexed BITMAPINFOHEADER. Without that, three of the seven kinds — the palette triple — have nothing to operate on at all, because `load_from_memory` resolves the indices away. Three BITMAPINFOHEADER facts stay outside the crate's reach and are read from, and patched back into, the fixed BMP v3 layout: `biClrUsed` (the crate zero-pads `get_palette` to 256 entries deliberately and exposes the real count nowhere), and both pixels-per-metre fields plus the row order (its encoder hard-codes the first two to 0 and always stores rows bottom-up).",
+      "rationale": "🫥️ RECLASSIFIED. The third-party crate here does REAL codec work — it decodes the artifact and will reject a malformed one — but that is not what the mutation test turns on. What the OUTPUT OF A MUTATION SHOULD BE is computed by this owner's own `🧪️oracle/🦀️component.rs`, whose `apply_kind` dispatch is a second implementation of this subset's mutation semantics. Its own doc comment says so: it \"deliberately mirrors\" the production `diff` rather than diverging from it. Both halves of the comparison therefore read the same specification, and a misreading of it produces two agreeing wrong answers.\n\nThe honest split is that the crate discharges \"the result is a well-formed file of this format\", and NOT \"the mutation computed the right answer\". Only the second is what a mutation oracle is for, so this is a `cross-semio-implementation`: a required SUPPLEMENT, never a substitute. A qualifying third-party reference for the mutation semantics is still owed.",
       "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
       "productionDebt": {
         "reachableFrom": [
@@ -26,7 +26,15 @@
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
-      }
+      },
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
@@ -99,6 +107,113 @@
         "remove-palette-entry",
         "replace-palette-entry",
         "replace-pixel-data"
+      ]
+    }
+  ],
+  "mutationManifests": [
+    {
+      "schema": "semio.repository-test.mutation-manifest/v2",
+      "artifact": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "any",
+      "standardDirectoryName": "🔖️v3",
+      "subsetDirectoryName": "✳️any",
+      "mutations": [
+        {
+          "id": "change-header-fields",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "change-header-fields",
+            "bridgeVersion": 1,
+            "variant": "ChangeHeaderFieldsMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "insert-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "InsertPaletteEntryMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "remove-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "RemovePaletteEntryMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-palette-entry",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-palette-entry",
+            "bridgeVersion": 1,
+            "variant": "ReplacePaletteEntryMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "replace-pixel-data",
+          "capability": "bmp-3-mutate",
+          "payloadSchema": "🔣️payload.schema.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "replace-pixel-data",
+            "bridgeVersion": 1,
+            "variant": "ReplacePixelDataMutation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "bmp-3-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        }
       ]
     }
   ]

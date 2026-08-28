@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "count", "grantBytes", "smallGrantBytes", "elementBytes", "scope", "names", "cancelFrontiers", "closeGrants", "returnOrders", "heldReaderSurvives", "contendedCopyProgresses"],
+  "properties": {
+    "version": { "const": 1 }, "count": { "const": 32 }, "grantBytes": { "const": 4096 }, "smallGrantBytes": { "const": 2048 }, "elementBytes": { "const": 2072 },
+    "scope": { "const": "fixture" }, "names": { "const": ["action-0", "action-1", "action-2"] },
+    "cancelFrontiers": { "const": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }, "closeGrants": { "const": [1, 64, 4096] },
+    "heldReaderSurvives": { "const": true }, "contendedCopyProgresses": { "const": false },
+    "returnOrders": { "const": [["source", "candidate"], ["candidate", "source"]] }
+  }
+}

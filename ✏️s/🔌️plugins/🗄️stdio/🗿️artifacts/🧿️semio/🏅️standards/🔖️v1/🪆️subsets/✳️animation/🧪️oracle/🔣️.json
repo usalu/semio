@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: a mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so `s.stdio.semio.animation`'s oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.animation` is a semio-NATIVE format, so its reference is a second IMPLEMENTATION written in another language from the committed grammars rather than a third-party package.",
   "oracles": [
     {
       "id": "semio-animation-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-animation-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-animation-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-animation/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line timelines-line` grammar in both directions — `timeline`, `option-name`, `channel`, `target`, `property = t|r|s|w|c:<hex>`, `interpolation = l|s|c`, `keyframe` and `value = S|V|Q|W` included — and all thirteen verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from its own notes and pinned by byte-exact re-emission: `hex` is the framework macro, so `77616c6b` is `walk` and `6f706163697479` is `opacity`, and `number = INT | FLOAT` prints through Rust's `{v}` Display, which drops the fractional part of an integral value — the committed walk cycle carries both spellings. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The interchange-reader route was surveyed again and still rejected on the merits rather than for absence — `gif` 0.13 exposes per-frame delays alone, and `pygltflib`/`gltf-transform` judge glTF's `channel` + `sampler` accessor indirection while this snapshot resolves that model into owned keyframes, so nine of the thirteen kinds would have had nothing to compare against."
+      "rationale": "No third-party library in any ecosystem reads or writes semio's own `.dsl.semio` envelope, so the second producer THE STANDARD requires is a second IMPLEMENTATION in another language. `../../../../🧪️tests/mutate-semio-animation/🐍️component.py` is that implementation: the `semio <envelope-id>.dsl v1` preamble, the whole `document = artifact-mark schema-line timelines-line` grammar in both directions — `timeline`, `option-name`, `channel`, `target`, `property = t|r|s|w|c:<hex>`, `interpolation = l|s|c`, `keyframe` and `value = S|V|Q|W` included — and all thirteen verbs of this subset's vocabulary together with their inverses, written in Python from `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio`, `../🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` and the envelope section of `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs`, importing nothing from and transliterating nothing of the Rust it judges. Two leaves the grammar states by reference were settled from its own notes and pinned by byte-exact re-emission: `hex` is the framework macro, so `77616c6b` is `walk` and `6f706163697479` is `opacity`, and `number = INT | FLOAT` prints through Rust's `{v}` Display, which drops the fractional part of an integral value — the committed walk cycle carries both spellings. `package` is deliberately the empty string: the implementation needs no distribution, so it contributes nothing to `🔒️dependencies.json` and nothing to the import-purity probe. The interchange-reader route was surveyed again and still rejected on the merits rather than for absence — `gif` 0.13 exposes per-frame delays alone, and `pygltflib`/`gltf-transform` judge glTF's `channel` + `sampler` accessor indirection while this snapshot resolves that model into owned keyframes, so nine of the thirteen kinds would have had nothing to compare against.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-animation-mutate`'s external-oracle requirement for its 13-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -33,7 +45,21 @@
           ]
         }
       ],
-      "kinds": ["no-mutation", "set-snapshot", "insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"]
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "insert-timeline",
+        "remove-timeline",
+        "set-timeline-name",
+        "insert-channel",
+        "remove-channel",
+        "set-channel-target",
+        "set-channel-interpolation",
+        "insert-keyframe",
+        "remove-keyframe",
+        "set-keyframe-time",
+        "set-keyframe-value"
+      ]
     }
   ]
 }

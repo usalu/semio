@@ -1,6 +1,7 @@
 //#region 📦️OwnedWireContract
 import { NumericIndex, type NumericIndexEdit, type NumericIndexReader, type NumericIndexRetirement, type NumericIndexGrant } from "../../../../🌱️value/🗂️ordered/🔢️numeric/🟦️component.ts";
 import { UiSurfaceBytes, UiSurfaceByteBuilder, type UiSurfaceByteRetirement } from "./🔢️bytes/🟦️component.ts";
+import { takeOwnedNativeBuffer } from "./🔒️transport/🟦️component.ts";
 
 export type RetainedUiWireValue = null | boolean | number | string | UiSurfaceBytes | readonly RetainedUiWireValue[] | { readonly [key: string]: RetainedUiWireValue };
 export type RetainedUiWireStep = { readonly kind: "blocked" | "pending" | "ready" | "rejected" | "complete"; readonly phase: string; readonly items: number; readonly bytes: number };
@@ -54,18 +55,9 @@ export class RetainedUiWireValueCursor {
   #byteRetirement: UiSurfaceByteRetirement | null = null;
   readonly #profile: "value" | "component" | "node";
 
-  constructor(input: Uint8Array, profile: "value" | "component" | "node" = "value") {
+  constructor(input: unknown, profile: "value" | "component" | "node" = "value") {
     this.#profile = profile;
-    const buffer = input.buffer;
-    if (!(buffer instanceof ArrayBuffer) || input.byteOffset !== 0 || input.byteLength !== buffer.byteLength) throw new Error("UI wire ownership requires an entire non-shared transport buffer");
-    try {
-      new Uint8Array(buffer);
-      const moved = structuredClone(buffer, { transfer: [buffer] });
-      if (buffer.byteLength !== 0) throw new Error("Buffer was not detached");
-      this.#input = new Uint8Array(moved);
-    } catch {
-      throw new Error("UI wire ownership transfer failed");
-    }
+    this.#input = new Uint8Array(takeOwnedNativeBuffer(input, "Uint8Array", Number.MAX_SAFE_INTEGER));
   }
 
   get value(): RetainedUiWireValue | undefined { return this.#ready && !this.#closing ? this.#root : undefined; }

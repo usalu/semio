@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🗑️remove-widget",
+  "semanticKind": "remove-widget",
+  "displayName": "Remove Widget",
+  "emoji": "🗑️",
+  "aggregateVariant": "RemoveWidget",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "remove-widget",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

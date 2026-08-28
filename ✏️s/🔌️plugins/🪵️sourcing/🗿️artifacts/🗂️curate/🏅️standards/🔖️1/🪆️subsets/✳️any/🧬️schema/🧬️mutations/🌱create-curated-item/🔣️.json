@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-curated-item",
+  "semanticKind": "create-curated-item",
+  "displayName": "Create Curated Item",
+  "emoji": "🌱",
+  "aggregateVariant": "CreateCuratedItem",
+  "payloadSchema": "🔣️payload.schema.json",
+  "textOpcode": "create-curated-item",
+  "binaryTag": null,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text"
+  ]
+}

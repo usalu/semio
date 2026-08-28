@@ -17,7 +17,7 @@ use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdat
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
-use crate::os_spr::{collection_diff_from_mutation, inverse_collection_mutation, CollectionDiff, CollectionMutation, Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, MutationOutcome, Patchable};
+use crate::os_spr::{Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 #[cfg(any(target_arch = "wasm32", test))]
@@ -75,194 +75,114 @@ impl Patchable<SynapseSpec> for SynapseSpec {
     }
 }
 
-/// ▶️ Applies a `CollectionDiff` (removed → modified → added) to an owned `Vec`.
-fn apply_flow_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>) -> Result<(), MutationApplyError>
-where
-    TId: PartialEq,
-    TItem: Identified<TId> + Clone + Patchable<TPatch>,
-{
-    for (index, id) in diff.removed.iter().enumerate() {
-        if !items.iter().any(|item| item.id() == id) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "removed flow item does not exist").at(["removed".to_string(), index.to_string()]));
-        }
-        if diff.removed[..index].contains(id) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "flow item is removed more than once").at(["removed".to_string(), index.to_string()]));
-        }
-    }
-    for (index, patch) in diff.modified.iter().enumerate() {
-        if !items.iter().any(|item| item.id() == &patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "modified flow item does not exist").at(["modified".to_string(), index.to_string()]));
-        }
-        if diff.removed.contains(&patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "flow item cannot be removed and modified").at(["modified".to_string(), index.to_string()]));
-        }
-        if diff.modified[..index].iter().any(|previous| previous.id == patch.id) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "flow item is modified more than once").at(["modified".to_string(), index.to_string()]));
-        }
-    }
-    for (index, added) in diff.added.iter().enumerate() {
-        if items.iter().any(|item| item.id() == added.id()) || diff.added[..index].iter().any(|previous| previous.id() == added.id()) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "added flow item identity already exists").at(["added".to_string(), index.to_string()]));
-        }
-    }
-    let mut candidate = items.clone();
-    candidate.retain(|item| !diff.removed.iter().any(|id| item.id() == id));
-    for patch in &diff.modified {
-        let item = candidate.iter_mut().find(|item| item.id() == &patch.id).ok_or_else(|| MutationApplyError::new("mutation.apply.conflicting-target", "an earlier patch changed a later flow target's identity").at(["modified"]))?;
-        item.apply_patch(&patch.patch);
-    }
-    candidate.extend(diff.added.iter().cloned());
-    *items = candidate;
-    Ok(())
+/// 📏️ Converts native positions to the portable Flow wire index without truncation.
+fn flow_wire_index(index: usize) -> MutationApplyResult<u32> {
+    u32::try_from(index).map_err(|_| MutationApplyError::new("mutation.apply.index-range", "Flow position exceeds the u32 wire range").at(["index"]))
 }
 
-/// ➕️ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
-fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
-    if let Some(next) = incoming {
-        match target {
-            Some(existing) => {
-                existing.removed.extend(next.removed);
-                existing.modified.extend(next.modified);
-                existing.added.extend(next.added);
-            }
-            None => *target = Some(next),
+/// 📐️ Validates a wire insertion position against the current ordered collection.
+fn flow_native_index(index: u32, length: usize) -> MutationApplyResult<usize> {
+    let index = usize::try_from(index).map_err(|_| MutationApplyError::new("mutation.apply.index-range", "Flow wire position exceeds the native index range").at(["index"]))?;
+    if index > length {
+        return Err(MutationApplyError::new("mutation.apply.index-range", "Flow position is outside the collection").at(["index"]));
+    }
+    Ok(index)
+}
+
+/// 🧱️ Structural collection edits retain insertion positions independently of mutation payloads.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FlowCollectionDelta<T> {
+    pub removed: Vec<String>,
+    pub inserted: Vec<(u32, T)>,
+    pub replaced: Vec<(String, T)>,
+}
+
+/// ▶️ Validates one structural fragment without copying or dropping its payload owners.
+fn apply_flow_collection_delta<'a, T: Identified<String>>(items: &mut Vec<&'a T>, delta: &'a FlowCollectionDelta<T>) -> MutationApplyResult<()> {
+    flow_wire_index(items.len())?;
+    let mut ids = BTreeSet::new();
+    for item in items.iter() {
+        if !ids.insert(item.id()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "Flow collection has duplicate identities"));
         }
     }
+    for id in &delta.removed {
+        let index = items.iter().position(|item| item.id() == id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "removed Flow item does not exist").at([id.as_str()]))?;
+        items.remove(index);
+    }
+    for (id, replacement) in &delta.replaced {
+        let index = items.iter().position(|item| item.id() == id).ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "changed Flow item does not exist").at([id.as_str()]))?;
+        if items.iter().enumerate().any(|(at, item)| at != index && item.id() == replacement.id()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "replacement Flow identity already exists").at([id.as_str()]));
+        }
+        items[index] = replacement;
+    }
+    for (index, item) in &delta.inserted {
+        let index = flow_native_index(*index, items.len())?;
+        flow_wire_index(items.len().checked_add(1).ok_or_else(|| MutationApplyError::new("mutation.apply.index-range", "Flow collection length overflow"))?)?;
+        if items.iter().any(|existing| existing.id() == item.id()) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "inserted Flow identity already exists").at([item.id().as_str()]));
+        }
+        items.insert(index, item);
+    }
+    Ok(())
 }
 //#endregion 🔖️CollectionSupport
 
 //#region 🔖️Mutations
-/// 📍️ One node-layout assignment inside a `SetLayout` operation; `None` removes the entry.
+/// 📍️ One layout assignment; absent or null layout removes the existing entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FlowLayoutEntry {
     pub id: String,
     #[dsl(block)]
     pub layout: Option<WidgetLayout>,
 }
 
-/// 🌊️ Typed, invertible flow-document operation. `Widgets`/`Synapses` are id-keyed collection operations for
-/// granular convergence; `SetLayout` moves nodes; `SetFixture` replaces the whole fixture (import/reset).
-/// The camera is ephemeral view state (plugin runtime), never a document operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum FlowMutation {
-    Widgets(CollectionMutation<String, Widget, Widget>),
-    Synapses(CollectionMutation<String, SynapseSpec, SynapseSpec>),
-    SetLayout { entries: Vec<FlowLayoutEntry> },
-    SetFixture { fixture: FlowFixture },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowDiff {
-    pub fixture: Option<FlowFixture>,
-    pub widgets: Option<CollectionDiff<String, Widget, Widget>>,
-    pub synapses: Option<CollectionDiff<String, SynapseSpec, SynapseSpec>>,
-    pub layout: Option<Vec<FlowLayoutEntry>>,
-}
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod flow_direct_tests;
 
-impl MutationDiff<FlowFixture> for FlowDiff {
-    fn apply(&self, snapshot: &FlowFixture) -> MutationApplyResult<FlowFixture> {
-        if let Some(fixture) = &self.fixture {
-            return Ok(fixture.clone());
-        }
-        let mut next = snapshot.clone();
-        if let Some(diff) = &self.widgets {
-            apply_flow_collection_diff(&mut next.widgets, diff).map_err(|error| error.under(["widgets"]))?;
-        }
-        if let Some(diff) = &self.synapses {
-            apply_flow_collection_diff(&mut next.synapses, diff).map_err(|error| error.under(["synapses"]))?;
-        }
-        if let Some(entries) = &self.layout {
-            for entry in entries {
-                if !next.widgets.iter().any(|widget| widget.id() == &entry.id) {
-                    return Err(MutationApplyError::new("mutation.apply.missing-target", format!("layout widget {} does not exist", entry.id)).at(["layout", entry.id.as_str()]));
-                }
-                match &entry.layout {
-                    Some(layout) => {
-                        next.layout.insert(entry.id.clone(), layout.clone());
-                    }
-                    None => {
-                        if next.layout.remove(&entry.id).is_none() {
-                            return Err(MutationApplyError::new("mutation.apply.missing-target", format!("layout entry {} does not exist", entry.id)).at(["layout", entry.id.as_str()]));
-                        }
-                    }
-                }
-            }
-        }
-        Ok(next)
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.fixture.is_some() {
-            *self = FlowDiff { fixture: other.fixture, ..Default::default() };
-            return;
-        }
-        absorb_flow_collection_diff(&mut self.widgets, other.widgets);
-        absorb_flow_collection_diff(&mut self.synapses, other.synapses);
-        if let Some(mut entries) = other.layout {
-            self.layout.get_or_insert_with(Vec::new).append(&mut entries);
-        }
-    }
-}
-
-impl Mutation<FlowFixture> for FlowMutation {
-    type Diff = FlowDiff;
-
-    /// 🧮️ Mechanical wrap only (26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-
-    /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet.
-    fn diff(&self, snapshot: &FlowFixture) -> MutationOutcome<FlowDiff> {
-        let diff = match self {
-            FlowMutation::Widgets(operation) => FlowDiff { widgets: Some(collection_diff_from_mutation(&snapshot.widgets, operation)), ..Default::default() },
-            FlowMutation::Synapses(operation) => FlowDiff { synapses: Some(collection_diff_from_mutation(&snapshot.synapses, operation)), ..Default::default() },
-            FlowMutation::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
-            FlowMutation::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
-        };
-        MutationOutcome::new(diff)
-    }
-
-    fn inverse(&self, snapshot: &FlowFixture) -> Vec<Self> {
-        match self {
-            FlowMutation::Widgets(operation) => vec![FlowMutation::Widgets(inverse_collection_mutation(&snapshot.widgets, operation))],
-            FlowMutation::Synapses(operation) => vec![FlowMutation::Synapses(inverse_collection_mutation(&snapshot.synapses, operation))],
-            FlowMutation::SetLayout { entries } => vec![FlowMutation::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: snapshot.layout.get(&entry.id).cloned() }).collect() }],
-            FlowMutation::SetFixture { .. } => vec![FlowMutation::SetFixture { fixture: snapshot.clone() }],
-        }
-    }
-}
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod diff;
+pub use diff::{FlowDelta, FlowDiff};
 
 /// 🌉️ Host-mutation → granular-operations bridge: diffs a `FlowFixture` before/after a `FlowHost` mutation into
 /// the minimal set of `FlowMutation`s, so the rich stateful engine keeps owning mutation logic (port wiring,
 /// cycle checks, cluster collapse) while the document store still records convergent, invertible operations.
 /// The camera is intentionally excluded (it is plugin runtime state).
-pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowMutation> {
+pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> MutationApplyResult<Vec<FlowMutation>> {
     let mut operations = Vec::new();
     let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
     for widget in &before.widgets {
         let id = widget_id_for(widget);
         if !after_widget_ids.contains(id) {
-            operations.push(FlowMutation::Widgets(CollectionMutation::Remove { id: id.to_string() }));
+            operations.push(FlowMutation::RemoveWidget(RemoveWidget { id: id.to_string() }));
         }
     }
     for (index, widget) in after.widgets.iter().enumerate() {
         let id = widget_id_for(widget);
         match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
-            None => operations.push(FlowMutation::Widgets(CollectionMutation::Add { index, item: widget.clone() })),
-            Some(prev) if prev != widget => operations.push(FlowMutation::Widgets(CollectionMutation::Patch { id: id.to_string(), patch: widget.clone() })),
+            None => operations.push(FlowMutation::AddWidget(AddWidget { index: flow_wire_index(index)?, widget: widget.clone() })),
+            Some(prev) if prev != widget => operations.push(FlowMutation::ChangeWidget(ChangeWidget { id: id.to_string(), widget: widget.clone() })),
             Some(_) => {}
         }
     }
     let after_synapse_ids: BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
     for synapse in &before.synapses {
         if !after_synapse_ids.contains(synapse.id.as_str()) {
-            operations.push(FlowMutation::Synapses(CollectionMutation::Remove { id: synapse.id.clone() }));
+            operations.push(FlowMutation::RemoveSynapse(RemoveSynapse { id: synapse.id.clone() }));
         }
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         match before.synapses.iter().find(|entry| entry.id == synapse.id) {
-            None => operations.push(FlowMutation::Synapses(CollectionMutation::Add { index, item: synapse.clone() })),
-            Some(prev) if *prev != *synapse => operations.push(FlowMutation::Synapses(CollectionMutation::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
+            None => operations.push(FlowMutation::AddSynapse(AddSynapse { index: flow_wire_index(index)?, synapse: synapse.clone() })),
+            Some(prev) if *prev != *synapse => operations.push(FlowMutation::ChangeSynapse(ChangeSynapse { id: synapse.id.clone(), synapse: synapse.clone() })),
             Some(_) => {}
         }
     }
@@ -278,9 +198,9 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
         }
     }
     if !entries.is_empty() {
-        operations.push(FlowMutation::SetLayout { entries });
+        operations.push(FlowMutation::ChangeLayout(ChangeLayout { entries }));
     }
-    operations
+    Ok(operations)
 }
 //#endregion 🔖️Mutations
 
@@ -400,7 +320,7 @@ enum NeuronNodeDsl {
 /// `Tree`) — models the `from`/`fromPort` -> `to`/`toPort` connection as a single unified
 /// `crate::os_dsl::Wire` literal (`from@fromPort->to@toPort`) instead of four separate string fields, per
 /// the unified syntax law for graph edges/connections. Converts at the `crate::os_store::ArtifactDsl`/
-/// `crate::os_store::OpText` boundary only (`flow_fixture_to_dsl`/`flow_mutation_to_dsl` and their inverses,
+/// `crate::os_store::OpText` boundary through the shared intrinsic field lowering and artifact conversion,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
 /// itself (JSON shape, `tree_from_fixture`, `flow_fixture_operations`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
@@ -514,7 +434,7 @@ enum WidgetDsl {
 
 /// 🌉️ `#[derive(crate::os_dsl::DslEnum)]` only gives `WidgetDsl` a `crate::os_dsl::DslVariants` binding, not
 /// `crate::os_dsl::DslField` — so it can't sit directly in a plain (non-`Vec`) field on its own.
-/// `FlowMutationDsl`'s `WidgetsAdd.item`/`WidgetsPatch.patch` are REQUIRED, never-collection single
+/// Direct add/change widget payloads contain REQUIRED, never-collection single
 /// values; this hand impl reuses the exact same "exactly one tagged statement" idiom
 /// `process_3d::SolidSpec` uses for the identical shape, so those fields stay a bare `WidgetDsl`
 /// rather than a `Box<WidgetDsl>`.
@@ -545,7 +465,7 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: ordered_set_to_vec(expanded) },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: crate::os_dsl::to_dsl_value(flow).unwrap_or(crate::os_dsl::DslValue::Null) },
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: crate::os_dsl::to_dsl_value(flow).expect("Flow GUI has a DSL value representation") },
     }
 }
 
@@ -559,7 +479,7 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
         WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_ordered_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
-        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow).unwrap_or_default() },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: crate::os_dsl::from_dsl_value(flow).map_err(|error| error.to_string())? },
     })
 }
 
@@ -673,153 +593,35 @@ impl crate::os_store::ArtifactPack for FlowFixture {
 }
 //#endregion 🔖️Dsl
 
-//#region 🔖️OpText
-/// ✂️ Local DSL-only mirror of `FlowMutation` — `crate::os_spr::CollectionMutation<K,V,P>` is declared
-/// in the `protocol` crate (foreign type), so it cannot itself gain a `crate::os_dsl::DslField`/
-/// `crate::os_dsl::DslVariants` binding here (orphan rule). This twin flattens the `Widgets`/
-/// `Synapses { collection }` wrappers into their own keyworded variants — mirroring
-/// `imperative_core::ImperativeMutationDsl`'s/`process_3d::Process3dMutationDsl`'s identical fix
-/// for the same foreign-`CollectionMutation` problem — and converts at the `crate::os_spr::OpText`
-/// boundary only; `FlowMutation` itself, and every consumer matching on it
-/// (`flow_fixture_operations`, `flow/plugin`), is completely untouched.
-#[derive(Clone, Debug, PartialEq, crate::os_dsl::DslOps)]
-enum FlowMutationDsl {
-    WidgetsAdd {
-        index: usize,
-        #[dsl(block)]
-        item: WidgetDsl,
-    },
-    WidgetsRemove {
-        id: String,
-    },
-    WidgetsMove {
-        id: String,
-        #[dsl(key = "to")]
-        to_index: usize,
-    },
-    WidgetsPatch {
-        id: String,
-        #[dsl(block)]
-        patch: WidgetDsl,
-    },
-    SynapsesAdd {
-        index: usize,
-        #[dsl(block)]
-        item: SynapseDsl,
-    },
-    SynapsesRemove {
-        id: String,
-    },
-    SynapsesMove {
-        id: String,
-        #[dsl(key = "to")]
-        to_index: usize,
-    },
-    SynapsesPatch {
-        id: String,
-        #[dsl(block)]
-        patch: SynapseDsl,
-    },
-    #[dsl(key = "layout")]
-    SetLayout {
-        entries: Vec<FlowLayoutEntry>,
-    },
-    #[dsl(key = "fixture")]
-    SetFixture {
-        #[dsl(block)]
-        fixture: FlowFixtureDsl,
-    },
-}
-
-fn flow_mutation_to_dsl(operation: &FlowMutation) -> FlowMutationDsl {
-    match operation {
-        FlowMutation::Widgets(CollectionMutation::Add { index: at, item }) => FlowMutationDsl::WidgetsAdd { index: *at, item: widget_to_widget_dsl(item) },
-        FlowMutation::Widgets(CollectionMutation::Remove { id }) => FlowMutationDsl::WidgetsRemove { id: id.clone() },
-        FlowMutation::Widgets(CollectionMutation::Move { id, to_index: to }) => FlowMutationDsl::WidgetsMove { id: id.clone(), to_index: *to },
-        FlowMutation::Widgets(CollectionMutation::Patch { id, patch }) => FlowMutationDsl::WidgetsPatch { id: id.clone(), patch: widget_to_widget_dsl(patch) },
-        FlowMutation::Synapses(CollectionMutation::Add { index: at, item }) => FlowMutationDsl::SynapsesAdd { index: *at, item: synapse_to_dsl(item) },
-        FlowMutation::Synapses(CollectionMutation::Remove { id }) => FlowMutationDsl::SynapsesRemove { id: id.clone() },
-        FlowMutation::Synapses(CollectionMutation::Move { id, to_index: to }) => FlowMutationDsl::SynapsesMove { id: id.clone(), to_index: *to },
-        FlowMutation::Synapses(CollectionMutation::Patch { id, patch }) => FlowMutationDsl::SynapsesPatch { id: id.clone(), patch: synapse_to_dsl(patch) },
-        FlowMutation::SetLayout { entries } => FlowMutationDsl::SetLayout { entries: entries.clone() },
-        FlowMutation::SetFixture { fixture } => FlowMutationDsl::SetFixture { fixture: flow_fixture_to_dsl(fixture) },
+/// 🎛️ Actual widget payloads share the intrinsic widget DSL lowering.
+impl crate::os_dsl::DslField for Widget {
+    fn shape() -> crate::os_dsl::Shape { <WidgetDsl as crate::os_dsl::DslField>::shape() }
+    fn to_value(&self) -> crate::os_dsl::FieldValue { <WidgetDsl as crate::os_dsl::DslField>::to_value(&widget_to_widget_dsl(self)) }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        widget_dsl_to_widget(<WidgetDsl as crate::os_dsl::DslField>::from_value(value)?)
     }
 }
 
-fn flow_mutation_from_dsl(operation: FlowMutationDsl) -> Result<FlowMutation, String> {
-    Ok(match operation {
-        FlowMutationDsl::WidgetsAdd { index, item } => {
-            let item = widget_dsl_to_widget(item)?;
-            FlowMutation::Widgets(CollectionMutation::Add { index, item })
+/// 🔌️ Actual synapse payloads reuse the intrinsic wire-literal lowering.
+impl crate::os_dsl::DslField for SynapseSpec {
+    fn shape() -> crate::os_dsl::Shape { <SynapseDsl as crate::os_dsl::DslField>::shape() }
+    fn to_value(&self) -> crate::os_dsl::FieldValue { <SynapseDsl as crate::os_dsl::DslField>::to_value(&synapse_to_dsl(self)) }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        synapse_from_dsl(<SynapseDsl as crate::os_dsl::DslField>::from_value(value)?)
+    }
+}
+
+/// 📄️ Explicit import payloads share the artifact's intrinsic DSL schema.
+impl crate::os_dsl::DslField for FlowFixture {
+    fn shape() -> crate::os_dsl::Shape { crate::os_dsl::Shape::Record(FlowFixtureDsl::__dsl_spec) }
+    fn to_value(&self) -> crate::os_dsl::FieldValue { crate::os_dsl::FieldValue::Record(flow_fixture_to_dsl(self).__dsl_to_record()) }
+    fn from_value(value: &crate::os_dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            crate::os_dsl::FieldValue::Record(record) => flow_fixture_dsl_to_fixture(FlowFixtureDsl::__dsl_from_record(record).map_err(|error| error.message)?),
+            other => Err(format!("expected Flow fixture record, found {other:?}")),
         }
-        FlowMutationDsl::WidgetsRemove { id } => FlowMutation::Widgets(CollectionMutation::Remove { id }),
-        FlowMutationDsl::WidgetsMove { id, to_index } => FlowMutation::Widgets(CollectionMutation::Move { id, to_index }),
-        FlowMutationDsl::WidgetsPatch { id, patch } => FlowMutation::Widgets(CollectionMutation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
-        FlowMutationDsl::SynapsesAdd { index, item } => {
-            let item = synapse_from_dsl(item)?;
-            FlowMutation::Synapses(CollectionMutation::Add { index, item })
-        }
-        FlowMutationDsl::SynapsesRemove { id } => FlowMutation::Synapses(CollectionMutation::Remove { id }),
-        FlowMutationDsl::SynapsesMove { id, to_index } => FlowMutation::Synapses(CollectionMutation::Move { id, to_index }),
-        FlowMutationDsl::SynapsesPatch { id, patch } => FlowMutation::Synapses(CollectionMutation::Patch { id, patch: synapse_from_dsl(patch)? }),
-        FlowMutationDsl::SetLayout { entries } => FlowMutation::SetLayout { entries },
-        FlowMutationDsl::SetFixture { fixture } => FlowMutation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture)? },
-    })
-}
-/// 🎙️ Handcrafted OpText (P6): derive no longer emits OpText/OpBinary.
-impl crate::os_spr::OpText for FlowMutationDsl {
-    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = crate::os_dsl::parse(line, &spec_fn(), &crate::os_dsl::ParseOptions { limits: crate::os_dsl::Limits::default(), mode: crate::os_dsl::SourceMode::Inline })?;
-                return <Self as crate::os_dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(crate::os_dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as crate::os_dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as crate::os_dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        crate::os_dsl::print(&record, &spec_fn(), crate::os_dsl::JoinMode::Inline)
     }
 }
-
-impl crate::os_spr::OpBinary for FlowMutationDsl {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        crate::os_dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        crate::os_dsl::variants_binary::decode_op(bytes)
-    }
-}
-
-impl crate::os_spr::OpText for FlowMutation {
-    fn parse_op(line: &str) -> Result<Self, crate::os_store::TextError> {
-        let dsl_operation = <FlowMutationDsl as crate::os_spr::OpText>::parse_op(line)?;
-        flow_mutation_from_dsl(dsl_operation).map_err(|message| crate::os_store::TextError::new(message, crate::os_store::TextSpan::at(1, 1)))
-    }
-
-    fn print_op(&self) -> String {
-        <FlowMutationDsl as crate::os_spr::OpText>::print_op(&flow_mutation_to_dsl(self))
-    }
-}
-
-/// ⚡️ Binary mirror of the `OpText` impl above — `FlowMutationDsl` already derives `OpBinary`
-/// via `#[derive(crate::os_dsl::DslOps)]`, so this is a pure to/from-dsl forward.
-impl crate::os_spr::OpBinary for FlowMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
-        flow_mutation_to_dsl(self).encode_op()
-    }
-
-    fn decode_op(bytes: &[u8]) -> Result<Self, crate::os_spr::ProtocolError> {
-        let dsl_operation = FlowMutationDsl::decode_op(bytes)?;
-        flow_mutation_from_dsl(dsl_operation).map_err(|message| crate::os_spr::ProtocolError::Malformed { what: "flow operation", offset: 0, detail: message })
-    }
-}
-//#endregion 🔖️OpText
 
 pub type FlowEnvelope = ArtifactEnvelope<FlowFixture, FlowMutation>;
 pub type FlowStore = ArtifactStore<FlowFixture, FlowMutation>;
@@ -909,20 +711,19 @@ impl ArtifactOwnedValueRetirementFactory<FlowFixture> for FlowOwnedFixtureRetire
 }
 
 struct FlowMutationRetirement {
-    mutation: Option<FlowMutation>,
+    frontier: flow_mutation_retirement::FlowMutationRetirementFrontier,
 }
 
+#[path = "🧬️schema/🧹️retirement/🦀️.rs"]
+mod flow_mutation_retirement;
+
 impl ErasedSnapshotRetirement for FlowMutationRetirement {
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.mutation = None;
-        Ok(SnapshotRetirementStep::Complete)
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        self.frontier.close_step(maximum_items, maximum_bytes)
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.mutation.is_none()
+        self.frontier.terminal_is_empty()
     }
 }
 
@@ -936,7 +737,7 @@ struct FlowMutationRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetirementFactory {
     fn retire_owned(&self, mutation: FlowMutation) -> Box<dyn ErasedSnapshotRetirement> {
-        Box::new(FlowMutationRetirement { mutation: Some(mutation) })
+        Box::new(FlowMutationRetirement { frontier: flow_mutation_retirement::FlowMutationRetirementFrontier::new(mutation) })
     }
 }
 
@@ -4655,7 +4456,7 @@ mod flow_vcs_tests {
         let forward = operation.diff(fixture).diff().apply(fixture).expect("valid flow diff");
         let inverse = operation.inverse(fixture);
         let mut restored = forward.clone();
-        for back in &inverse {
+        for back in inverse.iter().rev() {
             let next = back.diff(&restored).diff().apply(&restored).expect("valid inverse flow diff");
             restored.retire_cold();
             restored = next;
@@ -4668,15 +4469,15 @@ mod flow_vcs_tests {
     #[test]
     fn widget_add_patch_remove_round_trip() {
         let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
-        let add = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
+        let add = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
         let with_widget = round_trip(&fixture, &add);
         assert_eq!(with_widget.widgets.len(), 1);
 
-        let patch = FlowMutation::Widgets(CollectionMutation::Patch { id: "w1".into(), patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() } });
+        let patch = FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: Widget::InputNote { id: "w1".into(), text: "renamed".into() } });
         let patched = round_trip(&with_widget, &patch);
         assert!(matches!(&patched.widgets[0], Widget::InputNote { text, .. } if text == "renamed"));
 
-        let remove = FlowMutation::Widgets(CollectionMutation::Remove { id: "w1".into() });
+        let remove = FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() });
         let removed = round_trip(&patched, &remove);
         assert!(removed.widgets.is_empty());
     }
@@ -4684,7 +4485,7 @@ mod flow_vcs_tests {
     #[test]
     fn set_layout_round_trip() {
         let fixture = FlowFixture::default();
-        let operation = FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] };
+        let operation = FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] });
         let next = round_trip(&fixture, &operation);
         assert_eq!(next.layout.get("slider"), Some(&WidgetLayout { x: 12.0, y: 34.0 }));
     }
@@ -4696,7 +4497,7 @@ mod flow_vcs_tests {
         after.widgets.retain(|widget| Identified::id(widget) != "a");
         after.widgets.push(sample_widget("c"));
         after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
-        let operations = flow_fixture_operations(&before, &after);
+        let operations = flow_fixture_operations(&before, &after).expect("wire-representable flow fixture");
         let materialized = operations.iter().fold(before.clone(), |acc, operation| { let next = operation.diff(&acc).diff().apply(&acc).expect("valid flow replay diff"); acc.retire_cold(); next });
         assert_eq!(materialized.widgets.len(), 2);
         assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
@@ -4709,7 +4510,7 @@ mod flow_vcs_tests {
         let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_snapshot(), None)).await.expect("valid flow store fixture");
         for y in [10.0, 20.0, 30.0] {
             store
-                .dispatch(ArtifactCommand::AmendLast { mutations: vec![FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
+                .dispatch(ArtifactCommand::AmendLast { mutations: vec![FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] })], coalesce_key: Some("move-slider".into()) })
                 .await
                 .expect("drag tick");
         }
@@ -4748,21 +4549,21 @@ mod flow_vcs_tests {
     }
 
     /// 📜️ Exercises `crate::os_store::OpText` for every `FlowMutation` variant — the ground-truth proof for the
-    /// `🔖️OpText` region's `FlowMutationDsl` twin.
+    /// mounted transparent direct-leaf aggregate.
     #[test]
     fn flow_operation_op_text_round_trips_every_variant() {
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Widgets(CollectionMutation::Remove { id: "w1".into() }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Widgets(CollectionMutation::Move { id: "w1".into(), to_index: 2 }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Widgets(CollectionMutation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveWidget(RemoveWidget { id: "w1".into() }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveWidget(MoveWidget { id: "w1".into(), to_index: 2 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeWidget(ChangeWidget { id: "w1".into(), widget: sample_widget("w1") }));
         let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Synapses(CollectionMutation::Add { index: 0, item: synapse.clone() }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Synapses(CollectionMutation::Remove { id: "s1".into() }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Synapses(CollectionMutation::Move { id: "s1".into(), to_index: 1 }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::Synapses(CollectionMutation::Patch { id: "s1".into(), patch: synapse }));
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
-        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::SetFixture { fixture: FlowFixture::default() });
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::AddSynapse(AddSynapse { index: 0, synapse: synapse.clone() }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::RemoveSynapse(RemoveSynapse { id: "s1".into() }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::MoveSynapse(MoveSynapse { id: "s1".into(), to_index: 1 }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeSynapse(ChangeSynapse { id: "s1".into(), synapse: synapse }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ChangeLayout(ChangeLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] }));
+        crate::os_store::test_support::assert_op_line_round_trip(&FlowMutation::ReplaceFlowFixture(ReplaceFlowFixture { fixture: FlowFixture::default() }));
     }
 
     /// 📜️ `crate::os_store::test_support::assert_store_roundtrip` over a real `ArtifactStore<FlowFixture,
@@ -4771,7 +4572,7 @@ mod flow_vcs_tests {
     #[test]
     fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
         let document = FlowFixture::default();
-        let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
+        let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
         crate::os_store::test_support::assert_store_roundtrip(document, operation);
     }
 
@@ -4787,14 +4588,14 @@ mod flow_vcs_tests {
     }
 
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `FlowMutation`
-    /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `FlowMutationDsl`
-    /// mirror, see `🔖️OpText` above), so this closes the missing coverage rather than adding any new
+    /// implements `crate::os_spr::OpBinary` through the transparent direct-leaf aggregate and
+    /// its generic variant codec, so this covers the command envelope without adding another
     /// codec.
     #[semio_framework_async_macros::async_test]
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         let envelope = create_document_envelope("test/v1", "test", FlowFixture::default(), None);
         let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
-        let operation = FlowMutation::Widgets(CollectionMutation::Add { index: 0, item: sample_widget("w1") });
+        let operation = FlowMutation::AddWidget(AddWidget { index: 0, widget: sample_widget("w1") });
         store.dispatch(ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
         let envelope = store.envelope();
         let edit: &Edit<FlowMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");

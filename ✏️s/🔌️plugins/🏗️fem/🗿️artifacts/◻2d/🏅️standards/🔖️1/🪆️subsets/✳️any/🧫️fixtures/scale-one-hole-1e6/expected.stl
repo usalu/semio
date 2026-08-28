@@ -1,0 +1,226 @@
+solid exported
+	facet normal 0 0 -1
+		outer loop
+			vertex 1000000 500000 0
+			vertex 0 0 0
+			vertex 0 2000000 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 1000000 500000 0
+			vertex 4000000 0 0
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 0 0 250000
+			vertex 0 0 0
+			vertex 4000000 0 0
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 1000000 500000 0
+			vertex 1000000 1500000 0
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 2000000 500000 250000
+			vertex 2000000 500000 0
+			vertex 1000000 500000 0
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 0 0 250000
+			vertex 0 2000000 250000
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 0 2000000 250000
+			vertex 0 0 250000
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 0 0 250000
+			vertex 4000000 0 250000
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 2000000 500000 250000
+			vertex 1000000 500000 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 1000000 500000 0
+			vertex 0 2000000 0
+			vertex 1000000 1500000 0
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 0 2000000 250000
+			vertex 0 2000000 0
+			vertex 0 0 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 1000000 1500000 0
+			vertex 0 2000000 0
+			vertex 2000000 1500000 0
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 1000000 1500000 250000
+			vertex 1000000 1500000 0
+			vertex 2000000 1500000 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 1000000 1500000 250000
+			vertex 0 2000000 250000
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 1000000 1500000 250000
+			vertex 1000000 500000 250000
+			vertex 1000000 1500000 0
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 0 2000000 250000
+			vertex 4000000 2000000 250000
+			vertex 0 2000000 0
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 2000000 1500000 250000
+			vertex 1000000 1500000 250000
+			vertex 2000000 1500000 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 1000000 1500000 250000
+			vertex 2000000 1500000 250000
+			vertex 0 2000000 250000
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 1000000 500000 0
+			vertex 2000000 500000 0
+			vertex 4000000 0 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 4000000 0 0
+			vertex 2000000 500000 0
+			vertex 4000000 2000000 0
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 4000000 0 250000
+			vertex 4000000 0 0
+			vertex 4000000 2000000 0
+		endloop
+	endfacet
+	facet normal 0 -1 0
+		outer loop
+			vertex 4000000 0 250000
+			vertex 0 0 250000
+			vertex 4000000 0 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 1000000 500000 250000
+			vertex 4000000 0 250000
+			vertex 2000000 500000 250000
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 2000000 500000 250000
+			vertex 2000000 1500000 250000
+			vertex 2000000 500000 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 4000000 0 250000
+			vertex 4000000 2000000 250000
+			vertex 2000000 500000 250000
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 4000000 2000000 0
+			vertex 2000000 500000 0
+			vertex 2000000 1500000 0
+		endloop
+	endfacet
+	facet normal -1 0 0
+		outer loop
+			vertex 2000000 1500000 250000
+			vertex 2000000 1500000 0
+			vertex 2000000 500000 0
+		endloop
+	endfacet
+	facet normal 0 0 -1
+		outer loop
+			vertex 2000000 1500000 0
+			vertex 0 2000000 0
+			vertex 4000000 2000000 0
+		endloop
+	endfacet
+	facet normal 0 1 0
+		outer loop
+			vertex 4000000 2000000 250000
+			vertex 4000000 2000000 0
+			vertex 0 2000000 0
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 4000000 2000000 250000
+			vertex 2000000 1500000 250000
+			vertex 2000000 500000 250000
+		endloop
+	endfacet
+	facet normal 0 0 1
+		outer loop
+			vertex 2000000 1500000 250000
+			vertex 4000000 2000000 250000
+			vertex 0 2000000 250000
+		endloop
+	endfacet
+	facet normal 1 0 0
+		outer loop
+			vertex 4000000 2000000 250000
+			vertex 4000000 0 250000
+			vertex 4000000 2000000 0
+		endloop
+	endfacet
+endsolid exported

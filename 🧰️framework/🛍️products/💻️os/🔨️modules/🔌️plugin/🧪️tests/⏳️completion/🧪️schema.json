@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.plugin.awaited-completion.fixture.v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "registration", "checkpoint", "restartAuthority", "execution", "scope"],
+  "properties": {
+    "version": { "const": 1 },
+    "registration": { "type": "object", "additionalProperties": false, "required": ["attempts", "registeredEntries", "diagnostics", "diagnosticCode"], "properties": { "attempts": { "const": 2 }, "registeredEntries": { "const": 1 }, "diagnostics": { "const": 1 }, "diagnosticCode": { "const": "test.subset-macro.ok" } } },
+    "checkpoint": { "type": "object", "additionalProperties": false, "required": ["instance", "parkedRequests", "tasksAfterCancel", "requestsAfterCancel", "restartValue", "completionFaultCode", "completionFaultMessage"], "properties": { "instance": { "const": 507 }, "parkedRequests": { "const": 1 }, "tasksAfterCancel": { "const": 0 }, "requestsAfterCancel": { "const": 0 }, "restartValue": { "const": 7 }, "completionFaultCode": { "const": "plugin.request-registry" }, "completionFaultMessage": { "const": "request already consumed or unknown" } } },
+    "restartAuthority": { "const": { "tool": "applyCountFromTask", "defaultProofs": 0, "retainedProofs": 1, "distinctConcreteOwners": true, "artifactPublications": 1, "terminalReceipts": 1, "closeItems": 1, "closeBytes": 4096 } },
+    "execution": { "const": ["await-registration-before-observation", "await-validator-before-diagnostics", "await-executor-before-checkpoint", "await-request-retirement-before-observation"] },
+    "scope": { "type": "object", "additionalProperties": false, "required": ["nativeFixture", "retainedProductionRegistration", "guestCheckpointRuntime"], "properties": { "nativeFixture": { "const": true }, "retainedProductionRegistration": { "const": false }, "guestCheckpointRuntime": { "const": false } } }
+  }
+}

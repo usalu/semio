@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "authority": {
+    "activationGeneration": "7",
+    "firstOrigin": 13,
+    "retryEnvelope": 17,
+    "nextOrigin": 19,
+    "firstReturn": "11",
+    "firstPage": "1"
+  },
+  "source": {
+    "payloadHex": "00ff07",
+    "target": {
+      "kind": "shell",
+      "instance": "7"
+    },
+    "sourceCopies": 0,
+    "sourceOwners": 1
+  },
+  "grants": {
+    "items": [
+      0,
+      1
+    ],
+    "bytes": [
+      0,
+      1,
+      64,
+      4096
+    ],
+    "allocationBytes": [
+      0,
+      32768
+    ]
+  },
+  "cases": [
+    {
+      "name": "zero-grant-before-admission",
+      "events": [
+        "execute-zero-items",
+        "execute-zero-bytes"
+      ],
+      "expected": {
+        "producerSteps": 0,
+        "activeSources": 0,
+        "originFrontier": 0
+      }
+    },
+    {
+      "name": "refusal-before-producer",
+      "events": [
+        "execute-no-output-slot"
+      ],
+      "expected": {
+        "producerSteps": 0,
+        "activeSources": 0,
+        "originFrontier": 0
+      }
+    },
+    {
+      "name": "duplicate-frozen-origin",
+      "events": [
+        "execute",
+        "producer-message",
+        "retry-same-origin-new-envelope"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "producer-fault-keeps-root",
+      "events": [
+        "execute",
+        "producer-message",
+        "producer-fault"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "parent-move-reborrows-original",
+      "events": [
+        "execute",
+        "producer-message",
+        "freeze",
+        "encode-prefix",
+        "move-parent",
+        "encode-tail"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "cancel-issued-page-waits-input",
+      "events": [
+        "execute",
+        "producer-message",
+        "freeze",
+        "issue-page",
+        "cancel"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "page-ack-late-clock-keeps-page",
+      "events": [
+        "execute",
+        "producer-message",
+        "freeze",
+        "issue-page",
+        "stage-input-ack",
+        "clock-8000"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "retired-origin-never-reexecutes",
+      "events": [
+        "execute",
+        "producer-message",
+        "freeze",
+        "issue-page",
+        "input-ack",
+        "retire-source",
+        "retired-ack",
+        "execute-old-origin"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 0,
+        "originFrontier": 13
+      }
+    },
+    {
+      "name": "new-origin-preserves-frontier",
+      "events": [
+        "execute",
+        "producer-message",
+        "freeze",
+        "issue-page",
+        "input-ack",
+        "retire-source",
+        "retired-ack",
+        "execute-next-origin",
+        "execute-old-origin"
+      ],
+      "expected": {
+        "producerSteps": 1,
+        "activeSources": 1,
+        "originFrontier": 19
+      }
+    }
+  ],
+  "laws": {
+    "sourceExistsBeforeProducer": true,
+    "cursorReferencesInsideOwner": false,
+    "wholeTypedClone": false,
+    "globalOwnerLookup": false,
+    "oneSemanticSource": true,
+    "inputAckIsUiAck": false,
+    "sourceEmptyIsTerminalReceipt": false,
+    "lateClockDiscardsReceipt": false
+  }
+}

@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.reasoning.wires` is a semio-NATIVE argument board whose nodes live inside an untyped `DslValue` tree, so no oracle is registered and the evidence rests on the committed per-kind vectors — four refusals and six no-ops — plus the inverse law (see noOracleDecisions).",
   "oracles": [],
   "noOracleDecisions": [

@@ -1,0 +1,9 @@
+# WorkerPool Closure Completion Authority Review
+
+Read-only response to Dag's aggregate-close question. No source changes or native run.
+
+Current [Job](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1432) is `Box<dyn FnOnce() + Send + 'static>`. Native [try_submit](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1714) and cooperative [try_submit](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1923) return `Result<(), WorkerSubmitError>`: exact closure is returned on refusal, but success returns no per-submission affine ticket or completion owner.
+
+Native [worker_loop](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️component.rs:1642) consumes the boxed closure through catch_unwind, then releases permit/counters. Cooperative [pump](/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/🦀️component.rs:2007) does likewise and reports only whether pool work remains. Counters and pool occupancy are not an exact logical closure identity or a witness that a particular closure shell and its captured Arc have been destroyed. The comment near Job explicitly assigns future completion to a separate executor; that does not supply a WorkerPool callback-shell ticket.
+
+No existing WorkerPool surface read here proves the requested exact close callback-quiescence boundary. A real queue-owned ticket/closed-upgrade gate and retained callback-shell handback are required if aggregate terminal depends on destruction after the measured callback body. Do not substitute sampled Arc counts, global pending-work booleans, or a flag written before closure destruction. This finding does not claim that every future/executor API was exhaustively audited; it covers the actual WorkerPool submission/execute seam in scope.

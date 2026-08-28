@@ -1,0 +1,18 @@
+{
+  "version":1,
+  "cases":[
+    {"name":"u8-overflow","type":"u8","hex":"038002","native32":false,"native64":false,"finite":true},
+    {"name":"negative-u8","type":"u8","hex":"0401","native32":false,"native64":false,"finite":true},
+    {"name":"u8-maximum","type":"u8","hex":"03ff01","native32":true,"native64":true,"finite":true},
+    {"name":"u32-overflow","type":"u32","hex":"038080808010","native32":false,"native64":false,"finite":true},
+    {"name":"negative-u64","type":"u64","hex":"0401","native32":false,"native64":false,"finite":true},
+    {"name":"u64-maximum","type":"u64","hex":"03ffffffffffffffffff01","native32":true,"native64":true,"finite":true},
+    {"name":"i64-overflow","type":"i64","hex":"03ffffffffffffffffff01","native32":false,"native64":false,"finite":true},
+    {"name":"usize32-boundary","type":"usize","hex":"038080808010","native32":false,"native64":true,"finite":true},
+    {"name":"f64-integer-tag","type":"f64","hex":"0300","native32":false,"native64":false,"finite":true},
+    {"name":"f64-nan-bits","type":"f64","hex":"05000000000000f87f","native32":true,"native64":true,"finite":false},
+    {"name":"f64-infinity-bits","type":"f64","hex":"05000000000000f07f","native32":true,"native64":true,"finite":false},
+    {"name":"f64-negative-zero","type":"f64","hex":"050000000000000080","native32":true,"native64":true,"finite":true}
+  ],
+  "laws":["integer-narrowing-never-wraps","negative-never-becomes-unsigned","usize-explicit-target-width","f64-requires-float-tag","generic-codec-preserves-ieee-bits","finite-scene-domain-is-separate-from-generic-codec"]
+}

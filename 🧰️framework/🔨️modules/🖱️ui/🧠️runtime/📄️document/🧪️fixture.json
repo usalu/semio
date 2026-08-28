@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "surfaces": 9,
+  "surfaceCeilingBytes": 8388608,
+  "aggregateCeilingBytes": 33554432,
+  "workBytes": 4096,
+  "physicalBytes": 32768,
+  "comparisonHeapAllocations": 0,
+  "comparisonLogicalDepth": 256,
+  "unwindPhases": ["comparison", "copy", "source-returned", "candidate-returned"],
+  "freshCompletionFields": ["component", "bindings"],
+  "completionTransferUsesSeparateGrant": true,
+  "sameRootForReader": true,
+  "oldReaderSurvivesReplacement": true,
+  "readerReleaseGrants": [1, 64, 4096]
+}

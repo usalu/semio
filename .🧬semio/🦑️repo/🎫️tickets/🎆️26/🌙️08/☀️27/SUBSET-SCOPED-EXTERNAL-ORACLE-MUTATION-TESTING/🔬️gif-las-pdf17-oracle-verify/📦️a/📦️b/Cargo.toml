@@ -1,0 +1,40 @@
+# 🧭️ Own workspace root: a scratch spike for this ticket, never joins the repository workspace.
+#
+# Why this exists: the repository's real shared oracle crate
+# (✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust) links EVERY stdio format's `🧪️oracle/🦀️component.rs`
+# in one compilation unit. Several unrelated subsets (pdf@1.4's five per-mutation fixtures) currently
+# fail to compile because commit d394744295 restructured their committed test fixtures without
+# updating the `include_str!` call sites that read them — a pre-existing, out-of-scope breakage
+# (flagged separately) that blocks `cargo test` for the WHOLE shared crate, including gif@89a,
+# las@1.0 and pdf@1.7, whose own code is unaffected.
+#
+# This crate links ONLY the three real, already-complete oracle modules this ticket is scoped to
+# (plus the two shared family modules they depend on: `document`, `raster`), by `#[path]`, exactly
+# the way the real shared crate's own 📦️lib.rs does — so their existing `#[cfg(test)]` suites can be
+# compiled and run in isolation while the unrelated breakage is fixed elsewhere.
+[workspace]
+
+[package]
+name = "gif-las-pdf17-oracle-verify"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "gif_las_pdf17_oracle_verify"
+path = "src/lib.rs"
+
+[features]
+default = ["oracles"]
+oracles = []
+
+[dependencies]
+semio-repo-test-host = { path = "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+gif = "0.13"
+las = "0.11"
+lopdf = "0.44"
+pdf-writer = "0.15"
+zip = { version = "6", default-features = false, features = ["deflate"] }
+quick-xml = "0.42"
+png = "0.18"
+image = { version = "0.25", default-features = false, features = ["bmp", "tiff", "jpeg"] }

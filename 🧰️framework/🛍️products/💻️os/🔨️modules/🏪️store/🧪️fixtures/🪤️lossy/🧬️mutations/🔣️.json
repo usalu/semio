@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "SetN": {
+          "$ref": "🔢️set-n/🧬️schema/🔣️.json#/$defs/payload"
+        }
+      },
+      "required": [
+        "SetN"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

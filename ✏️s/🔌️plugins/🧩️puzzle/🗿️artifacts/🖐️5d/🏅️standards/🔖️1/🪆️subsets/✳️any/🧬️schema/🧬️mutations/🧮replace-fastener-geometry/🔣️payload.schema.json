@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceFastenerGeometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newGap",
+    "newRise",
+    "newRotation",
+    "newShift",
+    "newTilt",
+    "newTurn",
+    "newX",
+    "newY"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newGap": {
+      "type": "number"
+    },
+    "newShift": {
+      "type": "number"
+    },
+    "newRise": {
+      "type": "number"
+    },
+    "newRotation": {
+      "type": "number"
+    },
+    "newTurn": {
+      "type": "number"
+    },
+    "newTilt": {
+      "type": "number"
+    },
+    "newX": {
+      "type": "number"
+    },
+    "newY": {
+      "type": "number"
+    }
+  }
+}

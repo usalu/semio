@@ -3,37 +3,9 @@
   "title": "Gis2dPresence",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "selectedIds",
-    "cameraJson",
-    "featureSelectionJson",
-    "hoverJson",
-    "selectionMethod",
-    "selectionMode"
-  ],
+  "required": ["cameraJson"],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": { "type": "string" },
-      "x-semio-state": "presence"
-    },
     "cameraJson": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "featureSelectionJson": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "hoverJson": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectionMethod": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "selectionMode": {
       "type": "string",
       "x-semio-state": "presence"
     }

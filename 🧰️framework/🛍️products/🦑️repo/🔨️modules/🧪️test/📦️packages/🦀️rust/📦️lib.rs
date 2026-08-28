@@ -8,7 +8,7 @@
 //! through that owner's `🧪️oracle/🔣️.json` manifest, which the platform discovers by
 //! convention. Adding an artifact family therefore never edits this crate.
 //!
-//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json
+//! @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json
 
 //#region 🔖️Modules
 #[path = "../../🧬️protocol/🦀️component.rs"]

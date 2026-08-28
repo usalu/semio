@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeSheetWElMm3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSheetWElMm3"
+  ],
+  "properties": {
+    "newSheetWElMm3": {
+      "type": "number"
+    }
+  }
+}

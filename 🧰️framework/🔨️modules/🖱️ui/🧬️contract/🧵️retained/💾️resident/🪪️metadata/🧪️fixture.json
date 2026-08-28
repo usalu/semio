@@ -1,0 +1,54 @@
+{
+  "logicalRecordBytes": 16,
+  "logicalFieldBytes": 8,
+  "neutralRegistration": { "bytes": 256, "slots": 3, "owners": 3 },
+  "compositionCapacity": { "bytes": 65536, "slots": 512, "owners": 512, "control": { "bytes": 1024, "slots": 16, "owners": 16 } },
+  "catalogue": [
+    { "kind": "pool", "records": [
+      { "name": "state", "fields": ["ledger", "composition", "failure", "phase", "bindings", "head", "tail", "pending", "closing", "closed", "facade", "witness"] },
+      { "name": "facade", "fields": ["state"] },
+      { "name": "bindingTable", "fields": ["entries"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "instance", "records": [
+      { "name": "state", "fields": ["pool", "owner", "facade", "activation", "lifetime", "previous", "next", "head", "tail", "children", "closing", "closed", "record", "phase", "witness", "storage", "pending", "bindingInstalled", "failure", "childObserved"] },
+      { "name": "facade", "fields": ["state"] },
+      { "name": "lifetime", "fields": ["activationGeneration", "instanceId", "guestLifetime"] },
+      { "name": "bindingEntry", "fields": ["owner", "scope"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "payload", "records": [
+      { "name": "state", "fields": ["instance", "facade", "previous", "next", "head", "tail", "cursor", "builder", "reader", "pages", "closing", "closed", "record", "phase", "witness", "pending", "builderRecord", "readerRecord", "failure", "childObserved"] },
+      { "name": "facade", "fields": ["state"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "builder", "records": [
+      { "name": "facade", "fields": ["field", "resident", "bound", "closing", "phase", "fragment", "proof", "release", "failure", "copyPhase", "sourceKind", "input", "copyFragment", "lastFragment", "inputOffset", "copied", "copyProof", "copyRelease", "head", "tail", "writer", "written", "reader", "readerReserved", "record", "recordPhase", "witness"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "reader", "records": [
+      { "name": "facade", "fields": ["builder", "cell", "offset", "closing", "failed", "record", "recordPhase", "witness"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "page", "records": [
+      { "name": "state", "fields": ["payload", "writer", "previous", "next", "length", "storage", "readOwner", "reader", "record", "phase", "witness", "closing", "closed", "failure", "childObserved"] },
+      { "name": "facade", "fields": ["state"] },
+      { "name": "builderCell", "fields": ["page", "length", "next"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] },
+    { "kind": "evidence", "records": [
+      { "name": "state", "fields": ["fragment", "field", "builder", "offset", "length", "retired", "record", "parent", "next", "proof"] },
+      { "name": "facade", "fields": ["state"] },
+      { "name": "terminalWitness", "fields": ["original", "terminal"] }
+    ] }
+  ],
+  "expected": [
+    { "kind": "pool", "bytes": 192, "slots": 4, "owners": 4 },
+    { "kind": "instance", "bytes": 304, "slots": 5, "owners": 5 },
+    { "kind": "payload", "bytes": 232, "slots": 3, "owners": 3 },
+    { "kind": "builder", "bytes": 264, "slots": 2, "owners": 2 },
+    { "kind": "reader", "bytes": 112, "slots": 2, "owners": 2 },
+    { "kind": "page", "bytes": 232, "slots": 4, "owners": 4 },
+    { "kind": "evidence", "bytes": 152, "slots": 3, "owners": 3 }
+  ]
+}

@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution. `s.energy.model` persists no content model of its own — its body is two composed child handles regenerated together from one `Model` — so its single mutation kind is a paired-child overwrite. Semio-NATIVE, no oracle; the decision below also records that this subset's ONE committed specification vector is a documented no-op, which is a real gap rather than a passing test.",
   "oracles": [],
   "noOracleDecisions": [

@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any format it owns. Everything format-specific — which reference libraries are approved, what their projections mean, and which native crate carries them — lives here, with the owner of the formats.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/typst/pdf-writer",
       "rationale": "Typed, step-by-step PDF writer with explicit control over catalog, page tree, media boxes and content streams — the creation reference. Deterministic given the same call sequence, no network, no system dependencies, runs on Windows/macOS/Linux.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "pdf-writer",
+        "implementation": "typst pdf-writer typed PDF creation library",
+        "version": "0.15"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "lopdf",
@@ -36,7 +44,15 @@
       "testOnly": true,
       "homepage": "https://github.com/J-F-Liu/lopdf",
       "rationale": "PDF document-manipulation library exposing object-level editing, page insert/delete, content-stream rewriting and an independent parser — serves both as the editing oracle and as the independent reader that proves a subject's output is parseable.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "lopdf",
+        "implementation": "lopdf Rust PDF object-graph library",
+        "version": "0.44"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "png",
@@ -60,7 +76,15 @@
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "The OS host rasterizes SVG to PNG through this crate, so it is production-reachable TODAY. Discovered by the oracle-purity gate when png was registered — the gate did its job. Phase 7 target: the rasterizer's PNG writing belongs behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, at which point this entry loses its productionDebt and testOnly becomes a fact."
-      }
+      },
+      "kind": "third-party-library",
+      "engine": {
+        "family": "png",
+        "implementation": "png Rust PNG encoder/decoder",
+        "version": "0.18"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     },
     {
       "id": "gif",
@@ -77,7 +101,15 @@
       "testOnly": true,
       "homepage": "https://github.com/image-rs/image-gif",
       "rationale": "The reference GIF encoder/decoder of the Rust ecosystem. GIF is palette-based, so exact RGBA is a quantizer choice; the oracle is used only for frame geometry, frame count and opaque-sample structure, which the format does fix.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "gif",
+        "implementation": "gif Rust GIF encoder/decoder",
+        "version": "0.13"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "zip",
@@ -101,7 +133,15 @@
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
         "plan": "The OS host declares an optional `zip` dependency for container handling, so it is production-reachable TODAY. Phase 7 target: route that through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
-      }
+      },
+      "kind": "third-party-library",
+      "engine": {
+        "family": "zip",
+        "implementation": "zip Rust ZIP reader/writer",
+        "version": "6"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     },
     {
       "id": "flate2",
@@ -118,7 +158,15 @@
       "testOnly": true,
       "homepage": "https://github.com/rust-lang/flate2-rs",
       "rationale": "The reference zlib/deflate implementation of the Rust ecosystem. RFC 1951 does not fix WHICH encoding a compressor chooses, so this oracle is deliberately used for the ROUND TRIP — an independent inflater must recover exactly what this repository deflated — never for byte equality.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "flate2",
+        "implementation": "flate2 Rust zlib/DEFLATE implementation",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "csv",
@@ -135,7 +183,15 @@
       "testOnly": true,
       "homepage": "https://github.com/BurntSushi/rust-csv",
       "rationale": "The reference RFC 4180 CSV reader/writer of the Rust ecosystem. Line terminator, quote style and trailing newline are writer freedom; the header and the cell grid are normative.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "csv",
+        "implementation": "csv Rust RFC 4180 reader/writer",
+        "version": "1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "image-bmp",
@@ -160,7 +216,15 @@
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
-      }
+      },
+      "kind": "third-party-library",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     },
     {
       "id": "image-tiff",
@@ -185,7 +249,15 @@
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
-      }
+      },
+      "kind": "third-party-library",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     },
     {
       "id": "image-jpeg",
@@ -210,7 +282,15 @@
         ],
         "owner": "🧰️framework/🔨️modules/🗺️surface",
         "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
-      }
+      },
+      "kind": "third-party-library",
+      "engine": {
+        "family": "image-rs",
+        "implementation": "image Rust raster codec crate",
+        "version": "0.25"
+      },
+      "productionReachable": true,
+      "networkDuringExecution": false
     },
     {
       "id": "tobj",
@@ -227,7 +307,15 @@
       "testOnly": true,
       "homepage": "https://github.com/Twinklebear/tobj",
       "rationale": "The reference Wavefront OBJ reader of the Rust ecosystem. OBJ has no reference WRITER — it is a plain-text grammar — so the oracle writes the grammar directly and tobj serves as the independent reader that makes the comparison meaningful. Whitespace, numeric formatting and statement order are writer freedom; the vertex set, face topology and counts are normative.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "tobj",
+        "implementation": "tobj Rust Wavefront OBJ reader",
+        "version": "4"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "stl-io",
@@ -244,7 +332,15 @@
       "testOnly": true,
       "homepage": "https://github.com/hmeyer/stl_io",
       "rationale": "The reference binary/ASCII STL reader and writer of the Rust ecosystem. STL is a triangle soup with no vertex index and a derivable per-facet normal, so the projection compares resolved corner positions per triangle — what the format actually fixes — rather than an index buffer the format never had.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "stl-io",
+        "implementation": "stl_io Rust STL reader/writer",
+        "version": "0.8"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     },
     {
       "id": "pypdf-pdf-1-4-text",
@@ -260,7 +356,15 @@
       "license": "BSD-3-Clause",
       "testOnly": true,
       "homepage": "https://github.com/py-pdf/pypdf",
-      "rationale": "Text extraction is the one PDF capability this repository has no Rust reference for. `lopdf` — the registered editing and parsing oracle — exposes the object graph and the raw content streams, but reconstructing a page's reading order means decoding the font's /Encoding and /ToUnicode CMaps, undoing ligature and glyph-index mappings and re-assembling text-showing operators into lines; it does none of that, and no other crate linked by the oracle host does either. `pypdf` implements exactly that layer and is the reference every Python PDF toolchain builds text extraction on. Deterministic for a fixed document, pure Python, no network, no system libraries, cross-platform. Scoped to the text layer only: page geometry, object structure and rendering stay with the existing oracles."
+      "rationale": "Text extraction is the one PDF capability this repository has no Rust reference for. `lopdf` — the registered editing and parsing oracle — exposes the object graph and the raw content streams, but reconstructing a page's reading order means decoding the font's /Encoding and /ToUnicode CMaps, undoing ligature and glyph-index mappings and re-assembling text-showing operators into lines; it does none of that, and no other crate linked by the oracle host does either. `pypdf` implements exactly that layer and is the reference every Python PDF toolchain builds text extraction on. Deterministic for a fixed document, pure Python, no network, no system libraries, cross-platform. Scoped to the text layer only: page geometry, object structure and rendering stay with the existing oracles.",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "pypdf",
+        "implementation": "pypdf pure-Python PDF library",
+        "version": "6.14.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [

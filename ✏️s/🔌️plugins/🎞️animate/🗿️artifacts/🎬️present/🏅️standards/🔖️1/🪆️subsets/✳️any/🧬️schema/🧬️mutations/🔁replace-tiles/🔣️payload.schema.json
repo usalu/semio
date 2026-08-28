@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceTiles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newTiles"
+  ],
+  "properties": {
+    "newTiles": {
+      "type": "array",
+      "items": {
+        "title": "FigureTileDraft",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "crop",
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "crop": {
+            "title": "FigureTileFrame",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "height",
+              "width",
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

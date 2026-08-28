@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reviewed README Raw Source Activation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "contract", "scope", "execution", "contractId", "revisionId", "revisionInput", "revisionInputSha256", "taxonomyPath", "catalogPath", "catalogSha256", "catalogCaseIndex", "baseline", "expectedRevisionDigest", "shippedPublication", "runParent", "unregisteredPath", "generatorIsolation", "laws", "cases", "catalogCases", "driftCases", "frozenBindingCases", "schemaSnapshotCases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "contract": { "const": "reviewed-readme-source-activation-v1" },
+    "scope": { "const": "isolated-retained-loader-and-planner" },
+    "execution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["packageName", "packageCommand", "target", "command", "route", "source", "launchName", "launchCommand", "launchGroup", "launchOrder"],
+      "properties": {
+        "packageName": { "const": "@semio-tech/repo-lib" },
+        "packageCommand": { "const": "nx run @semio-tech/repo-lib:test-readme-current-source-activation" },
+        "target": { "const": "test-readme-current-source-activation" },
+        "command": { "const": "bun ./📜️script.ts test readme-current-source-activation" },
+        "route": { "const": "readme-current-source-activation" },
+        "source": { "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧪️readme-current-source-activation/🟦️.ts" },
+        "launchName": { "const": "🧹clean🧩️taxonomy🧪️readme-current-source-activation" },
+        "launchCommand": { "const": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache" },
+        "launchGroup": { "const": "4_gate" }, "launchOrder": { "const": 410.204 }
+      }
+    },
+    "contractId": { "const": "readme-license-owner-leaves-v1" },
+    "revisionId": { "const": "testing-readme-protocol-v2-reviewed" },
+    "revisionInput": { "type": "string", "minLength": 1 },
+    "revisionInputSha256": { "$ref": "#/definitions/hash" },
+    "taxonomyPath": { "type": "string", "minLength": 1 },
+    "catalogPath": { "type": "string", "minLength": 1 },
+    "catalogSha256": { "$ref": "#/definitions/hash" },
+    "catalogCaseIndex": { "const": 31 },
+    "baseline": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commit", "blob", "sha256", "size", "mode"],
+      "properties": {
+        "commit": { "const": "9f449b10659b95148c8bcb3f91ce583bf7446973" },
+        "blob": { "const": "97c9cd961ac67eb875f714da1a17a8d2121446dc" },
+        "sha256": { "$ref": "#/definitions/hash" },
+        "size": { "const": 7205 }, "mode": { "const": 420 }
+      }
+    },
+    "expectedRevisionDigest": { "$ref": "#/definitions/hash" },
+    "shippedPublication": { "const": {"revisionPointer":["semanticOwnedFileProjectionContracts","readme-license-owner-leaves-v1","currentSourceRevisions"],"evidence":[{"id":"readme-current-source-revision-input","inputRole":"revision","schemaVersion":1,"coordinates":[{"pointer":"/revisions/testing-readme-protocol-v2-reviewed/sourcePath","kind":"source"},{"pointer":"/cases/8/changes/0/value/sourcePath","kind":"source"}]},{"id":"readme-reviewed-expectation-input","inputRole":"reviewed-expectation","schemaVersion":1,"coordinates":[{"pointer":"/documents/readme","kind":"source"}]}],"sourceReadPolicy":"retained-reviewed-inputs-only","expectedFrozenDocuments":2,"expectedFrozenSelectors":3} },
+    "runParent": { "type": "string", "minLength": 1 },
+    "unregisteredPath": { "type": "string", "minLength": 1 },
+    "generatorIsolation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contractId", "removeField", "inputPatterns", "reason"],
+      "properties": {
+        "contractId": { "const": "plugin-registry" }, "removeField": { "const": "inputDiscovery" },
+        "inputPatterns": { "const": ["🧪️tests/🧪️unrelated-producer/🔣️.json"] }, "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "laws": {
+      "type": "object", "additionalProperties": false, "required": ["catalog", "revision", "lineage", "plan", "canonical", "isolation"],
+      "properties": { "catalog": { "type": "string" }, "revision": { "type": "string" }, "lineage": { "type": "string" }, "plan": { "type": "string" }, "canonical": { "type": "string" }, "isolation": { "type": "string" } }
+    },
+    "cases": {
+      "type": "array", "minItems": 18, "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "layout", "source", "expectation", "sourceMode", "destination", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "layout": { "enum": ["raw", "canonical", "unregistered"] }, "source": { "enum": ["current", "baseline", "changed", "symlink"] },
+          "expectation": { "enum": ["exact", "missing", "changed", "mode", "symlink", "parent-symlink", "post-edit"] },
+          "sourceMode": { "enum": [420, 384] }, "destination": { "enum": ["absent", "exact", "folded"] },
+          "catalog": { "const": "missing" },
+          "expected": { "enum": ["revised-move", "authority-problem", "empty-plan"] }
+        }
+      }
+    },
+    "driftCases": {
+      "type": "array", "minItems": 6, "maxItems": 6, "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "target", "expected"],
+        "properties": {
+          "id": { "type": "string" },
+          "target": { "enum": ["schema", "catalog", "expectation", "source", "schema-format", "inventory"] },
+          "expected": { "enum": ["reject", "fresh-schema"] }
+        }
+      }
+    },
+    "frozenBindingCases": {
+      "type": "array", "minItems": 5, "maxItems": 5, "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "change", "frozen"],
+        "properties": { "id": { "type": "string" }, "change": { "enum": ["none", "buffer", "owner", "baseline", "unowned"] }, "frozen": { "type": "boolean" } }
+      }
+    },
+    "schemaSnapshotCases": {
+      "type": "array", "minItems": 3, "maxItems": 3, "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "state", "accepted"],
+        "properties": { "id": { "type": "string" }, "state": { "enum": ["exact", "missing", "lossy"] }, "accepted": { "type": "boolean" } }
+      }
+    },
+    "catalogCases": {
+      "type": "array", "minItems": 5, "maxItems": 5, "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "state", "accepted"],
+        "properties": { "id": { "type": "string" }, "state": { "enum": ["exact", "changed", "mode", "symlink", "parent-symlink"] }, "accepted": { "type": "boolean" } }
+      }
+    }
+  },
+  "definitions": { "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+}

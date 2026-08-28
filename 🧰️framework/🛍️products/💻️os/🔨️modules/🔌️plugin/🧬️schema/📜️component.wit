@@ -596,22 +596,57 @@ interface effects {
 /// into a `poll` call — lifecycle, channel, UI acks, effect completions, messaging, timers, and
 /// inbound requests. Rust SSOT: `semio_framework::kernel::Event` (packet A3); mirrors field-for-
 /// field, same conversion pattern as `effects.wit`.
+interface instance-lifetime {
+  record lifetime {
+    activation-generation: u64,
+    instance-id: u32,
+    guest-lifetime: u64,
+  }
+  record open-request {
+    activation-generation: u64,
+    instance-id: u32,
+    request-sequence: u64,
+  }
+  record close-request {
+    lifetime: lifetime,
+    request-sequence: u64,
+  }
+  record captured-receipt {
+    lifetime: lifetime,
+    request-sequence: u64,
+  }
+  record close-receipt {
+    lifetime: lifetime,
+    request-sequence: u64,
+    close-generation: u64,
+  }
+  record ui-patch-receipt {
+    lifetime: lifetime,
+    patch-sequence: u64,
+  }
+  variant receipt {
+    captured(captured-receipt),
+    accepted(close-receipt),
+    retired(close-receipt),
+  }
+}
+
 interface events {
   use types.{pack, request-id, instance-id, message-endpoint, revision};
   use capabilities.{capability-grant, capability-change};
   use ui.{surface-ref};
+  use instance-lifetime.{close-request, receipt, ui-patch-receipt};
 
   record instance-open-event {
     instance: instance-id,
+    activation-generation: u64,
+    request-sequence: u64,
     app-id: string,
     actor: string,
     config: pack,
     assets: list<tuple<string, pack>>,
     capabilities: list<capability-grant>,
     quotas: pack,
-  }
-  record instance-close-event {
-    instance: instance-id,
   }
 
   variant activation-event {
@@ -659,12 +694,14 @@ interface events {
     height: u32,
   }
   record patch-ack-event {
+    receipt: ui-patch-receipt,
     surface: surface-ref,
     revision: revision,
   }
   /// 🩹️ The guest resends a full body (no incremental re-diff) on rejection — see
   /// `⚛️reactor/🩹️patches`'s `base-revision` mismatch fallback.
   record patch-rejected-event {
+    receipt: ui-patch-receipt,
     surface: surface-ref,
     revision: revision,
     reason: string,
@@ -732,7 +769,8 @@ interface events {
 
   variant event {
     instance-open(instance-open-event),
-    instance-close(instance-close-event),
+    instance-close(close-request),
+    instance-lifecycle-ack(receipt),
     activate(activate-event),
     suspend-request(suspend-request-event),
     capability-changed(capability-changed-event),
@@ -864,6 +902,154 @@ interface pure {
   trace-span: func(name: string);
 }
 
+/// 📄️ Fixed neutral bytes only; callers separately own command, return and acknowledgement authority.
+interface byte-page {
+  record block {
+    word-0: u64,
+    word-1: u64,
+    word-2: u64,
+    word-3: u64,
+    word-4: u64,
+    word-5: u64,
+    word-6: u64,
+    word-7: u64,
+  }
+  record page {
+    length: u32,
+    block-00: block,
+    block-01: block,
+    block-02: block,
+    block-03: block,
+    block-04: block,
+    block-05: block,
+    block-06: block,
+    block-07: block,
+    block-08: block,
+    block-09: block,
+    block-10: block,
+    block-11: block,
+    block-12: block,
+    block-13: block,
+    block-14: block,
+    block-15: block,
+    block-16: block,
+    block-17: block,
+    block-18: block,
+    block-19: block,
+    block-20: block,
+    block-21: block,
+    block-22: block,
+    block-23: block,
+    block-24: block,
+    block-25: block,
+    block-26: block,
+    block-27: block,
+    block-28: block,
+    block-29: block,
+    block-30: block,
+    block-31: block,
+    block-32: block,
+    block-33: block,
+    block-34: block,
+    block-35: block,
+    block-36: block,
+    block-37: block,
+    block-38: block,
+    block-39: block,
+    block-40: block,
+    block-41: block,
+    block-42: block,
+    block-43: block,
+    block-44: block,
+    block-45: block,
+    block-46: block,
+    block-47: block,
+    block-48: block,
+    block-49: block,
+    block-50: block,
+    block-51: block,
+    block-52: block,
+    block-53: block,
+    block-54: block,
+    block-55: block,
+    block-56: block,
+    block-57: block,
+    block-58: block,
+    block-59: block,
+    block-60: block,
+    block-61: block,
+    block-62: block,
+    block-63: block,
+  }
+}
+
+/// 📤️ Canonical fixed return controls and one neutral raw page; semantic content stays native-owned.
+interface return-page {
+  use byte-page.{page};
+
+  record origin {
+    activation-generation: u64,
+    request-sequence: u64,
+  }
+  record identity {
+    origin: origin,
+    return-sequence: u64,
+  }
+  record page-receipt {
+    identity: identity,
+    page-sequence: u64,
+    length: u32,
+    final: bool,
+  }
+  variant control {
+    poll(identity),
+    input-ack(page-receipt),
+    cancel(identity),
+    retired-ack(identity),
+  }
+  variant drive {
+    execute(origin),
+    control(control),
+  }
+  enum pending-reason { working, blocked, awaiting-input, closing }
+  enum completion { complete, cancelled, faulted }
+  enum control-outcome { accepted, duplicate, blocked, refused }
+  enum fault {
+    none, capacity, sequence-exhausted, stale-origin, stale-identity,
+    wrong-page, input-not-retired, not-retired, clock-unavailable,
+    clock-backward, deadline, owner-fault, malformed-control, mixed-control,
+  }
+  record refused {
+    origin: origin,
+    fault: fault,
+  }
+  record pending {
+    identity: identity,
+    reason: pending-reason,
+  }
+  record page-result {
+    receipt: page-receipt,
+    page: page,
+  }
+  record retired {
+    identity: identity,
+    completion: completion,
+  }
+  record control-result {
+    control: control,
+    outcome: control-outcome,
+    fault: fault,
+  }
+  variant return-result {
+    refused(refused),
+    pending(pending),
+    page(page-result),
+    retired(retired),
+    control(control-result),
+    protocol-fault(fault),
+  }
+}
+
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). The one turn-loop entry
 /// point every actor exports — replaces `exchange`, the poll-backbone + refresh-ui heartbeat, and
 /// every per-verb surface (`handle-action`, `handle-command`, `update-window`, `refresh-ui`,
@@ -879,10 +1065,12 @@ interface pure {
 /// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
 /// runs on an async-capable Store like every other export in this world.
 interface reactor {
+  use byte-page.{block, page};
   use types.{plugin-error, pack, instance-id};
   use effects.{effect};
   use events.{event};
   use ui.{ui-patch};
+  use instance-lifetime.{receipt, ui-patch-receipt};
 
   record budget {
     fuel: u64,
@@ -908,83 +1096,9 @@ interface reactor {
     item-count: u32,
     metadata: u32,
   }
-  record command-page-block {
-    word-0: u64,
-    word-1: u64,
-    word-2: u64,
-    word-3: u64,
-    word-4: u64,
-    word-5: u64,
-    word-6: u64,
-    word-7: u64,
-  }
   record command-ingress-page {
     cursor: command-page-cursor,
-    length: u32,
-    block-00: command-page-block,
-    block-01: command-page-block,
-    block-02: command-page-block,
-    block-03: command-page-block,
-    block-04: command-page-block,
-    block-05: command-page-block,
-    block-06: command-page-block,
-    block-07: command-page-block,
-    block-08: command-page-block,
-    block-09: command-page-block,
-    block-10: command-page-block,
-    block-11: command-page-block,
-    block-12: command-page-block,
-    block-13: command-page-block,
-    block-14: command-page-block,
-    block-15: command-page-block,
-    block-16: command-page-block,
-    block-17: command-page-block,
-    block-18: command-page-block,
-    block-19: command-page-block,
-    block-20: command-page-block,
-    block-21: command-page-block,
-    block-22: command-page-block,
-    block-23: command-page-block,
-    block-24: command-page-block,
-    block-25: command-page-block,
-    block-26: command-page-block,
-    block-27: command-page-block,
-    block-28: command-page-block,
-    block-29: command-page-block,
-    block-30: command-page-block,
-    block-31: command-page-block,
-    block-32: command-page-block,
-    block-33: command-page-block,
-    block-34: command-page-block,
-    block-35: command-page-block,
-    block-36: command-page-block,
-    block-37: command-page-block,
-    block-38: command-page-block,
-    block-39: command-page-block,
-    block-40: command-page-block,
-    block-41: command-page-block,
-    block-42: command-page-block,
-    block-43: command-page-block,
-    block-44: command-page-block,
-    block-45: command-page-block,
-    block-46: command-page-block,
-    block-47: command-page-block,
-    block-48: command-page-block,
-    block-49: command-page-block,
-    block-50: command-page-block,
-    block-51: command-page-block,
-    block-52: command-page-block,
-    block-53: command-page-block,
-    block-54: command-page-block,
-    block-55: command-page-block,
-    block-56: command-page-block,
-    block-57: command-page-block,
-    block-58: command-page-block,
-    block-59: command-page-block,
-    block-60: command-page-block,
-    block-61: command-page-block,
-    block-62: command-page-block,
-    block-63: command-page-block,
+    page: page,
   }
   record command-ingress-status {
     kind: u8,
@@ -1022,6 +1136,8 @@ interface reactor {
     status: turn-status,
     fuel-used: u64,
     command-ingress: command-ingress-status,
+    lifecycle-receipt: option<receipt>,
+    ui-patch-receipt: option<ui-patch-receipt>,
   }
   poll: async func(events: list<event>, command-page: option<command-ingress-page>, budget: budget) -> result<turn-result, plugin-error>;
 }

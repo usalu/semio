@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "UpdateHssInputs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newHssFYMpa",
+    "newHssMEdKnm",
+    "newHssSectionClass",
+    "newHssWElMm3"
+  ],
+  "properties": {
+    "newHssWElMm3": {
+      "type": "number"
+    },
+    "newHssFYMpa": {
+      "type": "number"
+    },
+    "newHssSectionClass": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "newHssMEdKnm": {
+      "type": "number"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["version","forgedRootAccepted","valid","invalid","largeBytes","cancelPrefixes","maximumChunkBytes","grant"],
+  "properties":{
+    "version":{"const":1},
+    "forgedRootAccepted":{"const":false},
+    "valid":{"type":"array","minItems":10,"items":{"type":"object","additionalProperties":false,"required":["name","text","hex"],"properties":{"name":{"type":"string"},"text":{"type":"string"},"hex":{"type":"string","pattern":"^([0-9a-f]{2})*$"}}}},
+    "invalid":{"type":"array","minItems":13,"items":{"type":"string"}},
+    "largeBytes":{"const":16384},
+    "cancelPrefixes":{"type":"array","minItems":11,"items":{"type":"integer","minimum":0}},
+    "maximumChunkBytes":{"const":256},
+    "grant":{"type":"object","additionalProperties":false,"required":["maxItems","maxBytes"],"properties":{"maxItems":{"const":1},"maxBytes":{"const":4096}}}
+  }
+}

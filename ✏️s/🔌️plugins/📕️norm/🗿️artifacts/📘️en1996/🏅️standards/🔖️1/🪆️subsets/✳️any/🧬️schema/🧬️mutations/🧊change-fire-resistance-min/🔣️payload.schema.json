@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeFireResistanceMin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireResistanceMin"
+  ],
+  "properties": {
+    "newFireResistanceMin": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

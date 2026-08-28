@@ -1,0 +1,347 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceKindCatalogs",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "newCatalogs": {
+      "title": "Puzzle2dKindCatalogs",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "edges",
+        "handles",
+        "nodes",
+        "wires"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "title": "Puzzle2dCatalogNodeKind",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "attributes",
+              "authors",
+              "baseKinds",
+              "description",
+              "handles",
+              "icon",
+              "id",
+              "image",
+              "isAbstract",
+              "label",
+              "name",
+              "representations",
+              "unit"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "isAbstract": {
+                "type": "boolean"
+              },
+              "baseKinds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "representations": {
+                "type": "array",
+                "items": {
+                  "title": "Puzzle2dRepresentation",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "description",
+                    "id",
+                    "mime",
+                    "name",
+                    "tags",
+                    "url"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "mime": {
+                      "type": "string"
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "lod": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "handles": {
+                "type": "array",
+                "items": {
+                  "title": "Puzzle2dHandleTemplate",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "angle",
+                    "description",
+                    "icon",
+                    "id",
+                    "label",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string"
+                    },
+                    "handleKind": {
+                      "type": "string"
+                    },
+                    "angle": {
+                      "type": "number"
+                    },
+                    "t": {
+                      "type": "number"
+                    },
+                    "mandatory": {
+                      "type": "boolean"
+                    },
+                    "radius": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "title": "Puzzle2dAttribute",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "key",
+                    "value"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "authors": {
+                "type": "array",
+                "items": {
+                  "title": "Puzzle2dAuthor",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "email",
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "rank": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "handles": {
+          "type": "array",
+          "items": {
+            "title": "Puzzle2dCatalogHandleKind",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "color",
+              "compatibleWith",
+              "defaultWireKind",
+              "description",
+              "icon",
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "order": {
+                "type": "integer"
+              },
+              "compatibleWith": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "defaultWireKind": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "title": "Puzzle2dCatalogEdgeKind",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "color",
+              "description",
+              "icon",
+              "id",
+              "label",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "wires": {
+          "type": "array",
+          "items": {
+            "title": "Puzzle2dCatalogWireKind",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "color",
+              "defaultEdgeKind",
+              "description",
+              "icon",
+              "id",
+              "label",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              },
+              "defaultEdgeKind": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

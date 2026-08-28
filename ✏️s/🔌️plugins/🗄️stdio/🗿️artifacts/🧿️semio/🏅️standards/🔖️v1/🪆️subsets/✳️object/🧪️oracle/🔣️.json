@@ -1,17 +1,29 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ This subset's own contribution: the mutation vocabulary belongs to ONE subset of ONE standard of ONE artifact, so its oracle registration and catalog live here rather than in a shared manifest. `s.stdio.semio.object` is a semio-NATIVE format that no third party reads or writes, so the reference is a second IMPLEMENTATION in another language, written from this subset's own committed specification documents.",
   "oracles": [
     {
       "id": "semio-object-python-independent",
       "ecosystem": "python",
       "package": "",
-      "capabilities": ["semio-v1-object-mutate"],
-      "comparisonProfiles": ["ordered-json-v1"],
+      "capabilities": [
+        "semio-v1-object-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
       "license": "AGPL-3.0-only",
       "testOnly": true,
-      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-object/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all nine verbs of `SemioObjectMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` for the record grammar, `…/📸️snapshot/💾️binary/📡️component.protocol.semio` for the pack header and the sentence naming its transform-and-slots payload, `…/📸️snapshot/🔣️component.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the nine verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` for the semio envelope and `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`'s `ArtifactRef::to_uri` for the child handle's dialect coordinate. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️example.pack.semio` byte for byte, which a misreading could not do."
+      "rationale": "No third-party library reads or writes semio's own `.dsl.semio`/`.pack.semio` envelope, so a differential comparison's second PRODUCER cannot be a foreign package — it has to be a second implementation. `🧪️tests/mutate-semio-object/🐍️component.py` is that implementation: the text envelope, the DSL grammar, the pack frame, the JSON projection and all nine verbs of `SemioObjectMutation`, written in Python from the committed specification documents alone — `../🧬️schema/📸️snapshot/📝️text/📖️component.grammar.semio` for the record grammar, `…/📸️snapshot/💾️binary/📡️component.protocol.semio` for the pack header and the sentence naming its transform-and-slots payload, `…/📸️snapshot/🔣️component.json` for the projection, `…/🧬️schema/🧬️mutations/📝️text/📖️component.grammar.semio` for the nine verbs and their argument lists, `🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️component.rs` for the semio envelope and `🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️component.rs`'s `ArtifactRef::to_uri` for the child handle's dialect coordinate. It imports nothing from the Rust it judges and transliterates none of it. `package` is deliberately empty: the implementation is the adapter file, so this entry contributes no dependency to `🔒️dependencies.json` and nothing to the import-purity probe. The derivation of the pack layout past the header — which the protocol description names but declines to frame — is pinned by the Python re-encoding the committed `🎒️example.pack.semio` byte for byte, which a misreading could not do.\n\nUNDER PROTOCOL V2 this registration is classified `cross-semio-implementation` — a required SUPPLEMENTAL oracle that does not discharge `semio-v1-object-mutate`'s external-oracle requirement for its 9-kind mutation vocabulary; a qualifying third-party reference (`third-party-library` / `third-party-cli` / `standards-reference-tool`) is still owed.",
+      "kind": "cross-semio-implementation",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository second implementation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [
@@ -121,7 +133,17 @@
           ]
         }
       ],
-      "kinds": ["move-object", "rotate-object", "scale-object", "create-brep", "delete-brep", "create-mesh", "delete-mesh", "create-properties", "delete-properties"]
+      "kinds": [
+        "move-object",
+        "rotate-object",
+        "scale-object",
+        "create-brep",
+        "delete-brep",
+        "create-mesh",
+        "delete-mesh",
+        "create-properties",
+        "delete-properties"
+      ]
     }
   ]
 }

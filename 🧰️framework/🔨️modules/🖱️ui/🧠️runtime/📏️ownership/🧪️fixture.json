@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "componentCopy": { "allocationGrant": 32768, "workGrant": 4096, "payloadBytes": 32768, "cancelFrontiers": [0, 1, 2, 3, 4, 5, 8, 12, 16, 32] },
+  "existingComponent": { "allocationGrant": 32768, "workGrant": 4096, "payloadBytes": 32768, "minimumTurns": 8, "rejectionAllocationBytes": 0, "oldRootCopied": false },
+  "patchAllocation": { "maximumBytesPerTurn": 32768, "directoryBytes": 27672, "operationBytes": 6416 },
+  "bindingClone": { "items": 32, "elementBytes": 2072, "wholeBackingBytes": 66304, "maximumBytesPerTurn": 32768, "cancelFrontiers": [0, 1, 2, 3, 4, 5, 12, 64, 100, 132], "unwindRetainsRoots": true },
+  "inlineCases": [
+    { "name": "tree-item-icon", "before": 0, "after": 1, "backingCapacity": 0, "additionalOwnedBytes": 0 },
+    { "name": "reserved-binding", "before": 1, "after": 2, "backingCapacity": 32, "additionalOwnedBytes": 0 }
+  ],
+  "transfer": { "capacity": 4, "values": [7, 11], "sourceBackingBytes": 0, "sourceItems": 0, "rejectedPayload": "retained-payload" },
+  "backingCases": [
+    { "name": "empty-unreserved", "capacity": 0, "initialized": 0, "elementBytes": 3072, "ownedBytes": 0 },
+    { "name": "empty-reserved", "capacity": 32, "initialized": 0, "elementBytes": 3072, "ownedBytes": 98304 },
+    { "name": "one-reserved", "capacity": 32, "initialized": 1, "elementBytes": 3072, "ownedBytes": 98304 },
+    { "name": "two-reserved", "capacity": 32, "initialized": 2, "elementBytes": 3072, "ownedBytes": 98304 },
+    { "name": "larger-reservation", "capacity": 64, "initialized": 2, "elementBytes": 3072, "ownedBytes": 196608 },
+    { "name": "zero-sized-elements", "capacity": 32, "initialized": 2, "elementBytes": 0, "ownedBytes": 0 }
+  ]
+}

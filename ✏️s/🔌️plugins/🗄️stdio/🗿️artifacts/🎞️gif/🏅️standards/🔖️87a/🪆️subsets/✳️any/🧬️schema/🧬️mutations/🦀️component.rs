@@ -82,7 +82,7 @@ pub enum GifMutation {
 
 /// 🏷️ Wave 7 mutation-oracle catalog: the kebab-case spelling of every `GifMutation` variant, in
 /// declaration order — what `../../🧪️oracle/🔣️.json`'s `mutationCatalogs[].kinds` and
-/// `../../../../../../🧪️tests/mutate-gif-87a/component.feature`'s `@id-mutate`/`@id-inverse` row
+/// `../../../../../../🧪️tests/mutate-gif-87a/🥒️.feature`'s `@id-mutate`/`@id-inverse` row
 /// ids are measured against. `kinds_match_enum_variants` below is what keeps this honest — the
 /// framework never parses Rust, so nothing else notices if this list and the enum drift apart.
 pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"];

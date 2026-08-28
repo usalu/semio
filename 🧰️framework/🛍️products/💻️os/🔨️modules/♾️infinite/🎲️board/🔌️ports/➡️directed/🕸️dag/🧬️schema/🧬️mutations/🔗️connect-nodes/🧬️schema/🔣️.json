@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "payload": {
+      "type": "object",
+      "required": [
+        "id",
+        "source",
+        "target",
+        "routeStyle",
+        "properties",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "routeStyle": {
+          "$ref": "../../../🔣️.json#/$defs/EdgeRouteStyle"
+        },
+        "properties": {
+          "$ref": "../../../🔣️.json#/$defs/PropertyBag"
+        },
+        "index": {
+          "$ref": "../../../🔣️.json#/$defs/U64"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$ref": "#/$defs/payload"
+    }
+  ],
+  "unevaluatedProperties": false
+}

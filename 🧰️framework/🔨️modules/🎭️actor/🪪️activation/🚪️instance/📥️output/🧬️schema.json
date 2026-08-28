@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Captured Actor Turn Output Reservation",
+  "description": "Pre-admitted strong output ownership. Admission and empty reservation cancellation do not discharge returned payloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["capacity", "sequence", "phase", "retained"],
+  "properties": {
+    "capacity": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+    "sequence": { "$ref": "semio.actor.instance-lifetime-close.v1#/definitions/u64" },
+    "phase": { "enum": ["reserved", "pending", "returned", "cancelled"] },
+    "retained": { "type": "boolean" }
+  },
+  "allOf": [{ "if": { "properties": { "phase": { "const": "returned" } } }, "then": { "properties": { "retained": { "const": true } } }, "else": { "properties": { "retained": { "const": false } } } }]
+}

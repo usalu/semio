@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "descriptorCount": 0,
+  "json": [
+    null,
+    true,
+    false,
+    0,
+    1,
+    -1,
+    "",
+    "noop",
+    "ChildrenTestMutation",
+    [],
+    [
+      null
+    ],
+    {},
+    {
+      "Noop": null
+    },
+    {
+      "operation": "noop"
+    },
+    {
+      "SetValue": {
+        "value": 1
+      }
+    },
+    {
+      "anything": {
+        "nested": [
+          1
+        ]
+      }
+    }
+  ],
+  "text": [
+    "",
+    " ",
+    "noop",
+    "{}",
+    "null",
+    "[]",
+    "{\"Noop\":null}",
+    "{\"operation\":\"noop\"}",
+    "children-test-mutation"
+  ],
+  "binary": [
+    [],
+    [
+      0
+    ],
+    [
+      1
+    ],
+    [
+      255
+    ],
+    [
+      110,
+      111,
+      111,
+      112
+    ],
+    [
+      123,
+      125
+    ],
+    [
+      110,
+      117,
+      108,
+      108
+    ]
+  ],
+  "expected": {
+    "json": false,
+    "text": false,
+    "binary": false
+  }
+}
+

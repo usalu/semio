@@ -1566,7 +1566,7 @@ export function partitionNextestExecutionFilters(args: readonly string[]): { bui
   for (let index = 0; index < cargoArgs.length; index += 1) {
     const arg = cargoArgs[index]!;
     const key = arg.split("=", 1)[0]!;
-    if (arg === "--ignore-default-filter" || (arg.startsWith("-E") && arg.length > 2)) {
+    if (arg === "--ignore-default-filter" || arg === "--no-fail-fast" || (arg.startsWith("-E") && arg.length > 2)) {
       executionArgs.push(arg);
     } else if (valuedFilters.has(key)) {
       if (arg.includes("=")) {
@@ -6084,6 +6084,8 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
 export * from "../../🔍️discovery/🟦️component.ts";
 export { cargoProviderTomlParser, inspectMutationMetadataSource, projectCargoProviderManifest, resolveCargoProviderBinding, type CargoProviderBinding, type CargoProviderBindingInput, type CargoProviderDependencyProjection, type CargoProviderLibraryProjection, type CargoProviderManifestProjection, type CargoProviderManifestProjectionInput, type CargoProviderTomlParser, type MutationMetadataProviderIdentity, type MutationMetadataSourceInput, type MutationMetadataSourceOrigin, type MutationMetadataSourceProof } from "../../🔍️discovery/🟦️component.ts";
 //#endregion 🔣️TaxonomyDiscovery
+
+export { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldDirectory, type ArtifactScaffoldFile, type ArtifactScaffoldLeaf, type ArtifactScaffoldOptions, type ArtifactScaffoldOwner, type ArtifactScaffoldPartial, type ArtifactScaffoldProgress, type ArtifactScaffoldResult } from "../../🏗️builder/🟦️.ts";
 
 //#region 🗂️Workspaces
 /** 🗂️ Generated root `package.json` `workspaces` array from a real on-disk package scan — see

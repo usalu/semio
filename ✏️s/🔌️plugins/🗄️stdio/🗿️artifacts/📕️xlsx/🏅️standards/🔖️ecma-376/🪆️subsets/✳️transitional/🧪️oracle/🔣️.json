@@ -1,6 +1,6 @@
 {
-  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
-  "schemaVersion": 1,
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
+  "schemaVersion": 2,
   "_comment": "🧩️ XLSX ECMA-376/✳️transitional's own contribution to the repository test platform: the CONFORMANCE-CLASS mutation vocabulary this subset owns, and the reference implementation that performs it independently. The ✳️any subset owns the document vocabulary (sheets, cells, blocks, runs, slides); this subset owns the ISO/IEC 29500-4 Transitional class, which is a property of the OPC package and of no document object — one kind per axis its own check_transitional_conformance reads, and the two vocabularies are disjoint. Reference: `quick-xml` 0.42 over the `zip` 6 container codec — a generic, namespace-agnostic OPC + XML implementation, which is what this axis needs. The obvious alternative, the Python `openpyxl` distribution on the venv host that landed with `pypdf-pdf-1-4-text`, was considered and NOT chosen: it is a document object model over the SpreadsheetML schema, exposing sheets/paragraphs/slides rather than the package's conformance class, so it could neither perform nor observe a single kind in this catalog. That is a statement about the shape of its API, not a claim about its quality, and it was not verified against an installed copy in the session that wrote this file.",
   "oracles": [
     {
@@ -18,7 +18,15 @@
       "testOnly": true,
       "homepage": "https://github.com/tafia/quick-xml",
       "rationale": "The reference streaming XML reader/writer of the Rust ecosystem, paired with `zip` 6 (MIT/Apache-2.0, already a registered oracle of this owner) for the OPC container. Together they read a real ECMA-376 package, perform every conformance-class edit this catalog declares — namespace declarations, the officeDocument relationship base, the root conformance attribute, legacy VML parts and mc:AlternateContent markup — and reassemble the whole container from the parts alone. That is a genuine second producer for every declared kind, which is why every scenario is @mode-differential. Registered under `quick-xml` because it performs and observes the edit; `zip` is the paired container codec and is exercised by every green scenario. Neither crate is production-reachable: this repository's own OPC and XML codecs are hand-written and link neither.",
-      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "kind": "third-party-library",
+      "engine": {
+        "family": "quick-xml",
+        "implementation": "quick-xml Rust streaming XML reader/writer",
+        "version": "0.42"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "mutationCatalogs": [

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ReplaceReferences",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "modelDefinitionId",
+    "references"
+  ],
+  "properties": {
+    "modelDefinitionId": {
+      "type": "string"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "title": "CadReference",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "hidden",
+          "id",
+          "locked",
+          "mediaKind",
+          "origin",
+          "sourceUrl",
+          "widthWorld"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string"
+          },
+          "mediaKind": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "orientation": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "scale": {
+            "type": "number"
+          },
+          "widthWorld": {
+            "type": "number"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "opacity": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

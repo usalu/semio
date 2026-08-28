@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeNodeAbbreviation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAbbreviation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newAbbreviation": {
+      "type": "string"
+    }
+  }
+}

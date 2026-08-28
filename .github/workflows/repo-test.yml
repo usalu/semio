@@ -1,0 +1,189 @@
+# 🧪️ Repository Test Protocol v2 — subset-scoped, externally-oracled mutation testing.
+#
+# Every lane shards by the coordinate a report row is keyed by
+# (`artifact / standard / subset / mutation / fixture-family / implementation / platform`).
+# There is deliberately NO artifact-level job anywhere in this file: a single job covering a whole
+# artifact is exactly the granularity Protocol v2 exists to replace, because one broad case then
+# stands in for every narrow one and the report cannot say which subset is actually covered.
+#
+# @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts — every command below
+# @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json — the v2 contract
+
+name: repo-test
+
+on:
+  pull_request:
+  merge_group:
+  schedule:
+    # 🌙️Nightly: the long suite plus the real-world corpus and the platform matrix.
+    - cron: "0 2 * * *"
+    # 🗓️Weekly exhaustive lane: the full mutation × outcome × fixture-family matrix.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      lane:
+        description: Which lane to run
+        type: choice
+        options: [pull-request, merge-queue, nightly, exhaustive]
+        default: pull-request
+
+concurrency:
+  group: repo-test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # 🏷️Every run is agent-scoped so concurrent lanes never contend on one cache or target directory.
+  SEMIO_AGENT_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+  SEMIO_BASELINE_SHA: ${{ github.sha }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🧾️ Everything provable without executing a single test. Runs on every event.
+  contract:
+    name: contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: 🩺️ toolchains present
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts doctor
+      - name: 🔍️ discovery
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts discover
+      - name: 🧾️ protocol, taxonomy, runtime↔manifest↔test equality, oracle qualification, fixture provenance
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts contract
+      - name: 🔬️ probe registry and qualification status
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts probe
+      - name: 🧫️ fixture digests and provenance
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture verify
+      - name: 🧫️ fixture licence, class and reproducibility audit
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture audit
+      - name: 🔒️ dependency classification and production reachability
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts dependency
+      - name: 🧹️ clean and gc are dry and refuse to leave the cache root
+        run: |
+          bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts clean --dry
+          bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts gc
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🏭️ What production dispatch actually offers, per SUBSET. The contract job holds the manifest
+  # against this; a subset whose bridge cannot run reports `runtime-inventory-missing` rather than
+  # passing, which is why this job is `continue-on-error: false` and not merely informational.
+  inventory:
+    name: inventory ${{ matrix.artifact }}@${{ matrix.standard }}/${{ matrix.subset }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact: s.stdio.step
+            standard: ap214
+            subset: cc6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - name: 🏭️ production mutation bridge
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts inventory --artifact ${{ matrix.artifact }} --standard ${{ matrix.standard }} --subset ${{ matrix.subset }}
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # ⚖️ The changed-subset lane. Sharded by SUBSET, never by artifact.
+  parity:
+    name: parity ${{ matrix.subset }} (${{ matrix.level }})
+    needs: contract
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        subset: [cc6]
+        level: [fundamental]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - name: ⚖️ oracle + subject + comparison pipeline
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity ${{ matrix.level }} --subset ${{ matrix.subset }}
+      - name: 📦️ preserve failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-evidence-${{ matrix.subset }}-${{ matrix.level }}
+          # 📦️STEP, meshes, canonical forms, probe logs and run manifests. Failure evidence is the
+          # whole point of the bundle: a geometric disagreement is unreadable without both shapes.
+          path: .🧬semio/🦑️repo/⚡️cache/tests/results/**
+          retention-days: 30
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 📊️ The subset-scoped coverage matrix and its release gates.
+  matrix-report:
+    name: coverage matrix
+    needs: [contract, parity]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: 📊️ sixteen dimensions, keyed by the full coordinate
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts matrix
+      - name: 🚦️ release gates
+        # 🚦️Advisory until the pilot's production bridge builds — see the ticket's status. The gate is
+        # RUN on every change so the distance to release is always visible, and the day it is made
+        # blocking is a one-line change here rather than a new mechanism.
+        continue-on-error: true
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts matrix --enforce
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🌙️ Nightly: the long suite, the platform matrix and fixture reproduction.
+  nightly:
+    name: nightly ${{ matrix.os }} / ${{ matrix.subset }}
+    if: github.event_name == 'schedule' || github.event.inputs.lane == 'nightly'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        subset: [cc6]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - name: ⚖️ long suite for this subset on this platform
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity long --subset ${{ matrix.subset }} --platform ${{ matrix.os }}
+      - name: 🧫️ fixture reproduction sample
+        # 🧫️Reproduction re-runs each recorded generator and compares bytes. It is expected to REPORT
+        # on this corpus rather than pass: OCCT stamps an incrementing translator counter and a
+        # wall-clock timestamp into every STEP export, which is why every bundle records
+        # `reproducible: false` and why no external canonicalizer is qualified yet.
+        continue-on-error: true
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture reproduce --subset ${{ matrix.subset }}
+      - name: 🧹️ cache integrity and gc dry run
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts gc
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # 🗓️ The exhaustive lane: every mutation × outcome × fixture-family, sharded to the leaf.
+  exhaustive:
+    name: exhaustive ${{ matrix.subset }} / ${{ matrix.family }}
+    if: github.event.schedule == '0 3 * * 0' || github.event.inputs.lane == 'exhaustive'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        subset: [cc6]
+        family: [spatial-relationship, shape-complexity, robustness, mechanical, failure]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - name: ⚖️ exhaustive suite for one fixture family
+        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity exhaustive --subset ${{ matrix.subset }} --fixture-family ${{ matrix.family }}
+      - name: 📦️ preserve failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exhaustive-evidence-${{ matrix.subset }}-${{ matrix.family }}
+          path: .🧬semio/🦑️repo/⚡️cache/tests/results/**
+          retention-days: 30

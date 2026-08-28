@@ -1,0 +1,29 @@
+{
+  "declaredOutcome": "rejected",
+  "kind": "move-vertex",
+  "hasExpected": true,
+  "solids": 0,
+  "shells": 2,
+  "faces": 2,
+  "edges": 6,
+  "vertices": 5,
+  "boundingBox": {
+    "xMin": -1.0000005684341886e-7,
+    "xMax": 500.0000001000001,
+    "yMin": -1e-7,
+    "yMax": 500.0000001000001,
+    "zMin": -1e-7,
+    "zMax": 1e-7
+  },
+  "boundingBoxDiagonal": 707.1067814693904,
+  "volume": 0,
+  "area": 125000.00000000001,
+  "validSolid": true,
+  "eulerCharacteristic": 1,
+  "genus": null,
+  "measuredFrom": "expected.step, re-imported",
+  "tessellationTolerance": 0.021213203444081712,
+  "meshVertexCount": 6,
+  "meshTriangleCount": 2,
+  "rejectionReason": "polygon() with corners 2 and 3 swapped did not throw; its PRE-EXPORT in-memory measureArea() is 0 (numerically zero), but expected.metrics.json's area is measured from the RE-IMPORTED expected.step, where OCCT's STEP writer has already split the self-intersecting face into two separate triangles — see notes"
+}

@@ -1,0 +1,6 @@
+{
+  "selection": { "graph": { "granularity": "node", "ids": ["a,comma", "b"], "anchorId": "a,comma" }, "private": { "granularity": "face", "ids": ["hidden"], "anchorId": "hidden" } },
+  "hover": {},
+  "activeMode": { "graph": "multiple", "private": "single" },
+  "activeGranularity": { "graph": "node", "private": "face" }
+}

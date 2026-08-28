@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MovePart3d",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newOrigin"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "newOrigin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

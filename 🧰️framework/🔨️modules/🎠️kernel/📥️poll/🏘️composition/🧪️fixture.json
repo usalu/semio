@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "valid": [
+    { "name": "zero-explicit", "input": { "composition": { "bytes": 0, "slots": 0, "owners": 0, "control": { "bytes": 0, "slots": 0, "owners": 0 } } }, "words": ["0", "0", "0", "0", "0", "0"] },
+    { "name": "split", "input": { "composition": { "bytes": 16384, "slots": 64, "owners": 32, "control": { "bytes": 2048, "slots": 8, "owners": 4 } } }, "words": ["16384", "64", "32", "2048", "8", "4"] },
+    { "name": "maximum-explicit", "input": { "composition": { "bytes": 9007199254740991, "slots": 9007199254740991, "owners": 9007199254740991, "control": { "bytes": 9007199254740991, "slots": 9007199254740991, "owners": 9007199254740991 } } }, "words": ["9007199254740991", "9007199254740991", "9007199254740991", "9007199254740991", "9007199254740991", "9007199254740991"] }
+  ],
+  "invalid": [
+    { "name": "missing", "input": {} },
+    { "name": "null", "input": { "composition": null } },
+    { "name": "missing-control", "input": { "composition": { "bytes": 1, "slots": 1, "owners": 1 } } },
+    { "name": "string-count", "input": { "composition": { "bytes": "1", "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } } },
+    { "name": "unsafe-count", "input": { "composition": { "bytes": 9007199254740992, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } } },
+    { "name": "negative", "input": { "composition": { "bytes": 1, "slots": -1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } } },
+    { "name": "fractional", "input": { "composition": { "bytes": 1, "slots": 1, "owners": 0.5, "control": { "bytes": 0, "slots": 0, "owners": 0 } } } },
+    { "name": "alias", "input": { "residentCapacity": { "bytes": 1, "slots": 1, "owners": 1, "control": { "bytes": 0, "slots": 0, "owners": 0 } } } }
+  ],
+  "partitionRefusals": [
+    { "bytes": 0, "slots": 1, "owners": 1, "control": { "bytes": 1, "slots": 0, "owners": 0 } },
+    { "bytes": 1, "slots": 0, "owners": 1, "control": { "bytes": 0, "slots": 1, "owners": 0 } },
+    { "bytes": 1, "slots": 1, "owners": 0, "control": { "bytes": 0, "slots": 0, "owners": 1 } }
+  ],
+  "bindingCases": [
+    { "name": "first-original", "phase": "empty", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": false, "expected": "initialize-original" },
+    { "name": "partial-retry", "phase": "opening", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": false, "expected": "resume-original" },
+    { "name": "partial-opening-cancellation", "phase": "opening", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": true, "expected": "close-original-opening" },
+    { "name": "ready-repeat", "phase": "ready", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": false, "expected": "use-original" },
+    { "name": "changed-configuration", "phase": "opening", "sameActivation": true, "sameOwner": true, "sameConfiguration": false, "cleanup": false, "expected": "refuse-retain-original" },
+    { "name": "equal-capacity-foreign-owner", "phase": "ready", "sameActivation": true, "sameOwner": false, "sameConfiguration": true, "cleanup": false, "expected": "refuse-retain-original" },
+    { "name": "replacement-activation", "phase": "ready", "sameActivation": false, "sameOwner": true, "sameConfiguration": true, "cleanup": true, "expected": "refuse-retain-original" },
+    { "name": "closing-new-work", "phase": "closing", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": false, "expected": "refuse-retain-original" },
+    { "name": "closing-issued-cleanup", "phase": "closing", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": true, "expected": "drain-original" },
+    { "name": "closing-changed-configuration", "phase": "closing", "sameActivation": true, "sameOwner": true, "sameConfiguration": false, "cleanup": true, "expected": "refuse-retain-original" },
+    { "name": "control-before-install", "phase": "empty", "sameActivation": true, "sameOwner": true, "sameConfiguration": true, "cleanup": true, "expected": "refuse-retain-original" }
+  ]
+}

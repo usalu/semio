@@ -1,14 +1,42 @@
 {
   "schemaVersion": 1,
   "contractId": "draw-source-scenario-input-v1",
-  "registryImplementation": {
-    "format": "typescript",
-    "content": "export {};\n"
+  "producerContext": {
+    "generatorId": "plugin-registry",
+    "compilerRoots": ["📜️script.ts"],
+    "workspaceInputs": ["package.json", "nx.json", "📋️project.json", ".gitignore"],
+    "runtimePackages": ["nx", "@nx/js", "@nxlv/python"],
+    "authority": "current-exact-no-follow-static-closure",
+    "workspaceBindings": "fixture-local",
+    "initialOutputs": "actual-generator-before-baseline",
+    "registryNodeCount": 10
   },
+  "launchSeed": {
+    "path": ".vscode/🧩️launch.seed.jsonc",
+    "format": "jsonc",
+    "content": "{\n  \"version\": \"0.2.0\",\n  \"configurations\": [\n    \"@generated:draw-fixture-host:react\"\n  ],\n  \"compounds\": [],\n\n  // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated\n  // output); see 🖥️launch.ts readSeed() for the exact split contract this marker line supports.\n  \"devLaunchers\": {\n    \"draw-fixture-host\": {\n      \"namePrefix\": \"🧪️draw-fixture-host\",\n      \"order\": 390,\n      \"command\": \"bun nx run @semio-tech/plugin-registry:check-generated\",\n      \"reactEnv\": { \"FIXTURE_PORT\": \"{PORT}\" },\n      \"reactServerReadyAction\": { \"pattern\": \"ready:(\\\\d+)\", \"uriFormat\": \"http://localhost:{PORT}\" }\n    }\n  }\n}\n"
+  },
+  "catalogContext": [
+    {
+      "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/Cargo.toml",
+      "format": "toml",
+      "content": "[package]\nname = \"draw-fixture-host\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\n\n[package.metadata.component]\npackage = \"semio:draw-fixture-host\"\n\n[package.metadata.semio]\nrole = \"plugin\"\nhost = { landing = \"fixture-landing\", shell = \"fixture-shell\" }\n\n[[package.metadata.semio.playground]]\nvariant = \"draw-fixture-host\"\nports = { react = 6197, wgpu = 6198 }\n"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧪️draw-fixture-host/📦️packages/🦀️rust/📚️library/🦀️.rs",
+      "format": "rust",
+      "content": "pub fn fixture_host() {}\n"
+    }
+  ],
   "cargoModuleRoot": {
-    "path": "📚️library/🦀️.rs",
+    "path": "📦️packages/🦀️rust/📚️library/🦀️.rs",
     "format": "rust",
-    "content": "#[path = \"../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs\"]\nmod cad_interaction_spec;\n"
+    "content": "#[path = \"../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs\"]\nmod cad_interaction_spec;\n"
+  },
+  "cadConsumerMount": {
+    "sourcePath": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts",
+    "path": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts",
+    "meaning": "unchanged-live-cad-bytes-in-authored-canonical-fixture-context"
   },
   "owner": {
     "artifactId": "🖍️draw",
@@ -87,7 +115,7 @@
     {
       "path": "📦️packages/🦀️rust/Cargo.toml",
       "format": "toml",
-      "content": "[package]\nname = \"draw-source-consumer\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"../../📚️library/🦀️.rs\"\n\n[dependencies]\nfsm = { path = \"../../{{artifactSourceRoot}}/🔄️fsm/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm\" }\n"
+      "content": "[package]\nname = \"draw-source-consumer\"\nversion = \"0.1.0\"\nedition = \"2021\"\n\n[lib]\npath = \"📚️library/🦀️.rs\"\n\n[dependencies]\nfsm = { path = \"../../{{artifactSourceRoot}}/🔄️fsm/📦️packages/🦀️rust\", package = \"semio-s-plugin-draw-fsm\" }\n"
     },
     {
       "path": "🧪️tests/🧪️reference/🦀️.rs",
@@ -101,6 +129,8 @@
     }
   ],
   "retention": {
+    "fixtureOwnerSegments": ["🧪️tests"],
+    "transactionTicketSegments": [".🧬semio", "🦑️repo", "🎫️tickets", "🎆️26", "🌙️08", "☀️27", "DRAW-SOURCE-SCENARIOS"],
     "parentSegments": ["📓️draw-source-scenarios", "🧪️runs"],
     "recordFilename": "📝️.md",
     "disposition": "retain-all-until-reviewed",
@@ -126,13 +156,14 @@
     "workspaceGlobCount": 2,
     "rootCollectionCount": 1,
     "externalModuleCount": 1,
-    "pluginRegistryRegenerationCount": 0,
+    "activatedGeneratorIds": ["plugin-registry"],
     "cargoModuleMount": {
       "manifestPath": "📦️packages/🦀️rust/Cargo.toml",
       "packageName": "draw-source-consumer",
-      "libraryEntry": "../../📚️library/🦀️.rs",
+      "libraryEntry": "📚️library/🦀️.rs",
       "moduleName": "cad_interaction_spec",
-      "moduleTarget": "../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs"
+      "moduleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️component.rs",
+      "canonicalModuleTarget": "../../../🗿️artifacts/📐️cad/🎬️interaction-spec/🦀️.rs"
     }
   }
 }

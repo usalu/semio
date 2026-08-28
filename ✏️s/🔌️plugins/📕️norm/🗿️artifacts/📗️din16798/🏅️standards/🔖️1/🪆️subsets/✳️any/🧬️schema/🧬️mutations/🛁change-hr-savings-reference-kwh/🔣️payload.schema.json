@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ChangeHrSavingsReferenceKwh",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newHrSavingsReferenceKwh"
+  ],
+  "properties": {
+    "newHrSavingsReferenceKwh": {
+      "type": "number"
+    }
+  }
+}

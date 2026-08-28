@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧬️schema/🧬️mutations/🔄change-synapse",
+  "semanticKind": "change-synapse",
+  "displayName": "Change Synapse",
+  "emoji": "🔄",
+  "aggregateVariant": "ChangeSynapse",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-synapse",
+  "binaryTag": 7,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}
+

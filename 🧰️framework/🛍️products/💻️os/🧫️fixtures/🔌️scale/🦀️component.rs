@@ -117,6 +117,7 @@ pub mod guest {
                 status: if outcome.status_more_work { WitTurnStatus::MoreWork } else { WitTurnStatus::Idle },
                 fuel_used: outcome.fuel_used,
                 command_ingress: command_page.map_or(exports::semio::framework::reactor::CommandIngressStatus::Idle, |page| exports::semio::framework::reactor::CommandIngressStatus::Backpressure(page.cursor)),
+                lifecycle_receipt: None,
             })
         }
     }

@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EditDesign",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "connections",
+    "id",
+    "pieces"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "pieces": {
+      "type": "array",
+      "items": {
+        "title": "SemioKitPiece",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "transform",
+          "typeId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "typeId": {
+            "type": "string"
+          },
+          "transform": {
+            "title": "SemioTransform",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rotation",
+              "scale",
+              "translation"
+            ],
+            "properties": {
+              "translation": {
+                "title": "SemioPoint3",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                }
+              },
+              "rotation": {
+                "title": "SemioQuaternion",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "w",
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  },
+                  "w": {
+                    "type": "number"
+                  }
+                }
+              },
+              "scale": {
+                "title": "SemioPoint3",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "properties": {
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  },
+                  "z": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "title": "SemioKitConnection",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "connectedPieceId",
+          "connectedPort",
+          "connectingPieceId",
+          "connectingPort",
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "connectingPieceId": {
+            "type": "string"
+          },
+          "connectingPort": {
+            "type": "string"
+          },
+          "connectedPieceId": {
+            "type": "string"
+          },
+          "connectedPort": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
