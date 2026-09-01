@@ -6,13 +6,12 @@ use crate::ast::{Pattern, PatternEdge, PatternNode, QueryResult};
 use crate::executor::execute;
 use crate::language_service::parse;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full rewrite artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteArtifact {
     #[state(artifact)]
@@ -120,17 +119,17 @@ pub fn rewrite_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor 
 
 //#region 🔖️RuleApplication
 /// ◀️ Left-hand side pattern for rewriting.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Lhs {
     pub pattern: PatternJson,
-    #[serde(default)]
+    #[value(default)]
     pub where_clause: Option<String>,
 }
 
 /// 🏷️ Parameter kind for parametric rewrite rules.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum ParameterKind {
     String,
     Number,
@@ -138,8 +137,8 @@ pub enum ParameterKind {
 }
 
 /// 🎛️ Parameter declaration on the right-hand side.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ParameterSpec {
     pub name: String,
     pub kind: ParameterKind,
@@ -147,47 +146,47 @@ pub struct ParameterSpec {
 }
 
 /// ▶️ Right-hand side mutation for rewriting.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Rhs {
-    #[serde(default)]
+    #[value(default)]
     pub create: Vec<PatternJson>,
-    #[serde(default)]
+    #[value(default)]
     pub delete: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub set: Vec<AssignmentJson>,
-    #[serde(default)]
+    #[value(default)]
     pub merge: Vec<PatternJson>,
-    #[serde(default)]
+    #[value(default)]
     pub parameters: Vec<ParameterSpec>,
 }
 
 /// 📜️ Rewrite rule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Rule {
     pub name: String,
     pub lhs: Lhs,
     pub rhs: Rhs,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PatternJson {
     pub left_var: String,
     pub left_kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub edge_var: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub edge_kind: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub right_var: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub right_kind: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AssignmentJson {
     pub var: String,
     pub prop: String,
@@ -225,7 +224,7 @@ pub(crate) fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String
     if bindings_json.trim().is_empty() {
         return Ok(BTreeMap::new());
     }
-    Ok(serde_json::from_str(bindings_json)?)
+    Ok(pack::from_json_str(bindings_json)?)
 }
 
 fn parameter_defaults(rule: &Rule) -> BTreeMap<String, PropertyValue> {
@@ -272,7 +271,7 @@ fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>
         PropertyValue::Bool(b) => b.to_string(),
         PropertyValue::Number(n) => n.to_string(),
         PropertyValue::String(s) => format!("\"{s}\""),
-        PropertyValue::Array(_) | PropertyValue::Object(_) => serde_json::to_string(&resolved).unwrap_or_else(|_| "null".into()),
+        PropertyValue::Array(_) | PropertyValue::Object(_) => pack::to_json_string(&resolved),
     }
 }
 
@@ -315,29 +314,29 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, Pr
 
 /// ♻️ Apply a rewrite rule from JSON.
 pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
-    let rule: Rule = serde_json::from_str(rule_json)?;
+    let rule: Rule = pack::from_json_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(serde_json::to_string(&ApplyRuleResult { fixture: graph.fixture_json()?, query: result })?)
+    Ok(pack::to_json_string(&ApplyRuleResult { fixture: graph.fixture_json()?, query: result }))
 }
 
 /// 🧵️ Build a rewrite rule Jack query from JSON without a graph.
 pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
-    let rule: Rule = serde_json::from_str(rule_json)?;
+    let rule: Rule = pack::from_json_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let query = build_rule_query(&rule, &bindings);
-    Ok(serde_json::to_string(&RuleQueryResult { query })?)
+    Ok(pack::to_json_string(&RuleQueryResult { query }))
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(value_derive::ToValue)]
+#[value(rename_all = "camelCase")]
 pub struct ApplyRuleResult {
     pub fixture: String,
     pub query: QueryResult,
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(value_derive::ToValue)]
+#[value(rename_all = "camelCase")]
 pub struct RuleQueryResult {
     pub query: String,
 }
@@ -490,7 +489,7 @@ mod rule_application_tests {
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Number(4.5)), "4.5");
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::String("hi".into())), "\"hi\"");
         let arr = PropertyValue::Array(vec![PropertyValue::Number(1.0)]);
-        assert_eq!(assignment_value_jack(&rule, &bindings, &arr), serde_json::to_string(&arr).unwrap());
+        assert_eq!(assignment_value_jack(&rule, &bindings, &arr), pack::to_json_string(&arr));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -510,14 +509,14 @@ mod rule_application_tests {
         rule.name = "label-core".into();
         rule.lhs.where_clause = Some("a.name = 'b'".into());
         rule.rhs.set.push(AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) });
-        let rule_json = serde_json::to_string(&rule).unwrap();
+        let rule_json = pack::to_json_string(&rule);
 
         let query_out = rule_query_json(&rule_json, "{}").unwrap();
-        let query_value: serde_json::Value = serde_json::from_str(&query_out).unwrap();
+        let query_value: pack::JsonValue = pack::parse_json(&query_out).unwrap();
         assert!(query_value["query"].as_str().unwrap().contains("SET a.label"));
 
         let apply_out = apply_rule_json(&mut g, &rule_json, "{}").unwrap();
-        let apply_value: serde_json::Value = serde_json::from_str(&apply_out).unwrap();
+        let apply_value: pack::JsonValue = pack::parse_json(&apply_out).unwrap();
         assert!(apply_value.get("fixture").is_some());
         let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));

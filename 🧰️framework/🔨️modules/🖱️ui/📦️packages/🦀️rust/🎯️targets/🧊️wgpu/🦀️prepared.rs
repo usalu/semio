@@ -1,6 +1,6 @@
 //! 📦️ Worker-owned render preparation and UI-authorized presentation contract.
 
-use crate::wgpu::draw::{DrawLayer, DrawList, ScissorRect};
+use crate::wgpu::draw_types::{DrawLayer, DrawList, ScissorRect};
 use crate::wgpu::kernel_3d_scene::Mesh3dLease;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, StepContext, StepOutcome};
 use std::mem::size_of;
@@ -2466,7 +2466,7 @@ impl PreparedRenderJob {
                 } else {
                     DrawMeasureCursor::LayerHeader(layer + 1)
                 };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::UiInstance>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::UiInstance>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerVector { layer, item, overlay } => {
                 let value = &draw.layers[layer];
@@ -2480,11 +2480,11 @@ impl PreparedRenderJob {
                 } else {
                     DrawMeasureCursor::LayerHeader(layer + 1)
                 };
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::VectorVertex>(), ..PreparedRenderUsage::default() }, next)
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::VectorVertex>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerRaster { layer, raster } => {
                 let value = &draw.layers[layer].raster_instances[raster];
-                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::UiInstance>(), ..PreparedRenderUsage::default() };
+                let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::UiInstance>(), ..PreparedRenderUsage::default() };
                 let next = if value.0.is_empty() { Self::next_layer_raster(draw, layer, raster) } else { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: 0 } };
                 (usage, next)
             }
@@ -2573,7 +2573,7 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Complete;
                     return Some(PreparedRenderUsage::default());
                 }
-                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw::GlassRegion>(), ..PreparedRenderUsage::default() }, DrawMeasureCursor::Glass(index + 1))
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::GlassRegion>(), ..PreparedRenderUsage::default() }, DrawMeasureCursor::Glass(index + 1))
             }
             DrawMeasureCursor::Complete => return None,
         };
@@ -3195,12 +3195,12 @@ impl UiPresentToken {
 }
 
 /// 🧵️ Non-Send authority for a transferred `OffscreenCanvas` owned by a dedicated browser Worker.
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub struct OffscreenPresentToken {
     _worker_isolate: std::marker::PhantomData<Rc<()>>,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl OffscreenPresentToken {
     pub fn mint_for_dedicated_worker() -> Result<Self, &'static str> {
         if web_sys::window().is_some() {
@@ -3803,7 +3803,7 @@ mod tests {
     #[test]
     fn draw_item_cap_faults_before_packet_publication() {
         let mut draw = DrawList::default();
-        draw.layers[0].ui_instances.push(crate::wgpu::draw::UiInstance::solid([0.0; 4], crate::wgpu::theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
+        draw.layers[0].ui_instances.push(crate::wgpu::draw_types::UiInstance::solid([0.0; 4], crate::wgpu::theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
         let mut input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
         input.limits.max_draw_items = 0;
         let mut job = PreparedRenderJob::new(input, 64);

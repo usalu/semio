@@ -12,15 +12,14 @@
 use crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::extent::{compute_binary_extent, BinaryExtent};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a binary snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `extent`, backed by the `📏extent/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.inference")]
 pub struct BinaryInference {
     #[derived]

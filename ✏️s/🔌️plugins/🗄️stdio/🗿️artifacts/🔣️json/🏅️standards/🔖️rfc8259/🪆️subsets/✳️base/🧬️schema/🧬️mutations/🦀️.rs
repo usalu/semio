@@ -1,7 +1,6 @@
 //! 🧬️ Transparent JsonMutation aggregate.
 use crate::artifacts::json::schema::diff::JsonDiff;
 use crate::artifacts::json::JsonSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use super::set_member::{SetMemberMutation, SetMemberPayload};
 pub use super::remove_member::{RemoveMemberMutation, RemoveMemberPayload};
@@ -10,8 +9,8 @@ pub use super::remove_array_element::{RemoveArrayElementMutation, RemoveArrayEle
 pub use super::set_scalar::{SetScalarMutation, SetScalarPayload};
 pub use crate::artifacts::json::schema::mutation_support::{JsonPath, JsonPathSegment};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "s.stdio.json")]
 pub enum JsonMutation {
     SetMember(SetMemberMutation),

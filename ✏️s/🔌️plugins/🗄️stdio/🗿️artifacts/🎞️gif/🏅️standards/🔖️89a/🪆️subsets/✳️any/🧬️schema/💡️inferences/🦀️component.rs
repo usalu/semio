@@ -8,15 +8,14 @@
 
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::dimensions::{compute_gif_dimensions, GifDimensions};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a gif89a snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a.inference")]
 pub struct GifInference {
     #[derived]

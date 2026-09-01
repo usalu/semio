@@ -18,6 +18,6 @@ pub(crate) fn render(state: &RewriteSnapshot, _cfg: &RewriteConfig) -> UiAssembl
     scene_surface(
         crate::editor::rewrite::TRINITY_REWRITE_PLAY_SURFACE_JACK,
         SurfaceKind::TextEditor,
-        &TextEditorScene { tokens_json: serde_json::to_string(&crate::language_service::semantic_tokens(&query)).ok(), ..TextEditorScene::base(query, Some("jack".into()), None) },
+        &TextEditorScene { tokens_json: Some(pack::to_json_string(&crate::language_service::semantic_tokens(&query))), ..TextEditorScene::base(query, Some("jack".into()), None) },
     )
 }

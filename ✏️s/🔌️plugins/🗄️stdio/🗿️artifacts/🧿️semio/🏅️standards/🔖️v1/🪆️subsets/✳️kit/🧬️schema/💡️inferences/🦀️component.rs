@@ -10,15 +10,14 @@
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::entries::{compute_semio_kit_entries, SemioKitEntries};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio kit snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.kit.inference")]
 pub struct SemioKitInference {
     #[derived]

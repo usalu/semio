@@ -2,6 +2,7 @@
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde/Display) — see R9
 
 pub use crate::span::TextSpan;
+use crate::value::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Errors
@@ -53,6 +54,22 @@ impl From<&'static str> for FaultCode {
     }
 }
 
+/// 🌉️ Hand-written, not derived: `FaultCode` is `#[serde(transparent)]`, a shape
+/// `#[derive(ToValue, FromValue)]` does not support (see its own module docstring).
+impl ToValue for FaultCode {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.0.clone())
+    }
+}
+impl FromValue for FaultCode {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => Ok(FaultCode(s)),
+            other => Err(ValueError::new(format!("expected a string for FaultCode, found {other:?}"))),
+        }
+    }
+}
+
 /// @emoji 🏷️ Stable, greppable diagnostic identifier, e.g. `"DSL0001"`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DiagnosticCode(pub &'static str);
@@ -79,6 +96,35 @@ pub enum Severity {
     Warning,
     Error,
     Fatal,
+}
+
+/// 🌉️ Hand-written, not derived: `Severity` is a plain unit-only "string enum" (`#[serde(rename_all
+/// = "camelCase")]` with no `tag`, serde's default bare-string representation) —
+/// `#[derive(ToValue, FromValue)]`'s enum path only supports internally-tagged representations.
+impl ToValue for Severity {
+    fn to_value(&self) -> DslValue {
+        let name = match self {
+            Severity::Info => "info",
+            Severity::Warning => "warning",
+            Severity::Error => "error",
+            Severity::Fatal => "fatal",
+        };
+        DslValue::String(name.to_string())
+    }
+}
+impl FromValue for Severity {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => match s.as_str() {
+                "info" => Ok(Severity::Info),
+                "warning" => Ok(Severity::Warning),
+                "error" => Ok(Severity::Error),
+                "fatal" => Ok(Severity::Fatal),
+                other => Err(ValueError::new(format!("unknown Severity variant `{other}`"))),
+            },
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 
 impl Severity {
@@ -336,13 +382,13 @@ macro_rules! fault_from_error {
     };
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 /// @emoji 🌐️ Surfaces a structured {@link Fault} to JavaScript callers.
 pub fn fault_to_js(fault: Fault) -> wasm_bindgen::JsValue {
     wasm_bindgen::JsValue::from_str(&serde_json::to_string(&fault).unwrap_or(fault.message))
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 /// @emoji 🌐️ Maps `Result<T, Fault>` into `Result<T, JsValue>` for wasm exports.
 pub fn result_fault_to_js<T>(result: Result<T, Fault>) -> Result<T, wasm_bindgen::JsValue> {
     result.map_err(fault_to_js)

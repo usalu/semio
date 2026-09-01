@@ -5,10 +5,11 @@ use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::heat_recovery::{heat_recovery_exchange_w, HeatRecoveryUnit, HxAirstream};
 use crate::units::{CP_DRY_AIR, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ZoneEquipment
 /// 🏠️ Zone-level HVAC equipment catalog.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ZoneEquipment {
     Baseboard { heating: HeatingCoil },
     Radiant { heating: HeatingCoil, cooling: Option<CoolingCoil>, surface_area_m2: f64 },
@@ -21,7 +22,7 @@ pub enum ZoneEquipment {
 }
 
 /// 📥️ Zone equipment simulation request.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneEquipmentRequest {
     pub zone_temperature_c: f64,
     pub zone_humidity_ratio: f64,
@@ -36,7 +37,7 @@ pub struct ZoneEquipmentRequest {
 }
 
 /// 📤️ Zone equipment simulation result.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneEquipmentOutput {
     pub delivered_heating_w: f64,
     pub delivered_cooling_w: f64,

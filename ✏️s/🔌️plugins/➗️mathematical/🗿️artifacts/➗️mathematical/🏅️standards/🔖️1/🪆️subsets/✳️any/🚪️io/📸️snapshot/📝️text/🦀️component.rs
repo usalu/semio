@@ -20,6 +20,9 @@ use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapsho
 use crate::artifacts::mathematical::MathematicalGeometry;
 use crate::artifacts::mathematical::{MathematicalEdge, MathematicalGraph, MathematicalNode, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use store::ArtifactDsl;
 
 //#region 🔖️Dsl
@@ -128,6 +131,28 @@ impl<'de> Deserialize<'de> for MathematicalGraphDsl {
     }
 }
 
+/// 🌱️ Hand-written `ToValue`/`FromValue` for `MathematicalGraphDsl` — same reason and same
+/// round-trip-through-`MathematicalGraph` shape as the hand-rolled `Serialize`/`Deserialize` pair
+/// directly above (`MathematicalGraphDsl` can't be `#[derive(ToValue, FromValue)]`d: `dsl::Wire`,
+/// nested inside `MathematicalEdgeDsl`, implements neither). `ToValue::to_value` has no `Result` to
+/// propagate a conversion failure through (unlike `Serialize::serialize`) — falls back to
+/// `DslValue::Null`, which cannot happen for any `MathematicalGraphDsl` actually produced by
+/// `math_graph_to_dsl` (the only constructor), matching this file's other defensive `unwrap_or`
+/// fallbacks over composed fields.
+impl ToValue for MathematicalGraphDsl {
+    fn to_value(&self) -> DslValue {
+        match math_graph_from_dsl(self.clone()) {
+            Ok(graph) => graph.to_value(),
+            Err(_) => DslValue::Null,
+        }
+    }
+}
+impl FromValue for MathematicalGraphDsl {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        Ok(math_graph_to_dsl(&MathematicalGraph::from_value(value)?))
+    }
+}
+
 /// 📌️ `MathematicalGraphDsl`/`MathematicalEdgeDsl` above are the DSL-only shape the `SetArtifact`
 /// app command's own payload uses (`🎮️commands/📄️set-artifact/🦀️component.rs`) — that command still
 /// carries a WHOLE graph as one gesture (routed onto the granular `ReplaceGraph`/`ReplacePoints`
@@ -184,13 +209,14 @@ async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 
 //#region 🔖️TextPrimitives
 /// 🧮️ `equation` has no handcrafted grammar of its own yet (future wave) — round-tripped as
-/// hex-encoded `serde_json`, the same "real codec, minimal grammar" trade `child` handles above
+/// hex-encoded first-party JSON (`pack::json::to_json_string`/`from_json_str`, over `EquationSnapshot`'s
+/// own `ToValue`/`FromValue`), the same "real codec, minimal grammar" trade `child` handles above
 /// already make for their own opaque payload half (the `ArtifactRef` URI).
 async fn enc_equation(e: &EquationSnapshot) -> String {
-    enc_str(&serde_json::to_string(e).expect("EquationSnapshot serializes"))
+    enc_str(&pack::json::to_json_string(e))
 }
 async fn dec_equation(s: &str) -> Result<EquationSnapshot, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 
 async fn print_mathematical_snapshot_body(s: &MathematicalSnapshot) -> String {

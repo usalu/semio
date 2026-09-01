@@ -35,7 +35,6 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::Sem
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
 /// needed, and flow's own mutations facet needs for the same reason).
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::create_edge;
@@ -61,7 +60,7 @@ use super::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioBrepSnapshot, diff = SemioBrepDiff, schema = "s.stdio.semio.brep")]
 pub enum SemioBrepMutation {
     CreateVertex(create_vertex::CreateVertex),
@@ -109,7 +108,7 @@ pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBre
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioBrepMutation`]. `create-*`/`delete-*` payloads address topology by the string ids (`v1`, `e2`, `so1`) the
 /// committed vectors use, so a decoded mutation is directly comparable with the vector it came from.

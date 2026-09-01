@@ -184,7 +184,7 @@ mod subject {
             "enum" => Ok(Part21Value::Enum(str_field(value, "v")?)),
             "reference" => Ok(Part21Value::Ref(u64_field(value, "v")?)),
             "aggregate" => Ok(Part21Value::List(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
-            "typed" => Ok(Part21Value::Typed(str_field(value, "name")?, vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?])),
+            "typed" => Ok(Part21Value::Typed { name: str_field(value, "name")?, items: vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?] }),
             other => Err(format!("unknown value type {other:?}")),
         }
     }

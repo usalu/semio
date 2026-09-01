@@ -1,7 +1,6 @@
 //! 🧬️ Transparent BmpMutation aggregate.
 use crate::artifacts::bmp::schema::diff::BmpDiff;
 use crate::artifacts::bmp::BmpSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::bmp::schema::operations::{apply_bmp_mutation, inverse_bmp_mutation};
 
@@ -14,8 +13,8 @@ pub use super::replace_pixel_data::ReplacePixelDataMutation;
 //#endregion Owners
 
 //#region Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = BmpSnapshot, diff = BmpDiff, schema = "s.stdio.bmp")]
 pub enum BmpMutation {
     ChangeHeaderFields(ChangeHeaderFieldsMutation),

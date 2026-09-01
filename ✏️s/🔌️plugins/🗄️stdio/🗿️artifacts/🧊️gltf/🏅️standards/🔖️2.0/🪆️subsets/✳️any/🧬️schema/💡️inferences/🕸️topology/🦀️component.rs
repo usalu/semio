@@ -13,10 +13,9 @@ pub mod holes;
 
 use super::super::modules::measurement_contracts::*;
 use super::geometry_core::GltfGeometryContext;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfTopologyIndicators {
     pub holes: GltfMeasure<u64>,
     pub handles: GltfMeasure<u64>,
@@ -48,24 +47,23 @@ impl GltfInferenceStage<GltfGeometryContext<'_>> for GltfTopologyInference {
 #[cfg(test)]
 mod canonical_vectors {
     use super::*;
-    use serde::Deserialize;
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Context {
         points: Vec<[f64; 3]>,
         triangles: Vec<[usize; 3]>,
         valid: bool,
     }
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         context: Context,
         value: Option<i64>,
         availability: String,
     }
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

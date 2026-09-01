@@ -7,7 +7,7 @@ use super::*;
 
 //#region 🔖️Payload
 /// 📐️ Replaces one triangle's 3 vertices (whole-value replace).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetTriangleVertices {
     pub(crate) index: usize,

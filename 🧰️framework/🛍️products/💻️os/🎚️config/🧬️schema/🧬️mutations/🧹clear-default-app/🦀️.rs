@@ -6,12 +6,14 @@ use super::OpeningConfigMutation;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 use semio_framework::{AppRole, ArtifactDialect};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🧹 Removes the pinned default for one `(dialect, role)` coordinate, if present.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ClearDefaultApp {
     pub dialect: ArtifactDialect,
     pub role: AppRole,

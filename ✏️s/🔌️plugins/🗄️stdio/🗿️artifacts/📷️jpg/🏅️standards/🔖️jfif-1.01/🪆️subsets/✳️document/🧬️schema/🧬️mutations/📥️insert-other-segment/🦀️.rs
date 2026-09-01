@@ -2,12 +2,11 @@
 use crate::artifacts::jpg::schema::diff::{self, *};
 use crate::artifacts::jpg::schema::mutations::JpgMutation;
 use crate::artifacts::jpg::schema::snapshot::*;
-use serde::{Deserialize, Serialize};
 
 //#region Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertOtherSegmentMutation {
     pub index: usize,
     pub segment: JpgSegment,

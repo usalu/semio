@@ -1,6 +1,7 @@
 //! 🧬️ Transparent Flow direct-leaf dispatch and generic codec surfaces.
 use super::{FlowFixture, FlowDiff};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧩️Leaves
 #[path = "➕️add-widget/🦀️.rs"] mod add_widget;
@@ -26,8 +27,9 @@ pub use replace_flow_fixture::ReplaceFlowFixture;
 //#endregion 🧩️Leaves
 
 //#region 🧬️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::Mutations, crate::os_dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_ToValue, FromValue, dsl::Mutations, crate::os_dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = FlowFixture, diff = FlowDiff, schema = "flow.fixture")]
 pub enum FlowMutation {
     AddWidget(AddWidget),

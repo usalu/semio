@@ -24,58 +24,57 @@ use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{Fl
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️CollectionDiffTypes
 pub type FlowParamsDiff = NamedTripleDiff<String, FlowParamDiff, FlowParam>;
 pub type FlowNodesDiff = NamedTripleDiff<String, FlowNodeDiff, FlowNode>;
 pub type FlowEdgesDiff = NamedTripleDiff<String, FlowEdgeDiff, FlowEdge>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowParamDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
 /// 🌳️ `position`/weak value structs replace whole-value per the recipe ("Weak entities = value
 /// structs — whole-value replaced in diffs, never sub-diffed").
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowNodeDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub params: Option<FlowParamsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub position: Option<SemioPoint2>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowEdgeDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub from: Option<PortRef>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub to: Option<PortRef>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<String>,
 }
 //#endregion 🔖️CollectionDiffTypes
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `s.stdio.semio.flow`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow.diff")]
 pub struct SemioFlowDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<FlowNodesDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub edges: Option<FlowEdgesDiff>,
 }
 //#endregion 🔖️Diff

@@ -23,7 +23,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vec
 
 /// 🗺️ A parametric surface `S(u, v)`. Domain and periodicity are documented per variant; as with
 /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::curve::Curve3`], a face's *used* trim domain is stored by the topology layer, not here.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Surface {
     /// 🗺️ `frame.origin + u·frame.x + v·frame.y`. Domain `(-∞, ∞) × (-∞, ∞)`.
     Plane { frame: Frame3 },

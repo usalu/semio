@@ -20,10 +20,11 @@ use crate::solar::{shading_factor, surface_solar_absorption};
 use crate::zone_air::{advance_zone_air, HumiditySolutionMethod, ZoneAirBalance, ZoneAirState};
 use crate::zone_hvac::{ZoneEquipment, ZoneEquipmentRequest};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Config
 /// ⚙️ Simulation environment type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum SimulationEnvironment {
     WeatherRunPeriod,
     HeatingDesignDay,
@@ -32,7 +33,7 @@ pub enum SimulationEnvironment {
 }
 
 /// ⚙️ Convergence tolerances.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ConvergenceTolerances {
     pub temperature_k: f64,
     pub humidity_ratio: f64,
@@ -48,7 +49,7 @@ impl Default for ConvergenceTolerances {
 }
 
 /// ⚙️ Simulation configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SimulationConfig {
     pub environment: SimulationEnvironment,
     pub zone_timestep_minutes: u32,
@@ -84,7 +85,7 @@ impl Default for SimulationConfig {
 
 // #region 🔖️DeliveredEnergy
 /// ⚡️ Delivered energy per timestep for metering.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DeliveredEnergy {
     pub heating_w: f64,
     pub cooling_w: f64,
@@ -109,7 +110,7 @@ impl DeliveredEnergy {
 
 // #region 🔖️State
 /// 🔄️ Per-zone simulation state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneState {
     pub air: ZoneAirState,
     pub heating_demand_w: f64,
@@ -126,7 +127,7 @@ impl ZoneState {
 }
 
 /// 🔄️ Surface thermal history for CTF conduction.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SurfaceState {
     pub inside_temp_c: f64,
     pub outside_temp_c: f64,
@@ -136,7 +137,7 @@ pub struct SurfaceState {
 }
 
 /// 🔄️ Full simulation state.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SimulationModel {
     pub(crate) zones: FixedTable<EntityId, ZoneState>,
     pub(crate) surfaces: FixedTable<EntityId, SurfaceState>,
@@ -156,7 +157,7 @@ impl Default for SimulationModel {
 
 // #region 🔖️TimestepJob
 /// 🧭️ Bounded phase of one persistent zone timestep.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum TimestepStage {
     Surface,
     Fenestration,
@@ -173,7 +174,7 @@ pub(crate) enum TimestepStage {
 }
 
 /// 🧭️ One-semantic-unit preparation cursor for a zone.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum ZonePreparationStage {
     Begin,
     DaylightConfig,
@@ -192,7 +193,7 @@ pub(crate) enum ZonePreparationStage {
     Publish,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct ZonePreparationWork {
     stage: ZonePreparationStage,
     cursor: usize,
@@ -217,7 +218,7 @@ struct ZonePreparationWork {
     humidistat: Option<HumidistatSpec>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum ScheduleLookupStage {
     Constant,
     Annual,
@@ -283,7 +284,7 @@ pub(crate) const P7C1_SCHEDULE_LOOKUP_STAGES: [ScheduleLookupStage; 8] = [
     ScheduleLookupStage::TimeSeries,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct ScheduleLookupWork {
     requested_id: crate::model::ScheduleId,
     stage: ScheduleLookupStage,
@@ -293,7 +294,7 @@ struct ScheduleLookupWork {
     daily_fallback: ScheduleLookupStage,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum SystemSubstepStage {
     Predict,
     IdealLoad,
@@ -303,7 +304,7 @@ pub(crate) enum SystemSubstepStage {
     Complete,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct SystemSubstepWork {
     stage: SystemSubstepStage,
     ideal_cursor: usize,
@@ -314,7 +315,7 @@ struct SystemSubstepWork {
     balance: Option<ZoneAirBalance>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum PlantStage {
     ReduceZoneLoad,
     BuildPriority,
@@ -322,7 +323,7 @@ pub(crate) enum PlantStage {
     Simulate,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct PlantWork {
     plant_index: usize,
     stage: PlantStage,
@@ -333,14 +334,14 @@ struct PlantWork {
     first_load_w: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct BatteryWork {
     battery_index: usize,
     zone_cursor: usize,
     net_load_w: f64,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct ZoneTimestepWork {
     zone_index: usize,
     zone_id: EntityId,
@@ -360,7 +361,7 @@ struct ZoneTimestepWork {
 }
 
 /// ⏱️ Cursor-owned execution state for one zone timestep.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) struct TimestepWork {
     stage: TimestepStage,
     context: ScheduleContext,
@@ -389,7 +390,7 @@ pub(crate) struct TimestepWork {
 }
 
 /// 🧱️ Persistent backing constructor for one timestep.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) struct TimestepBuilder {
     stage: u8,
     cursor: usize,

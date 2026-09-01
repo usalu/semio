@@ -392,6 +392,7 @@ pub fn inference_resources(workspace: Option<&Arc<HeadlessWorkspace>>) -> Vec<Re
 #[cfg(test)]
 mod quick {
     use super::*;
+    use crate::protocol::ToolRegistry;
     use crate::catalog::{compile, Catalog, CatalogSource};
     use crate::protocol::is_valid_tool_name;
     use semio_framework::{Locale, Terminology};

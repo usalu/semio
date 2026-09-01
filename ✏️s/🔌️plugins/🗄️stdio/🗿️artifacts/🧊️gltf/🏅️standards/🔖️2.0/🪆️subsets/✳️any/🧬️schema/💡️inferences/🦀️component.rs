@@ -3,15 +3,14 @@
 use crate::artifacts::gltf::schema::snapshot::GltfSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::super::modules::measurement_contracts::*;
 use super::compactness;
 use super::{adjacency::*, area_volume::*, clearance::*, compactness::*, concavity::*, curvature::*, mass_distribution::*, orientation::*, proportion::*, roughness::*, size::*, symmetry::*, thickness::*, topology::*};
 
 //#region 🔖️PublicRecords
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfEntityIndicators {
     pub size: GltfSizeIndicators,
     pub area_volume: GltfAreaVolumeIndicators,
@@ -29,18 +28,18 @@ pub struct GltfEntityIndicators {
     pub topology: GltfTopologyIndicators,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfPartInference {
     pub address: GltfEntityAddress,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     pub indicators: GltfEntityIndicators,
     pub diagnostic_ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfPairInference {
     pub first: GltfEntityAddress,
     pub second: GltfEntityAddress,
@@ -53,8 +52,8 @@ pub struct GltfPairInference {
     pub orientation_consistency: GltfMeasure<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfInferenceCounts {
     pub scene_count: u64,
     pub node_instance_count: u64,
@@ -69,8 +68,8 @@ pub struct GltfInferenceCounts {
     pub invalid_part_count: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfGeometricInference {
     pub schema: String,
     pub schema_version: u32,
@@ -85,8 +84,8 @@ pub struct GltfGeometricInference {
     pub provenance: GltfProvenance,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gltf.inference")]
 pub struct GltfInference {
     #[derived]

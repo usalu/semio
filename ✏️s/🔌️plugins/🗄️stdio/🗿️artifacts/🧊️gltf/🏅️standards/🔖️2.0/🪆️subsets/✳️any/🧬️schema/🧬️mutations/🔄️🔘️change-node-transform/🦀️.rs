@@ -1,17 +1,16 @@
 //! 🧬️ Direct change-node-transform mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-transform.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfTransformNodePayload { pub node: usize, pub transform: GltfNodeTransform }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum GltfNodeTransform { Matrix { matrix: [f64; 16] }, Trs { translation: Option<[f64; 3]>, rotation: Option<[f64; 4]>, scale: Option<[f64; 3]> } }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.node, base.document.nodes.len(), "document/nodes")?; let finite = match &payload.transform { GltfNodeTransform::Matrix { matrix } => matrix.iter().all(|value| value.is_finite()), GltfNodeTransform::Trs { translation, rotation, scale } => translation.iter().flatten().chain(rotation.iter().flatten()).chain(scale.iter().flatten()).all(|value| value.is_finite()) }; if !finite { return Err(reject("gltf.mutation.invalid-transform", format!("document/nodes/{}/transform", payload.node), "transform values must be finite")); } Ok(()) }
@@ -19,9 +18,9 @@ pub fn validate(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Resu
 pub fn apply(payload: &GltfTransformNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); let node = &mut next.document.nodes[payload.node]; match &payload.transform { GltfNodeTransform::Matrix { matrix } => { node.matrix = Some(*matrix); node.translation = None; node.rotation = None; node.scale = None; }, GltfNodeTransform::Trs { translation, rotation, scale } => { node.matrix = None; node.translation = *translation; node.rotation = *rotation; node.scale = *scale; } } Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeNodeTransformMutation {
     Apply(GltfTransformNodePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

@@ -5,10 +5,8 @@ use semio_framework_os::{WorkflowMutation, WorkflowParameter, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 use crate::engine::space::engine::parameter_entity_id;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "patch-parameter")]
 pub struct PatchParameter {
     pub parameter_id: String,
@@ -18,7 +16,7 @@ pub struct PatchParameter {
 
 pub async fn handle(payload: &PatchParameter, doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
     let projection = doc.snapshot;
-    let value_json: Value = serde_json::from_str(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
+    let value_json: Value = pack::from_json_str(&payload.value).unwrap_or_else(|_| Value::String(payload.value.clone()));
     let patch = if payload.field == "addOption" {
         value_json.as_str().map(str::to_string).and_then(|option| {
             projection.parameters.iter().find(|entry| parameter_entity_id(entry) == payload.parameter_id).and_then(|entry| match entry {

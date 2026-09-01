@@ -5,18 +5,17 @@
 
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, delete_edge};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateEdge {
     pub id: GraphEdgeId,
     pub source: GraphNodeId,
     pub target: GraphNodeId,
-    #[serde(default)]
+    #[value(default)]
     pub kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub label: String,
 }
 

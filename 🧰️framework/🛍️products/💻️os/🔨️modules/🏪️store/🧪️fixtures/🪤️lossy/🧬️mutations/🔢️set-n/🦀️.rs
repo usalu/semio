@@ -1,5 +1,6 @@
 use super::{DemoSnapshot, LossyDiff, LossyMutation};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

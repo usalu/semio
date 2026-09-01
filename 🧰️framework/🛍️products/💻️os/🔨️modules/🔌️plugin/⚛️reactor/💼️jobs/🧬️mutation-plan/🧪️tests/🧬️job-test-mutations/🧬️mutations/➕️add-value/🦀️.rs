@@ -1,9 +1,12 @@
 //#region ➕️AddJobTestValue
 use super::super::{JobTestDiff,JobTestOp,JobTestSnapshot};
 
-#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize,dsl::MutationLeaf)]
+// 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound;
+// `ToValue`/`FromValue` are `CompositeMutationKind`'s (see that trait's own doc) — both coexist.
+#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize,semio_framework_value_derive::ToValue,semio_framework_value_derive::FromValue,dsl::MutationLeaf)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct AddValue { pub(crate) delta:i32 }
 
 impl protocol::MutationKind<JobTestSnapshot,JobTestOp> for AddValue {

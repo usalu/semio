@@ -13,7 +13,7 @@ use crate::artifacts::model::EnergyModelSnapshot;
 /// arbitrary opaque JSON text verbatim, never validating it), a composed child slot can only ever
 /// hold a real, typed `Model`.
 pub fn diff(payload: &ReplaceModel, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-    let model: crate::model::Model = serde_json::from_str(&payload.new_model_json).unwrap_or_default();
+    let model: crate::model::Model = pack::json::from_json_str(&payload.new_model_json).unwrap_or_default();
     if model == crate::artifacts::model::energy_model(base) {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Energy model already has this value.");
     }

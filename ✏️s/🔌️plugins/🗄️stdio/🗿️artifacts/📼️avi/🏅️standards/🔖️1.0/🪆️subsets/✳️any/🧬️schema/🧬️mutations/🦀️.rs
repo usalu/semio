@@ -5,7 +5,6 @@ use crate::artifacts::avi::standards::v1_0::subsets::any::schema::diff::{AviChun
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -38,8 +37,8 @@ pub mod remove_unknown_chunk;
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none — and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = AviSnapshot, diff = AviDiff, schema = "AviMutation")]
 pub enum AviMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

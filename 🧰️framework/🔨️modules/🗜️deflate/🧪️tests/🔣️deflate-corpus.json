@@ -1,0 +1,17 @@
+{
+  "schema": "semio.deflate-corpus.v1",
+  "note": "inputs are a constant-seeded in-test LCG (no rand crate); each case is round-tripped against the miniz_oxide dev-dependency oracle in both directions.",
+  "cases": [
+    { "seed": 1, "len": 0 },
+    { "seed": 2, "len": 1 },
+    { "seed": 3, "len": 2 },
+    { "seed": 4, "len": 63 },
+    { "seed": 5, "len": 64 },
+    { "seed": 6, "len": 65 },
+    { "seed": 7, "len": 1023 },
+    { "seed": 8, "len": 1024 },
+    { "seed": 9, "len": 4097 },
+    { "seed": 10, "len": 32800 },
+    { "seed": 11, "len": 70000 }
+  ]
+}

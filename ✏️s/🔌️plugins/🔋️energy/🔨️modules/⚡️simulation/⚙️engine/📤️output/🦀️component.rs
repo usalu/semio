@@ -2,10 +2,11 @@
 
 use crate::model::FixedTable;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Variable
 /// 📈️ Reporting frequency for output variables.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ReportingFrequency {
     Timestep,
     Hourly,
@@ -16,7 +17,7 @@ pub enum ReportingFrequency {
 }
 
 /// 📈️ Aggregation method for reported values.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum Aggregation {
     Instantaneous,
     Average,
@@ -26,7 +27,7 @@ pub enum Aggregation {
 }
 
 /// 📈️ Registered output variable descriptor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct OutputVariable {
     pub key: String,
     pub unit: crate::units::Unit,
@@ -35,7 +36,7 @@ pub struct OutputVariable {
 }
 
 /// 📦️ Variable registry for sparse reporting.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct OutputRegistry {
     pub(crate) variables: Vec<OutputVariable>,
 }
@@ -60,7 +61,7 @@ impl OutputRegistry {
 
 // #region 🔖️TimeSeries
 /// 📈️ Time-series storage for one variable.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TimeSeries {
     pub(crate) key: String,
     pub(crate) timestamps_hours: Vec<f64>,
@@ -69,7 +70,7 @@ pub struct TimeSeries {
     pub(crate) admitted_samples: usize,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum TimeSeriesAppendError {
     BackingNotAdmitted,
     LengthMismatch,
@@ -120,7 +121,7 @@ impl TimeSeries {
 }
 
 /// 📦️ All time-series output.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TimeSeriesTable {
     pub(crate) series: FixedTable<String, TimeSeries>,
 }

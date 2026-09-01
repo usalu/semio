@@ -1,7 +1,6 @@
 //! 🧬️ Transparent TiffMutation aggregate.
 use crate::artifacts::tiff::schema::diff::TiffDiff;
 use crate::artifacts::tiff::TiffSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::tiff::schema::operations::{apply_tiff_mutation, inverse_tiff_mutation};
 
@@ -15,8 +14,8 @@ pub use super::replace_tag::ReplaceTagMutation;
 //#endregion Owners
 
 //#region Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = TiffSnapshot, diff = TiffDiff, schema = "s.stdio.tiff")]
 pub enum TiffMutation {
     ChangeByteOrder(ChangeByteOrderMutation),

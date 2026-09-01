@@ -17,7 +17,6 @@
 #![allow(clippy::needless_range_loop, reason = "index-based numerics loops mirror the algebra_internals style for matrix and rule iteration")]
 use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::{MatD, VecD};
 use semio_framework_geometry::random::Rng;
-use serde::{Deserialize, Serialize};
 use std::f64::consts::E;
 
 // #region 🔖️FuzzyError
@@ -80,7 +79,7 @@ fn argmax(values: &[f64]) -> usize {
 
 // #region 🔖️MembershipFunction
 /// 📐️ Parametric membership function with eval, parameter access, and gradient hooks for adaptation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum MembershipFunction {
     Triangular { a: f64, b: f64, c: f64 },
     Trapezoidal { a: f64, b: f64, c: f64, d: f64 },
@@ -307,7 +306,7 @@ impl MembershipFunction {
 
 // #region 🔖️FuzzySet
 /// 🌫️ Type-1 fuzzy set: linguistic label plus membership function.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzySet {
     pub name: String,
     pub mf: MembershipFunction,
@@ -326,7 +325,7 @@ impl FuzzySet {
 }
 
 /// 🌫️ Interval type-2 fuzzy set with footprint of uncertainty (lower/upper membership functions).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct IntervalType2Set {
     pub name: String,
     pub lower: MembershipFunction,
@@ -368,7 +367,7 @@ impl IntervalType2Set {
 }
 
 /// 🌫️ Intuitionistic fuzzy set with membership, non-membership, and hesitation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct IntuitionisticSet {
     pub name: String,
     pub membership: MembershipFunction,
@@ -395,7 +394,7 @@ impl IntuitionisticSet {
 
 // #region 🔖️TNormTConorm
 /// 🔗️ T-norm for fuzzy AND aggregation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TNorm {
     Min,
     Product,
@@ -431,7 +430,7 @@ impl TNorm {
 }
 
 /// 🔗️ T-conorm for fuzzy OR aggregation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum TConorm {
     Max,
     ProbSum,
@@ -465,7 +464,7 @@ impl TConorm {
 }
 
 /// 🌫️ Linguistic hedge modifiers.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Hedge {
     Very,
     Somewhat,
@@ -504,7 +503,7 @@ pub fn dilation(mu: f64) -> f64 {
 
 // #region 🔖️FuzzyArithmetic
 /// 🔢️ Triangular fuzzy number for α-cut arithmetic.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzyNumber {
     pub a: f64,
     pub b: f64,
@@ -583,7 +582,7 @@ pub fn fuzzy_mul_interval(a: FuzzyNumber, b: FuzzyNumber, alpha: f64) -> (f64, f
 
 // #region 🔖️FuzzyRelation
 /// 🔗️ Graded fuzzy relation R: X → Y stored as a matrix.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzyRelation {
     pub values: Vec<Vec<f64>>,
 }
@@ -650,7 +649,7 @@ impl FuzzyRelation {
 
 // #region 🔖️PossibilityTheory
 /// 🎭️ Possibility measure Π(A) = sup_{x∈A} μ(x) on a discrete universe.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PossibilityMeasure {
     pub universe: Vec<f64>,
     pub membership: Vec<f64>,
@@ -685,7 +684,7 @@ impl PossibilityMeasure {
 
 // #region 🔖️Universe
 /// 📏️ Discrete universe of discourse for numerical integration and defuzzification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Universe {
     pub min: f64,
     pub max: f64,
@@ -720,7 +719,7 @@ impl Universe {
 
 // #region 🔖️LinguisticVariable
 /// 🗣️ Linguistic variable: universe plus named fuzzy terms.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct LinguisticVariable {
     pub name: String,
     pub universe: Universe,
@@ -747,7 +746,7 @@ impl LinguisticVariable {
 
 // #region 🔖️Rule
 /// 📜️ Antecedent clause: input variable index and term index.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct AntecedentClause {
     pub input: usize,
     pub term: usize,
@@ -755,7 +754,7 @@ pub struct AntecedentClause {
 }
 
 /// 📜️ Rule consequent variants for Mamdani, Sugeno, and Tsukamoto engines.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Consequent {
     Mamdani { output: usize, term: usize },
     SugenoConstant { output: usize, value: f64 },
@@ -765,7 +764,7 @@ pub enum Consequent {
 }
 
 /// 📜️ Weighted fuzzy rule with optional confidence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Rule {
     pub id: usize,
     pub antecedents: Vec<AntecedentClause>,
@@ -790,7 +789,7 @@ impl Rule {
 }
 
 /// 📚️ Collection of fuzzy rules.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct RuleBase {
     pub rules: Vec<Rule>,
 }
@@ -810,7 +809,7 @@ impl RuleBase {
 
 // #region 🔖️Defuzzification
 /// 🎯️ Defuzzification method applied to a discrete aggregated membership vector.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Defuzzifier {
     Centroid,
     Bisector,
@@ -886,7 +885,7 @@ impl Defuzzifier {
 
 // #region 🔖️InferenceEngine
 /// ⚙️ Fuzzy inference engine type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
 pub enum InferenceModel {
     Mamdani,
     Sugeno,
@@ -896,7 +895,7 @@ pub enum InferenceModel {
 }
 
 /// 🔥️ Single rule firing trace for explainability.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct RuleTrace {
     pub rule_id: usize,
     pub activation: f64,
@@ -905,7 +904,7 @@ pub struct RuleTrace {
 }
 
 /// 🧾️ Explanation of an inference step.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Explanation {
     pub model: InferenceModel,
     pub input_values: Vec<f64>,
@@ -916,7 +915,7 @@ pub struct Explanation {
 }
 
 /// 🎛️ Multi-input multi-output fuzzy inference system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct MimoSystem {
     pub inputs: Vec<LinguisticVariable>,
     pub outputs: Vec<LinguisticVariable>,
@@ -1057,7 +1056,7 @@ fn tsukamoto_inverse(mf: &MembershipFunction, alpha: f64) -> f64 {
 }
 
 /// 🏗️ Hierarchical fuzzy system: layer outputs become next-layer inputs.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct HierarchicalSystem {
     pub layers: Vec<MimoSystem>,
 }
@@ -1084,7 +1083,7 @@ impl HierarchicalSystem {
 
 // #region 🔖️AdaptiveMembership
 /// 🎯️ Adaptive membership-function fitting from labeled (x, μ) samples via gradient descent.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct AdaptiveMembership {
     pub mf: MembershipFunction,
     pub learning_rate: f64,
@@ -1130,7 +1129,7 @@ impl AdaptiveMembership {
 
 // #region 🔖️Anfis
 /// 🧠️ ANFIS: adaptive neuro-fuzzy inference system with hybrid least-squares + gradient learning.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Anfis {
     pub input_count: usize,
     pub rules_per_input: usize,
@@ -1454,7 +1453,7 @@ impl PsoOptimizer {
 
 // #region 🔖️EvolvingFuzzySystem
 /// 🔄️ Evolving fuzzy system that adds, prunes, and adapts rules from streaming samples.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct EvolvingFuzzySystem {
     pub system: MimoSystem,
     pub learning_rate: f64,
@@ -1504,7 +1503,7 @@ impl EvolvingFuzzySystem {
 
 // #region 🔖️FuzzyCMeans
 /// 🎯️ Fuzzy c-means clustering result.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FcmResult {
     pub centers: Vec<Vec<f64>>,
     pub membership: Vec<Vec<f64>>,
@@ -1621,7 +1620,7 @@ pub fn gustafson_kessel(data: &[Vec<f64>], k: usize, m: f64, max_iter: usize) ->
 
 // #region 🔖️MulticriteriaDecision
 /// 📊️ Fuzzy AHP pairwise comparison matrix.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzyAhp {
     pub matrix: Vec<Vec<FuzzyNumber>>,
 }
@@ -1651,7 +1650,7 @@ impl FuzzyAhp {
 }
 
 /// 📊️ Fuzzy TOPSIS decision over alternatives.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzyTopsis {
     pub alternatives: Vec<String>,
     pub criteria: Vec<String>,
@@ -1692,7 +1691,7 @@ impl FuzzyTopsis {
 }
 
 /// 📊️ Fuzzy VIKOR compromise ranking.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FuzzyVikor {
     pub alternatives: Vec<String>,
     pub criteria: Vec<String>,
@@ -1736,7 +1735,7 @@ impl FuzzyVikor {
 
 // #region 🔖️TemporalSpatial
 /// ⏱️ Temporal fuzzy evaluator for vague time concepts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct TemporalEvaluator {
     pub now: f64,
     pub recent_window: f64,
@@ -1758,7 +1757,7 @@ impl TemporalEvaluator {
 }
 
 /// 📍️ Spatial fuzzy evaluator for proximity concepts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SpatialEvaluator {
     pub anchor: Vec<f64>,
     pub near_radius: f64,
@@ -1801,7 +1800,7 @@ pub fn hybrid_fuse(membership: f64, possibility: f64, fuzzy_weight: f64) -> f64 
 
 // #region 🔖️FanController
 /// 🌀️ Fan-speed controller builder demonstrating the full advanced fuzzy pipeline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct FanController {
     pub temperature_var: LinguisticVariable,
     pub speed_var: LinguisticVariable,

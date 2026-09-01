@@ -3,22 +3,21 @@
 
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3")]
 pub struct Mp3Artifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub id3v2: Option<Id3v2Tag>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<Mp3Frame>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub id3v1: Option<Id3v1Tag>,
 }
 

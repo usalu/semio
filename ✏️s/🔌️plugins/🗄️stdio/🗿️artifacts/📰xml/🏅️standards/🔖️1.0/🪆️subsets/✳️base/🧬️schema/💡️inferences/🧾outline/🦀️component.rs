@@ -6,12 +6,11 @@
 
 use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::xml::XmlSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Xml` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XmlOutline {
     pub element_count: u32,
     pub max_depth: u32,

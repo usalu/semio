@@ -12,35 +12,34 @@
 //! already builds on), never an engine. Reached at `standards::v1::subsets::any::schema::triples`
 //! (no shorter shim — every consumer now uses this full path).
 
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexModified<D> {
     pub index: usize,
     pub diff: D,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexAdded<T> {
     pub index: usize,
     pub item: T,
 }
 
-// 🩹 `bound(...)` override (same pattern as bcf's own local `NamedTripleDiff` copy, see that
-// module's doc comment): without it, `#[derive(Deserialize)]` on a struct whose field is
-// `#[serde(default)]` infers a spurious `D: Default`/`T: Default` bound via serde_derive's
-// generic-parameter heuristic, even though `Vec<_>: Default` never actually needs `D`/`T: Default`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "D: Serialize, T: Serialize", deserialize = "D: Deserialize<'de>, T: Deserialize<'de>"))]
+// 🩹 `#[derive(ToValue, FromValue)]` synthesizes `D: ToValue + FromValue`/`T: ToValue + FromValue`
+// automatically per own type parameter (see `🌱️value/✨️derive`'s module docs) — no explicit
+// `#[value(bound = "...")]` override needed here, unlike `serde_derive`'s own inference which
+// bcf's local `NamedTripleDiff` copy had to work around explicitly.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexedTripleDiff<D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<IndexModified<D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<IndexAdded<T>>,
 }
 
@@ -52,23 +51,23 @@ impl<D, T> Default for IndexedTripleDiff<D, T> {
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️NamedTriple
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedModified<K, D> {
     pub key: K,
     pub diff: D,
 }
 
-// 🩹 same `bound(...)` override as `IndexedTripleDiff` above (see that struct's comment) — required
-// here too, `K`/`D`/`T` all appear only inside `#[serde(default)]` `Vec<_>` fields.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "K: Serialize, D: Serialize, T: Serialize", deserialize = "K: Deserialize<'de>, D: Deserialize<'de>, T: Deserialize<'de>"))]
+// 🩹 same auto-synthesized-bound story as `IndexedTripleDiff` above (see that struct's comment) —
+// no explicit `#[value(bound = "...")]` needed.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<K>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<NamedModified<K, D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<T>,
 }
 
@@ -167,8 +166,8 @@ where
 /// shared copy existed — see `s.stdio.value`'s own `🧬️schema/🔺️diff/🦀️component.rs` for the
 /// reference usage this was hoisted from. Existing per-subset local copies are untouched (still
 /// correct); only new W4/W5 consumers should import this one instead of reinventing it again.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedAdded<T> {
     pub index: usize,
     pub item: T,
@@ -329,23 +328,23 @@ mod tests {
         assert_eq!(decoded, diff);
     }
 
-    /// 🩹 A non-`Default` item type proves the `bound(...)` override actually works: without it,
-    /// `#[derive(Deserialize)]`'s spurious inferred `T: Default` bound would fail THIS test to
-    /// even compile (not just at runtime) the moment `T` doesn't implement `Default` — exactly the
-    /// shape every real `ArtifactSchema` diff-item type is in practice.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    /// 🩹 A non-`Default` item type proves the auto-synthesized `T: ToValue + FromValue` bound
+    /// actually works standalone (no `Default` needed): `NoDefault` is a single-field tuple struct,
+    /// so it derives via `#[value(transparent)]` (forwards straight to/from its own `u32` field).
+    #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+    #[value(transparent)]
     struct NoDefault(u32);
 
     #[semio_framework_async_macros::async_test]
-    async fn serde_json_round_trips_a_non_default_item_type() {
+    async fn json_round_trips_a_non_default_item_type() {
         let diff: NamedTripleDiff<String, NoDefault, NoDefault> = NamedTripleDiff { removed: vec!["gone".to_string()], modified: vec![NamedModified { key: "kept".to_string(), diff: NoDefault(9) }], added: vec![NoDefault(3)] };
-        let json = serde_json::to_string(&diff).expect("serialize");
-        let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = serde_json::from_str(&json).expect("deserialize");
+        let json = pack::to_json_string(&diff);
+        let decoded: NamedTripleDiff<String, NoDefault, NoDefault> = pack::from_json_str(&json).expect("deserialize");
         assert_eq!(decoded, diff);
 
         let idiff: IndexedTripleDiff<NoDefault, NoDefault> = IndexedTripleDiff { removed: vec![1], modified: vec![IndexModified { index: 0, diff: NoDefault(5) }], added: vec![IndexAdded { index: 2, item: NoDefault(7) }] };
-        let ijson = serde_json::to_string(&idiff).expect("serialize");
-        let idecoded: IndexedTripleDiff<NoDefault, NoDefault> = serde_json::from_str(&ijson).expect("deserialize");
+        let ijson = pack::to_json_string(&idiff);
+        let idecoded: IndexedTripleDiff<NoDefault, NoDefault> = pack::from_json_str(&ijson).expect("deserialize");
         assert_eq!(idecoded, idiff);
     }
 

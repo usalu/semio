@@ -3,36 +3,42 @@
 //! real content digest). Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque
 //! `model_json` field is gone — since a composed child slot can only ever hold a real, typed
 //! `Model` (never arbitrary/malformed text), this leaf now census over
-//! `crate::artifacts::model::energy_model(snapshot)`'s own `serde_json` serialization, which is
-//! ALWAYS a full JSON object (`Model` derives `Default`, every field always present) rather than
-//! treating the body as an opaque, possibly-malformed byte string.
+//! `crate::artifacts::model::energy_model(snapshot)`'s own first-party `pack::json` serialization
+//! (`Model` derives `ToValue`), which is ALWAYS a full JSON object (`Model` derives `Default`,
+//! every field always present) rather than treating the body as an opaque, possibly-malformed byte
+//! string.
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{DslValue, ToValue};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Census of the working-scene `Model` behind a snapshot's composed children.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct EnergyModelEntries {
     pub entry_count: u32,
     pub byte_size: u32,
     pub content_digest: String,
 }
 
-/// 🗃️ `entryCount` = number of top-level `Model` fields (its own `serde_json` object always has
+/// 🗃️ `entryCount` = number of top-level `Model` fields (its own `DslValue::Object` always has
 /// one key per field — `Model` derives `Default`, never a partial object); `byteSize` = real UTF-8
 /// byte length of that JSON; `contentDigest` = a deterministic (within-process) fingerprint over
 /// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
 /// hash crate needed for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
     let model = crate::artifacts::model::energy_model(snapshot);
-    let json = serde_json::to_string(&model).unwrap_or_default();
+    let json = pack::json::to_json_string(&model);
     let bytes = json.as_bytes();
-    let entry_count = match serde_json::to_value(&model) {
-        Ok(serde_json::Value::Object(map)) => map.len() as u32,
+    let entry_count = match model.to_value() {
+        DslValue::Object(entries) => entries.len() as u32,
         _ => 0,
     };
     let mut hasher = DefaultHasher::new();
@@ -60,7 +66,7 @@ mod tests {
     async fn default_model_yields_the_full_field_count_and_a_real_byte_size() {
         let entries = compute_energy_model_entries(&EnergyModelSnapshot::default());
         assert_eq!(entries.entry_count, MODEL_FIELD_COUNT);
-        let expected_bytes = serde_json::to_string(&crate::model::Model::default()).expect("Model serializes").len() as u32;
+        let expected_bytes = pack::json::to_json_string(&crate::model::Model::default()).len() as u32;
         assert_eq!(entries.byte_size, expected_bytes);
     }
 

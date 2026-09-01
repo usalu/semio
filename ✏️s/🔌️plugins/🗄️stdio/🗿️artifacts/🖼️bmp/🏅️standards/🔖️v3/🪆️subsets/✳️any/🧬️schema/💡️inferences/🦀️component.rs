@@ -6,15 +6,14 @@
 
 use crate::artifacts::bmp::BmpSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::dimensions::{compute_bmp_dimensions, BmpDimensions};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bmp snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp.inference")]
 pub struct BmpInference {
     #[derived]

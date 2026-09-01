@@ -4,15 +4,14 @@ use crate::artifacts::jack::JackSnapshot;
 use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, NodeGraphViewport, UiAssemblyResult, WindowMeasure};
 use semio_framework_ui_contract::SurfaceKind;
-use serde_json::json;
 
 pub(crate) const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 
-fn trinity_lod_tier_rows() -> Vec<serde_json::Value> {
-    serde_json::from_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default()
+fn trinity_lod_tier_rows() -> Vec<pack::JsonValue> {
+    pack::from_json_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default()
 }
 
-pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_action: impl Fn(&str, Option<serde_json::Value>) -> ActionDescriptor) -> WindowMeasure {
+pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_action: impl Fn(&str, Option<pack::JsonValue>) -> ActionDescriptor) -> WindowMeasure {
     let mut items = vec![MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
     items.extend(trinity_lod_tier_rows().into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();

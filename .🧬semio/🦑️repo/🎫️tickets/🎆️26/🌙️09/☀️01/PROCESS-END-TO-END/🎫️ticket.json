@@ -1,0 +1,13 @@
+{
+  "title": "Process End to End",
+  "emoji": "🏭️",
+  "status": "open",
+  "description": "Get the process plugin (s/plugins/process, artifact process3d) working end to end: `bun run dev:process:3d` boots, the app mounts, and every window renders non-empty with correct functionality (render, commands, mutations, io round-trip through the pipeline). Mirror the approach used for the sourcing end-to-end ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2594"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪69b7884f639347bda2415453bcbe9961"
+  ]
+}

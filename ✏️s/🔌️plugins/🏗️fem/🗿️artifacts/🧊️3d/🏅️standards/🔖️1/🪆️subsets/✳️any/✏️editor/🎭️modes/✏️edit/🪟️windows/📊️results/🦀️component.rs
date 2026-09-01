@@ -237,7 +237,7 @@ mod tests {
             })
             .expect("world surface child");
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");
-        let json = serde_json::to_string(&node).expect("render json");
+        let json = dsl::json::to_json_string(&node);
         assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);
         assert!(scene.meshes_json.contains("\"colors\""), "expected a vertex colors array on the solid mesh data: {}", scene.meshes_json);
         assert!(json.contains("Case: dead"), "expected a case-id caption: {json}");

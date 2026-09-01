@@ -1,10 +1,12 @@
 use super::super::{WorkflowDiff, WorkflowMutation, WorkflowSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "move-node")]
 pub struct MoveNode { #[dsl(key = "id")] pub node_id: String, pub x: f64, pub y: f64 }
 //#endregion 🔖️Payload

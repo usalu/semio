@@ -73,7 +73,7 @@ pub fn adler32(data: &[u8]) -> u32 {
 //#endregion Adler32
 
 //#region BitIO
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 struct BitWriter {
     out: Vec<u8>,
     cur: u8,
@@ -682,14 +682,14 @@ pub fn deflate_raw(data: &[u8]) -> Vec<u8> {
 //#endregion 🧵️StreamingEncode
 
 //#region 🧵️TunedEncode
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, value_derive::ToValue, value_derive::FromValue)]
 enum TunedFrame {
     Raw,
     Zlib { header: u16, adler: u32 },
 }
 
 /// 🎛️ Persistent bounded encoder for the selected Office, Illustrator, and level-nine policies.
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 pub struct TunedDeflateEncodeJob {
     engine: dynamic::Job,
     frame: TunedFrame,

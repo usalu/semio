@@ -5,12 +5,11 @@
 
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Stl triangle-soup bounding box and triangle count.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StlBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

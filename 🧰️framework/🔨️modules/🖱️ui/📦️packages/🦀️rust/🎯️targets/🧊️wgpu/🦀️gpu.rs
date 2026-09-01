@@ -2,7 +2,7 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
 use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS};
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use crate::wgpu::prepared::OffscreenPresentToken;
 use crate::wgpu::prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
 use crate::wgpu::text::FontAtlas;
@@ -190,7 +190,7 @@ impl GpuContext {
     }
 
     /// 🧵️ Creates the browser GPU surface directly in a dedicated Worker from a transferred canvas.
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub async fn from_offscreen_canvas(canvas: web_sys::OffscreenCanvas, css_width: f32, css_height: f32, dpr: f32) -> Result<Self, String> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor { backends: wgpu::Backends::BROWSER_WEBGPU, ..Default::default() });
         let surface = instance.create_surface(wgpu::SurfaceTarget::OffscreenCanvas(canvas)).map_err(|err| format!("offscreen surface: {err:?}"))?;
@@ -326,7 +326,7 @@ impl GpuContext {
         gate.validate(packet, live_revision, live_generation).map_err(|error| error.to_string())
     }
 
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     pub fn begin_prepared_offscreen(&self, _token: &OffscreenPresentToken, gate: &PreparedRenderGate, packet: &PreparedRenderPacket, live_revision: u64, live_generation: u64) -> Result<(), String> {
         gate.validate(packet, live_revision, live_generation).map_err(|error| error.to_string())
     }

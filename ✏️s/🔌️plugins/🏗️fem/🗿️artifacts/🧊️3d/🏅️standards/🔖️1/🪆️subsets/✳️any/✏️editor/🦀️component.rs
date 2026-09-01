@@ -27,7 +27,7 @@ use semio_framework_plugin::{
     ArtifactToolPublicationLane,
     ArtifactView, ConfigSpec, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
-use serde_json::{json, Value};
+use dsl::json::Value;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -228,7 +228,8 @@ impl std::io::Write for Fem3dConfigByteCounter {
 
 fn fem3d_config_edit_bytes(edit: &protocol::Edit<Fem3dConfigMutation>) -> Result<usize, String> {
     let mut counter = Fem3dConfigByteCounter { bytes: 0 };
-    serde_json::to_writer(&mut counter, edit).map_err(|_| "FEM3d config edit exceeds its serialized byte envelope".to_string())?;
+    use std::io::Write as _;
+    counter.write_all(dsl::json::to_json_string(edit).as_bytes()).map_err(|_| "FEM3d config edit exceeds its serialized byte envelope".to_string())?;
     Ok(counter.bytes)
 }
 
@@ -335,40 +336,40 @@ impl store::ArtifactStoreOneItemPreparation<Fem3dConfig, Fem3dConfigMutation> fo
 /// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
 /// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (the `🫀️core` kernel is
 /// a cross-artifact shared crate, out of scope to touch here), so this hand-rolls the same shape
-/// `serde_json::to_string` would have produced, using `Dof`'s existing `{:?}` formatting. Single
+/// `dsl::json::to_json_string` would have produced, using `Dof`'s existing `{:?}` formatting. Single
 /// consumer (`export_media`), so this lives here rather than in the artifact's `⚙️engine`.
 fn fem3d_dof_json(dof: Dof) -> Value {
-    json!(format!("{dof:?}"))
+    dsl::json!(format!("{dof:?}"))
 }
 
 fn fem3d_element_result_json(result: &ElementResult) -> Value {
     match result {
-        ElementResult::Bar { n } => json!({ "kind": "bar", "n": n }),
+        ElementResult::Bar { n } => dsl::json!({ "kind": "bar", "n": n }),
         ElementResult::Beam { stations } => {
-            json!({ "kind": "beam", "stations": stations.iter().map(|s| json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "beam", "stations": stations.iter().map(|s| dsl::json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
         }
         ElementResult::Plane { gauss } => {
-            json!({ "kind": "plane", "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "plane", "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
         }
         ElementResult::Plate { gauss } => {
-            json!({ "kind": "plate", "gauss": gauss.iter().map(|g| json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "plate", "gauss": gauss.iter().map(|g| dsl::json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
         }
-        ElementResult::Solid { gauss } => json!({
+        ElementResult::Solid { gauss } => dsl::json!({
             "kind": "solid",
-            "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
         }),
-        ElementResult::Shell { gauss } => json!({
+        ElementResult::Shell { gauss } => dsl::json!({
             "kind": "shell",
-            "gauss": gauss.iter().map(|g| json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| dsl::json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
         }),
     }
 }
 
 fn fem3d_static_result_json(result: &crate::model::StaticResult) -> Value {
-    json!({
-        "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
-        "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": fem3d_dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
-        "elements": result.elements.iter().map(|(id, element_result)| json!({ "id": id, "result": fem3d_element_result_json(element_result) })).collect::<Vec<_>>(),
+    dsl::json!({
+        "displacements": result.displacements.iter().map(|d| dsl::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
+        "reactions": result.reactions.iter().map(|r| dsl::json!({ "nodeId": r.node_id, "dof": fem3d_dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
+        "elements": result.elements.iter().map(|(id, element_result)| dsl::json!({ "id": id, "result": fem3d_element_result_json(element_result) })).collect::<Vec<_>>(),
         "checks": { "residualNorm": result.checks.residual_norm, "reactionSum": result.checks.reaction_sum },
     })
 }
@@ -514,7 +515,7 @@ fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMa
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
         let p = node_pos(node);
-        instances.push(json!({
+        instances.push(dsl::json!({
             "id": format!("node-{}", node.id),
             "meshId": "box",
             "position": p,
@@ -538,7 +539,7 @@ fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMa
         let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
         let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
         let id = crate::artifacts::fem3d::element_id(element);
-        instances.push(json!({
+        instances.push(dsl::json!({
             "id": format!("el-{id}"),
             "meshId": "box",
             "position": mid,
@@ -599,8 +600,8 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
         }
 
         let mesh_id = format!("solid-{}", solid.solid_id);
-        meshes.push(json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
-        instances.push(json!({
+        meshes.push(dsl::json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
+        instances.push(dsl::json!({
             "id": format!("solid-inst-{}", solid.solid_id),
             "meshId": mesh_id,
             "position": [0.0, 0.0, 0.0],
@@ -617,12 +618,15 @@ fn fem3d_solid_mesh_entries(doc: &Fem3dSnapshot, displacements: Option<&HashMap<
 /// model window and every results view (static/modal/buckling).
 #[cfg(test)]
 pub fn fem3d_scene_parts(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
-    let mut meshes: Vec<Value> = serde_json::from_str(&semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()]))).unwrap_or_default();
+    let mut meshes = dsl::json::parse(&semio_framework_plugin::resolve_ready(semio_framework_plugin::world3d_meshes_json_from_kinds(&["box".to_string()])))
+        .ok()
+        .and_then(|value| value.as_array().cloned())
+        .unwrap_or_default();
     let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
     let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
     meshes.extend(solid_meshes);
     instances.extend(solid_instances);
-    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
+    (dsl::json::to_string(&Value::Array(meshes)), dsl::json::to_string(&Value::Array(instances)))
 }
 
 /// 🎥️ Resolves a `FemCamera` to its JSON string, falling back to the framework's default 3D camera when
@@ -797,10 +801,10 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
                 };
-                let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null)).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let value = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let outline: Vec<[f64; 2]> = dsl::FromValue::from_value(dsl::json::to_dsl_value(&value.get("outline").cloned().unwrap_or(Value::Null))).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
                 let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
-                    Some(holes_value) => serde_json::from_value(holes_value).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
+                    Some(holes_value) => dsl::FromValue::from_value(dsl::json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
                 };
                 let base_z = value.get("baseZ").and_then(Value::as_f64).unwrap_or(0.0);
@@ -1026,7 +1030,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
-        serde_json::to_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render")).expect("render json")
+        dsl::json::to_json_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -1038,9 +1042,9 @@ mod tests {
 
     //#region 🧪️RetainedCommandEnvelope
     #[test]
-    fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
+    fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
         let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
         assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -1050,8 +1054,8 @@ mod tests {
         for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
             let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
             let mutation = Fem3dConfigMutation::SetCamera { camera: crate::artifacts::fem3d::FemCamera { json: value } };
-            let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
-            let decoded: Fem3dConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
+            let encoded = dsl::json::to_json_string(&mutation);
+            let decoded: Fem3dConfigMutation = dsl::json::from_json_str(&encoded).expect("first-party JSON decode");
             assert_eq!(decoded, mutation);
             assert_eq!(factory.preflight(&decoded, None, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
         }
@@ -1205,7 +1209,7 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_fem3d_app()).expect("app definition json");
+        let json = dsl::json::to_json_string(&create_fem3d_app());
         for id in [window_model::FEM3D_WINDOW_MODEL, window_results::FEM3D_WINDOW_RESULTS] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
@@ -1244,7 +1248,7 @@ mod tests {
     //#region 🔖️MediaPorts
     /// 🎞️ `"results:out"` runs every load case fresh and returns a `Structured` JSON payload — build a
     /// doc with the bundled example (which has load cases), export, assert the JSON round-trips through
-    /// `serde_json` and names a case id.
+    /// the first-party value codec and names a case id.
     #[semio_framework_async_macros::async_test]
     async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
         let mut app: Fem3dApp = fem3d_app();
@@ -1257,7 +1261,7 @@ mod tests {
         assert_eq!(media.media_type.form, MediaForm::Value);
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a Structured payload") };
         assert_eq!(schema, "computation.fem3d");
-        let value: Value = serde_json::from_str(&json).expect("results:out payload is valid JSON");
+        let value = dsl::json::parse(&json).expect("results:out payload is valid JSON");
         assert!(value.get("dead").is_some(), "expected the example fixture's dead case in the results map: {json}");
         assert!(value["dead"].get("displacements").is_some(), "expected a displacements array: {json}");
     }
@@ -1281,7 +1285,7 @@ mod tests {
         let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
         let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
         let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let json = serde_json::json!({
+        let json = dsl::json!({
             "outline": [[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
             "holes": [],
             "baseZ": 0.5,

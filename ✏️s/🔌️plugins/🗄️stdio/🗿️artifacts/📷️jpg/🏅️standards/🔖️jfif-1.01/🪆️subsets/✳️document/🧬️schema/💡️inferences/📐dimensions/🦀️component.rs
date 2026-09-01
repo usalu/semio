@@ -3,7 +3,6 @@
 //! the value type + its pure `compute` fn (no `InferredField`).
 
 use crate::artifacts::jpg::JpgSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ JPEG canonical raster geometry. `bit_depth` reads the SOF (T.81 §B.2.2) `precision` field
@@ -11,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// `⚙️engine::decode_jpg`'s documented scope), falling back to the canonical `8` a freshly
 /// hand-authored (`SetPixels`-only, no `frame` yet) snapshot always decodes to. `has_alpha` is
 /// always `false` — JPEG (T.81) has no alpha channel, this is not a heuristic.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgDimensions {
     pub width: u32,
     pub height: u32,

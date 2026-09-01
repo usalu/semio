@@ -5,9 +5,8 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{create_backbone_document, WorkflowMutation, WorkflowSnapshot, S_SPACE_SCHEMA};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
 
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "open-space")]
 pub struct OpenSpace {
     pub space_id: String,

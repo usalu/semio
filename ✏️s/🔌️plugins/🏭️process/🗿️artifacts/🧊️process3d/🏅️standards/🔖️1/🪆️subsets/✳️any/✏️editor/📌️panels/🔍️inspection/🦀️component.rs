@@ -54,23 +54,19 @@ mod tests {
         assert_eq!(definition.body_key.as_deref(), Some(PROCESS_3D_PLAY_BODY_INSPECTION));
     }
 
-    //#region 🔖️AddStepIsADocumentedNoOp
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `AddStep` dispatches a
-    /// `CreateStep` mutation, a documented no-op now (`steps` composes an `s.stdio.semio.flow`
-    /// CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment), so the persisted
-    /// `document.steps` this test suite used to read is gone. `add_step::handle`'s own capability-
-    /// dimension VALIDATION gate is also a documented gap now (no resolvable stock extent — see
-    /// its own doc comment), so every resolvable machine/capability pair succeeds unconditionally.
-    /// These tests assert the honest post-migration behavior: the command still dispatches its
-    /// (no-op) mutation.
+    //#region 🔖️AddStepDispatch
+    /// 🌉️ `AddStep` dispatches a real `CreateStep` mutation against `step_payloads`.
+    /// `add_step::handle`'s own capability-dimension VALIDATION gate is a documented gap (no
+    /// resolvable stock extent — see its own doc comment), so every resolvable machine/capability
+    /// pair succeeds unconditionally.
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): the inspector no longer selects
     /// the new step (selection is framework-owned now, unreachable from `Emit`), so this only
-    /// asserts the still-real mutation dispatch, not a rendered inspector state.
+    /// asserts the mutation dispatch, not a rendered inspector state.
     #[semio_framework_async_macros::async_test]
-    async fn add_step_dispatches_its_no_op_mutation() {
+    async fn add_step_dispatches_its_mutation() {
         let mut app = testkit::app();
         let result = testkit::dispatch(&mut app, Process3dCommand::AddStep(add_step::AddStep { measure: Some("drill".into()), machine_id: None, capability_id: None, position: None }));
-        assert!(!result.mutations.is_empty(), "AddStep must still dispatch its (no-op) CreateStep mutation");
+        assert!(!result.mutations.is_empty(), "AddStep must dispatch its CreateStep mutation");
     }
 
     /// 🌉️ Same documented gap as above, from the catalogue-routed (machine/capability-addressed)
@@ -100,6 +96,6 @@ mod tests {
         let rendered = testkit::render(&mut app, PROCESS_3D_PLAY_BODY_INSPECTION);
         assert!(rendered.contains("process3d-play-inspector.empty"));
     }
-    //#endregion 🔖️AddStepIsADocumentedNoOp
+    //#endregion 🔖️AddStepDispatch
 }
 //#endregion 🧪️Tests

@@ -14,13 +14,12 @@
 use crate::artifacts::ifc::STDIO_IFC_DOCUMENT_SCHEMA;
 use crate::artifacts::step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 🔤️ One typed value in IFC4's Part-21 argument-list syntax — own enum, mirrors
 /// `step::engine::part21::Part21Value`'s shape but is IFC's own type (never shared cross-artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum IfcValue {
     /// `$` — attribute explicitly unset.
     Unset,
@@ -37,7 +36,7 @@ pub enum IfcValue {
     /// Part-21 syntax level).
     Aggregate(Vec<IfcValue>),
     /// `IFCLENGTHMEASURE(3000.)` — a "defined type" wrapper: EXPRESS keyword + its own arg list.
-    TypedValue(String, Vec<IfcValue>),
+    TypedValue { name: String, items: Vec<IfcValue> },
 }
 
 impl Default for IfcValue {
@@ -89,7 +88,7 @@ impl IfcValue {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_typed(&self) -> Option<(&str, &[IfcValue])> {
-        if let IfcValue::TypedValue(name, items) = self {
+        if let IfcValue::TypedValue { name, items } = self {
             Some((name.as_str(), items.as_slice()))
         } else {
             None
@@ -103,8 +102,8 @@ impl IfcValue {
 /// the primary `name`/`args` carried on [`IfcEntity`] itself. Ordinary (non-complex) instances
 /// carry an empty `complex` vec; nothing about a real complex instance's extra type members is
 /// ever silently dropped (typed raw-retention, per the recipe).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcComplexType {
     pub name: String,
     pub args: Vec<IfcValue>,
@@ -116,13 +115,13 @@ pub struct IfcComplexType {
 /// IFC4 entity type, matching how the format itself is structured; a derived analyzer view can
 /// filter by `name` for domain-specific queries (see `engine::spatial`) without this snapshot
 /// needing a hand-modeled Rust type per IFC entity kind.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcEntity {
     pub id: u64,
     pub name: String,
     pub args: Vec<IfcValue>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub complex: Vec<IfcComplexType>,
 }
 //#endregion 🔖️Entity
@@ -131,8 +130,8 @@ pub struct IfcEntity {
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`), typed
 /// via IFC's own [`IfcValue`] — kept as their raw tuple-of-values shape (not schema-interpreted
 /// into named sub-fields), matching the recipe's "typed HEADER section" completeness target.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcHeader {
     pub file_description: Vec<IfcValue>,
     pub file_name: Vec<IfcValue>,
@@ -145,19 +144,19 @@ pub struct IfcHeader {
 /// model (never `step::engine::part21::Part21Document`). Spatial structure/placement
 /// matrices/property sets stay a derived analyzer view (`engine::spatial::analyze_spatial`,
 /// which is handed a `Part21Document` built on demand via [`to_part21_document`]), not stored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: IfcHeader,
     /// 🆔️ Id-keyed, order-preserving — the strong collection this artifact's diff/mutations work
     /// against (see `schema::diff::IfcEntitiesDiff`).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<IfcEntity>,
 }
 
@@ -179,7 +178,7 @@ fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
         Part21Value::Int(i) => IfcValue::Integer(*i),
         Part21Value::Real(r) => IfcValue::Real(r.to_f64().unwrap_or_default()),
         Part21Value::List(items) => IfcValue::Aggregate(items.iter().map(ifc_value_from_part21).collect()),
-        Part21Value::Typed(name, items) => IfcValue::TypedValue(name.clone(), items.iter().map(ifc_value_from_part21).collect()),
+        Part21Value::Typed { name, items } => IfcValue::TypedValue { name: name.clone(), items: items.iter().map(ifc_value_from_part21).collect() },
         Part21Value::Unset => IfcValue::Unset,
         Part21Value::Derived => IfcValue::Derived,
     }
@@ -195,7 +194,7 @@ fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
         IfcValue::Integer(i) => Part21Value::Int(*i),
         IfcValue::Real(r) => Part21Value::Real((*r).into()),
         IfcValue::Aggregate(items) => Part21Value::List(items.iter().map(part21_value_from_ifc).collect()),
-        IfcValue::TypedValue(name, items) => Part21Value::Typed(name.clone(), items.iter().map(part21_value_from_ifc).collect()),
+        IfcValue::TypedValue { name, items } => Part21Value::Typed { name: name.clone(), items: items.iter().map(part21_value_from_ifc).collect() },
         IfcValue::Unset => Part21Value::Unset,
         IfcValue::Derived => Part21Value::Derived,
     }

@@ -703,11 +703,11 @@ mod tests {
         let out = reg.dispatch("draw.shape.rect", &input).unwrap();
         let handle = out.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("handle")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
 
-        let export_json: serde_json::Value = serde_json::from_str(&export_dwg_json(handle)).unwrap();
+        let export_json = pack::json::parse(&export_dwg_json(handle)).unwrap();
         let data = export_json.get("dwg").and_then(|v| v.as_str()).expect("dwg base64");
         assert!(!data.is_empty());
 
-        let import_json: serde_json::Value = serde_json::from_str(&import_dwg_json(data)).unwrap();
+        let import_json = pack::json::parse(&import_dwg_json(data)).unwrap();
         let imported_handle = import_json.get("handle").and_then(|v| v.as_str()).expect("imported handle");
         let scene_json = render_scene_json(imported_handle);
         assert!(scene_json.contains("nodes"));
@@ -952,13 +952,13 @@ mod tests {
     async fn export_svg_json_returns_svg_for_known_handle() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
-        let json: serde_json::Value = serde_json::from_str(&export_svg_json(&handle)).unwrap();
+        let json = pack::json::parse(&export_svg_json(&handle)).unwrap();
         assert!(json.get("svg").and_then(|v| v.as_str()).is_some_and(|svg| svg.contains("svg")));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_svg_json_returns_error_for_unknown_handle() {
-        let json: serde_json::Value = serde_json::from_str(&export_svg_json("drawing-missing-999")).unwrap();
+        let json = pack::json::parse(&export_svg_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
@@ -966,25 +966,25 @@ mod tests {
     async fn export_pdf_json_returns_pdf_for_known_handle() {
         let _guard = kernel_read_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
-        let json: serde_json::Value = serde_json::from_str(&export_pdf_json(&handle)).unwrap();
+        let json = pack::json::parse(&export_pdf_json(&handle)).unwrap();
         assert!(json.get("pdf").and_then(|v| v.as_str()).is_some_and(|pdf| !pdf.is_empty()));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_pdf_json_returns_error_for_unknown_handle() {
-        let json: serde_json::Value = serde_json::from_str(&export_pdf_json("drawing-missing-999")).unwrap();
+        let json = pack::json::parse(&export_pdf_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn render_scene_json_returns_error_for_unknown_handle() {
-        let json: serde_json::Value = serde_json::from_str(&render_scene_json("drawing-missing-999")).unwrap();
+        let json = pack::json::parse(&render_scene_json("drawing-missing-999")).unwrap();
         assert!(json.get("error").is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn import_dwg_json_rejects_invalid_base64() {
-        let json: serde_json::Value = serde_json::from_str(&import_dwg_json("not-@@-base64!!")).unwrap();
+        let json = pack::json::parse(&import_dwg_json("not-@@-base64!!")).unwrap();
         assert!(json.get("error").and_then(|v| v.as_str()).unwrap_or_default().contains("base64"));
     }
 
@@ -993,7 +993,7 @@ mod tests {
         let _guard = kernel_write_guard();
         let handle = make_rect(0.0, 0.0, 5.0, 5.0);
         dispose_drawing(&handle);
-        let json: serde_json::Value = serde_json::from_str(&render_scene_json(&handle)).unwrap();
+        let json = pack::json::parse(&render_scene_json(&handle)).unwrap();
         assert!(json.get("error").is_some());
     }
 
@@ -1003,8 +1003,8 @@ mod tests {
         let kept = make_rect(0.0, 0.0, 5.0, 5.0);
         let dropped = make_rect(1.0, 1.0, 5.0, 5.0);
         retain_drawing_handles(&[kept.clone()]);
-        let kept_json: serde_json::Value = serde_json::from_str(&render_scene_json(&kept)).unwrap();
-        let dropped_json: serde_json::Value = serde_json::from_str(&render_scene_json(&dropped)).unwrap();
+        let kept_json = pack::json::parse(&render_scene_json(&kept)).unwrap();
+        let dropped_json = pack::json::parse(&render_scene_json(&dropped)).unwrap();
         assert!(kept_json.get("nodes").is_some());
         assert!(dropped_json.get("error").is_some());
     }
@@ -1012,7 +1012,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {
         let mask = vec![255u8; 16];
-        let json: serde_json::Value = serde_json::from_str(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0)).unwrap();
+        let json = pack::json::parse(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0)).unwrap();
         assert!(json.get("segments").is_some());
     }
 
@@ -1020,26 +1020,26 @@ mod tests {
     async fn boolean_segments_json_unions_two_traced_masks() {
         let mask = vec![255u8; 16];
         let segments_json = trace_bitmap_json(4, 4, &mask, 0.5, 0.0);
-        let result: serde_json::Value = serde_json::from_str(&boolean_segments_json(&segments_json, &segments_json, "union")).unwrap();
+        let result = pack::json::parse(&boolean_segments_json(&segments_json, &segments_json, "union")).unwrap();
         assert!(result.get("segments").is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_reports_malformed_json_input() {
-        let result: serde_json::Value = serde_json::from_str(&boolean_segments_json("not json", "{}", "union")).unwrap();
+        let result = pack::json::parse(&boolean_segments_json("not json", "{}", "union")).unwrap();
         assert!(result.get("error").is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_propagates_upstream_error() {
-        let upstream_error = serde_json::json!({ "error": "upstream boom" }).to_string();
-        let result: serde_json::Value = serde_json::from_str(&boolean_segments_json(&upstream_error, "{\"segments\":[]}", "union")).unwrap();
+        let upstream_error = pack::json::to_string(&pack::json::object([("error".to_string(), pack::json::Value::from("upstream boom"))]));
+        let result = pack::json::parse(&boolean_segments_json(&upstream_error, "{\"segments\":[]}", "union")).unwrap();
         assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("upstream boom"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn boolean_segments_json_reports_missing_segments_field() {
-        let result: serde_json::Value = serde_json::from_str(&boolean_segments_json("{}", "{\"segments\":[]}", "union")).unwrap();
+        let result = pack::json::parse(&boolean_segments_json("{}", "{\"segments\":[]}", "union")).unwrap();
         assert_eq!(result.get("error").and_then(|v| v.as_str()), Some("missing segments"));
     }
 
@@ -1074,38 +1074,13 @@ mod tests {
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+        let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "draw", "Draw", "draw", &manifest_json);
+        let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "draw", "Draw", "draw", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0")
             .extends("flow")
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "flow-play",
-                    "extensionId": "draw",
-                    "label": "Draw",
-                    "iconId": "draw",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "procedural3d-play",
-                    "extensionId": "draw",
-                    "label": "Draw",
-                    "iconId": "draw",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .handler("evaluate", |req| {
-                #[derive(serde::Deserialize)]
-                #[serde(rename_all = "camelCase")]
-                struct EvaluateRequest {
-                    operator_id: String,
-                    input_json: String,
-                }
-                let request: EvaluateRequest = serde_json::from_slice(req).unwrap();
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            });
+            .contributes_topic(flow_topic.topic, flow_topic.payload)
+            .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
+            .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&module_registry(), req).unwrap()));
         install_extension_bundle(bundle);
         let installed = extension_manifest();
         assert_eq!(installed.topic_contributions.len(), 2);
@@ -1122,34 +1097,14 @@ mod tests {
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
-    use flow_extension_sdk::{build_manifest_json, evaluate_json};
+    use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-    use serde::Deserialize;
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct EvaluateRequest {
-        operator_id: String,
-        input_json: String,
-    }
-
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
-        let extension_id = "draw";
-        let label = "Draw";
-        let icon_id = "draw";
-        let topic_payload = serde_json::json!({
-            "appId": app_id,
-            "extensionId": extension_id,
-            "label": label,
-            "iconId": icon_id,
-            "manifestJson": &manifest_json,
-        });
-        topic_payload
-    }
+    const EXTENSION_ID: &str = "draw";
+    const EXTENSION_LABEL: &str = "Draw";
 
     // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
     // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
@@ -1158,28 +1113,25 @@ mod extension_guest {
     // See R9.
     fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
-        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
-        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
+        let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
+        let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "draw", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
+            evaluate_invoke_json(&module_registry(), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
         }))
     }
 
     #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let fixture = pack::json::parse(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
         let bundle = bundle();
-        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
-        assert_eq!(manifest["extensionId"], fixture["draw"]["pluginId"]);
+        assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("draw").and_then(|entry| entry.get("pluginId")).and_then(pack::json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);
         for contribution in &bundle.manifest.topic_contributions {
-            let payload: serde_json::Value = contribution.decode().unwrap();
-            assert_eq!(payload["extensionId"], fixture["draw"]["flowId"]);
+            assert_eq!(contribution.payload.get("extensionId").and_then(|value| value.as_str()), fixture.get("draw").and_then(|entry| entry.get("flowId")).and_then(pack::json::Value::as_str));
         }
     }
 

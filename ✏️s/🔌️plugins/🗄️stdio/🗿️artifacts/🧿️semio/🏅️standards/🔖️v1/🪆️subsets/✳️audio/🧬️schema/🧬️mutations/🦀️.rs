@@ -18,7 +18,6 @@ use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{S
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation, OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `s.stdio.semio.audio`.
@@ -43,9 +42,9 @@ pub mod remove_tag;
 pub mod set_tag_value;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioAudioSnapshot, diff = SemioAudioDiff, schema = "SemioAudioMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAudioMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetSampleRate(set_sample_rate::SetSampleRate),

@@ -5,13 +5,11 @@
 
 use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full jack artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackArtifact {
     #[state(artifact)]
@@ -56,10 +54,72 @@ pub struct JackArtifact {
 }
 //#endregion 🔖️Artifact
 
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `content` is a `store::ArtifactChild<S>` composed-artifact
+/// handle, which speaks `serde` (framework-internal, unaffected by this ticket) rather than
+/// `ToValue`/`FromValue` directly — bridged through the pre-existing `dsl::to_dsl_value`/
+/// `dsl::from_dsl_value` seam instead of widening the derive macro to understand child-slot
+/// handles. See `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+/// 🔍️research/📓️serde-fanout-playbook.md`'s "composed/child-slot fields" trap.
+impl dsl::ToValue for JackArtifact {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("name".to_string(), dsl::ToValue::to_value(&self.name)),
+            ("manifestId".to_string(), dsl::ToValue::to_value(&self.manifest_id)),
+            ("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)),
+            ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
+            ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
+            ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
+            ("activeFixtureId".to_string(), dsl::ToValue::to_value(&self.active_fixture_id)),
+            ("jackQuery".to_string(), dsl::ToValue::to_value(&self.jack_query)),
+            ("lodModeByWindow".to_string(), dsl::ToValue::to_value(&self.lod_mode_by_window)),
+            ("viewportCamera".to_string(), dsl::ToValue::to_value(&self.viewport_camera)),
+            ("jackResultJson".to_string(), dsl::ToValue::to_value(&self.jack_result_json)),
+            ("editorEngagementInput".to_string(), dsl::ToValue::to_value(&self.editor_engagement_input)),
+            ("graphEngagementInput".to_string(), dsl::ToValue::to_value(&self.graph_engagement_input)),
+            ("resultsEngagementInput".to_string(), dsl::ToValue::to_value(&self.results_engagement_input)),
+            ("reorganizeEpoch".to_string(), dsl::ToValue::to_value(&self.reorganize_epoch)),
+            ("editorSelection".to_string(), dsl::ToValue::to_value(&self.editor_selection)),
+            ("revision".to_string(), dsl::ToValue::to_value(&self.revision)),
+            ("locale".to_string(), dsl::ToValue::to_value(&self.locale)),
+        ])
+    }
+}
+impl dsl::FromValue for JackArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: dsl::FromValue::from_value(field("schema")?)?,
+            name: dsl::FromValue::from_value(field("name")?)?,
+            manifest_id: dsl::FromValue::from_value(field("manifestId")?)?,
+            manifest: dsl::FromValue::from_value(field("manifest")?)?,
+            camera: dsl::FromValue::from_value(field("camera")?)?,
+            content: dsl::from_dsl_value(field("content")?).map_err(dsl::ValueError::new)?,
+            root_node_id: dsl::FromValue::from_value(field("rootNodeId")?)?,
+            active_fixture_id: dsl::FromValue::from_value(field("activeFixtureId")?)?,
+            jack_query: dsl::FromValue::from_value(field("jackQuery")?)?,
+            lod_mode_by_window: dsl::FromValue::from_value(field("lodModeByWindow")?)?,
+            viewport_camera: dsl::FromValue::from_value(field("viewportCamera")?)?,
+            jack_result_json: dsl::FromValue::from_value(field("jackResultJson")?)?,
+            editor_engagement_input: dsl::FromValue::from_value(field("editorEngagementInput")?)?,
+            graph_engagement_input: dsl::FromValue::from_value(field("graphEngagementInput")?)?,
+            results_engagement_input: dsl::FromValue::from_value(field("resultsEngagementInput")?)?,
+            reorganize_epoch: dsl::FromValue::from_value(field("reorganizeEpoch")?)?,
+            editor_selection: dsl::FromValue::from_value(field("editorSelection")?)?,
+            revision: dsl::FromValue::from_value(field("revision")?)?,
+            locale: dsl::FromValue::from_value(field("locale")?)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
+
 //#region 🔖️Helpers
 /// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JackEditorSelection {
     pub start: u64,
     pub end: u64,

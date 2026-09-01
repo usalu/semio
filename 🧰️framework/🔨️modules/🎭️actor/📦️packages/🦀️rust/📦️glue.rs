@@ -13,15 +13,18 @@
 // guest-side (`?Send`) transports.
 #![allow(async_fn_in_trait)]
 
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, so this is narrowed to
+// `not(target_env = "p2")` — the browser-only `KernelHost` bridge below has no meaning for the
+// WASI component target and must not pull `wasm-bindgen`/the aliased async runtime into it.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 extern crate semio_framework_async as wasm_bindgen_futures;
 
 #[path = "../../🦀️component.rs"]
 mod component;
 pub use component::*;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[path = "../../🔗️bindings/🦀️.rs"]
 mod kernel_host;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use kernel_host::KernelHost;

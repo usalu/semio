@@ -6,88 +6,72 @@
 //! `framework/surface/node-graph`'s `GraphHost`/`GraphSession` split, except the pure host
 //! (`BoardHost`) already lives in `infinite_board_port_directed_normal` and is re-exported by this
 //! crate's own puzzle-2d engine — this module only owns the wasm session wrapper around it.
+//! Browser-only (`wasm32`, non-WASI-P2): mirrors the puzzle-3d/puzzle-5d wasm bridges, gated the
+//! same way so this file never links `wasm-bindgen`/`js-sys`/`web-sys` into the `wasm32-wasip2`
+//! plugin component.
 
-// 🧬️ Every item below is individually `#[cfg(target_arch = "wasm32")]`-gated (the wasm session
-// wrapper has no native meaning), so these imports must be too or they warn as unused on native.
-#[cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
-#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::board_host::{puzzle_board_host, puzzle_board_host_normal};
-#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::layout::redraw_layout_fixture_json;
-#[cfg(target_arch = "wasm32")]
 use crate::editor::puzzle2d::engine::{
     apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json,
     BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
 
 // #region 🔖️WasmHost
-#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
 use web_sys::HtmlCanvasElement;
 
-#[cfg(target_arch = "wasm32")]
 use geometry::ray_from_origin_to_axis_aligned_rectangle_edge;
-#[cfg(target_arch = "wasm32")]
 use js_sys::Promise;
-#[cfg(target_arch = "wasm32")]
 use semio_framework_async::browser::future_to_promise;
-#[cfg(target_arch = "wasm32")]
 use std::cell::RefCell;
-#[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardComputeEdgeBezier)]
 pub fn board_compute_edge_bezier(source_px: f64, source_py: f64, source_cx: f64, source_cy: f64, target_px: f64, target_py: f64, target_cx: f64, target_cy: f64) -> Vec<f64> {
     let c = compute_edge_bezier_points(Point::new(source_px, source_py), Point::new(target_px, target_py), Point::new(source_cx, source_cy), Point::new(target_cx, target_cy));
     vec![c.p0.x, c.p0.y, c.p1.x, c.p1.y, c.p2.x, c.p2.y, c.p3.x, c.p3.y]
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardDistancePointCubic)]
 pub fn board_distance_point_cubic(px: f64, py: f64, p0x: f64, p0y: f64, p1x: f64, p1y: f64, p2x: f64, p2y: f64, p3x: f64, p3y: f64, steps: u32) -> f64 {
     let curve = CubicBez::new(Point::new(p0x, p0y), Point::new(p1x, p1y), Point::new(p2x, p2y), Point::new(p3x, p3y));
     distance_point_to_cubic_bezier(Point::new(px, py), curve, steps.max(1) as usize)
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRayRectEdge)]
 pub fn board_ray_rect_edge(hw: f64, hh: f64, ux: f64, uy: f64) -> Vec<f64> {
     let p = ray_from_origin_to_axis_aligned_rectangle_edge(hw, hh, ux, uy);
     vec![p.x, p.y]
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardHandlePositionCircle)]
 pub fn board_handle_position_circle(cx: f64, cy: f64, radius: f64, angle: f64) -> Vec<f64> {
     let p = handle_position_on_circle(Point::new(cx, cy), radius, angle);
     vec![p.x, p.y]
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardHandlePositionRectangle)]
 pub fn board_handle_position_rectangle(cx: f64, cy: f64, width: f64, height: f64, angle: f64) -> Vec<f64> {
     let p = handle_position_on_rectangle(Point::new(cx, cy), width, height, angle);
     vec![p.x, p.y]
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRedrawLayoutFixtureJson)]
 pub fn board_redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, JsValue> {
     redraw_layout_fixture_json(fixture_json, options_json).map_err(|e| JsValue::from_str(&e))
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = boardRedrawHandlesFixtureJson)]
 pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, JsValue> {
     apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
 }
 
 /// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = puzzle2dParseDslJson)]
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
     use store::ArtifactDsl;
@@ -97,13 +81,11 @@ pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
 
 // #region 🔖️WasmSession
 /// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
-#[cfg(target_arch = "wasm32")]
 struct BoardSessionInner {
     host: BoardHost,
     gpu: canvas::gpu_session::CanvasGpuSession,
 }
 
-#[cfg(target_arch = "wasm32")]
 impl BoardSessionInner {
     fn set_logical_size_and_maybe_resize_surface(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
@@ -117,13 +99,11 @@ impl BoardSessionInner {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub struct BoardSession {
     state: Rc<RefCell<BoardSessionInner>>,
 }
 
-#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 impl BoardSession {
     #[wasm_bindgen(constructor)]

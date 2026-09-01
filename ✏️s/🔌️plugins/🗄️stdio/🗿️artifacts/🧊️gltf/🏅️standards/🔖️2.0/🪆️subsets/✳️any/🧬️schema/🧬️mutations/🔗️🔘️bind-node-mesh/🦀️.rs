@@ -1,14 +1,13 @@
 //! 🧬️ Direct bind-node-mesh mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 pub const ID: &str = "s.stdio.gltf.mutation.bind-node-mesh.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfBindNodeMeshPayload { pub node: usize, pub mesh: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.node, base.document.nodes.len(), "document/nodes")?; checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; Ok(()) }
@@ -16,9 +15,9 @@ pub fn validate(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Resul
 pub fn apply(payload: &GltfBindNodeMeshPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.nodes[payload.node].mesh = Some(payload.mesh); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindNodeMeshMutation {
     Apply(GltfBindNodeMeshPayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

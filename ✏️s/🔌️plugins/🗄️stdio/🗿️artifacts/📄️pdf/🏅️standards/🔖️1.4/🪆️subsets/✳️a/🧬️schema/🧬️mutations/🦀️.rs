@@ -1,7 +1,6 @@
 //! 🧬️ Transparent PDF 1.4/A mutation registry and delegation.
 
 use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "📝️set-page-text/🦀️.rs"]
@@ -14,8 +13,8 @@ pub use set_page_text::CONFORMANT_TEXT;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4.a")]
 pub enum PdfA1Mutation {
     SetPageText(SetPageText),

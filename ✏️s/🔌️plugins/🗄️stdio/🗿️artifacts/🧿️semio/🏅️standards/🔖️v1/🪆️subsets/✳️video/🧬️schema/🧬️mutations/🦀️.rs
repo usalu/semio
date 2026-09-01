@@ -15,7 +15,6 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::diff::{
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.semio.video`. Beyond the baseline `SetSnapshot`, this
@@ -44,9 +43,9 @@ pub mod set_sample_data;
 pub mod set_sample_flags;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioVideoSnapshot, diff = SemioVideoDiff, schema = "SemioVideoMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioVideoMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `stream` at `index` (FINAL state).

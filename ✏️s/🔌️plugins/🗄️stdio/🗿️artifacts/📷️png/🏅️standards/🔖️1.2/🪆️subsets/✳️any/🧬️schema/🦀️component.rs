@@ -4,10 +4,9 @@
 use crate::artifacts::png::schema::snapshot::{PngBackground, PngChromaticities, PngChunk, PngChunkMarker, PngColorType, PngPhysicalDims, PngRgb, PngSrgbIntent, PngTextChunk, PngTextKind, PngTimestamp, PngTransparency};
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png")]
 pub struct PngArtifact {
     #[state(artifact)]
@@ -23,40 +22,40 @@ pub struct PngArtifact {
     #[state(artifact)]
     pub interlace: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub plte: Option<Vec<PngRgb>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trns: Option<PngTransparency>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub gama: Option<u32>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub chrm: Option<PngChromaticities>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub srgb: Option<PngSrgbIntent>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub phys: Option<PngPhysicalDims>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub time: Option<PngTimestamp>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub bkgd: Option<PngBackground>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub text_chunks: Vec<PngTextChunk>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub chunk_order: Vec<PngChunkMarker>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub unknown_chunks: Vec<PngChunk>,
 }
 

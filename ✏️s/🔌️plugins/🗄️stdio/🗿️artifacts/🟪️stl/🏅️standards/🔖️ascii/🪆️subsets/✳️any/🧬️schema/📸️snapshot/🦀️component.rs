@@ -8,7 +8,6 @@
 
 use crate::artifacts::stl::STDIO_STL_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️StlTriangle
 /// 🔺️ One ASCII/binary STL facet: `facet normal ni nj nk` / `outer loop` / 3×`vertex vx vy vz` /
@@ -36,8 +35,8 @@ use serde::{Deserialize, Serialize};
 /// `DiffCodec` and `StlMutation`'s `OpText`/`OpBinary` are hand-rolled instead (see those files),
 /// using an explicit `[…]`-bracketed grammar for `normal`/`vertices` that DOES mark nesting depth
 /// (`enc_vec3`/`enc_vertices` in `🔺️diff::component`), sidestepping the bug entirely.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StlTriangle {
     pub normal: [f64; 3],
     pub vertices: [[f64; 3]; 3],
@@ -58,17 +57,17 @@ impl Default for StlTriangle {
 /// for the real, reproduced nested-`[T;N]` grammar bug this artifact's whole `dsl`-derive attempt
 /// hit) — `StlMutation::SetSnapshot`'s payload is hand-encoded via `enc_snapshot`/`dec_snapshot`
 /// in `🧬️mutations::component` instead.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]
 pub struct StlSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub solid_name: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub triangles: Vec<StlTriangle>,
 }
 

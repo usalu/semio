@@ -9,7 +9,7 @@ use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation}
 use crate::editor::process3d::set_active_utility_effect;
 use crate::editor::process3d::terminology::{process3d_labels, Process3dLabels};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️FaceDrag
 /// 🖱️➡️ Builds a push/pull step from a face-drag gesture: dragging into the solid (negative `distance`
@@ -42,7 +42,7 @@ fn process3d_step_from_face_drag(normal: [f64; 3], point: [f64; 3], distance: f6
 pub mod world_pointer_down {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-pointer-down")]
     pub struct WorldPointerDown {
         #[dsl(coord)]
@@ -78,7 +78,7 @@ pub mod world_pointer_down {
 pub mod world_face_drag_end {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "world-face-drag-end")]
     pub struct WorldFaceDragEnd {
         #[dsl(coord)]

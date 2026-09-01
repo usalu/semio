@@ -22,6 +22,10 @@ use crate::{
 };
 use semio_framework_dispatch_macros::dyn_enum_close;
 use semio_framework_plugin_host::OwnedRuntime;
+/// 🌉️ Trait import only — brings `ArtifactStore::undo`/`redo` (real `store::SpaceMember` methods,
+/// object-safe async trait, not inherent) into method-call scope for `undo_probe_mutation`/
+/// `redo_probe_mutation` below.
+use store::SpaceMember as _;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -182,6 +186,21 @@ impl store::ArtifactPack for ProbeSnapshot {
     }
 }
 
+/// 🌉️ Hand-written, not derived: `ProbeSnapshot` wraps a foreign `serde_json::Value`, one of the
+/// documented gaps the `ToValue`/`FromValue` derive does not cover (`📓️fix-os-kernel-store-mutations.md`
+/// §"Key facts"). Routes through the same `to_dsl_value`/`from_dsl_value` serde bridge
+/// `SpaceHistoryDiff`/`SpaceHistoryMutation` use for the identical reason.
+impl store::ToValue for ProbeSnapshot {
+    fn to_value(&self) -> store::DslValue {
+        store::to_dsl_value(self).expect("ProbeSnapshot converts to DslValue infallibly")
+    }
+}
+impl store::FromValue for ProbeSnapshot {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+        store::from_dsl_value(value).map_err(store::ValueError::new)
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ProbeDiff(pub serde_json::Value);
 
@@ -195,6 +214,18 @@ impl store::MutationDiff<ProbeSnapshot> for ProbeDiff {
     }
 }
 
+/// 🌉️ Hand-written — same foreign-`serde_json::Value` gap as [`ProbeSnapshot`]'s impl above.
+impl store::ToValue for ProbeDiff {
+    fn to_value(&self) -> store::DslValue {
+        store::to_dsl_value(self).expect("ProbeDiff converts to DslValue infallibly")
+    }
+}
+impl store::FromValue for ProbeDiff {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+        store::from_dsl_value(value).map_err(store::ValueError::new)
+    }
+}
+
 /// 🧪️ The only operation this probe document supports: whole-value replace — mirrors
 /// `crate::os_store::impl_whole_record_config!`'s "no field-level diff" shape, the simplest legal
 /// `Mutation` implementor.
@@ -203,8 +234,35 @@ pub enum ProbeMutation {
     SetValue(serde_json::Value),
 }
 
+/// 🧷️ Hand-built `store::Mutation::DESCRIPTORS` entry for `ProbeMutation`'s one operation — not
+/// `#[derive(dsl::Mutations)]` (see `ProbeMutation`'s own docstring): that derive requires each
+/// variant to wrap a real `MutationLeaf` payload, and `SetValue`'s foreign `serde_json::Value`
+/// field is not one. Field values satisfy `store::validate_mutation_leaf_descriptor`'s contract by
+/// hand.
+const PROBE_SET_VALUE_DESCRIPTOR: store::MutationLeafDescriptor = store::MutationLeafDescriptor {
+    schema_version: 1,
+    owner: "os/mcp/workspace/🧬️mutations/set-value",
+    semantic_kind: "set-value",
+    display_name: "Set Value",
+    emoji: "🧪",
+    aggregate_variant: "SetValue",
+    payload_schema: PROBE_SCHEMA,
+    text_opcode: None,
+    binary_tag: None,
+    invertibility: store::MutationInvertibility::ExplicitMutation,
+    diff_participation: store::MutationDiffParticipation::Detect,
+    outcome_classes: &[store::MutationOutcomeClass::Applied],
+    composition: store::MutationComposition::Atomic,
+    required_language_surfaces: &[store::MutationLanguageSurface::Rust],
+};
+
 impl store::Mutation<ProbeSnapshot> for ProbeMutation {
     type Diff = ProbeDiff;
+    const DESCRIPTORS: &'static [store::MutationLeafDescriptor] = &[PROBE_SET_VALUE_DESCRIPTOR];
+
+    fn descriptor(&self) -> &'static store::MutationLeafDescriptor {
+        &Self::DESCRIPTORS[0]
+    }
 
     fn diff(&self, _base: &ProbeSnapshot) -> store::MutationOutcome<ProbeDiff> {
         let ProbeMutation::SetValue(value) = self;
@@ -213,6 +271,19 @@ impl store::Mutation<ProbeSnapshot> for ProbeMutation {
 
     fn inverse(&self, base: &ProbeSnapshot) -> Vec<Self> {
         vec![ProbeMutation::SetValue(base.0.clone())]
+    }
+}
+
+/// 🌉️ Hand-written — `ProbeMutation::SetValue` wraps a foreign `serde_json::Value` field, same gap
+/// as [`ProbeSnapshot`]'s impl above (the derive cannot map a foreign type's shape into `DslValue`).
+impl store::ToValue for ProbeMutation {
+    fn to_value(&self) -> store::DslValue {
+        store::to_dsl_value(self).expect("ProbeMutation converts to DslValue infallibly")
+    }
+}
+impl store::FromValue for ProbeMutation {
+    fn from_value(value: store::DslValue) -> Result<Self, store::ValueError> {
+        store::from_dsl_value(value).map_err(store::ValueError::new)
     }
 }
 
@@ -249,6 +320,93 @@ pub fn ensure_probe_codec_registered() {
     ONCE.call_once(|| {
         let _ = store::register_document_codec(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA));
     });
+}
+
+/// 🧹️ Owned-value retirement for a probe's snapshot root/initial snapshot/mutation — a `ProbeStore`
+/// has nothing external to release (no blob handle, no disk row) so retiring one is exactly taking
+/// it, one bounded step at a time, mirroring `🏪️store/🦀️component.rs`'s own `#[cfg(test)]`
+/// `DemoSnapshotRetirement`/`DemoInitialSnapshotRetirement`/`DemoMutationRetirement` triplet (the
+/// canonical shape for a value with no real external resource behind it).
+struct ProbeOwnedRetirement<T>(Option<T>);
+
+impl<T: Send> store::ErasedSnapshotRetirement for ProbeOwnedRetirement<T> {
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.0.take().is_some() {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(store::SnapshotRetirementStep::Complete)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+}
+
+struct ProbeSnapshotRetirementFactory;
+
+impl store::SnapshotRetirementFactory<ProbeSnapshot> for ProbeSnapshotRetirementFactory {
+    fn retire(&self, snapshot: Arc<ProbeSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(ProbeOwnedRetirement(Some(snapshot)))
+    }
+}
+
+struct ProbeInitialSnapshotRetirementFactory;
+
+impl store::ArtifactOwnedValueRetirementFactory<ProbeSnapshot> for ProbeInitialSnapshotRetirementFactory {
+    fn retire_owned(&self, value: ProbeSnapshot) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(ProbeOwnedRetirement(Some(value)))
+    }
+}
+
+struct ProbeMutationRetirementFactory;
+
+impl store::ArtifactOwnedValueRetirementFactory<ProbeMutation> for ProbeMutationRetirementFactory {
+    fn retire_owned(&self, value: ProbeMutation) -> Box<dyn store::ErasedSnapshotRetirement> {
+        Box::new(ProbeOwnedRetirement(Some(value)))
+    }
+}
+
+/// 🔐️ The one real owner catalog every `ProbeStore` installs right after construction
+/// (`ensure_probe_artifact`) — required before `ArtifactStore::drop`'s terminal-empty witness can
+/// ever be reached (`install_member_store_owners_exact`'s own doc: "There is no default catalog").
+/// `store::ArtifactStoreCursorDisposer` is the store crate's own canonical full-store close driver
+/// (used the same way by its `#[cfg(test)] demo_closable_store_owners`): it walks every detached
+/// authority — displaced retirements, returned reads, history, metadata, message ledgers,
+/// conflicts, the pending report, every runtime string (applied/redo edit ids, the revision
+/// accumulator, the checkpoint/local-actor ids), the tail/current snapshot roots, the backbone, the
+/// causal DAG, and finally the envelope shell — in the exact order `ArtifactStore::drop`'s witness
+/// checks them.
+fn probe_store_owners() -> store::MemberStoreOwners<ProbeSnapshot, ProbeMutation> {
+    store::MemberStoreOwners::new(Arc::new(ProbeSnapshotRetirementFactory), Arc::new(ProbeInitialSnapshotRetirementFactory), Arc::new(ProbeMutationRetirementFactory), Box::new(store::ArtifactStoreCursorDisposer::<ProbeSnapshot, ProbeMutation>::new()))
+}
+
+/// 🚪️ Drains one `ProbeStore` to `ArtifactStore::drop`'s exact terminal-empty witness before
+/// letting it actually drop — the production teardown a `--folder`/`--hub`-bound `semio-os-mcp`
+/// process needs at shutdown (`HeadlessWorkspace`'s own `Drop`, below) and what every `workspace`/
+/// `artifact` test that opens a real probe now relies on too. `close_owned_step` is bounded per call
+/// (`SpaceMember`'s own contract), so this is a loop to completion, not a single call; a `Blocked`
+/// step means an external owner (e.g. the backbone's shared queue) hasn't released its side yet —
+/// harmless to retry since `ArtifactHost::close` (called by every caller of this function, before
+/// the probe store itself) is what makes that release happen.
+fn close_probe_store_to_terminal(mut probe_store: ProbeStore) {
+    const PROBE_STORE_CLOSE_MAXIMUM_TURNS: usize = 1 << 20;
+    for _ in 0..PROBE_STORE_CLOSE_MAXIMUM_TURNS {
+        match probe_store.close_owned_step(1, 1 << 16) {
+            Ok(store::SnapshotRetirementStep::Complete) => {
+                assert!(probe_store.close_owned_terminal_is_empty(), "probe store close driver reported Complete without its exact terminal-empty witness");
+                return;
+            }
+            Ok(_) => continue,
+            Err(error) => {
+                eprintln!("[probe-store-close] `{}` cannot reach terminal-empty: {error}", "close_probe_store_to_terminal");
+                return;
+            }
+        }
+    }
+    eprintln!("[probe-store-close] `close_probe_store_to_terminal` did not reach terminal-empty within its bounded turn budget");
 }
 //#endregion 🔖️ProbeDocument
 
@@ -338,7 +496,7 @@ pub fn activate_plugin_instance(
     let mut instance = runtime.instantiate_actor(&compiled, actor).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
 
     let open_event = semio_framework::kernel::Event::InstanceOpen {
-        instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", entry.plugin_id, actor_label)),
+        request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: u32::from(plugin_ordinal), request_sequence: 1 },
         app_id: semio_framework::kernel::AppInstanceId(app_ref.app_id.clone()),
         actor: actor_label.to_string(),
         config: Vec::new(),
@@ -560,7 +718,7 @@ impl PluginArtifactChannel {
         let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
             self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
         let event = semio_framework::kernel::Event::InstanceOpen {
-            instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)),
+            request: semio_framework::kernel::ActorInstanceOpenRequest { activation_generation: 1, instance_id: instance, request_sequence: 1 },
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
             actor: self.actor_label.clone(),
             config: Vec::new(),
@@ -611,18 +769,18 @@ impl PluginArtifactChannel {
             }
             let seq = self.next_seq;
             self.next_seq += 1;
-            let command = semio_framework::io::resolve_ready(store::encode_app_command(&real_command)).map_err(|fault| Self::not_wired("encoding AppCommand", fault))?;
+            let command = semio_framework::io::resolve_ready(store::encode_app_command(&real_command)).map_err(|fault| Self::not_wired("encoding AppCommand", format!("{}: {}", fault.code.0, fault.message)))?;
             let envelope = semio_framework::kernel::CommandEnvelope { instance, seq, command };
-            let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| Self::not_wired("reserving command batch", fault))?;
+            let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| Self::not_wired("reserving command batch", format!("{}: {}", fault.code.0, fault.message)))?;
             if let Err((fault, rejected)) = owners.try_push(envelope) {
                 self.rejected_command_builds.insert_admitted(u64::from(instance), semio_framework::kernel::RejectedCommandBuild::new(owners, rejected));
-                return Err(Self::not_wired("admitting command owner", fault));
+                return Err(Self::not_wired("admitting command owner", format!("{}: {}", fault.code.0, fault.message)));
             }
             let batch = match semio_framework::kernel::CommandBatch::try_new(seq, owners) {
                 Ok(batch) => batch,
                 Err((fault, owners)) => {
                     self.rejected_command_builds.insert_admitted(u64::from(instance), semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
-                    return Err(Self::not_wired("admitting command batch", fault));
+                    return Err(Self::not_wired("admitting command batch", format!("{}: {}", fault.code.0, fault.message)));
                 }
             };
             self.pending_command_closes.insert_admitted(u64::from(instance), seq, semio_framework::kernel::CommandBatchDriver::new(seq, batch));
@@ -632,15 +790,15 @@ impl PluginArtifactChannel {
         let event = self
             .pending_command_closes
             .with_driver_mut(u64::from(instance), seq, |driver| driver.next_page())
-            .map_err(|fault| Self::not_wired("retained command driver", fault))?
-            .map_err(|fault| Self::not_wired("command page", fault))?
+            .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
+            .map_err(|fault| Self::not_wired("command page", format!("{}: {}", fault.code.0, fault.message)))?
             .map(|(cursor, bytes)| semio_framework::kernel::Event::CommandIngressPage { cursor, bytes })
             .unwrap_or(semio_framework::kernel::Event::Wake);
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
-        self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", fault))?;
+        self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", format!("{}: {}", fault.code.0, fault.message)))?;
         let turn = match self.runtime.execute_actor_turn(guest, std::slice::from_ref(&event), owned_interactive_budget()) {
             Ok(turn) => {
-                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", fault))?;
+                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 turn
             }
             Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => return Err(Self::budget_fault("AppCommand")),
@@ -651,8 +809,8 @@ impl PluginArtifactChannel {
         let progress = self
             .pending_command_closes
             .with_driver_mut(u64::from(instance), seq, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
-            .map_err(|fault| Self::not_wired("retained command driver", fault))?
-            .map_err(|fault| Self::not_wired("command acknowledgement", fault))?;
+            .map_err(|fault| Self::not_wired("retained command driver", format!("{}: {}", fault.code.0, fault.message)))?
+            .map_err(|fault| Self::not_wired("command acknowledgement", format!("{}: {}", fault.code.0, fault.message)))?;
         for effect in turn.effects {
             if let semio_framework::kernel::Effect::Respond { req, result } = effect {
                 if req.0 != seq {
@@ -663,12 +821,12 @@ impl PluginArtifactChannel {
         }
         match progress {
             semio_framework::kernel::CommandBatchProgress::Complete => {
-                self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", fault))?;
+                self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 let mut pending = self.pending_exchanges.remove(instance).expect("terminal pending exchange");
                 pending.response.take(seq)
             }
             semio_framework::kernel::CommandBatchProgress::Faulted => {
-                self.pending_command_closes.begin_close(u64::from(instance), seq).map_err(|fault| Self::not_wired("faulted command owner", fault))?;
+                self.pending_command_closes.begin_close(u64::from(instance), seq).map_err(|fault| Self::not_wired("faulted command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 let (response_complete, _) = self.pending_exchanges.close_response_step(instance, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                 if !response_complete {
                     return Err(Self::budget_fault("AppCommand fault response cleanup"));
@@ -984,6 +1142,24 @@ pub struct HeadlessWorkspace {
     action_adapter: Mutex<Option<Arc<ActionAdapter>>>,
 }
 
+/// 🚪️ Real teardown for a `--folder`/`--hub`-bound `semio-os-mcp` process (and every test that opens
+/// a real probe): drains every store `open_probes` still owns to `ArtifactStore::drop`'s
+/// terminal-empty witness instead of leaving that to `HashMap`'s own field drop, which would hit the
+/// witness assert with nothing ever drained. `artifact_host.close` runs first for each id so the
+/// backbone's remote side (the actor this workspace itself opened via `ArtifactHost::open`) releases
+/// its shared queue reference before `close_probe_store_to_terminal` needs to `Arc::try_unwrap` it —
+/// the same "release the other side before draining" order `store::sync::ArtifactHost`'s own `Drop`
+/// already follows for its actor runners.
+impl Drop for HeadlessWorkspace {
+    fn drop(&mut self) {
+        let probes = std::mem::take(&mut *self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
+        for (artifact_id, probe_store) in probes {
+            self.artifact_host.close(&artifact_id);
+            close_probe_store_to_terminal(probe_store);
+        }
+    }
+}
+
 impl HeadlessWorkspace {
     fn new(origin: WorkspaceOrigin, principal: String, scopes: Vec<String>, catalog: Arc<Catalog>) -> Self {
         ensure_probe_codec_registered();
@@ -1066,6 +1242,7 @@ impl HeadlessWorkspace {
             None => {
                 let envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
                 let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
+                probe_store.install_member_store_owners_exact(probe_store_owners());
                 let channels = self
                     .artifact_host
                     .open(store::sync::ArtifactActorConfig {
@@ -1080,14 +1257,14 @@ impl HeadlessWorkspace {
                 probe_store
             }
         };
-        if probe_store.applied_edit_ids().await.is_empty() {
+        if probe_store.applied_edit_ids().is_empty() {
             probe_store
                 .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) })
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
         }
-        let applied_edit_ids = probe_store.applied_edit_ids().await;
+        let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
         let revision = RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor: applied_edit_ids.len().to_string() };
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
@@ -1106,12 +1283,13 @@ impl HeadlessWorkspace {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
         let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], description: Some("os.agent headless mutation".to_string()) }).await;
-        let applied_edit_ids = probe_store.applied_edit_ids().await;
+        let applied_edit_ids = probe_store.applied_edit_ids();
+        let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
+        let cursor = applied_edit_ids.len().to_string();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         dispatched.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("applying mutation to `{artifact_id}`: {error}")))?;
         self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
-        let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
-        Ok(RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor: applied_edit_ids.len().to_string() })
+        Ok(RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor })
     }
 
     /// 🧪️ Real `ArtifactStore::undo()` over an open probe document — same scope note as
@@ -1120,7 +1298,7 @@ impl HeadlessWorkspace {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to undo")))?;
         let outcome = probe_store.undo().await;
-        let snapshot = probe_store.snapshot().await;
+        let snapshot = probe_store.snapshot();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("undoing `{artifact_id}`: {error}")))?;
         Ok(snapshot.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}` after undo: {error}")))?.0)
@@ -1132,7 +1310,7 @@ impl HeadlessWorkspace {
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open probe store to redo")))?;
         let outcome = probe_store.redo().await;
-        let snapshot = probe_store.snapshot().await;
+        let snapshot = probe_store.snapshot();
         self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
         outcome.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("redoing `{artifact_id}`: {error}")))?;
         Ok(snapshot.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}` after redo: {error}")))?.0)
@@ -1417,7 +1595,7 @@ impl HeadlessWorkspace {
                 Some(probe_store) => Ok(vec![ResourceContent {
                     uri: uri.to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::json!({ "appliedEditIds": semio_framework::io::resolve_ready(probe_store.applied_edit_ids()) }).to_string()),
+                    text: Some(serde_json::json!({ "appliedEditIds": probe_store.applied_edit_ids() }).to_string()),
                     blob: None,
                 }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
@@ -1813,7 +1991,7 @@ mod long {
             }
         }
         shell_store.tick().await.expect("shell ingests the propagated edit");
-        assert_eq!(shell_store.snapshot().await.expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
+        assert_eq!(shell_store.snapshot().expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
 
         // 🎫️ W3 extension: a SECOND real commit (`apply_probe_mutation`, beyond
         // `ensure_probe_artifact`'s one-shot seed above) propagates too — proving "prepare → commit
@@ -1841,7 +2019,7 @@ mod long {
             }
         }
         shell_store.tick().await.expect("shell ingests the second propagated edit");
-        assert_eq!(shell_store.snapshot().await.expect("shell snapshot").0["revision"], 2, "the shell observes the agent's second real headless commit too");
+        assert_eq!(shell_store.snapshot().expect("shell snapshot").0["revision"], 2, "the shell observes the agent's second real headless commit too");
     }
 
     /// 🎫️ W3: real, honest round trips for all six `PluginArtifactChannel` mutation verbs against

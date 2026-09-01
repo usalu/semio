@@ -13,7 +13,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
@@ -25,8 +24,8 @@ pub const STDIO_SEMIOTEXT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.text";
 //#region 🔖️MarkKind
 /// 🖊️ The closed inline-mark vocabulary this leaf carries — bold/italic/code (flag-only) and link
 /// (carries an `href`). `href` on a non-`Link` mark is always the empty string.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum SemioTextMarkKind {
     #[default]
     Bold,
@@ -39,12 +38,12 @@ pub enum SemioTextMarkKind {
 //#region 🔖️Mark
 /// 🔖️ One inline mark applied to a run. Strong entity, index-addressed within its owning run's
 /// `marks` (an intrinsically ordered, anonymous collection — see `➕add-mark`/`➖remove-mark`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTextMark {
     pub kind: SemioTextMarkKind,
     /// 🔗️ Populated only when `kind == Link`; empty string otherwise.
-    #[serde(default)]
+    #[value(default)]
     pub href: String,
 }
 //#endregion 🔖️Mark
@@ -54,27 +53,27 @@ pub struct SemioTextMark {
 /// authored `content`, and its ordered `marks`. Runs themselves are index-addressed (no stable
 /// id — an intrinsically ordered, anonymous collection, `📓️taxonomy.md` addressing rule #3), the
 /// same shape `insert-run`/`remove-run`/`reorder-runs` operate on.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTextRun {
-    #[serde(default)]
+    #[value(default)]
     pub language: String,
-    #[serde(default)]
+    #[value(default)]
     pub content: String,
-    #[serde(default)]
+    #[value(default)]
     pub marks: Vec<SemioTextMark>,
 }
 //#endregion 🔖️Run
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text")]
 pub struct SemioTextSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub runs: Vec<SemioTextRun>,
 }
 
@@ -337,7 +336,7 @@ impl store::ArtifactPack for SemioTextSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.text` — the shape `mutate-semio-text` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
 /// could drift away from the type it claims to project. A thin `serde_json` wrapper (already a

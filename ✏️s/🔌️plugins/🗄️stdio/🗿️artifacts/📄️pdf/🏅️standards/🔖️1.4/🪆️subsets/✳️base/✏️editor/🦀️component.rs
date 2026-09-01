@@ -20,7 +20,6 @@ use semio_framework_plugin::{
     StandardId, SubsetId,
 };
 use semio_framework_ui_contract::Buildable;
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -34,7 +33,7 @@ pub const PDF14_DIALECT: Dialect = Dialect { artifact_kind: PDF_ARTIFACT_SCHEMA_
 /// ✏️ The editor's typed command channel -- the ONE edit `main`'s `editable_window_kind()` action
 /// (`set-page`, contract §2.6) can trigger. See `main`'s own module doc comment for why this appends
 /// to the page's existing text rather than replacing it (`PdfMutation` has no "replace" primitive).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum Pdf14EditorCommand {
     #[dsl(key = "set-page")]
     SetPage { index: usize, text: String },

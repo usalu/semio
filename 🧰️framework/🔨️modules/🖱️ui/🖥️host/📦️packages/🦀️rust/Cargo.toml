@@ -39,5 +39,11 @@ backend_d3d12 = { path = "../../../🖼️render/🎯️targets/🪟️d3d12/�
 [target.'cfg(target_os = "linux")'.dependencies]
 backend_vulkan = { path = "../../../🖼️render/🎯️targets/🌋️vulkan/📦️packages/🦀️rust", package = "semio-framework-ui-backend-vulkan" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ `backend_webgpu` is a browser-only WebGPU-via-`wasm-bindgen` backend. Excluded from
+# `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too.
+# This crate is the OS product's native desktop windowing host, never embedded inside a shipped
+# plugin component — no s plugin depends on it — and there is no wasip2 `ActiveBackend` here (see
+# `🦀️backend_alias.rs`): a headless component has no platform GPU surface to alias to. Left
+# unresolved for wasip2 deliberately; fixing it is out of this slice's scope.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 backend_webgpu = { path = "../../../🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }

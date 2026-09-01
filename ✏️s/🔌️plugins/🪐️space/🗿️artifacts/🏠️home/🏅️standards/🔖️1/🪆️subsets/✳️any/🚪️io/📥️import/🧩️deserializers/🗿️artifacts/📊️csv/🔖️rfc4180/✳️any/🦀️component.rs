@@ -11,8 +11,8 @@ pub async fn register() {}
 /// this snapshot pair never had.
 pub async fn deserialize(from: &CsvSnapshot) -> Result<SHomeSnapshot, store::TextError> {
     let _ = STDIO_CSV_DOCUMENT_SCHEMA;
-    let value = serde_json::json!({ "hasHeader": from.has_header, "records": from.records });
-    serde_json::from_value(value).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+    let value = dsl::DslValue::object([("hasHeader".to_string(), dsl::ToValue::to_value(&from.has_header)), ("records".to_string(), dsl::ToValue::to_value(&from.records))]);
+    dsl::FromValue::from_value(value).map_err(|e: dsl::ValueError| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
 }
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<SHomeSnapshot, store::TextError> {

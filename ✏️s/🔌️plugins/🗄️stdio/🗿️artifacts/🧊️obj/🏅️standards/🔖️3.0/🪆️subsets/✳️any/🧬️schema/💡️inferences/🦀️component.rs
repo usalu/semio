@@ -8,15 +8,14 @@
 use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::bounds::{compute_obj_bounds, ObjBounds};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an obj snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj.inference")]
 pub struct ObjInference {
     #[derived]

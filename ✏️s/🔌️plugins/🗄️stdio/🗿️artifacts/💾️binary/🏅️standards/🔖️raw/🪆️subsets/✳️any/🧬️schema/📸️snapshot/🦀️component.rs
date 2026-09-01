@@ -2,7 +2,6 @@
 
 use crate::artifacts::binary::STDIO_BINARY_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
@@ -11,14 +10,14 @@ use serde::{Deserialize, Serialize};
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot{snapshot})`),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary")]
 pub struct BinarySnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub bytes: Vec<u8>,
 }

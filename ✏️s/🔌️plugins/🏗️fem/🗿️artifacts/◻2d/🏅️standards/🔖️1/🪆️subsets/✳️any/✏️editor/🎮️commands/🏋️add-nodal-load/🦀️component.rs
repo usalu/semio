@@ -5,7 +5,7 @@ use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::{FemDof, FemLoad, FemLoadCase};
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
@@ -52,7 +52,7 @@ fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-nodal-load")]
 pub struct AddNodalLoad {
     pub node_id: String,

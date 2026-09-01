@@ -9,11 +9,13 @@
 
 use semio_framework::{AppRef, AppRole, ArtifactDialect};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🎚️ One user-pinned default: `dialect × role -> app`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DefaultApp {
     pub dialect: ArtifactDialect,
     pub role: AppRole,
@@ -21,8 +23,9 @@ pub struct DefaultApp {
 }
 
 /// 🎚️ `os.config.opening` — every pinned viewer/editor default, OS-wide.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct OpeningPreferences {
     pub defaults: Vec<DefaultApp>,
 }

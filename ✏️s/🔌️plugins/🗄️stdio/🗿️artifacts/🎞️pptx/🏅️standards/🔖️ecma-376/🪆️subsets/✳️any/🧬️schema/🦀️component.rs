@@ -4,24 +4,23 @@ use crate::artifacts::pptx::schema::snapshot::{PptxPresentation, PptxXmlPart};
 use crate::artifacts::pptx::PptxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Artifact
 /// 🧬️ Full `stdio.pptx` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx")]
 pub struct PptxArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub opc: OpcPackage,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub xml_parts: Vec<PptxXmlPart>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub presentation: PptxPresentation,
 }
 //#endregion Artifact

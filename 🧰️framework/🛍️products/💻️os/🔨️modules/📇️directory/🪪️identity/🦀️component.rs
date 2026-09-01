@@ -128,14 +128,16 @@ mod cache {
 //#endregion 🔖️Cache
 
 //#region 🔖️MintOrRestore
-/// ⏰️ Millisecond wall-clock read, native `SystemTime` / wasm32 `js_sys::Date` — same split
-/// `🏪️store/🔄️sync`'s own `now_ms` already uses.
-#[cfg(not(target_arch = "wasm32"))]
+/// ⏰️ Millisecond wall-clock read: `SystemTime` on native AND `wasm32-wasip2` (WASI's clock backs
+/// it fine), `js_sys::Date` only in the actual browser wasm build — `target_arch = "wasm32"` is TRUE
+/// for wasip2 too, so that arm is narrowed to exclude it. Same split `🏪️store/🔄️sync`'s own
+/// `now_ms` uses.
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 async fn now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 async fn now_ms() -> i64 {
     js_sys::Date::now() as i64
 }

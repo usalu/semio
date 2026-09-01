@@ -17,11 +17,13 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema
     BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
 };
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 pub use crate::artifacts::process3d::schema::mutations::Process3dMutation;
 
 pub use crate::artifacts::process3d::schema::diff::Process3dDiff;
+
+use crate::artifacts::process3d::schema::diff::Process3dToolSolidChildList;
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -35,7 +37,7 @@ pub const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process.proce
 
 //#region 🔖️Workshop
 /// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, dsl::DslScalar)]
 pub enum StockQuantity {
     #[default]
     Width,
@@ -43,6 +45,39 @@ pub enum StockQuantity {
     Height,
     MaxDimension,
     MinDimension,
+}
+
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]`'s enum path only supports
+/// internally-tagged (`#[value(tag = "…")]`) representations, but `StockQuantity` is a plain
+/// unit-only "string enum" — serde's own default (untagged bare-string) representation for an
+/// enum with no `#[serde(...)]` attribute at all — so the wire shape here is just the bare variant
+/// name, matching what `Serialize`/`Deserialize` already produce for this type today.
+impl semio_framework_os_kernel::ToValue for StockQuantity {
+    fn to_value(&self) -> semio_framework_os_kernel::DslValue {
+        let name = match self {
+            StockQuantity::Width => "width",
+            StockQuantity::Depth => "depth",
+            StockQuantity::Height => "height",
+            StockQuantity::MaxDimension => "maxDimension",
+            StockQuantity::MinDimension => "minDimension",
+        };
+        semio_framework_os_kernel::DslValue::String(name.to_string())
+    }
+}
+impl semio_framework_os_kernel::FromValue for StockQuantity {
+    fn from_value(value: semio_framework_os_kernel::DslValue) -> Result<Self, semio_framework_os_kernel::ValueError> {
+        match value {
+            semio_framework_os_kernel::DslValue::String(s) => match s.as_str() {
+                "width" => Ok(StockQuantity::Width),
+                "depth" => Ok(StockQuantity::Depth),
+                "height" => Ok(StockQuantity::Height),
+                "maxDimension" => Ok(StockQuantity::MaxDimension),
+                "minDimension" => Ok(StockQuantity::MinDimension),
+                other => Err(semio_framework_os_kernel::ValueError::new(format!("unknown StockQuantity variant `{other}`"))),
+            },
+            other => Err(semio_framework_os_kernel::ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 
 /// 🪚️ Which kernel geometry effect a capability produces — `ProcessMeasure`'s three shapes are the
@@ -57,8 +92,8 @@ pub enum MeasureKind {
 /// ✅️ "the named stock quantity must be at least/at most the named capability parameter's value (±
 /// margin)" — a capability's rules are ANDed together, e.g. a crosscut capability needs stock width
 /// AND height above the blade diameter.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum CapabilityRule {
     Min {
         quantity: StockQuantity,
@@ -76,8 +111,8 @@ pub enum CapabilityRule {
 
 /// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
 /// referenced by id from the capability's own `MeasureRecipe`/`CapabilityRule`s.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct CapabilityParameter {
     pub id: String,
     pub label: String,
@@ -88,8 +123,8 @@ pub struct CapabilityParameter {
 /// 🪚️ How a capability's parameters build a kernel `ProcessMeasure` — every field names a
 /// `Capability::parameters` entry by id, resolved at measure-build time; `measure_kind()` derives the
 /// fixed Cut/Drill/Attach effect so it never needs to be stored redundantly alongside the recipe.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "recipe", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "recipe", rename_all = "camelCase")]
 pub enum MeasureRecipe {
     /// ✂️ A disc-shaped cut tool sized from a blade `diameter` and `kerf` (tool thickness).
     DiscCut { diameter: String, kerf: String },
@@ -134,16 +169,16 @@ impl dsl::DslField for MeasureRecipe {
 
 /// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
 /// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Capability {
     pub id: String,
     pub label: String,
     pub icon_id: String,
     pub recipe: MeasureRecipe,
-    #[serde(default)]
+    #[value(default)]
     pub parameters: Vec<CapabilityParameter>,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(statements, block)]
     pub rules: Vec<CapabilityRule>,
 }
@@ -151,17 +186,17 @@ pub struct Capability {
 /// 🛠️ A machine in the document's workshop — an embedded snapshot, never a reference; consistent with
 /// `StepOrigin`'s never-resolve invariant (see its doc comment), and robust to catalog drift: editing
 /// or removing an installed catalog can never retroactively change an already-configured workshop.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct WorkshopMachine {
     pub id: String,
     pub label: String,
     pub icon_id: String,
     /// 🏷️ Which installed catalog this snapshot was seeded from — informational only, never resolved
     /// (a machine stays fully usable after its source catalog is uninstalled).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub catalog_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub capabilities: Vec<Capability>,
 }
 
@@ -172,14 +207,14 @@ impl Identified<String> for WorkshopMachine {
 }
 
 /// 🩹️ Sparse edit for a `WorkshopMachine` — `None` fields are left untouched.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct WorkshopMachinePatch {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub capabilities: Option<Vec<Capability>>,
 }
 
@@ -207,10 +242,10 @@ impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
 }
 
 /// 🏭️ The document's configured workshop: the machines available to build steps from.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Workshop {
-    #[serde(default)]
+    #[value(default)]
     pub machines: Vec<WorkshopMachine>,
 }
 
@@ -327,16 +362,16 @@ fn default_true() -> bool {
 }
 
 /// 🧭️ Position + axis-angle rotation applied via the brep kernel's `rotate_sync`/`translate_sync`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Pose {
-    #[serde(default)]
+    #[value(default)]
     #[dsl(coord)]
     pub position: [f64; 3],
-    #[serde(default = "default_axis_z")]
+    #[value(default = "default_axis_z")]
     #[dsl(dir)]
     pub axis: [f64; 3],
-    #[serde(default)]
+    #[value(default)]
     #[dsl(angle = "rad")]
     pub angle: f64,
 }
@@ -351,8 +386,8 @@ impl Default for Pose {
 /// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
 /// workshop entry, so editing or removing the machine/capability can never retroactively change
 /// already-authored geometry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct StepOrigin {
     pub machine_id: String,
     pub capability_id: String,
@@ -374,8 +409,8 @@ pub struct StepOrigin {
 /// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
 /// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
 /// content-addressable `SemioBrepSnapshot` topology.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum WorkingSolid {
     Box {
         width: f64,
@@ -408,8 +443,8 @@ impl Default for WorkingSolid {
 
 /// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
 /// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Stock {
     pub id: String,
     pub label: String,
@@ -427,8 +462,8 @@ impl Default for Stock {
 /// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
 /// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
 /// converter.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "measure", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
     Cut { tool: WorkingSolid, pose: Pose },
@@ -456,14 +491,14 @@ impl ProcessMeasure {
 
 /// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
 /// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ProcessStep {
     pub id: String,
     pub label: String,
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     pub enabled: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub origin: Option<StepOrigin>,
     pub measure: ProcessMeasure,
 }
@@ -475,17 +510,17 @@ impl Identified<String> for ProcessStep {
 }
 
 /// 🩹️ Sparse edit for a `ProcessStep` — `None` fields are left untouched.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ProcessStepPatch {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub enabled: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub measure: Option<ProcessMeasure>,
     /// 🏭️ Outer `Option` = "this patch touches origin"; inner `Option` = the new value (`None` clears it).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub origin: Option<Option<StepOrigin>>,
 }
 
@@ -525,8 +560,8 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
 /// `ChildStoreFactory` seam reaches `ArtifactApp::handle` (checked directly against
 /// `🔌️plugin/🦀️component.rs`, W1-owned, confirmed still absent as of this wave — see
 /// `process_working_scene_from_snapshot`'s own doc comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ProcessWorkingScene {
     pub stock: Stock,
     pub steps: Vec<ProcessStep>,
@@ -830,6 +865,20 @@ pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> Proc
     stock.pose = snapshot.stock_pose.clone();
     ProcessWorkingScene { stock, steps: snapshot.step_payloads.clone() }
 }
+
+/// 🔁 Shared re-mint for every step-scoped mutation (`create`/`delete`/`rename`/`change-step-
+/// enabled`/`change-step-origin`/`replace-step-measure`/`reorder-steps`): given `base` and an
+/// already-edited step list, rebuilds `steps`/`step_payloads`/`tool_solids` by delegating to
+/// `process_working_scene_to_snapshot` — the one place real composed-child content is minted —
+/// so no mutation duplicates that minting logic. `stock`/`workshop`/`resolved_up_to` are carried
+/// through from `base` untouched; callers only ever splice the returned diff's `steps`/
+/// `step_payloads`/`tool_solids` fields into their own `Process3dDiff`.
+pub fn process3d_step_timeline_diff(base: &Process3dSnapshot, new_steps: Vec<ProcessStep>) -> Process3dDiff {
+    let mut scene = process_working_scene_from_snapshot(base);
+    scene.steps = new_steps;
+    let minted = process_working_scene_to_snapshot(&scene, base.workshop.clone(), base.resolved_up_to);
+    Process3dDiff { steps: Some(minted.steps), step_payloads: Some(minted.step_payloads), tool_solids: Some(Process3dToolSolidChildList { values: minted.tool_solids }), ..Default::default() }
+}
 //#endregion 🔖️SceneConverters
 //#endregion 🔖️WorkingScene
 
@@ -906,6 +955,18 @@ mod tests {
     async fn workshop_dsl_round_trips_through_document() {
         let snapshot = Process3dSnapshot { workshop: sample_workshop(), ..empty_process3d_snapshot() };
         store::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    }
+
+    /// 🔤️ `ToValue`/`FromValue` (`semio_framework_value_derive`) over `semio_framework_os_kernel::
+    /// json::{to_json_string, from_json_str}` — the `serde_json::to_string`/`from_str` replacement
+    /// every `process-extension-*` catalog crate's `machinesJson` payload routes through instead
+    /// (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
+    #[semio_framework_async_macros::async_test]
+    async fn workshop_machines_round_trip_through_the_first_party_json_bridge() {
+        let machines = sample_workshop().machines;
+        let text = semio_framework_os_kernel::json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&text).expect("decode");
+        assert_eq!(parsed, machines);
     }
 
     #[semio_framework_async_macros::async_test]

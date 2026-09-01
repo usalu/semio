@@ -1,15 +1,11 @@
-//! ↩️ `create-step` inverse.
-//!
-//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `diff()` is a documented no-op
-//! (see the sibling `🔺️diff/🦀️component.rs`'s doc comment) — nothing changed, so per the
-//! sanctioned `MutationKind::inverse` contract ("a mutation with nothing to undo returns
-//! `Vec::new()`"), there is nothing to invert.
+//! ↩️ `create-step` inverse — undo of a create is always a `delete-step` by the created id.
 
+use crate::artifacts::process3d::mutations::delete_step::DeleteStep;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &super::CreateStep, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
-    Vec::new()
+pub fn inverse(payload: &super::CreateStep, _base: &Process3dSnapshot) -> Vec<Process3dMutation> {
+    vec![Process3dMutation::DeleteStep(DeleteStep { id: payload.step.id.clone() })]
 }
 //#endregion 🔖️Inverse

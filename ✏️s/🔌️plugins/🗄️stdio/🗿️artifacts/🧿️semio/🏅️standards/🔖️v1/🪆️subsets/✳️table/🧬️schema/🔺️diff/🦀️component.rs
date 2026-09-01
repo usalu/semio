@@ -11,13 +11,12 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::split
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ColumnList
 /// 📋 Whole-list wrapper for the `columns` field diff — every mutation triad rebuilds the full
 /// ordered `values` vec from `base` and wraps it here (`SemioTextRunList`'s own shape).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct SemioTableColumnList {
     pub values: Vec<SemioTableColumn>,
 }
@@ -25,23 +24,23 @@ pub struct SemioTableColumnList {
 
 //#region 🔖️RowList
 /// 📋 Whole-list wrapper for the `rows` field diff — same shape as [`SemioTableColumnList`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct SemioTableRowList {
     pub values: Vec<SemioTableRow>,
 }
 //#endregion 🔖️RowList
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table.diff")]
 pub struct SemioTableDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub columns: Option<SemioTableColumnList>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rows: Option<SemioTableRowList>,
 }
 

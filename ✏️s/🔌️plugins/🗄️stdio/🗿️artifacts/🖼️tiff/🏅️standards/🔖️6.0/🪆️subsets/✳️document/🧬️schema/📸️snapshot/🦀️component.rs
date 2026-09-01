@@ -13,13 +13,12 @@
 
 use crate::artifacts::tiff::STDIO_TIFF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region ByteOrder
 /// 🧭️ TIFF6 §2 byte-order mark (`II` little-endian / `MM` big-endian) — governs every
 /// multi-byte field in the file, including every IFD entry's `count`/inline value bytes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum TiffByteOrder {
     #[default]
     LittleEndian,
@@ -31,8 +30,8 @@ pub enum TiffByteOrder {
 /// 🏷️ TIFF6 §2 Table 2 — the 12 real IFD entry field types. Type code 13 (`IFD`) is a later
 /// extension outside the 6.0 core table and is deliberately NOT modeled (decode errors
 /// honestly rather than fabricating a 13th variant this standard doesn't claim).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum TiffFieldType {
     Byte,
     Ascii,
@@ -105,8 +104,8 @@ impl TiffFieldType {
 /// value honestly. Adjacently tagged (`kind`/`value`) rather than internally tagged so these
 /// newtype variants (all of which wrap arrays/strings, not structs) serialize cleanly — same
 /// pattern as `ply`'s `PlyValue`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum TiffValues {
     Byte(Vec<u8>),
     Ascii(String),
@@ -180,8 +179,8 @@ impl TiffValues {
 //#region Tag
 /// 🏷️ One IFD entry — a weak value (whole-value replaced in diffs: `kind`/`values` move
 /// together atomically, never sub-diffed).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffTag {
     pub tag: u16,
     pub kind: TiffFieldType,
@@ -210,12 +209,12 @@ pub struct TiffTag {
 /// `StripOffsets`/`RowsPerStrip`/`StripByteCounts` (TIFF6 §Baseline) backed by real payload rather
 /// than omit them (the pre-2026-08-25 behaviour, which silently discarded a multi-page file's
 /// later pages on every round trip).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct TiffIfd {
-    #[serde(default)]
+    #[value(default)]
     pub entries: Vec<TiffTag>,
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
 }
 //#endregion Ifd
@@ -241,8 +240,8 @@ pub const TAG_TILE_BYTE_COUNTS: u16 = 325;
 /// 🧬️ Complete `stdio.tiff` 6.0 semantic snapshot. `schema` is an identity field, never
 /// diffed. `pixels` is a legitimate `Vec<u8>` exception (decoded raster payload, canonical
 /// 8-bit RGBA — see `⚙️engine` doc); everything else the format defines lives in `ifds`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff")]
 pub struct TiffSnapshot {
     #[state(artifact)]
@@ -250,10 +249,10 @@ pub struct TiffSnapshot {
     #[state(artifact)]
     pub byte_order: TiffByteOrder,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub ifds: Vec<TiffIfd>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
 }
 

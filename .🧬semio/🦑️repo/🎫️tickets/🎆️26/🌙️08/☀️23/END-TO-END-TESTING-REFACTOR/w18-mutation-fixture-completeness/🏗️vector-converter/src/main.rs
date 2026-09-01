@@ -63,10 +63,10 @@ where
         "applied-with-diagnostics"
     };
 
-    write(&target.join("📸️snapshot").join("⬅️before").join("🔣️component.json"), &serde_json::to_value(&before).expect("before re-encodes"));
-    write(&target.join("📸️snapshot").join("➡️after").join("🔣️component.json"), &serde_json::to_value(&produced).expect("after re-encodes"));
-    write(&target.join("🦠️mutation").join("🔣️component.json"), mutation_json);
-    write(&target.join("🔺️diff").join("🔣️component.json"), &serde_json::to_value(outcome.diff()).expect("diff encodes"));
+    write(&target.join("📸️snapshot").join("⬅️before").join("🔣️.json"), &serde_json::to_value(&before).expect("before re-encodes"));
+    write(&target.join("📸️snapshot").join("➡️after").join("🔣️.json"), &serde_json::to_value(&produced).expect("after re-encodes"));
+    write(&target.join("🦠️mutation").join("🔣️.json"), mutation_json);
+    write(&target.join("🔺️diff").join("🔣️.json"), &serde_json::to_value(outcome.diff()).expect("diff encodes"));
     let mut declared = serde_json::Map::new();
     declared.insert("status".to_string(), serde_json::Value::String(status.to_string()));
     if !messages.is_empty() {
@@ -75,7 +75,7 @@ where
             serde_json::Value::Array(messages.iter().map(|(code, level)| serde_json::json!({ "code": code, "level": level })).collect()),
         );
     }
-    write(&target.join("🎯️outcome").join("🔣️component.json"), &serde_json::Value::Object(declared));
+    write(&target.join("🎯️outcome").join("🔣️.json"), &serde_json::Value::Object(declared));
     Ok(status.to_string())
 }
 
@@ -141,9 +141,9 @@ fn main() {
             if !tests.is_dir() {
                 continue;
             }
-            // 🅰️ Flat shape: the fixture IS `🧪️tests/🔣️component.json`. 🅱️ Concrete shape: one
-            // scenario directory holding a single `🔣️component.json`.
-            let flat = tests.join("🔣️component.json");
+            // 🅰️ Flat shape: the fixture IS `🧪️tests/🔣️.json`. 🅱️ Concrete shape: one
+            // scenario directory holding a single `🔣️.json`.
+            let flat = tests.join("🔣️.json");
             let targets: Vec<(PathBuf, PathBuf)> = if flat.is_file() {
                 vec![(flat.clone(), tests.join("direct-behavior"))]
             } else {
@@ -152,7 +152,7 @@ fn main() {
                     .flatten()
                     .flatten()
                     .filter(|entry| entry.path().is_dir())
-                    .map(|entry| (entry.path().join("🔣️component.json"), entry.path()))
+                    .map(|entry| (entry.path().join("🔣️.json"), entry.path()))
                     .filter(|(source, _)| source.is_file())
                     .collect()
             };

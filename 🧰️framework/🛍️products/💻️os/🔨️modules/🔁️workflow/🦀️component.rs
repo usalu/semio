@@ -450,6 +450,20 @@ pub struct WorkflowNode {
     pub outputs: Vec<WorkflowMediaPort>,
 }
 
+/// 🔀️ Hand-written, not derived: `inputs`/`outputs` carry `WorkflowMediaPort.spec: MediaPortSpec`,
+/// a foreign type this crate can't implement `ToValue`/`FromValue` for under the orphan rule (same
+/// reasoning as its hand-crafted `dsl::DslField` above) — routed through the existing serde bridge.
+impl ::semio_framework_os_kernel::ToValue for WorkflowNode {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::to_dsl_value(self).expect("WorkflowNode converts to DslValue infallibly")
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for WorkflowNode {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        ::semio_framework_os_kernel::from_dsl_value(value).map_err(::semio_framework_os_kernel::ValueError::new)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct WorkflowEdge {
@@ -460,6 +474,21 @@ pub struct WorkflowEdge {
     pub target_port_id: String,
     #[dsl(block)]
     pub contract: MediaContract,
+}
+
+/// 🔀️ Hand-written, not derived: `contract: MediaContract` embeds foreign `MediaType`/
+/// `MediaWireFormat`/`MediaForm` types this crate can't implement `ToValue`/`FromValue` for under
+/// the orphan rule (same reasoning as `MediaContract`'s own hand-crafted `dsl::DslField` above) —
+/// routed through the existing serde bridge.
+impl ::semio_framework_os_kernel::ToValue for WorkflowEdge {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::to_dsl_value(self).expect("WorkflowEdge converts to DslValue infallibly")
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for WorkflowEdge {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        ::semio_framework_os_kernel::from_dsl_value(value).map_err(::semio_framework_os_kernel::ValueError::new)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
@@ -739,16 +768,18 @@ pub struct WorkflowParameterFieldSpec {
 
 /// 🎯️ `field_path` names a `ConfigFieldSpec.key` in the target node's app's declared `ConfigSpec` —
 /// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ConfigFieldShape`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct WorkflowParameterBinding {
     pub parameter_id: String,
     pub node_id: String,
     pub field_path: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslEnum)]
 #[serde(tag = "type", rename_all = "lowercase")]
+#[value(tag = "type", rename_all = "lowercase")]
 pub enum WorkflowParameter {
     Numeric {
         id: String,
@@ -1099,8 +1130,22 @@ impl dsl::DslField for WorkflowInput {
     }
 }
 
+/// 🔀️ Hand-written, not derived: `multiplicity: PortMultiplicity` is a foreign type this crate
+/// can't implement `ToValue`/`FromValue` for under the orphan rule (same reasoning as this type's
+/// hand-crafted `dsl::DslField` above) — routed through the existing serde bridge.
+impl ::semio_framework_os_kernel::ToValue for WorkflowInput {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::to_dsl_value(self).expect("WorkflowInput converts to DslValue infallibly")
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for WorkflowInput {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        ::semio_framework_os_kernel::from_dsl_value(value).map_err(::semio_framework_os_kernel::ValueError::new)
+    }
+}
+
 /// 🔗️ Binds a declared [`WorkflowInput`] slot onto one node's in-port.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 pub struct WorkflowInputBinding {
     pub input_id: String,
     pub node_id: String,
@@ -1109,7 +1154,7 @@ pub struct WorkflowInputBinding {
 
 /// 📤️ Names where a node's out-port materializes in the output collection — `path_template` like
 /// `"renders/{node}/{input.stem}.{ext}"` (resolved at run time by W5's `SpaceRunner`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 pub struct WorkflowOutputBinding {
     pub node_id: String,
     pub port_id: String,
@@ -1256,7 +1301,7 @@ pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &Workflo
             next.parameter_bindings.retain(|binding| !(binding.node_id == *node_id && binding.field_path == *field_path));
             next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
-        WorkflowMutation::UpdateNodePorts(UpdateNodePorts) => {
+        WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}) => {
             next.graph = sync_workflow_parameter_ports(&next.graph, &next.parameter_bindings);
         }
         WorkflowMutation::AddInput(AddInput { input }) => next.inputs.push(input.clone()),
@@ -1282,8 +1327,9 @@ pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &Workflo
     next
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum WorkflowDiff {
     #[default]
     Empty,
@@ -1473,7 +1519,7 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
             WorkflowDiff::PatchParameter { parameter_id, parameter } => WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: parameter_id.clone(), parameter: Box::new(parameter.clone()) }),
             WorkflowDiff::BindParameterField { binding } => WorkflowMutation::BindParameterField(BindParameterField { binding: binding.clone() }),
             WorkflowDiff::UnbindParameterField { node_id, field_path } => WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: node_id.clone(), field_path: field_path.clone() }),
-            WorkflowDiff::SyncNodePorts => WorkflowMutation::UpdateNodePorts(UpdateNodePorts),
+            WorkflowDiff::SyncNodePorts => WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}),
             WorkflowDiff::DeclareInput { input } => WorkflowMutation::AddInput(AddInput { input: input.clone() }),
             WorkflowDiff::RemoveInput { input_id } => WorkflowMutation::RemoveInput(RemoveInput { input_id: input_id.clone() }),
             WorkflowDiff::BindInput { binding } => WorkflowMutation::BindInput(BindInput { binding: binding.clone() }),
@@ -1631,6 +1677,21 @@ impl dsl::DslField for RunStatus {
     }
 }
 
+/// 🔀️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` on an enum requires a
+/// `#[value(tag = "…")]` variant wrapper, but this is a plain fieldless scalar (matching its
+/// hand-crafted `dsl::DslField` above) — routed through the existing serde bridge so it stays a
+/// plain string, not a needlessly tag-wrapped object.
+impl ::semio_framework_os_kernel::ToValue for RunStatus {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::to_dsl_value(self).expect("RunStatus converts to DslValue infallibly")
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for RunStatus {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        ::semio_framework_os_kernel::from_dsl_value(value).map_err(::semio_framework_os_kernel::ValueError::new)
+    }
+}
+
 /// 🚦️ Per-node outcome of one run — `Computed` (ran fresh), `CacheHit` (memoized against the prior
 /// sealed run's `RunNodeRecord`), `Failed` (the node's `AppChannelHost` exchange errored).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -1681,14 +1742,28 @@ impl dsl::DslField for RunNodeStatus {
     }
 }
 
+/// 🔀️ Hand-written, not derived: same rationale as `RunStatus`'s impl above — a plain fieldless
+/// scalar, routed through the existing serde bridge instead of a tag-wrapped derive.
+impl ::semio_framework_os_kernel::ToValue for RunNodeStatus {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::to_dsl_value(self).expect("RunNodeStatus converts to DslValue infallibly")
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for RunNodeStatus {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        ::semio_framework_os_kernel::from_dsl_value(value).map_err(::semio_framework_os_kernel::ValueError::new)
+    }
+}
+
 /// 🎬️ Who/what started a run — `Manual` (a dev/CLI invocation; `actor` mirrors `AppCommand::Hello`'s
 /// own actor string) or `Automation` (W6's dispatcher, referencing the triggering `os.automation`
 /// artifact + the event fingerprint that fired it — not built this wave, field carried for forward
 /// compat only). Hand-crafted `dsl::DslField` (`Shape::Record`) mirroring `MediaContract`'s own
 /// tag-plus-optional-fields encoding above — a real Rust sum type stays the API surface; the wire
 /// encoding is just a `kind` discriminator text field plus each variant's own optional columns.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum RunTrigger {
     Manual { actor: String },
     Automation { automation_ref: String, event_fingerprint: String },
@@ -1780,8 +1855,9 @@ impl dsl::DslField for RunTrigger {
 /// plain JSON text sidesteps that risk entirely while staying a lossless round trip. `run::SpaceRunner`
 /// parses it back to `serde_json::Value` when applying the overlay onto a node's config (see
 /// `WorkflowParameterBinding.field_path`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase")]
 pub struct RunParameterValue {
     pub parameter_id: String,
     pub value: String,
@@ -1789,8 +1865,9 @@ pub struct RunParameterValue {
 
 /// 🔑️ One port's fingerprint — reused for both a `RunNodeRecord`'s `input_fingerprints` and
 /// `output_fingerprints` (same shape, different table column on the owning row).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase")]
 pub struct PortFingerprint {
     pub port_id: String,
     pub fingerprint: String,
@@ -1798,8 +1875,9 @@ pub struct PortFingerprint {
 
 /// 📤️ Where one node's out-port materialized in the run's own write-only output area — `path` is
 /// relative to the run's own sink (see `run::RunContext`'s doc), never a source-bundle path.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase")]
 pub struct RunOutputArtifact {
     pub port_id: String,
     pub artifact_id: String,
@@ -1811,8 +1889,9 @@ pub struct RunOutputArtifact {
 /// against the PRIOR sealed run's `node_records`, not a side-channel state file. `duration_ms` is
 /// `f64` (not `u64`): the `dsl` engine's scalar `DslField` impls cover `bool`/`f32`/`f64`/`String`
 /// only, no integer width — see `dsl/rs/lib.rs`'s `impl DslField for f64` and neighbors.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase")]
 pub struct RunNodeRecord {
     pub node_id: String,
     pub status: RunNodeStatus,
@@ -1978,8 +2057,9 @@ pub fn apply_run_operation(document: &RunArtifact, operation: &RunMutation) -> R
     next
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum RunDiff {
     #[default]
     Empty,
@@ -2320,7 +2400,7 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: "p1".into(), parameter: Box::new(WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false }) }));
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField(BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }));
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField(UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }));
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts));
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UpdateNodePorts(UpdateNodePorts {}));
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddInput(AddInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } }));
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput(RemoveInput { input_id: "in-1".into() }));
         store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput(BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }));

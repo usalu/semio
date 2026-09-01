@@ -4,13 +4,12 @@
 
 use crate::artifacts::png::schema::snapshot::PngColorType;
 use crate::artifacts::png::PngSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ PNG IHDR-derived raster geometry. `has_alpha` is exact (PNG's `colorType` is an explicit
 /// enum, §11.2.2) — unlike jpg/bmp/tiff this needs no heuristic.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PngDimensions {
     pub width: u32,
     pub height: u32,

@@ -16,7 +16,6 @@
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 use super::flattened_scene::{DrawFlattenedScene, FlattenedNode};
@@ -24,8 +23,8 @@ use super::flattened_scene::{DrawFlattenedScene, FlattenedNode};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a drawing snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `flattenedScene`, backed by the `🎛flattened-scene/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing.inference")]
 pub struct SemioDrawingInference {
     #[derived]

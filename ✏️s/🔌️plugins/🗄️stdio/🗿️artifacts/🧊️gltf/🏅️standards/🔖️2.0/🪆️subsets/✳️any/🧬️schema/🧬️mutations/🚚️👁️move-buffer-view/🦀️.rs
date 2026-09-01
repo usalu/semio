@@ -1,12 +1,11 @@
 //! 🧬️ Direct move-buffer-view mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level_collections::*;
 pub const ID: &str = "s.stdio.gltf.mutation.move-buffer-view.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/bufferViews"];
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)] #[value(rename_all = "camelCase")]
 pub struct GltfMoveBufferViewPayload { pub index: usize, pub position: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.index >= base.document.buffer_views.len() || payload.position >= base.document.buffer_views.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "indices must address items")); } if payload.index == payload.position { return Err(reject("gltf.mutation.no-observable-change", "document/bufferViews", "destination equals source")); }  Ok(()) }
@@ -14,9 +13,9 @@ pub fn validate(payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Res
 pub fn apply(payload: &GltfMoveBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, Some(payload.position), None)?;  Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveBufferViewMutation {
     Apply(GltfMoveBufferViewPayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

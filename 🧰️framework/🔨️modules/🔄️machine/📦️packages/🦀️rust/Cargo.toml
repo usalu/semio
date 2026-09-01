@@ -34,7 +34,11 @@ semio-framework-dispatch-macros = { path = "../../../🔀️dispatch/📦️pack
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only `WasmHost` (JS timer/effect-callback bridge, `wasm_bridge` mod in `🦀️.rs`).
+# Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component
+# target too. wasip2 doesn't need this bridge: `NativeHost` (same file) is backed by
+# `std::time::Instant`, which WASI's clock supports, so it already serves the component target.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen = "0.2.106"
 js-sys = "0.3.83"
 

@@ -23,7 +23,8 @@ use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
-use serde::{Deserialize, Serialize};
+use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -38,8 +39,8 @@ const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a process3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `stockBounds`/`stepCount`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d.inference")]
 pub struct Process3dInference {
     #[derived]
@@ -95,11 +96,9 @@ impl ArtifactInferrer for crate::artifacts::process3d::standards::v1::subsets::a
 //#endregion 🔖️ArtifactInferrer
 
 //#region 🔖️KernelReplay
-fn hash_value<T: Serialize>(value: &T) -> u64 {
+fn hash_value<T: ToValue>(value: &T) -> u64 {
     let mut hasher = DefaultHasher::new();
-    if let Ok(json) = serde_json::to_string(value) {
-        json.hash(&mut hasher);
-    }
+    semio_framework_os_kernel::json::to_json_string(value).hash(&mut hasher);
     hasher.finish()
 }
 
@@ -147,9 +146,8 @@ impl ProcessKernelReplay {
 fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
     let mut hasher = DefaultHasher::new();
     stock_signature.hash(&mut hasher);
-    if let Ok(json) = serde_json::to_string(steps) {
-        json.hash(&mut hasher);
-    }
+    let value = semio_framework_os_kernel::DslValue::Array(steps.iter().map(|step| ToValue::to_value(*step)).collect());
+    semio_framework_os_kernel::json::to_json_string(&value).hash(&mut hasher);
     hasher.finish()
 }
 

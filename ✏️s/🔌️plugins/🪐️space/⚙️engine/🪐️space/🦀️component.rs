@@ -40,7 +40,6 @@ use semio_framework_plugin::{
     InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowLayout, CLEAR_SELECTION_ACTION_ID,
     INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID,
 };
-use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -130,7 +129,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 /// `selectInstance`/`nodeGraphSelect`/`setMediaNodeSelection`/`setAppInstanceSelection` action builders
 /// every measure/document row used to construct by hand.
 pub(crate) async fn space_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
-    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+    let targets = pack::to_json_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
     s_play_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": S_PLAY_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
 
@@ -1023,7 +1022,16 @@ pub async fn create_space_app() -> App {
     app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
     let mut app = app.workflow("s", "S Studio", "studio");
     for (id, label) in S_STUDIO_EXAMPLES {
-        let json = serde_json::to_string_pretty(&parse_demo_space_document()).expect("serialize demo studio document");
+        // 🚧️ `OsWorkflowArtifactDocument` (= `BackboneDocument<WorkflowSnapshot, WorkflowMutation>`)
+        // is deeply framework-owned (`ArtifactVcs`/`ArtifactCursor`/`Edit`/`Conflict`/...) and only
+        // derives `Serialize` today; routing through the OLD `dsl::to_dsl_value::<T: Serialize>`
+        // bridge (framework-internal, not a new plugin dependency on serde) rather than chasing a
+        // multi-type `ToValue` cascade through framework internals outside this ticket's plugin
+        // batch. Flagged per the fan-out playbook's own note on this bridge: convert `ToValue`
+        // natively once `BackboneDocument`'s field tree gets it (tracked with the in-flight
+        // `Edit<Op>: ToValue` framework work this same tree depends on).
+        let document_value = dsl::to_dsl_value(&parse_demo_space_document().await).expect("serialize demo studio document");
+        let json = pack::json_to_string_pretty(&pack::json_from_dsl_value(&document_value));
         // 📊️ `label` is sourced from `S_STUDIO_EXAMPLES` — no per-locale split is available at the
         // source, so it is genuine runtime data here, not compile-checked native copy.
         app = app.example(*id, LocalizedLabel::data(*label), json, "file-text");
@@ -1201,7 +1209,7 @@ mod tests {
     fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
         let base = SpaceConfig::default();
         let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
-        expected["workflowEngagementInput"] = serde_json::json!("draft");
+        expected["workflowEngagementInput"] = pack::json!("draft");
         let (post, inverse, _) = prepare_space_config(&base, SpaceConfigMutation::SetWorkflowEngagementInput { value: "draft".into() }).expect("bounded config candidate");
         assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
         assert!(matches!(inverse, SpaceConfigMutation::SetWorkflowEngagementInput { value } if value == base.workflow_engagement_input));
@@ -1237,28 +1245,28 @@ mod tests {
 
     impl SpaceRetainedCatalogOracle for SerdeJsonSpaceRetainedCatalogOracle {
         fn summarize(&self, fixture: &str) -> SpaceRetainedCatalogSummary {
-            let document: serde_json::Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
-            let routes = document.get("routes").and_then(serde_json::Value::as_array).expect("routes array");
+            let document: pack::JsonValue = pack::parse_json(fixture).expect("language-neutral retained catalog fixture");
+            let routes = document.get("routes").and_then(pack::JsonValue::as_array).expect("routes array");
             let bounded_ids = routes
                 .iter()
-                .filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded"))
-                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter(|route| route.get("execution").and_then(pack::JsonValue::as_str) == Some("bounded"))
+                .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
-            let batch = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("batch")).count();
+            let batch = routes.iter().filter(|route| route.get("execution").and_then(pack::JsonValue::as_str) == Some("batch")).count();
             let migrated_ids = routes
                 .iter()
-                .filter(|route| route.get("status").and_then(serde_json::Value::as_str) == Some("migrated"))
-                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter(|route| route.get("status").and_then(pack::JsonValue::as_str) == Some("migrated"))
+                .filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
             let host_only_ids = document
                 .get("publicationContracts")
-                .and_then(serde_json::Value::as_array)
+                .and_then(pack::JsonValue::as_array)
                 .expect("publication contracts array")
                 .iter()
-                .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
-                .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter(|contract| contract.get("lanes").and_then(pack::JsonValue::as_array).is_some_and(|lanes| lanes.as_slice() == [pack::JsonValue::String("hostOnly".into())]))
+                .filter_map(|contract| contract.get("toolId").and_then(pack::JsonValue::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
-            let ids = routes.iter().filter_map(|route| route.get("id").and_then(serde_json::Value::as_str)).collect::<std::collections::BTreeSet<_>>();
+            let ids = routes.iter().filter_map(|route| route.get("id").and_then(pack::JsonValue::as_str)).collect::<std::collections::BTreeSet<_>>();
             SpaceRetainedCatalogSummary { routes: routes.len(), bounded: bounded_ids.len(), batch, migrated: migrated_ids.len(), unique: ids.len() == routes.len(), bounded_ids, migrated_ids, host_only_ids }
         }
     }
@@ -1343,7 +1351,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn commit_checkpoint_round_trips_projection() {
         use crate::engine::space::commands::spawn_app;
-        use serde_json::json;
         testkit::seed_draw_plugin();
         let mut app = VcsArtifactApp::new(SpaceApp::default());
         app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: testkit::test_surface_id("draw"), x: 80.0, y: 80.0 }), &plugin_testkit::meta("local")).expect("spawn");
@@ -1355,7 +1362,6 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn checkout_checkpoint_restores_projection() {
         use crate::engine::space::commands::spawn_app;
-        use serde_json::json;
         testkit::seed_draw_plugin();
         let mut app = VcsArtifactApp::new(SpaceApp::default());
         let before = app.snapshot().expect("projection").graph.nodes.len();
@@ -1435,10 +1441,10 @@ mod tests {
         let config = SpaceConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let _app = SpaceApp::default();
-        let catalogue_json = serde_json::to_string(&SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg)).unwrap();
+        let catalogue_json = pack::to_json_string(&SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg));
         assert!(catalogue_json.contains("\"Apps\""));
 
-        let parameters_json = serde_json::to_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
+        let parameters_json = pack::to_json_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg));
         assert!(parameters_json.contains("Add Parameter"));
         assert!(parameters_json.contains("\"Name\""));
         assert!(parameters_json.contains("\"Remove\""));
@@ -1453,12 +1459,12 @@ mod tests {
         let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
         let cfg = ConfigView { snapshot: &config };
         let _app = SpaceApp::default();
-        let parameters_json = serde_json::to_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg)).unwrap();
+        let parameters_json = pack::to_json_string(&SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg));
         assert!(parameters_json.contains("Parameter hinzufügen"));
         assert!(parameters_json.contains("\"Entfernen\""));
         assert!(!parameters_json.contains("Add Parameter"));
 
-        let inspector_json = serde_json::to_string(&SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg)).unwrap();
+        let inspector_json = pack::to_json_string(&SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg));
         assert!(inspector_json.contains("Wähle Workflow-Knoten im Arbeitsbereich aus."));
     }
 

@@ -21,4 +21,7 @@ trace = []
 
 [dependencies]
 semio-framework-os-kernel = { workspace = true }
+# 🔢️ `⚙️engine`, mounted into this crate via `#[path]`, content-addresses its cache keys with
+# `semio_framework_hash::hash` — the dep travels with that mount.
+semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 serde = { workspace = true }

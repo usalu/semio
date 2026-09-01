@@ -4,13 +4,13 @@ use crate::artifacts::fem3d::{Fem3dSnapshot, FemCombination};
 use crate::artifacts::fem3d::diff::{Fem3dCombinationsDelta, Fem3dDiff};
 use crate::artifacts::fem3d::mutations::{Fem3dMutation, delete_combination};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🌱️ Brings a new [`FemCombination`] into existence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-combination")]
 pub struct CreateCombination {
     pub combination: FemCombination,

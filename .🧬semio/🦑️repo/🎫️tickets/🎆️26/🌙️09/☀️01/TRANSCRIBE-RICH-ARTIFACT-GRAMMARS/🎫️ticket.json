@@ -1,0 +1,11 @@
+{
+  "title": "Transcribe Rich Artifact Grammars",
+  "emoji": "📜️",
+  "status": "closed",
+  "description": "Transcribe the 27 rich mutation and snapshot component.grammar.semio grammars under ✏️s/🔌️plugins into equivalent sibling 🅰️component.g4 (ANTLR4) and 🔤️component.ebnf (ISO-14977) grammars. Preserve the current correct identities, add or extend conformance coverage for these representations if an appropriate harness exists, and verify the affected grammar facets.",
+  "summary": "Audited the 27 requested hand-crafted grammar facets. Their 54 ANTLR4 and ISO-14977 mirrors were already present in the checkout; a language-agnostic coverage and identity audit found zero failures. Confirmed M5 correctly validates only normative component.grammar.semio files. The M5 invocation was blocked on shared Cargo locks before execution and was cancelled, so no M5 result is claimed.",
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪bbf99c1d71b74866bbebbd68d933c513"
+  ]
+}

@@ -24,9 +24,8 @@ async fn duplicate_nodes(source_ids: Vec<String>, projection: &WorkflowSnapshot)
 
 //#endregion 🔖️DuplicateAndPaste
 
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "paste-app-instance")]
 pub struct PasteAppInstance {}
 

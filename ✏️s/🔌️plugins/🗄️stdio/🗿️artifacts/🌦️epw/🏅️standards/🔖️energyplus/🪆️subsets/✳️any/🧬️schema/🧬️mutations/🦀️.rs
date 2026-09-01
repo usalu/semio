@@ -8,7 +8,6 @@ use crate::artifacts::epw::standards::energyplus::subsets::any::schema::diff::{
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.epw`.
@@ -45,8 +44,8 @@ pub mod set_record_field;
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EpwSnapshot, diff = EpwDiff, schema = "EpwMutation")]
 pub enum EpwMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

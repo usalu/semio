@@ -1,7 +1,6 @@
 //! 🧬️ Transparent XmlMutation aggregate.
 use crate::artifacts::xml::schema::diff::XmlDiff;
 use crate::artifacts::xml::XmlSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
 pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
@@ -11,8 +10,8 @@ pub use super::set_attribute::{SetAttributeMutation, SetAttributePayload};
 pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "s.stdio.xml")]
 pub enum XmlMutation {
     SetDeclaration(SetDeclarationMutation),

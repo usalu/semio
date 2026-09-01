@@ -1,7 +1,8 @@
 //! 📐️ FEM 2D artifact — document entities (constitutional: general).
 
 use crate::model::Dof;
-use serde::{Deserialize, Serialize};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
@@ -16,8 +17,8 @@ pub const FEM2D_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_
 
 // #region 🔖️Document
 /// 📍️ A structural node in plan (x, y in meters).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemNode {
     pub id: String,
     #[dsl(unit = "m")]
@@ -34,7 +35,7 @@ pub struct FemNode {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemDof` used to be a byte-identical
 /// second copy of this exact enum; it now re-exports this one (`crate::artifacts::fem2d::FemDof`)
 /// instead — see `🗿️artifacts/🧊️3d/🦀️component.rs`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
 pub enum FemDof {
     #[dsl(key = "Tx")]
     Tx,
@@ -48,6 +49,40 @@ pub enum FemDof {
     Ry,
     #[dsl(key = "Rz")]
     Rz,
+}
+
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]`'s enum path only supports
+/// internally-tagged (`#[value(tag = "…")]`) representations, but `FemDof` is a plain unit-only
+/// "string enum" — the value codec's untagged bare-string representation for an enum with no
+/// `#[value(...)]` attribute at all — so the wire shape here is just the bare variant name.
+impl ToValue for FemDof {
+    fn to_value(&self) -> DslValue {
+        let name = match self {
+            FemDof::Tx => "Tx",
+            FemDof::Ty => "Ty",
+            FemDof::Tz => "Tz",
+            FemDof::Rx => "Rx",
+            FemDof::Ry => "Ry",
+            FemDof::Rz => "Rz",
+        };
+        DslValue::String(name.to_string())
+    }
+}
+impl FromValue for FemDof {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => match s.as_str() {
+                "Tx" => Ok(FemDof::Tx),
+                "Ty" => Ok(FemDof::Ty),
+                "Tz" => Ok(FemDof::Tz),
+                "Rx" => Ok(FemDof::Rx),
+                "Ry" => Ok(FemDof::Ry),
+                "Rz" => Ok(FemDof::Rz),
+                other => Err(ValueError::new(format!("unknown FemDof variant `{other}`"))),
+            },
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
 }
 
 impl FemDof {
@@ -81,12 +116,12 @@ impl From<Dof> for FemDof {
 }
 
 /// 🔩️ A 2-node structural member — axial-only `Bar` or axial+bending `Beam`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Beam { id: String, start: String, end: String, material_id: String, section_id: String },
 }
 
@@ -99,8 +134,8 @@ pub fn element_id(element: &FemElement) -> &str {
 
 /// 🧱️ An isotropic material — Young's modulus `e` in Pascals, Poisson's ratio `nu`, density `rho`
 /// in kg/m³ (the latter two required for continuum `FemRegion` elements and self-weight).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemMaterial {
     pub id: String,
     pub name: String,
@@ -112,8 +147,8 @@ pub struct FemMaterial {
 }
 
 /// 📏️ A cross-section — area in m², strong-axis moment of inertia `iy` in m⁴.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemSection {
     pub id: String,
     pub name: String,
@@ -124,8 +159,8 @@ pub struct FemSection {
 }
 
 /// 🔒️ A support: the subset of a node's DOFs restrained to zero displacement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemSupport {
     pub id: String,
     pub node_id: String,
@@ -134,14 +169,14 @@ pub struct FemSupport {
 
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL, or a normal pressure (Pa) over a
 /// meshed `FemRegion`, simplified as a uniform global `-Y` nodal load (see `area_load_nodal_loads`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Nodal { id: String, node_id: String, dof: FemDof, value: f64 },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64 },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Area { id: String, region_id: String, pressure: f64 },
 }
 
@@ -153,8 +188,8 @@ pub fn load_id(load: &FemLoad) -> &str {
 }
 
 /// 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemLoadCase {
     pub id: String,
     pub name: String,
@@ -165,8 +200,8 @@ pub struct FemLoadCase {
 
 /// 🟩️ A meshed continuum region — a polygon (with optional holes) filled with `Tri3Cst` elements at
 /// solve time (see `crate::fem2d_engine::meshing::build_nodes_and_elements`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemRegion {
     pub id: String,
     pub name: String,
@@ -180,16 +215,16 @@ pub struct FemRegion {
 /// 🔗️ One combination term — a referenced load case (or nested combination) id and its scale
 /// factor. A named record instead of a bare `(String, f64)` tuple: the DSL engine's `DslField`
 /// binding has no impl for raw Rust tuples, only for named types deriving `DslRecord`/`DslScalar`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemCombinationTerm {
     pub case_id: String,
     pub factor: f64,
 }
 
 /// 🧮️ A linear combination of load cases — terms superposed by `fem2d_solve_all`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemCombination {
     pub id: String,
     pub name: String,
@@ -205,8 +240,8 @@ pub struct FemCombination {
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4): `fem3d`'s `FemAnalysisSettings` used to be a
 /// byte-identical second copy of this exact struct; it now re-exports this one
 /// (`crate::artifacts::fem2d::FemAnalysisSettings`) instead — see `🗿️artifacts/🧊️3d/🦀️component.rs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
     pub modal_count: usize,
     pub buckling_count: usize,
@@ -220,8 +255,8 @@ impl Default for FemAnalysisSettings {
 }
 
 /// 🎥️ The canvas camera (pan/zoom) for the plugin viewport.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemCamera {
     pub x: f64,
     pub y: f64,

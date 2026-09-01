@@ -2,33 +2,32 @@
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfIndirectObject, PdfInfo, PdfPage, PdfSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🏅️ConformanceSupport
 #[path = "🏅️conformance-support/🦀️component.rs"]
 pub mod conformance_support;
 //#endregion 🏅️ConformanceSupport
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub declared_version: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pages: Vec<PdfPage>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub info: PdfInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub objects: Vec<PdfIndirectObject>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trailer: Vec<PdfDictEntry>,
 }
 

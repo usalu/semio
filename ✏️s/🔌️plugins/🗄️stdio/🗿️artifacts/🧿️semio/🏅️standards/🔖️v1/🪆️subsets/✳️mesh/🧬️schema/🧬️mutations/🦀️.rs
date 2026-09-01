@@ -69,7 +69,6 @@ use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{Se
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `✳️brep`/`✳️flow`'s own facets document).
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::change_material_base_color;
@@ -97,7 +96,7 @@ use super::set_primitive_topology;
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +
 /// base-color/metallic/roughness, texture lifecycle + mime/bytes, then the one scalar reposition
 /// (`move-vertex`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioMeshSnapshot, diff = SemioMeshDiff, schema = "s.stdio.semio.mesh")]
 pub enum SemioMeshMutation {
     CreateMesh(create_mesh::CreateMesh),
@@ -167,7 +166,7 @@ pub fn inverse_semio_mesh_mutation(mutation: &SemioMeshMutation, base: &SemioMes
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioMeshMutation`]. `create-primitive`'s payload embeds a whole `MeshPrimitive`, so decoding it from the committed
 /// vector is the only way the adapter can exercise that kind without restating every coordinate.

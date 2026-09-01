@@ -7,12 +7,11 @@
 //! `InferredField` needed.
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::Mp4Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ mp4's per-track `stts`-derived container duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Duration {
     pub duration_seconds: f64,
     pub track_count: u32,

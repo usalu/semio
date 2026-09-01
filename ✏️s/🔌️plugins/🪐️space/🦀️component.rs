@@ -51,7 +51,7 @@ pub async fn ensure_space_fixtures_registered() {
     static FIXTURES: LazyLock<()> = LazyLock::new(|| {
         // 🩹️ draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::ArtifactDsl`);
         // this registry is still JSON-shaped (framework/product/os hasn't migrated yet), so
-        // `materialize_os_app_instance_document_json`'s `serde_json::from_str` will fall back to
+        // `materialize_os_app_instance_document_json`'s `pack::from_json_str` will fall back to
         // `json!({})` for these two slugs until then. Non-fatal: seed content is a convenience default,
         // not required for correctness.
         register_os_fixture_json("🖍️semio.draw.json", include_str!("../🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"));

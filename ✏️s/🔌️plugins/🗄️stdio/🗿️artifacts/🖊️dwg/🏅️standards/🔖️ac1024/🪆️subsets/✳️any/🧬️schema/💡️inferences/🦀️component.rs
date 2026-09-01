@@ -15,15 +15,14 @@
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::structure::{compute_dwg_structure, DwgStructure};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an ac1024 dwg snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `structure`, backed by the `🗂structure/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg.inference")]
 pub struct DwgInference {
     #[derived]

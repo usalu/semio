@@ -8,7 +8,7 @@
 use crate::artifacts::fem3d::diff::Fem3dDiff;
 use crate::artifacts::fem3d::Fem3dSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 📖️SemioGrammar
@@ -25,8 +25,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 /// replace is not an in-history mutation at all (routed through `ArtifactStore::reset` /
 /// `Effect::LoadDocument`, see `Fem3dPlayApp::whole_document_operation` returning `None` now and
 /// `editor::fem3d::reset_document_effect`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Fem3dSnapshot, diff = Fem3dDiff, schema = "fem.fem3d")]
 pub enum Fem3dMutation {
     CreateNode(create_node::mutation::CreateNode),
@@ -503,7 +503,7 @@ pub const KINDS: &[&str] = &[
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///
 /// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
-/// no `serde`, no `serde_json` and no `protocol` is reachable from an adapter, and this crate's
+/// no third-party codec or `protocol` is reachable from an adapter, and this crate's
 /// `protocol`/`store` extern-crate aliases are private — so neither `Fem3dMutation` nor
 /// `Fem3dSnapshot` can be named there, and hand-transcribing either into a Rust literal
 /// would be a second copy of the committed specification vector, free to drift away from it. This
@@ -518,12 +518,12 @@ pub const KINDS: &[&str] = &[
 /// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Fem3dSnapshot, String> {
-        let decoded: Fem3dSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: Fem3dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: Fem3dMutation = dsl::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <Fem3dMutation as Mutation<Fem3dSnapshot>>::inverse(&mutation, &base);
@@ -533,17 +533,17 @@ pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
         let outcome = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
-    });
-    Ok(report.to_string())
+    let report = dsl::DslValue::object([
+    ("base".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&base))),
+    ("expectedSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&expected))),
+    ("snapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&applied))),
+    ("diff".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.diff()))),
+    ("messages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(forward.messages()))),
+    ("inverseSteps".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse))),
+    ("inverseSnapshot".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&undone))),
+    ("inverseMessages".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&inverse_messages))),
+    ]);
+    Ok(dsl::json::to_json_string(&report))
 }
 //#endregion 🌉️TestBridge
 

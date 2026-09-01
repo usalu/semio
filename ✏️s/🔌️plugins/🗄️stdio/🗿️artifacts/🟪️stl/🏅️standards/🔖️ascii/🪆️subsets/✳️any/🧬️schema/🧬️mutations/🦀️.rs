@@ -30,7 +30,6 @@ use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::StlSnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.stl`.
@@ -51,9 +50,9 @@ pub mod set_triangle_vertices;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StlSnapshot, diff = StlDiff, schema = "StlMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StlMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetSolidName(set_solid_name::SetSolidName),

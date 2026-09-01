@@ -1,12 +1,11 @@
 //! 🧮️ Trinity Jack app — view-state config + config operations.
 
 use crate::artifacts::jack::Camera;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct JackEditorSelection {
     pub start: u64,
     pub end: u64,
@@ -17,8 +16,8 @@ pub struct JackEditorSelection {
 /// `nodeGraphViewport`), the active fixture/example id, the jack query draft + its last result, the
 /// three engagement-input drafts, the reorganize epoch, the editor's text selection, the per-window
 /// LOD mode, a completion-request revision counter, and the BCP-47 locale tag.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jackcfg")]
 #[dsl(layout = "lines")]
 pub struct JackConfig {
@@ -108,7 +107,7 @@ store::impl_whole_record_config!(JackConfig);
 /// inherent to the "backwards restores a full prior snapshot" design (mirrors `RewriteConfigMutation`
 /// and `shooting_op::ShootingConfigMutation`) — boxing it would perturb the `#[dsl(block)]` wire
 /// shape for no behavioral gain, so the size lint is silenced instead of restructuring the type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 #[allow(clippy::large_enum_variant)]
 pub enum JackConfigMutation {
     #[dsl(key = "snapshot")]

@@ -7,12 +7,11 @@
 //! `graph`'s own whole-graph topology facets reach for their own graphs).
 
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Census
 /// 🌳️ Semio value graph variant census.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioValueCensus {
     pub null_count: u32,
     pub bool_count: u32,

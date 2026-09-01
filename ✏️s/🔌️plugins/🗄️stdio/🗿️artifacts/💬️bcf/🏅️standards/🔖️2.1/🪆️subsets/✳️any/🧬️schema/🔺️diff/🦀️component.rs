@@ -15,22 +15,21 @@ use crate::artifacts::bcf::BcfSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️GenericNamedEngine
 /// 🏷️ Name/key-keyed collection triple, generic over key `K`, item `T`, and per-field diff `D`.
 /// `added` carries the full item (which already contains its own key). Mirrors docx's
 /// `NamedTripleDiff` verbatim (see that module's doc comment for the `bound(...)` rationale — a
-/// known serde_derive limitation where `#[serde(default)]` on a `Vec<T>` field spuriously infers
+/// known serde_derive limitation where `#[value(default)]` on a `Vec<T>` field spuriously infers
 /// `T: Default`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "K: Serialize, D: Serialize, T: Serialize", deserialize = "K: Deserialize<'de>, D: Deserialize<'de>, T: Deserialize<'de>"))]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<K>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<NamedModified<K, D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<T>,
 }
 
@@ -40,8 +39,8 @@ impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedModified<K, D> {
     pub key: K,
     pub diff: D,
@@ -224,18 +223,18 @@ pub type BcfPartsDiff = NamedTripleDiff<String, BcfPartDiff, BcfRawPart>;
 /// (that sweep found "0 enums" only because it greps for `pub enum` declared IN the diff file
 /// itself; `BcfCamera` lives in the snapshot module and is reached via `BcfViewpointDiff`).
 /// `DiffCodec` is hand-rolled below.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.diff")]
 pub struct BcfDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub topics: Option<BcfTopicsDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub parts: Option<BcfPartsDiff>,
 }
 
@@ -243,61 +242,61 @@ pub struct BcfDiff {
 /// `creation_author` are scalar patches; `labels` is whole-value replaced (not itself a keyed
 /// collection per the completeness target); `comments`/`viewpoints` are recursive guid-keyed
 /// triples.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfTopicDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub status: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub priority: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub labels: Option<Vec<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub creation_date: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub creation_author: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub comments: Option<BcfCommentsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub viewpoints: Option<BcfViewpointsDiff>,
 }
 
 /// 🔺️ Per-comment sparse diff. `viewpoint_ref` is tri-state (`Some(None)` = reference cleared).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfCommentDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub date: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub viewpoint_ref: Option<Option<String>>,
 }
 
 /// 🔺️ Per-viewpoint sparse diff. `camera`/`components`/`snapshot` are all weak (whole-value
 /// replaced, per the recipe — never sub-diffed) and tri-state nullable.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfViewpointDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub camera: Option<Option<BcfCamera>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<Option<BcfComponents>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub snapshot: Option<Option<Vec<u8>>>,
 }
 
 /// 🔺️ Per-raw-part sparse diff — `name` is the key, so only `data` can change.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfPartDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<u8>>,
 }
 //#endregion 🔖️DiffTypes

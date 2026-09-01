@@ -378,7 +378,8 @@ impl CompressionCodec for NoCompression {
 //#endregion 🔖️Codec
 
 //#region 🔖️Deflate
-/// @emoji 🗜️ Deflate compression (via `miniz_oxide`) as a `CodecId(1)` `CompressionCodec`.
+/// @emoji 🗜️ Deflate compression (first-party `semio-framework-deflate`, RFC 1951 raw DEFLATE) as
+/// a `CodecId(1)` `CompressionCodec`.
 #[cfg(feature = "deflate")]
 pub struct DeflateCodec;
 
@@ -386,7 +387,7 @@ pub struct DeflateCodec;
 pub fn deflate_compress(raw: &[u8]) -> Result<Vec<u8>, PackError> {
     #[cfg(feature = "deflate")]
     {
-        Ok(miniz_oxide::deflate::compress_to_vec(raw, 6))
+        Ok(semio_framework_deflate::deflate(raw))
     }
     #[cfg(not(feature = "deflate"))]
     {
@@ -401,7 +402,7 @@ pub fn deflate_decompress(stored: &[u8], raw_len: u64, limit: u64) -> Result<Vec
     }
     #[cfg(feature = "deflate")]
     {
-        let out = miniz_oxide::inflate::decompress_to_vec_with_limit(stored, raw_len as usize).map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
+        let out = semio_framework_deflate::inflate(stored, raw_len as usize).map_err(|_| PackError::Malformed { what: "deflate", offset: 0, detail: "decompression failed".to_string() })?;
         if out.len() as u64 != raw_len {
             return Err(PackError::Malformed { what: "deflate", offset: 0, detail: "decompressed length mismatch".to_string() });
         }
@@ -425,7 +426,7 @@ pub enum DeflateRetainedStep {
 /// 🧵️ Incremental raw-DEFLATE decoder with exact producer handback and one output byte per grant.
 #[cfg(feature = "deflate")]
 pub struct DeflateRetainedCursor {
-    state: Option<Box<miniz_oxide::inflate::stream::InflateState>>,
+    inflater: Option<semio_framework_deflate::Inflater>,
     pending: Option<u8>,
     expected: u64,
     produced: u64,
@@ -438,7 +439,7 @@ impl DeflateRetainedCursor {
         if expected > limit {
             return Err(PackError::LimitExceeded("retained deflate raw length exceeds limit"));
         }
-        Ok(Self { state: Some(miniz_oxide::inflate::stream::InflateState::new_boxed(miniz_oxide::DataFormat::Raw)), pending: None, expected, produced: 0, complete: false })
+        Ok(Self { inflater: Some(semio_framework_deflate::Inflater::new()), pending: None, expected, produced: 0, complete: false })
     }
 
     pub fn admit_byte(&mut self, byte: u8) -> Result<(), u8> {
@@ -453,35 +454,24 @@ impl DeflateRetainedCursor {
         if self.complete {
             return Ok(DeflateRetainedStep::Complete);
         }
-        let input = self.pending.as_ref().map(std::slice::from_ref).unwrap_or(&[]);
-        let mut output = [0u8; 1];
-        let result = miniz_oxide::inflate::stream::inflate(
-            self.state.as_mut().ok_or(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decoder is closed".into() })?,
-            input,
-            &mut output,
-            if input_complete { miniz_oxide::MZFlush::Finish } else { miniz_oxide::MZFlush::None },
-        );
-        if result.bytes_consumed == 1 {
-            self.pending = None;
-        }
-        if result.bytes_written == 1 {
-            self.produced = self.produced.checked_add(1).ok_or(PackError::LimitExceeded("retained deflate output overflow"))?;
-            if self.produced > self.expected {
-                return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length".into() });
+        let inflater = self.inflater.as_mut().ok_or(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decoder is closed".into() })?;
+        match inflater.advance(&mut self.pending, input_complete) {
+            Ok(semio_framework_deflate::InflateOutcome::Wrote(byte)) => {
+                self.produced = self.produced.checked_add(1).ok_or(PackError::LimitExceeded("retained deflate output overflow"))?;
+                if self.produced > self.expected {
+                    return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length exceeds declared raw length".into() });
+                }
+                Ok(DeflateRetainedStep::Byte(byte))
             }
-            return Ok(DeflateRetainedStep::Byte(output[0]));
-        }
-        match result.status {
-            Ok(miniz_oxide::MZStatus::StreamEnd) => {
+            Ok(semio_framework_deflate::InflateOutcome::Done) => {
                 if self.pending.is_some() || self.produced != self.expected {
                     return Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "decompressed length mismatch or trailing input".into() });
                 }
                 self.complete = true;
                 Ok(DeflateRetainedStep::Complete)
             }
-            Ok(_) if self.pending.is_none() && !input_complete => Ok(DeflateRetainedStep::NeedInput),
-            Err(miniz_oxide::MZError::Buf) if self.pending.is_none() && !input_complete => Ok(DeflateRetainedStep::NeedInput),
-            _ => Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed".into() }),
+            Ok(semio_framework_deflate::InflateOutcome::NeedInput) => Ok(DeflateRetainedStep::NeedInput),
+            Err(_) => Err(PackError::Malformed { what: "deflate", offset: self.produced, detail: "incremental decompression failed".into() }),
         }
     }
 
@@ -490,13 +480,13 @@ impl DeflateRetainedCursor {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete && self.pending.is_none() && self.state.is_none()
+        self.complete && self.pending.is_none() && self.inflater.is_none()
     }
 
     pub fn close(&mut self) {
         self.pending = None;
         self.complete = true;
-        self.state = None;
+        self.inflater = None;
     }
 }
 

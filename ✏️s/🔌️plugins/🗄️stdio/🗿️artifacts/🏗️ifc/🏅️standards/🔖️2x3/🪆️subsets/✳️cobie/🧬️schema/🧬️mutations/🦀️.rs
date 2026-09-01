@@ -35,7 +35,6 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 use crate::artifacts::step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
@@ -65,8 +64,8 @@ const STOREY: &str = "IFCBUILDINGSTOREY";
 const TYPE_ASSIGNMENT: &str = "IFCRELDEFINESBYTYPE";
 
 /// 🏠️ One COBie Space sheet row.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CobieSpaceRow {
     pub global_id: String,
     pub name: String,
@@ -77,8 +76,8 @@ pub struct CobieSpaceRow {
 
 /// 🔗️ One COBie Type sheet linkage: an `IfcRelDefinesByType` relating maintainable products to a
 /// real `IFC*TYPE`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CobieTypeAssignment {
     pub global_id: String,
     pub owner_history: Option<u64>,
@@ -104,7 +103,7 @@ pub mod set_type_assignment;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3CobieMutation")]
 pub enum Ifc2x3CobieMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

@@ -134,14 +134,15 @@ async fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, Str
 //#endregion 🔖️Tokenizer
 
 //#region 🔖️GraphCodec
-/// 🕸️ Whole-`MathematicalGraph` text form (used by `replace-graph`) — a quoted JSON string
-/// (`MathematicalGraph` already derives `Serialize`/`Deserialize`) rather than a second handcrafted
-/// graph grammar; `enc_str`/`dec_str`'s backslash/quote escaping round-trips it byte-for-byte.
+/// 🕸️ Whole-`MathematicalGraph` text form (used by `replace-graph`) — a quoted first-party JSON
+/// string (`pack::json::to_json_string`/`from_json_str`, over `MathematicalGraph`'s own
+/// `ToValue`/`FromValue`) rather than a second handcrafted graph grammar; `enc_str`/`dec_str`'s
+/// backslash/quote escaping round-trips it byte-for-byte.
 async fn enc_graph(graph: &MathematicalGraph) -> String {
-    enc_str(&serde_json::to_string(graph).expect("MathematicalGraph always serializes"))
+    enc_str(&pack::json::to_json_string(graph))
 }
 async fn dec_graph(s: &str) -> Result<MathematicalGraph, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+    pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️GraphCodec
 

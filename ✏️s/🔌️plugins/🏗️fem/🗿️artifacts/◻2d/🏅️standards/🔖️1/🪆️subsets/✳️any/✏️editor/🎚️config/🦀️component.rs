@@ -7,7 +7,7 @@
 
 use crate::artifacts::fem2d::FemCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // #region 🔖️Config
 /// 🧮️ B1: fem2d's real `ArtifactEditor::Config` — the pure-trait pilot's config artifact. Absorbs both
@@ -15,8 +15,8 @@ use serde::{Deserialize, Serialize};
 /// `ViewModel` used to carry into label resolution — session-only view state now round-trips through
 /// the config `ArtifactStore` exactly like document content, with a real `backwards` per
 /// [`Fem2dConfigMutation`] instead of never being VCS'd at all.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "fem2dcfg")]
 #[dsl(layout = "lines")]
 pub struct Fem2dConfig {
@@ -99,7 +99,8 @@ store::impl_whole_record_config!(Fem2dConfig);
 /// it". `Mutation::Diff` is the WHOLE `Fem2dConfig` (not a granular patch type): `diff()` returns "the
 /// full config after this op", and `store::impl_whole_record_config!` supplies the
 /// `MutationDiff<Fem2dConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(tag = "kind")]
 pub enum Fem2dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

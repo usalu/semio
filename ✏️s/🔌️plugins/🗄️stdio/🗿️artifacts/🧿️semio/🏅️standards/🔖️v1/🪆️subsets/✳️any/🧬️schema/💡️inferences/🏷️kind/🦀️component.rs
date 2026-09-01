@@ -6,12 +6,11 @@
 //! `InferredField` needed.
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::{subset_ordinal, subset_tag, SemioSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Kind
 /// 🏷️ The envelope's wrapped-subset dispatch tag/ordinal.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKind {
     pub tag: String,
     pub ordinal: u32,

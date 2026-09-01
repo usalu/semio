@@ -7,7 +7,6 @@ use crate::artifacts::rewrite::rewrite_snapshot_mutations;
 use crate::artifacts::rewrite::op::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use semio_framework_plugin::{Emit, Fault};
-use serde_json::Value;
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
@@ -66,10 +65,10 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
     }
 }
 fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
-    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return false;
     };
     let left_var = lhs.pattern.left_var.clone();
@@ -107,8 +106,8 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
         _ => false,
     };
     if changed {
-        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
-        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
+        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
     }
     changed
 }
@@ -190,10 +189,10 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> 
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
-    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return false;
     };
     let changed = match clause_ref {
@@ -217,8 +216,8 @@ pub(crate) fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> 
         }
     };
     if changed {
-        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
-        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
+        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
         state.rule_layout.remove(node_id);
     }
     changed

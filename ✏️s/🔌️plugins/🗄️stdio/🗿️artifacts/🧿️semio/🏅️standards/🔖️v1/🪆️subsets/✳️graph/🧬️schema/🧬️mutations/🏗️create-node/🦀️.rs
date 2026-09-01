@@ -6,22 +6,21 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::Semi
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::mutations::{SemioGraphMutation, delete_node};
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateNode {
     pub id: GraphNodeId,
-    #[serde(default)]
+    #[value(default)]
     pub kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub label: String,
-    #[serde(default)]
+    #[value(default)]
     pub position: SemioPoint2,
-    #[serde(default)]
+    #[value(default)]
     pub ports: Vec<SemioGraphPort>,
-    #[serde(default)]
+    #[value(default)]
     pub properties: Vec<SemioValueEntry>,
 }
 

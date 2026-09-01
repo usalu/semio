@@ -5,7 +5,6 @@ use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::DeflateSnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.deflate`.
@@ -23,8 +22,16 @@ pub mod set_payload;
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+///
+/// 🧪️ `#[derive(dsl::DslOps)]` is kept ALONGSIDE `#[derive(dsl::Mutations)]`: every variant below
+/// is a single-field newtype wrapping its own mutation leaf, and `dsl_variants_codegen`'s
+/// "single-field tuple variant" branch (`✨️derive/🦀️component.rs`) delegates `DslVariants`
+/// straight through to that leaf's own `#[derive(dsl::DslRecord)]`-provided `DslField` impl — the
+/// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
+/// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
+/// facets and this `OpText`/`OpBinary` pair are unaffected by the leaf split.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = DeflateSnapshot, diff = DeflateDiff, schema = "DeflateMutation")]
 pub enum DeflateMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
@@ -87,28 +94,36 @@ pub(crate) fn agg_inverse(this: &DeflateMutation, base: &DeflateSnapshot) -> Vec
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
-/// mirrors the `stdio.mp3` pilot's own hand-rolled bridge
-/// (`../../../../../🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`).
-/// P6's `#[derive(dsl::DslOps)]` cannot apply post-migration: its `DslVariants` codegen only
-/// delegates a single-field tuple variant to the inner type's OWN `dsl::DslField` impl, and a
-/// `#[derive(dsl::MutationLeaf)]` payload does not carry one — so the prior `DslOps`-derived
-/// grammar bridge is replaced by this JSON one, not preserved byte-for-byte.
+/// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only, never `OpText`/
+/// `OpBinary` themselves) — the same ~15-line body every `DslOps`-derived enum's `OpText` impl
+/// uses (`GifMutation`, `FlowMutationDsl`, `SpaceMutation` precedent).
 impl OpText for DeflateMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
+/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`.
 impl OpBinary for DeflateMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs

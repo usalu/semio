@@ -4,13 +4,12 @@
 //! there is no multi-user shareable live surface on the launcher.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ No shareable live launcher state — chrome stays in `HomeConfig`.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct HomePresence {}
 
 impl protocol::MutationDiff<HomePresence> for HomePresence {
@@ -57,8 +56,8 @@ impl ArtifactPack for HomePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum HomePresenceMutation {
     Noop,
 }

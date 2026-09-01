@@ -20,8 +20,8 @@ fn main() {
                 continue;
             }
         };
-        let base_bytes = format!("{}\n", serde_json::to_string_pretty(&base).expect("seed serialises"));
-        let mutated_bytes = format!("{}\n", serde_json::to_string_pretty(&mutated).expect("mutation serialises"));
+        let base_bytes = format!("{}\n", pack::json::to_string(&base).expect("seed serialises"));
+        let mutated_bytes = format!("{}\n", pack::json::to_string(&mutated).expect("mutation serialises"));
         match (project(base_bytes.as_bytes()), project(mutated_bytes.as_bytes())) {
             (Ok(before), Ok(after)) => {
                 if before == after {

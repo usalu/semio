@@ -30,7 +30,15 @@ import { OwnedKernelReturnContent } from "../../../🎠️kernel/📤️return/�
 import { OwnedResidentLedger, OwnedResidentRecordDetachment, OwnedResidentRetirement, type OwnedResidentAdmission, type OwnedResidentRecord, type ResidentGrant, type ResidentStep } from "../../../🌱️value/💾️resident/🟦️component.ts";
 import { OwnedUiResidentPool, OwnedUiResidentPoolRetirement, type OwnedUiResidentInstance, type OwnedUiResidentPayload, type OwnedUiResidentPayloadSourceRelease as UiResidentSourceProof } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️component.ts";
 import { uiResidentMetadataEnvelope } from "../../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🪪️metadata/🟦️component.ts";
-const residentCapacity = Object.getOwnPropertyDescriptor(OwnedResidentLedger.prototype, "capacity")!.get!;
+/** 🧬️ Brand-check accessor for {@link OwnedResidentLedger}, resolved LAZILY on first use.
+ * `OwnedResidentLedger` arrives over an import cycle (`🧵️shard-client` → `🎠️kernel/📥️input` →
+ * `🖱️ui/…/💾️resident` → back here), and reading `.prototype` at module-evaluation time touches the
+ * binding while that cycle is still initializing — which is a TDZ
+ * (`ReferenceError: Cannot access 'X' before initialization`) in any bundled build, killing the whole
+ * preview before it mounts. Deferring the lookup to first call moves it past module evaluation; the
+ * check itself is unchanged. */
+let residentCapacityGetter: (() => number) | undefined;
+const residentCapacity = (): (() => number) => (residentCapacityGetter ??= Object.getOwnPropertyDescriptor(OwnedResidentLedger.prototype, "capacity")!.get! as () => number);
 const NO_RESIDENT_FAULT = Symbol("actor-resident.no-fault");
 const poolUiEnvelope = uiResidentMetadataEnvelope("pool");
 const poolRecordEnvelope = poolUiEnvelope;
@@ -723,7 +731,7 @@ export class ShardClient {
   private watchdogHandle: ReturnType<typeof setInterval> | null = null;
 
   constructor(options: ShardClientOptions) {
-    try { Reflect.apply(residentCapacity, options.residentLedger, []); } catch { throw new Error("actor-resident.invalid-ledger"); }
+    try { Reflect.apply(residentCapacity(), options.residentLedger, []); } catch { throw new Error("actor-resident.invalid-ledger"); }
     this.#residentLedger = options.residentLedger;
     if (options.shardCount < 1) throw new Error("[DEBUG] ShardClient requires shardCount >= 1");
     this.createWorker = options.createWorker;

@@ -19,6 +19,7 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-os-infinite = { path = "../../../♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { workspace = true }
@@ -27,7 +28,7 @@ neural_engine = { path = "../../../🧠️neural/⚙️engine/📦️packages/�
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 ui_webgpu = { path = "../../../../../../🔨️modules/🖱️ui/🖼️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust", package = "semio-framework-ui-backend-webgpu" }
 semio-framework-3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust" }
 semio-framework-2d = { path = "../../../../../../🔨️modules/◻2d/📦️packages/🦀️rust" }
@@ -48,12 +49,19 @@ semio-s-plugin-flow-extension-list = { path = "../../../../../../../✏️s/🔌
 semio-s-plugin-flow-extension-draw = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust", default-features = false }
 semio-s-plugin-flow-extension-bim = { path = "../../../../../../../✏️s/🔌️plugins/🌊️flow/🧩️extensions/🏗️bim/📦️packages/🦀️rust", default-features = false }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-# 🎲️ `.cargo/config.toml` sets `--cfg getrandom_backend="wasm_js"` for wasm32, but that flag alone makes
-# getrandom 0.3 `compile_error!` unless its own `wasm_js` Cargo feature is also on. This crate pulls
-# getrandom transitively (semio-framework-ui's wgpu features → wgpu/vello/hayro), and nothing in that
-# graph enables it — so the flow-core wasm-pack build, which the React renderer imports for
-# `createFlowSession`, failed for every `dev` run. Declared here (the wasm-pack build root) so feature
-# unification covers the whole graph, matching how 📐️cad and the wgpu target already do it.
+# ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ui_wgpu`'s `wgpu-engine`
+# feature (the real `wgpu` crate and its `wasm-bindgen-futures`/`js-sys`/`wasm-bindgen` chain) is
+# narrowed away from `wasm32-wasip2` here — nothing this crate's own program logic needs
+# (`ui_wgpu::wgpu::{DrawList, ...}` and friends) requires it any more, see
+# `🖱️ui/🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring for the wgpu-tier split this depends on.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu-engine"] }
+
+# 🌉️ Browser-only: `getrandom`'s `wasm_js` backend and the `wasm_bridge` JS-callable tessellation
+# exports (`📐️brep-geometry/🦀️component.rs`) both require an actual JS engine (the former backs
+# onto `Math.random`/`crypto.getRandomValues`, the wasm-pack-built `createFlowSession` bundle the
+# React renderer imports). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE
+# for the WASI component target too, where neither applies.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2.106"

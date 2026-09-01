@@ -1,47 +1,28 @@
 //! 🔀️ Imperative control module: catalogue-only control-flow step kinds.
 
-// 🚫️async: E1 pure — serde_json only, zero suspension points — see R9.
+use pack::json::{array, object, to_string, Value};
+
+// 🚫️async: E1 pure — pack::json only, zero suspension points — see R9.
 pub fn catalogue_json() -> String {
-    serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue",
-        "sections": [{
-            "id": "control",
-            "title": "Control",
-            "items": [
-                {
-                    "kind": "control.if",
-                    "name": "If",
-                    "abbreviation": "If",
-                    "icon": "emoji:🔀️",
-                    "summary": "Runs the then or else body based on a boolean scope key.",
-                    "module": "control",
-                    "inputs": [{ "name": "key", "code": "S" }],
-                    "bodies": ["then", "else"],
-                },
-                {
-                    "kind": "control.while",
-                    "name": "While",
-                    "abbreviation": "Whl",
-                    "icon": "emoji:🔁️",
-                    "summary": "Repeats the body while a boolean scope key is true.",
-                    "module": "control",
-                    "inputs": [{ "name": "key", "code": "S" }],
-                    "bodies": ["body"],
-                },
-                {
-                    "kind": "control.repeat",
-                    "name": "Repeat",
-                    "abbreviation": "Rpt",
-                    "icon": "emoji:🔁️",
-                    "summary": "Repeats the body a fixed number of times.",
-                    "module": "control",
-                    "inputs": [{ "name": "count", "code": "N" }],
-                    "bodies": ["body"],
-                },
-            ],
-        }],
-    }))
-    .unwrap_or_else(|_| "{}".into())
+    let item = |kind: &str, name: &str, abbreviation: &str, icon: &str, summary: &str, input_name: &str, input_code: &str, bodies: &[&str]| {
+        object([
+            ("kind".to_string(), Value::from(kind)),
+            ("name".to_string(), Value::from(name)),
+            ("abbreviation".to_string(), Value::from(abbreviation)),
+            ("icon".to_string(), Value::from(icon)),
+            ("summary".to_string(), Value::from(summary)),
+            ("module".to_string(), Value::from("control")),
+            ("inputs".to_string(), array([object([("name".to_string(), Value::from(input_name)), ("code".to_string(), Value::from(input_code))])])),
+            ("bodies".to_string(), array(bodies.iter().map(|body| Value::from(*body)))),
+        ])
+    };
+    let items = array([
+        item("control.if", "If", "If", "emoji:🔀️", "Runs the then or else body based on a boolean scope key.", "key", "S", &["then", "else"]),
+        item("control.while", "While", "Whl", "emoji:🔁️", "Repeats the body while a boolean scope key is true.", "key", "S", &["body"]),
+        item("control.repeat", "Repeat", "Rpt", "emoji:🔁️", "Repeats the body a fixed number of times.", "count", "N", &["body"]),
+    ]);
+    let sections = array([object([("id".to_string(), Value::from("control")), ("title".to_string(), Value::from("Control")), ("items".to_string(), items)])]);
+    to_string(&object([("schema".to_string(), Value::from("imperative.catalogue")), ("sections".to_string(), sections)]))
 }
 
 // 🚫️async: E1 pure — in-memory registry construction, zero suspension points — see R9.

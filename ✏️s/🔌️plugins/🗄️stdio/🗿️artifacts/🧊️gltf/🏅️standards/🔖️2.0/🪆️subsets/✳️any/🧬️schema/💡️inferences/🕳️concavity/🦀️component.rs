@@ -12,10 +12,9 @@ pub mod reentrant_volume;
 use super::super::modules::measurement_contracts::*;
 use super::super::modules::vector_operations::{add, dot, mul};
 use super::geometry_core::{convex_hull_metrics, hull_sample, triangle_area, GltfGeometryContext};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfConcavityIndicators {
     pub convex_hull_gap: GltfMeasure<f64>,
     pub reentrant_area: GltfMeasure<f64>,

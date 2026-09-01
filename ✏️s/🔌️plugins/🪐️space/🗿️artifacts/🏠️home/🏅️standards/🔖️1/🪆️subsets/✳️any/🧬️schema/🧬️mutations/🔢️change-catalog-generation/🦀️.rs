@@ -4,13 +4,12 @@
 use crate::artifacts::home::diff::SHomeDiff;
 use crate::artifacts::home::mutations::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔢 `change-catalog-generation` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-catalog-generation")]
 pub struct ChangeCatalogGeneration {
     pub new_catalog_generation: u64,

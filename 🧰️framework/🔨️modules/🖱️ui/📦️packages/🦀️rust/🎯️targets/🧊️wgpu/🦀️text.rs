@@ -511,7 +511,7 @@ impl FontAtlas {
 }
 
 pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     {
         use js_sys::Uint8Array;
         use semio_framework_async::browser::JsFuture;

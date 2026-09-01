@@ -5,6 +5,13 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 
 /// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's
 /// own key-order/lexeme-preserving model, not `serde_json::Value` — see json's snapshot module).
+///
+/// 🌱️ NOT converted to `pack::json`/`ToValue` — `JsonSnapshot::from_value`/`.to_serde_value()`
+/// (`semio_s_plugin_stdio::artifacts::json`) are hard-typed to `serde_json::Value`, a foreign
+/// plugin's own API this crate does not own (same documented blocker as `➗️mathematical`'s sibling
+/// `import/json`/`export/json` leaves). `EnergyModelSnapshot` keeps its `Serialize` derive
+/// alongside `ToValue` specifically so this bridge — the only reason this crate cannot yet drop
+/// `serde_json` from `Cargo.toml` — still compiles.
 pub async fn register() {}
 
 pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<JsonSnapshot, store::TextError> {

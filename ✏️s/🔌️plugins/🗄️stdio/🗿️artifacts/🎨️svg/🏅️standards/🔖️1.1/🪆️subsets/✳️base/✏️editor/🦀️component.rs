@@ -10,11 +10,10 @@ use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum SvgAnyEditCommand {
     SetPixelRegion { source: String },
 }

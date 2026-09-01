@@ -39,7 +39,7 @@ impl std::error::Error for TabularError {}
 pub const MISSING_CODE: u32 = u32::MAX;
 
 /// 🏷️ A categorical column: integer codes into a level table, with `MISSING_CODE` marking missing values.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct CategoricalColumn {
     levels: Vec<String>,
     codes: Vec<u32>,
@@ -152,7 +152,7 @@ impl CategoricalColumn {
 
 // #region 🔖️Column
 /// 📦️ One table column: either a continuous `f64` series (missing = `NaN`) or a [`CategoricalColumn`].
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Column {
     Continuous(Vec<f64>),
     Categorical(CategoricalColumn),
@@ -184,7 +184,7 @@ impl Column {
 
 // #region 🔖️Table
 /// 🗃️ A column-oriented, named, row-aligned dataset.
-#[derive(Clone, Debug, PartialEq, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Table {
     names: Vec<String>,
     columns: Vec<Column>,

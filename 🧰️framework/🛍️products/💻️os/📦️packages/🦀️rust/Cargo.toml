@@ -19,18 +19,19 @@ path = "📦️glue.rs"
 
 [features]
 default = ["deflate"]
-deflate = ["dep:miniz_oxide", "semio-framework-replication/deflate", "semio-framework-pack/deflate"]
+deflate = ["semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 dsl-fixture-sweep-full = []
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
 # `📇️directory/🔌️client`'s `NativeDirectoryTransport` routes its HTTP calls through
 # `semio-framework-os-services`'s `HttpPool`/`ComputePool` (bounded, cancellable, deadline-aware).
 # The services edge now belongs to `sync` as the shared host boundary for Store file watching too.
 ureq = ["dep:ureq", "dep:semio-framework-actor"]
-# 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is a target-independent
-# `[dependencies]` entry, so a feature-flag `tokio/net` would unify onto EVERY target including
-# wasm32, and tokio's own build script hard-errors on `net` for `wasm32` (unlike `rt`/`time`, which
-# it explicitly supports there). `net` is instead added unconditionally for non-wasm32 targets only,
-# via the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
+# 🧵️ No `tokio/net` reference here (unlike `rt`/`time`): `tokio` is now a
+# `not(all(target_arch = "wasm32", target_env = "p2"))`-gated dependency (present on native and
+# browser wasm32, absent from wasip2), so a feature-flag `tokio/net` would still unify onto browser
+# wasm32, and tokio's own build script hard-errors on `net` for wasm32 (unlike `rt`/`time`, which it
+# explicitly supports there). `net` is instead added unconditionally for non-wasm32 targets only, via
+# the `[target.cfg(not(wasm32))]` `tokio` entry below — see its docstring. WASI-P2 guest plugins
 # never link the sync actor's native (tokio-tungstenite) transport — see `🔄️sync/🦀️component.rs`'s
 # `native_actor` vs `wasm_actor` split — so `net` has no business reaching wasm32 at all.
 sync = ["dep:tokio-tungstenite", "dep:semio-framework-os-services", "tokio/rt", "tokio/time"]
@@ -41,6 +42,7 @@ typegen = []
 
 [dependencies]
 dsl_derive = { path = "../../🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust", package = "semio-framework-os-kernel-dsl-derive" }
+semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-pack = { workspace = true }
 semio-framework-replication = { workspace = true }
 # 🪪️ `OperationContext`/`CancelToken`/`ScopeHandle` vocabulary (ticket
@@ -48,33 +50,57 @@ semio-framework-replication = { workspace = true }
 # unconditional (not target-gated) dependency: `📇️directory/🔌️client`'s `DirectoryTransport` trait
 # carries an `OperationContext` on every implementation, native AND browser alike.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-base64 = "0.22.1"
-miniz_oxide = { version = "0.8", optional = true }
+# 🔤️ `pack_value_to_base64`/`pack_value_from_base64` (`🏪️store/🦀️component.rs`) are the only base64
+# call sites this crate owns, and they are genuinely guest-reachable (scene `*Json` field encoding),
+# not host-only — so this re-points at the first-party RFC 4648 codec instead of target-gating a
+# third-party dependency away. Replaces the former `base64 = "0.22.1"` entry.
+semio-framework-io-base64 = { path = "../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-tokio = { version = "1", features = ["sync", "macros"], default-features = false }
 ureq = { version = "2", optional = true }
 semio-framework-hash = { path = "../../../../🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { workspace = true }
-zip = { version = "2.4", default-features = false, features = ["deflate"] }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only bridges reached through this crate's mounted modules (`🪪️identity`'s
+# `crypto.getRandomValues` entropy arm, `📇️directory/🔌️client`'s experimental `browser` transport,
+# `🏪️store/🔄️sync`'s `wasm_actor`, `🏪️store/👷️worker`'s Web Worker `postMessage` bridge) plus the
+# `wasm_bindgen_futures` alias their async-fn codegen needs. Excluded from `wasm32-wasip2` because
+# `target_arch = "wasm32"` is TRUE for the WASI component target too. `fill_entropy`/`now_ms`
+# needed genuine wasip2 arms instead — see their docstrings.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
 
+# 🧵️ Host-only tokio + zip, present on native AND browser wasm32, absent only from the shipped
+# `wasm32-wasip2` component target — `target_arch = "wasm32"` is TRUE for wasm32-wasip2 too, so the
+# full `not(all(target_arch = "wasm32", target_env = "p2")))` form is required (see the module-level
+# docstring on `[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]`
+# above for why a bare arch gate is wrong). `tokio` backs the `sync` cargo feature's native
+# `tokio-tungstenite` transport and (base `sync`/`macros` tokio features only) the browser
+# `📇️directory/🔌️client::browser` WebSocket bridge's `tokio::sync::mpsc` channel — both entirely
+# outside a WASI guest's reach (`🔄️sync/🦀️component.rs`'s own docstring: "WASI-P2 plugins never link
+# this crate ... This actor is a host-side concern only"; the browser bridge is
+# `cfg(all(target_arch = "wasm32", not(target_env = "p2")))`-gated already). `zip` backs
+# `🧩️extension`'s `.sxt` package pack/unpack/verify — installing a runtime extension is host tooling
+# (only caller repo-wide: `semio-framework-os`'s native host crate), never something a guest
+# component does to itself; its module mount is gated the same way in `📦️glue.rs`.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+tokio = { version = "1", features = ["sync", "macros"], default-features = false }
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 futures = "0.3"
 tokio-tungstenite = { version = "0.26", optional = true, features = ["rustls-tls-webpki-roots"] }
-# 🧵️ Same crate key as the base `[dependencies]` entry above — cargo unifies same-name deps declared
-# in `[dependencies]` and a matching `[target.cfg(...)]` table into one edge for that target, unioning
-# features (non-optional here to match the base entry's non-optional bit; a rename-alias or a mixed
-# optional/non-optional pairing under one name both hit cargo's "multiple times with different names"
-# / conflicting-optionality rejections). `net` is therefore always present for non-wasm32 builds of
-# this crate, independent of the `sync` feature toggle — harmless (tokio without `sync`'s other deps
-# never spins up a listener) and the only way to keep `net` off wasm32 unconditionally, which is the
-# actual requirement: WASI-P2 guest plugins must never link tokio's networking.
+# 🧵️ Same crate key as the `not(all(target_arch = "wasm32", target_env = "p2"))` table above — cargo
+# unifies same-name deps declared in multiple matching `[target.cfg(...)]` tables into one edge for
+# a given target, unioning features (non-optional here to match that table's non-optional bit; a
+# rename-alias or a mixed optional/non-optional pairing under one name both hit cargo's "multiple
+# times with different names" / conflicting-optionality rejections). `net` is therefore always
+# present for non-wasm32 builds of this crate, independent of the `sync` feature toggle — harmless
+# (tokio without `sync`'s other deps never spins up a listener) and the only way to keep `net` off
+# wasm32 unconditionally (both browser and wasip2), which is the actual requirement: no wasm32 target
+# of this crate should ever link tokio's networking.
 tokio = { version = "1", default-features = false, features = ["net"] }
 # 🌀️ `HttpPool`/`ComputePool` and the owned file-change watcher. This remains optional because all
 # consumers are native sync-runtime paths; this crate names only OS-services-owned types.

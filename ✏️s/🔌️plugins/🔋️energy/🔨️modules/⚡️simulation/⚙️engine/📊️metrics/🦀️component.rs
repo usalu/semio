@@ -1,10 +1,11 @@
 //! 🌿️ Environmental and resilience metrics.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Environmental
 /// 🌿️ Source energy conversion factors by fuel [J/J delivered].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SourceEnergyFactors {
     pub electricity: f64,
     pub natural_gas: f64,
@@ -19,7 +20,7 @@ impl Default for SourceEnergyFactors {
 }
 
 /// 🌿️ Greenhouse gas emission factors [kg CO2e per kWh].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EmissionFactors {
     pub electricity_kg_per_kwh: f64,
     pub natural_gas_kg_per_kwh: f64,
@@ -32,7 +33,7 @@ impl Default for EmissionFactors {
 }
 
 /// 🌿️ Environmental metrics summary.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EnvironmentalMetrics {
     pub site_energy_kwh: f64,
     pub source_energy_kwh: f64,
@@ -42,7 +43,7 @@ pub struct EnvironmentalMetrics {
 
 // #region 🔖️Resilience
 /// 🛡️ Resilience exposure metrics.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ResilienceMetrics {
     pub hours_above_heat_index_32c: u32,
     pub hours_below_10c: u32,

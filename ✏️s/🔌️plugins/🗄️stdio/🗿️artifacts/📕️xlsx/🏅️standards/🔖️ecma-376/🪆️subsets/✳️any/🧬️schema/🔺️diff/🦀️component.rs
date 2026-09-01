@@ -23,7 +23,6 @@ use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcRelati
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔖️GenericCollectionTriples
@@ -31,19 +30,17 @@ use std::collections::HashMap;
 /// `removed`/`modified` keys refer to BASE state; `added` carries the full item (already
 /// containing its own key). Identity is the KEY, not position — no index transport is needed on
 /// absorb.
-// 🩹 `bound(...)` overrides serde's default per-field-`default` bound inference (a known
-// serde_derive limitation: a `#[serde(default)]` `Vec<_>` field conservatively demands
-// `D: Default`/`T: Default` even though `Vec<_>: Default` never actually needs its item type to
-// be `Default` — the real requirement is only `Serialize`/`Deserialize`), same fix docx's diff
-// module documents.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", bound(serialize = "K: Serialize, D: Serialize, T: Serialize", deserialize = "K: Deserialize<'de>, D: Deserialize<'de>, T: Deserialize<'de>"))]
+// 🩹 `#[derive(ToValue, FromValue)]` synthesizes `K: ToValue + FromValue`/`D: .../`T: ...`
+// automatically per own type parameter (see `🌱️value/✨️derive`'s module docs) — no explicit
+// `#[value(bound = "...")]` override needed here.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedTripleDiff<K, D, T> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<K>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<NamedModified<K, D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<T>,
 }
 
@@ -53,8 +50,8 @@ impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedModified<K, D> {
     pub key: K,
     pub diff: D,
@@ -67,10 +64,10 @@ pub struct NamedModified<K, D> {
 /// entity per the recipe (a value union, not a keyed collection) — whole-value replaced, never
 /// sub-diffed field-by-field (its own `Formula.cached` nests another `XlsxCellValue`, so
 /// sub-diffing would need a second recursive diff type for no real gain over LWW-replace).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxCellDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<XlsxCellValue>,
 }
 
@@ -78,19 +75,19 @@ pub type XlsxCellsDiff = NamedTripleDiff<(u32, u32), XlsxCellDiff, XlsxCell>;
 pub type XlsxSheetsDiff = NamedTripleDiff<String, XlsxSheetDiff, XlsxSheet>;
 pub type XlsxSharedStringsDiff = NamedTripleDiff<usize, String, (usize, String)>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxSheetDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub cells: Option<XlsxCellsDiff>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxWorkbookDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub sheets: Option<XlsxSheetsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub shared_strings: Option<XlsxSharedStringsDiff>,
 }
 //#endregion 🔖️WorkbookDiffTypes
@@ -101,43 +98,43 @@ pub type XlsxOpcPartsDiff = NamedTripleDiff<String, XlsxOpcPartDiff, OpcPart>;
 pub type XlsxOpcRelListDiff = NamedTripleDiff<String, XlsxOpcRelDiff, OpcRelationship>;
 pub type XlsxOpcRelationshipsDiff = NamedTripleDiff<String, XlsxOpcRelListDiff, (String, Vec<OpcRelationship>)>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxOpcContentTypesDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub defaults: Option<XlsxOpcCtEntriesDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub overrides: Option<XlsxOpcCtEntriesDiff>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxOpcPartDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub content_type: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bytes: Option<Vec<u8>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxOpcRelDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rel_type: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub target_mode: Option<OpcTargetMode>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxOpcDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub content_types: Option<XlsxOpcContentTypesDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub parts: Option<XlsxOpcPartsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub relationships: Option<XlsxOpcRelationshipsDiff>,
 }
 //#endregion 🔖️OpcDiffTypes
@@ -162,15 +159,15 @@ pub struct XlsxOpcDiff {
 /// this file's collections use has no `DslField` impl (no blanket impl for arbitrary generic
 /// structs, only `Vec`/`BTreeMap`/arrays) — a second, independent structural blocker beyond the
 /// enum. `DiffCodec` is hand-rolled below (§5's template, `f6-recon-report.md`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx.diff")]
 pub struct XlsxDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub opc: Option<XlsxOpcDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub workbook: Option<XlsxWorkbookDiff>,
 }
 //#endregion 🔖️Diff

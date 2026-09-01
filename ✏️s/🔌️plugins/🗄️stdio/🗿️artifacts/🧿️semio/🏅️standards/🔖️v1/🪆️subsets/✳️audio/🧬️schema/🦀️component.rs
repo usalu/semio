@@ -3,10 +3,9 @@
 
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.audio")]
 pub struct SemioAudioArtifact {
     #[state(artifact)]
@@ -14,13 +13,13 @@ pub struct SemioAudioArtifact {
     #[state(artifact)]
     pub sample_rate: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub format: SemioAudioFormat,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub channels: Vec<SemioAudioChannel>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tags: Vec<SemioAudioTag>,
 }
 

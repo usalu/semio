@@ -1,9 +1,11 @@
 use super::super::{DagDelta, DagDiff, DagMutation, DagSnapshot, ChangedNodeOperatorKind};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "change-node-operator-kind")]
 pub struct ChangeNodeOperatorKind { pub id: String, pub new_operator_kind: Option<String> }
 

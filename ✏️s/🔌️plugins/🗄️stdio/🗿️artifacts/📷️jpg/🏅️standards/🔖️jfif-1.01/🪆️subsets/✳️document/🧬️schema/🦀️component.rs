@@ -2,26 +2,25 @@
 
 use crate::artifacts::jpg::JpgSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 /// 🎪️ Reduced UI-editable view: identity + the raster the user is directly manipulating. Ticket
 /// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION killed the shared
 /// `RasterImage` wrapper (jpg/png/tiff each copy-pasted it) — `width`/`height`/`pixels` are
 /// first-class fields here, matching `JpgSnapshot`'s own shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg")]
 pub struct JpgArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub width: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
 }
 

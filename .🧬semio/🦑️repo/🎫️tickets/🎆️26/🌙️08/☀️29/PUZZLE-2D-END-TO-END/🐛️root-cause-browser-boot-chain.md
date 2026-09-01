@@ -96,3 +96,98 @@ and paint.
 - Remaining: every editor action is still refused with
   `interactive-job.not-ui-safe … BatchOnlyPendingRewrite` until the guest is rebuilt with the
   `Migrated` classifications from §7.
+
+## 9. Puzzle 2D was never migrated to the typed tool-job protocol — the real remaining work
+
+With the boot chain fixed, the app renders and every editor action reaches dispatch. There the last
+gate closes: only `InteractiveJobClassification::Migrated` is UI-dispatchable, **and** a migrated verb
+must resolve an exact app-owned proof through `qualified_tool_proof` — otherwise
+`interactive-job.missing-factory`: *"typed command 'X' has no exact controller/owner/factory/tool
+/schema proof"*.
+
+The 3D and 5D editors each register an app tool factory
+(`Puzzle3d/5dRetainedCommandJobFactory`), declare `PUZZLE3D/5D_RETAINED_TOOL_IDS`, and implement
+`build_tool_job` mapping each tool id to a `PuzzleCommandWork`. **2D had none of it**:
+`PUZZLE2D_RETAINED_TOOL_IDS` was `&[]` and neither `register_tool_job_factories` nor `build_tool_job`
+existed — which is exactly what the blanket `BatchOnlyPendingRewrite` marker was recording.
+
+So flipping all 38 rows to `Migrated` was necessary but not sufficient, and on its own it only trades
+`interactive-job.not-ui-safe` for `interactive-job.missing-factory`.
+
+### What this ticket implemented
+
+2D already carried two finished `PuzzleCommandWork` implementations (`Puzzle2dActiveExampleWork`,
+`Puzzle2dForceLayoutWork`) plus a `puzzle2d_retained_reduce`/`_extent` pair for `addNode` — all three
+written and then never wired. Now added, mirroring 3D:
+
+- `PUZZLE2D_RETAINED_TOOL_IDS = ["setActiveExample", "forceLayout", "addNode"]`
+- `Puzzle2dRetainedCommandJobFactory` (`ToolJobFactory` + `ArtifactOwnedToolJobFactory`, with
+  publication contracts on the `Artifact` lane)
+- `bounded_first_step_tool_proofs!`, `register_tool_job_factories`, `build_tool_job` on
+  `impl ArtifactEditor for Puzzle2dPlayApp`
+- Classifications corrected to the honest state: `Migrated` for exactly those three, the other 35 back
+  to `BatchOnlyPendingRewrite`.
+
+### What remains
+
+The other 35 interactive 2D actions — the whole `brush*` family, `setFillCount`, `applyBoardEvents`,
+`deleteSelection`, `setCamera`, the `engagement*` and `setGrid*` group — still need a
+`PuzzleCommandWork` each (or a shared scalar-config work like `Puzzle3dScalarConfigWork`) before they
+can be marked `Migrated`. That is the substance of finishing puzzle 2D end to end, and every
+verification round costs a full guest rebuild (~2 h: `semio_s_plugin_stdio` alone is ~65 min).
+
+Note also that the currently published guest is a **debug** profile (97 MB core wasm). Its maintenance
+step blows the 8 ms `INTERACTIVE_STEP_CEILING_US` and marks the instance
+`RUNTIME_MAINTENANCE_FAULT` → *"runtime live cleanup faulted for instance 1"*. Rebuild with
+`SEMIO_PLUGIN_PROFILE=wasm-release` (20 MB) for a representative run.
+
+## 10. Brush and fill hinge on exactly one action: `applyBoardEvents`
+
+Worth recording because it collapses the remaining work from "35 actions" to one.
+
+Brush interaction is **client-side**: the wasm-bindgen `BoardSession` owns `brushOpenSlot`,
+`brushCommitSlot`, `brushCycleCandidate`, `brushSetCandidateIndex`, and paints candidates and previews
+itself. `Board2dHost/🟦️component.tsx:447` then commits the session's event queue to the plugin with a
+single `dispatch("applyBoardEvents", { eventsJson })`, and `brushPlace` is one of the
+`PUZZLE2D_FLUSH_NOW_EVENT_NAMES` (line 88) that forces that flush.
+
+So the plugin-side `brush*` actions are not on the browser's interaction path at all — only
+`applyBoardEvents` is. Migrating that one verb is what makes brush and fill commit end to end.
+
+### Scale of that one migration
+
+5D's equivalent, `Puzzle5dBoardEventsWork`, is a bounded incremental state machine: it streams the
+events JSON byte-by-byte with its own depth/string/escape tracking, carries ~25 fields of cursor state,
+and folds drag-moves, edges, fasteners, brush placement and camera into mutations — all inside the
+7.5 ms / 4096-item `puzzle_command_contract()`. 2D's `apply_board_events::apply_board_events(ctx, args)`
+today runs inside `handle`'s one-shot pipeline (build scene → sync host → act → `apply_host_events` →
+`puzzle2d_document_delta_operations`) and cannot be dropped into a resumable work as-is.
+
+### Repo-wide context
+
+No puzzle editor has finished this migration: 5D is 9 migrated / 41 batch-only, 3D lists 4 retained
+tool ids, and 2D is now 3 / 35. Repo-wide the split is 366 `Migrated` vs 444 `BatchOnlyPendingRewrite`.
+Finishing 2D's brush/fill is a slice of that standing program, not a defect introduced here.
+
+### `applyBoardEvents` migrated (written, not yet compiled)
+
+Rather than port 5D's ~400-line streaming state machine, 2D's batch is small by construction — the
+browser flushes a handful of events per interaction — so `applyBoardEvents` migrates as a bounded
+one-shot `BoundedFirstStepCommandWork`:
+
+- `puzzle2d_board_events_extent` parses `eventsJson`, refuses a batch over
+  `PUZZLE2D_BOARD_EVENT_BATCH_LIMIT` (256) rather than truncating it, and reports the real event count.
+- `puzzle2d_board_events_reduce` reruns exactly `handle`'s pipeline — `scene_for`, a fresh
+  `BoardHost`, `sync_host_runtime_state`, `apply_board_events`, `apply_host_events`,
+  `puzzle2d_document_delta_operations` — and emits the same artifact/config mutations and `ui_scope`.
+  The one difference is `operation: None`: a retained work never receives the `ArtifactView` that
+  `handle` reads `operation_optional()` from.
+
+`PUZZLE2D_RETAINED_TOOL_IDS` is now
+`["setActiveExample", "forceLayout", "addNode", "applyBoardEvents"]` (4 `Migrated`, 34 still
+`BatchOnlyPendingRewrite`).
+
+**Not verified.** `cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2` has not been green once
+since 14:55 — every failure is in framework crates another session is editing live (store schema,
+replication manifest, wgpu ui glue, store component, mesh-engine), none in a file this ticket touched.
+Compile, then rebuild at `SEMIO_PLUGIN_PROFILE=wasm-release`, then drive brush/fill in the browser.

@@ -8,16 +8,14 @@ use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "copy-invite-link")]
 pub struct CopyInviteLink {
     pub space_id: String,
     pub role: String,
-    #[serde(default)]
+    #[value(default)]
     pub ttl_secs: u64,
 }
 //#endregion 🔖️Payload
@@ -26,7 +24,7 @@ pub struct CopyInviteLink {
 pub async fn handle(payload: &CopyInviteLink, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
     let ttl_secs = if payload.ttl_secs == 0 { 3600 } else { payload.ttl_secs };
-    let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "role": role, "ttlSecs": ttl_secs })).ok();
+    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id, "role": role, "ttlSecs": ttl_secs })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args }))
 }
 //#endregion 🔖️Handle
@@ -53,7 +51,7 @@ mod tests {
             })
             .expect("a ReplayShellCommand effect");
         assert_eq!(action_id, "os.directory.share-link");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args")).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
         assert_eq!(args_value["ttlSecs"], 3600);
         assert_eq!(args_value["spaceId"], "sp-1");
     }
@@ -74,7 +72,7 @@ mod tests {
                 _ => None,
             })
             .expect("args");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
         assert_eq!(args_value["ttlSecs"], 60);
         assert_eq!(args_value["role"], "author");
     }

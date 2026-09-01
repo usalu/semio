@@ -654,8 +654,11 @@ function materializeHost(repoRoot: string, discovered: DiscoveredCase, role: Tes
 type PhaseOutcome = Readonly<{ results: TestResult[]; problems: string[] }>;
 
 /** 🏃️ Executes one `(case, level, role, implementation)` triple and reads back its owned result stream. */
-function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation): PhaseOutcome {
-  const { plan, missingFixtures, planPath } = planExecution(repoRoot, discovered, level, role, implementation);
+function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLevel, role: TestRole, implementation: Implementation, subjectRawInputs?: Readonly<Partial<Record<Implementation, string>>>): PhaseOutcome {
+  const planned = planExecution(repoRoot, discovered, level, role, implementation);
+  const plan = subjectRawInputs === undefined ? planned.plan : { ...planned.plan, subjectRawInputs };
+  const { missingFixtures, planPath } = planned;
+  if (subjectRawInputs !== undefined) writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);
   const problems = missingFixtures.map((uri) => `${discovered.caseDir}: unresolved fixture ${uri}`);
   if (plan.scenarios.length === 0) return { results: [], problems };
   rmSync(plan.resultsPath, { force: true });
@@ -711,13 +714,10 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
     const decision = oracleDecision(repoRoot, discovered, level);
     if (decision.problem !== null) problems.push(decision.problem);
     const caseResults: TestResult[] = [];
+    const rawInputOracle = buildCasePlan(repoRoot, discovered, level).plan.oracleInput === "subject-raw";
 
-    if (phases.includes("oracle") && decision.implementation !== null) {
-      const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation);
-      caseResults.push(...outcome.results);
-      problems.push(...outcome.problems);
-    }
-    if (phases.includes("subject")) {
+    const runSubjects = (): void => {
+      if (!phases.includes("subject") && !rawInputOracle) return;
       // 🔬️Only the languages this repository actually implements the owner in are dispatched as
       // subjects; see `ownerShipsImplementation`.
       const subjects = selectImplementations(discovered, rest).filter((candidate) => ownerShipsImplementation(repoRoot, discovered, candidate));
@@ -731,7 +731,19 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
         caseResults.push(...outcome.results);
         problems.push(...outcome.problems);
       }
+    };
+    const subjectRawInputs = (): Readonly<Partial<Record<Implementation, string>>> => Object.fromEntries(
+      caseResults
+        .filter((result) => result.role === "subject" && result.status === "passed" && result.output.rawPath !== undefined)
+        .map((result) => [result.implementation, result.output.rawPath!] as const),
+    );
+    if (rawInputOracle) runSubjects();
+    if (phases.includes("oracle") && decision.implementation !== null) {
+      const outcome = executeOne(repoRoot, discovered, level, "oracle", decision.implementation, rawInputOracle ? subjectRawInputs() : undefined);
+      caseResults.push(...outcome.results);
+      problems.push(...outcome.problems);
     }
+    if (!rawInputOracle) runSubjects();
     scenarioCount += new Set(caseResults.map((result) => result.scenario)).size;
     allResults.push(...caseResults);
 
@@ -827,7 +839,7 @@ class ContractScript extends Script {
   }
 }
 
-/** 🔮️ The oracle phase — proves the reference library actually supports the case before any local code exists. */
+/** 🔮️ The oracle phase — proves the reference library actually supports the case before any local code exists, except an explicit byte-decoder oracle, which first receives its subject artifact. */
 class OracleScript extends Script {
   run(segments: string[]): void {
     process.exit(runPhases(this.repoRoot, segments, ["oracle"]));

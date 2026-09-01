@@ -3,42 +3,40 @@
 use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{apply_flow_fixture_to_os_workflow, OsWorkflowCamera, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
-use serde_json::Value;
 
-use serde::{Deserialize, Serialize};
 
 /// 🚧️ TEMP(Wave 3): `operations_json` stays an opaque JSON-array string, mirroring
 /// `apply_flow_fixture_to_os_workflow`'s still-JSON `fixture_json` bridge — typed once the flow
 /// bridge itself is typed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "node-graph-edit")]
 pub struct NodeGraphEdit {
     pub operations_json: String,
 }
 
 async fn edit_with_selection(payload: &NodeGraphEdit, projection: &WorkflowSnapshot, selected: &[String]) -> Emit<WorkflowMutation, SpaceConfigMutation> {
-    let edit_operations = serde_json::from_str::<Value>(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(Value::as_array).cloned()).unwrap_or_default();
+    let edit_operations = pack::parse_json(&payload.operations_json).ok().and_then(|value| value.get("operations").and_then(pack::JsonValue::as_array).cloned()).unwrap_or_default();
     let mut artifact_mutations = Vec::new();
     let mut config_mutations = Vec::new();
     let mut effects = Vec::new();
     for edit in &edit_operations {
-        match edit.get("operation").and_then(Value::as_str).unwrap_or("") {
+        match edit.get("operation").and_then(pack::JsonValue::as_str).unwrap_or("") {
             "setFixture" => {
-                if let Some(fixture_json) = edit.get("fixtureJson").and_then(Value::as_str) {
-                    if let Some(camera) = serde_json::from_str::<Value>(fixture_json).ok().and_then(|fixture| fixture.get("camera").cloned()).and_then(|camera| serde_json::from_value::<OsWorkflowCamera>(camera).ok()) {
+                if let Some(fixture_json) = edit.get("fixtureJson").and_then(pack::JsonValue::as_str) {
+                    if let Some(camera) = pack::parse_json(fixture_json).ok().and_then(|fixture| fixture.get("camera").cloned()).and_then(|camera| dsl::from_dsl_value::<OsWorkflowCamera>(pack::json_to_dsl_value(&camera)).ok()) {
                         config_mutations.push(SpaceConfigMutation::SetCamera { window_id: crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW.into(), camera: camera.into() });
                     }
                     artifact_mutations.extend(apply_flow_fixture_to_os_workflow(&projection.graph, fixture_json));
                 }
             }
             "move" => {
-                if let (Some(node_id), Some(x), Some(y)) = (edit.get("nodeId").and_then(Value::as_str), edit.get("x").and_then(Value::as_f64), edit.get("y").and_then(Value::as_f64)) {
+                if let (Some(node_id), Some(x), Some(y)) = (edit.get("nodeId").and_then(pack::JsonValue::as_str), edit.get("x").and_then(pack::JsonValue::as_f64), edit.get("y").and_then(pack::JsonValue::as_f64)) {
                     artifact_mutations.push(WorkflowMutation::MoveNode { node_id: node_id.into(), x, y });
                 }
             }
             "connect" => {
                 if let (Some(source_node_id), Some(source_port_id), Some(target_node_id), Some(target_port_id)) =
-                    (edit.get("sourceNodeId").and_then(Value::as_str), edit.get("sourcePortId").and_then(Value::as_str), edit.get("targetNodeId").and_then(Value::as_str), edit.get("targetPortId").and_then(Value::as_str))
+                    (edit.get("sourceNodeId").and_then(pack::JsonValue::as_str), edit.get("sourcePortId").and_then(pack::JsonValue::as_str), edit.get("targetNodeId").and_then(pack::JsonValue::as_str), edit.get("targetPortId").and_then(pack::JsonValue::as_str))
                 {
                     match crate::engine::space::negotiate_connect_or_notify(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
                         Ok(contract) => artifact_mutations.push(crate::engine::space::connect_edge_operation(source_node_id, source_port_id, target_node_id, target_port_id, contract)),
@@ -87,7 +85,6 @@ mod tests {
         use crate::engine::space::testkit::{apply_mutations, studio_emit};
         use crate::engine::space::SpaceCommand;
         use semio_framework_os::os_workflow_to_flow_fixture;
-        use serde_json::json;
         let projection = demo_space_projection();
         let config = SpaceConfig::default();
         let node = projection.graph.nodes.first().expect("node").clone();

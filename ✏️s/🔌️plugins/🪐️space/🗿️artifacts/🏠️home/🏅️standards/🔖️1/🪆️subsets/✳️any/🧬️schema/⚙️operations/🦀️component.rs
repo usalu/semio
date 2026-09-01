@@ -94,12 +94,12 @@ pub const KINDS: &[&str] = &["change-catalog-generation"];
 /// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn s_home_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<SHomeSnapshot, String> {
-        let decoded: SHomeSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        let decoded: SHomeSnapshot = pack::from_json_str(text).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: SHomeMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: SHomeMutation = pack::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::inverse(&mutation, &base);
@@ -109,15 +109,15 @@ pub fn s_home_mutation_report_json(base_json: &str, mutation_json: &str, after_j
         let outcome = <SHomeMutation as protocol::Mutation<SHomeSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
+    let report = pack::json!({
+        "base": pack::json_from_dsl_value(&dsl::ToValue::to_value(&base)),
+        "expectedSnapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&expected)),
+        "snapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&applied)),
+        "diff": pack::json_from_dsl_value(&dsl::ToValue::to_value(forward.diff())),
+        "messages": pack::json_from_dsl_value(&dsl::ToValue::to_value(&forward.messages().to_vec())),
+        "inverseSteps": pack::json_from_dsl_value(&dsl::ToValue::to_value(&inverse)),
+        "inverseSnapshot": pack::json_from_dsl_value(&dsl::ToValue::to_value(&undone)),
+        "inverseMessages": pack::json_from_dsl_value(&dsl::ToValue::to_value(&inverse_messages)),
     });
     Ok(report.to_string())
 }

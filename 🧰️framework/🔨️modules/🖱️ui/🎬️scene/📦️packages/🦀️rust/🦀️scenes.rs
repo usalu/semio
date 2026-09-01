@@ -18,6 +18,7 @@
 //! 🚫️async: E6 sync payload construction — the `.base()` constructors below are plain sync `fn` by
 //! decree (ticket ruling E6), not the `pub async fn` they arrived as in `ui_wgpu`.
 
+use protocol::value::{DslValue, FromValue, ValueError};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SceneDoc
@@ -364,6 +365,139 @@ pub struct NodeGraphOperatorRecord {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub group: Vec<String>,
 }
+
+//#region 🔖️NodeGraphRecordsFromValue
+/// 🌱️ Hand-written `FromValue` (decode direction only — nothing here needs `ToValue`, see the
+/// Cargo.toml docstring on the `protocol` dependency for why this is hand-written rather than
+/// `#[derive(ToValue, FromValue)]`) for the plugin-side JSON-round-trip shims (`space`'s
+/// `json_array_to_node_graph_*` in `🕸️compiled-dag`/`🔄️workflow` window files) that decode a
+/// first-party `pack::from_json_str::<Vec<NodeGraphXRecord>>(...)` off text a framework producer
+/// still emits via `serde_json`. Mirrors each struct's own `#[serde(rename_all = "camelCase",
+/// default, skip_serializing_if = ...)]` attributes field-by-field: a missing key decodes to the
+/// same default a missing/omitted JSON key would under `serde`.
+impl FromValue for NodeGraphPortRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
+        Ok(Self {
+            id: String::from_value(field("id")?)?,
+            label: opt("label")?,
+            code: opt("code")?,
+            abbreviation: opt("abbreviation")?,
+            full_name: opt("fullName")?,
+            artifact_kind: opt("resourceKind")?,
+        })
+    }
+}
+
+impl FromValue for NodeGraphNodeRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
+        Ok(Self {
+            id: String::from_value(field("id")?)?,
+            label: opt("label")?,
+            x: f64::from_value(field("x")?)?,
+            y: f64::from_value(field("y")?)?,
+            width: f64::from_value(field("width")?)?,
+            height: f64::from_value(field("height")?)?,
+            inputs: get("inputs").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            outputs: get("outputs").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            instance_id: opt("instanceId")?,
+            plugin_id: opt("pluginId")?,
+            app_id: opt("appId")?,
+            icon: opt("icon")?,
+        })
+    }
+}
+
+impl FromValue for NodeGraphEdgeRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
+        Ok(Self {
+            id: String::from_value(field("id")?)?,
+            source_node_id: String::from_value(field("sourceNodeId")?)?,
+            source_port_id: String::from_value(field("sourcePortId")?)?,
+            target_node_id: String::from_value(field("targetNodeId")?)?,
+            target_port_id: String::from_value(field("targetPortId")?)?,
+            label: opt("label")?,
+        })
+    }
+}
+
+impl FromValue for NodeGraphFindItem {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            id: String::from_value(field("id")?)?,
+            label: String::from_value(field("label")?)?,
+            category: String::from_value(field("category")?)?,
+        })
+    }
+}
+
+impl FromValue for NodeGraphOperatorVariadicRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            slot_key: String::from_value(field("slotKey")?)?,
+            min: usize::from_value(field("min")?)?,
+            max: get("max").map(Option::<usize>::from_value).transpose()?.flatten(),
+        })
+    }
+}
+
+impl FromValue for NodeGraphOperatorChannelRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        let opt = |key: &str| get(key).map(Option::<String>::from_value).transpose().map(Option::flatten);
+        Ok(Self {
+            code: String::from_value(field("code")?)?,
+            abbreviation: String::from_value(field("abbreviation")?)?,
+            name: String::from_value(field("name")?)?,
+            full_name: String::from_value(field("fullName")?)?,
+            operators: get("operators").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            default_json: opt("defaultJson")?,
+            label: opt("label")?,
+            cardinality: get("cardinality").map(String::from_value).transpose()?.unwrap_or_default(),
+        })
+    }
+}
+
+impl FromValue for NodeGraphOperatorRecord {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            id: String::from_value(field("id")?)?,
+            extension: String::from_value(field("extension")?)?,
+            name: String::from_value(field("name")?)?,
+            abbreviation: String::from_value(field("abbreviation")?)?,
+            icon: String::from_value(field("icon")?)?,
+            summary: String::from_value(field("summary")?)?,
+            inputs: get("inputs").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            outputs: get("outputs").map(Vec::from_value).transpose()?.unwrap_or_default(),
+            variadic_input: get("variadicInput").map(Option::<NodeGraphOperatorVariadicRecord>::from_value).transpose()?.flatten(),
+            variadic_output: get("variadicOutput").map(Option::<NodeGraphOperatorVariadicRecord>::from_value).transpose()?.flatten(),
+            group: get("group").map(Vec::from_value).transpose()?.unwrap_or_default(),
+        })
+    }
+}
+//#endregion 🔖️NodeGraphRecordsFromValue
 //#endregion 🔖️NodeGraphRecords
 
 //#region 🔖️NodeGraphScene

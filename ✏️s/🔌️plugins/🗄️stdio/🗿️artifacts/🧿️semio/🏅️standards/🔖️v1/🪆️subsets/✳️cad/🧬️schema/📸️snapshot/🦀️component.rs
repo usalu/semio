@@ -6,7 +6,6 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
@@ -17,14 +16,13 @@ pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 /// value replaced in diffs, never sub-diffed, same treatment as `BcfCamera`/`XlsxCellValue`.
 ///
 /// 🧪️ `Default` (with `Line` as the zero-length degenerate default) is required here, not for any
-/// domain reason, but to satisfy a spurious `T: Default` bound the shared
-/// `engine::triples::NamedTripleDiff<K,D,T>`'s derived `Deserialize` impl infers from its own
-/// `#[serde(default)]`-annotated `added: Vec<T>` field (same known `serde_derive` quirk bcf's
-/// local `NamedTripleDiff` copy already worked around via an explicit `#[serde(bound(...))]—`
-/// the SHARED copy under `⚙️engine/🧰️triples` is missing that override; noted as a shared-infra
-/// gap for the closer, not fixed here per this ticket's write-scope rules).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+/// domain reason, but because the shared `engine::triples::NamedTripleDiff<K,D,T>`'s
+/// `#[derive(ToValue, FromValue)]` synthesizes a per-type-parameter bound (`T: ToValue`/
+/// `FromValue`, see `🌱️value/✨️derive`'s module docs) plus this file's own `added: Vec<T>` field
+/// needing `T: Default` wherever the missing-key fallback runs — bcf's local `NamedTripleDiff`
+/// copy carries the identical requirement (see that file's own doc comment).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum CadEntity {
     Line { a: SemioPoint2, b: SemioPoint2 },
     Arc { center: SemioPoint2, radius: f64, start_angle: f64, end_angle: f64 },
@@ -52,8 +50,8 @@ impl Default for CadEntity {
 //#region 🔖️Layer
 /// 🗂️ Name-keyed (dxf `TABLES/LAYER`-style) — strong entity, own per-field diff. `Default` is the
 /// same spurious-bound workaround `CadEntity` documents above.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadLayer {
     pub name: String,
     pub color_index: i32,
@@ -66,8 +64,8 @@ pub struct CadLayer {
 /// 🏷️ One placed entity — `handle` is the id key (dxf group code 5); `layer` names the owning
 /// `CadLayer` by reference. Referential invariants (dangling `layer`/`Insert.block_name`) are
 /// checked by the composer's `SemioCadValidator`, not enforced structurally here.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadEntityRecord {
     pub handle: String,
     pub layer: String,
@@ -78,31 +76,31 @@ pub struct CadEntityRecord {
 //#region 🔖️Block
 /// 📦️ Name-keyed (dxf `BLOCKS` section) — strong entity; `entities` is its own nested id-keyed
 /// collection (same shape as the top-level `entities`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CadBlock {
     pub name: String,
     pub base_point: SemioPoint2,
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<CadEntityRecord>,
 }
 //#endregion 🔖️Block
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.cad")]
 pub struct SemioCadSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub layers: Vec<CadLayer>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<CadBlock>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<CadEntityRecord>,
 }
 
@@ -649,25 +647,25 @@ pub fn encode_semio_cad_pack(snapshot: &SemioCadSnapshot) -> Vec<u8> {
     <SemioCadSnapshot as store::ArtifactPack>::encode_pack(snapshot)
 }
 
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.cad` — the shape the `mutate-semio-cad` case compares under `ordered-json-v1`. A thin
-/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
-/// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
-/// derived from the snapshot type itself rather than hand-written a second time in the adapter,
-/// where it could drift.
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
+/// `s.stdio.semio.cad` — the shape the `mutate-semio-cad` case compares under `ordered-json-v1`. A
+/// thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue` — see
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/`),
+/// so a projection is derived from the snapshot type itself rather than hand-written a second time
+/// in the adapter, where it could drift.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_cad_snapshot_json(snapshot: &SemioCadSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioCadSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_cad_snapshot_json`] — decodes the
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_cad_snapshot_json`] — decodes the
 /// `before`/`after` halves of `mutate-semio-cad`'s committed specification vectors
 /// (`../../../../../🧪️tests/mutate-semio-cad/🧫️fixtures/🦠️<kind>.json`) into real [`SemioCadSnapshot`]
 /// values, so the adapter never hand-transcribes a fixture into a Rust literal that could silently
 /// drift away from the JSON it claims to mirror.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_cad_snapshot_json(text: &str) -> Result<SemioCadSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

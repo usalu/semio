@@ -6,13 +6,12 @@
 //! for its own node/edge graph).
 
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭 Topological shape of the semio flow node/edge graph.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioFlowTopology {
     /// 🥇️ Node ids in Kahn topological order — only nodes reachable by repeatedly removing
     /// zero-indegree nodes; nodes stuck in a cycle are omitted (see `cycle_free`).

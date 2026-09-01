@@ -543,10 +543,10 @@ pub mod viewer {
 //#endregion 👁️Viewer
 
 //#region 🌉️WasmBridge
-/// 🌉️ `WriterHost` (all targets) plus `WriterSession`/`WriterArtifactVcs` (wasm32 only) — see
-/// `editor::writer::wasm` for the individual `cfg` gates; this re-export just surfaces them at the
-/// crate root, matching the old bundle crate's `📦️glue.rs` surface. Wasm bridge lives under the
-/// editor module (never the viewer): it is the two-way document VCS bridge, editor-only by nature.
+/// 🌉️ `WriterHost` (all targets) — see `editor::writer::wasm` for the type; this re-export just
+/// surfaces it at the crate root, matching the old bundle crate's `📦️glue.rs` surface. The
+/// wasm-bindgen document VCS bridge that used to live in `editor::writer::wasm` was deleted (never
+/// built by any `wasm32-unknown-unknown` target — 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION).
 pub use editor::writer::wasm::*;
 //#endregion 🌉️WasmBridge
 

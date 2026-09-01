@@ -11,7 +11,6 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️RecordDiff
@@ -20,11 +19,11 @@ use std::collections::{BTreeMap, HashMap};
 /// numeric-index access `🧬️mutations::EpwMutation::SetRecordField` needs.
 macro_rules! epw_record_diff {
     ($($field:ident => $index:expr),+ $(,)?) => {
-        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-        #[serde(rename_all = "camelCase")]
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+        #[value(rename_all = "camelCase")]
         pub struct EpwRecordDiff {
             $(
-                #[serde(default, skip_serializing_if = "Option::is_none")]
+                #[value(default, skip_serializing_if = "Option::is_none")]
                 pub $field: Option<String>,
             )+
         }
@@ -92,30 +91,30 @@ const _: () = assert!(EPW_RECORD_FIELD_COUNT == 35, "EpwRecordDiff field-index t
 
 //#region 🔖️RecordsDiff
 /// 🧩 One record patched-in-place at a BASE index.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwRecordModified {
     pub index: usize,
     pub diff: EpwRecordDiff,
 }
 
 /// 🧩 One record inserted at a FINAL index.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwRecordAdded {
     pub index: usize,
     pub record: EpwRecord,
 }
 
 /// 🔺️ Index-keyed removed/modified/added triple over `EpwSnapshot::records`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwRecordsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<EpwRecordModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<EpwRecordAdded>,
 }
 
@@ -168,36 +167,36 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.epw`. No `snapshot: Option<EpwSnapshot>` full-replace slot — even
 /// `SetSnapshot`'s diff is `EpwDiff::between(base, next)`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.diff")]
 pub struct EpwDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub location: Option<EpwLocation>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub design_conditions: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub typical_extreme_periods: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub ground_temperatures: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub holidays_dst: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub comments_1: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub comments_2: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data_periods: Option<EpwDataPeriods>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub records: Option<EpwRecordsDiff>,
 }
 

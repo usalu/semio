@@ -5,7 +5,7 @@ use crate::artifacts::fem3d::op::Fem3dMutation;
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase};
 use crate::editor::fem3d::config::{Fem3dConfig, Fem3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🔎️ Resolves the target load case for a load-adding command: the named `case_id` if given and
 /// found, else the document's first load case, else `None` — a missing case is not resolved here,
@@ -54,8 +54,8 @@ fn next_load_id(doc: &Fem3dSnapshot, case_id: Option<&str>) -> String {
 
 // #endregion 🧪️Tests
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "add-member-udl")]
 pub struct AddMemberUdl {
     pub element_id: String,

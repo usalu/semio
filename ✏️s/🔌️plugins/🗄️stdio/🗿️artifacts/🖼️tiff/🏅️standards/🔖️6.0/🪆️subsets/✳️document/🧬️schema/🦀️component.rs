@@ -4,10 +4,9 @@
 use crate::artifacts::tiff::schema::snapshot::{TiffByteOrder, TiffIfd};
 use crate::artifacts::tiff::TiffSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff")]
 pub struct TiffArtifact {
     #[state(artifact)]
@@ -15,10 +14,10 @@ pub struct TiffArtifact {
     #[state(artifact)]
     pub byte_order: TiffByteOrder,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub ifds: Vec<TiffIfd>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
 }
 

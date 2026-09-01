@@ -1,22 +1,21 @@
 //! 🦀️ Lowpoly command catalog case — Rust subject adapter. Ticket
 //! `26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS`.
 //!
-//! Recorded no-oracle decision `lowpoly-command-catalog-shape`
-//! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`) — see this case's own feature file
-//! for the full "reduced scope, stated honestly" account of why: dispatching a command and asserting
-//! its produced mutation needs `ArtifactView`/`ConfigView` (from `semio_framework_plugin`) and
-//! `Mutation::diff`/`apply` (from `protocol`), neither of which any generated Rust test host in this
-//! repository links today. What this case asserts is the narrower claim that survives without either
-//! crate: `LowpolyCommand`'s `TOOL_JOB_IDS`/`command_id()` are plain INHERENT items on the enum the
-//! macro generates, and every payload struct is a public, directly constructible type.
+//! The public lowpoly editor shim re-exports the framework view and emission types a generated Rust
+//! subject host needs to invoke a command handler without linking `semio_framework_plugin` itself.
+//! Alongside the catalog-shape checks, this adapter dispatches `patchObject` and asserts its emitted
+//! document mutation directly.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{Context, Outcome};
+    use semio_s_plugin_lowpoly::artifacts::lowpoly::{LowpolyMutation, LowpolyObject, LowpolySnapshot};
     use semio_s_plugin_lowpoly::editor::lowpoly::commands::{add_primitive, camera, chrome, engagement, fixture, mesh_edit, patch_object, paint, selection, sun, transform, utility, uv};
-    use semio_s_plugin_lowpoly::editor::lowpoly::LowpolyCommand;
+    use semio_s_plugin_lowpoly::editor::lowpoly::config::LowpolyConfig;
+    use semio_s_plugin_lowpoly::editor::lowpoly::session::LowpolyScratch;
+    use semio_s_plugin_lowpoly::editor::lowpoly::{ArtifactView, ConfigView, HistoryView, LowpolyCommand};
 
     /// 🧾️ One representative value per group, mirroring the crate's own `every_command()` test
     /// helper's example payloads exactly (`✏️editor/🦀️component.rs`'s `#[cfg(test)] mod tests`), so a
@@ -71,6 +70,41 @@ mod subject {
         let projection = semio_repo_test_host::parse_json(&format!("{{\"count\":{}}}", ids.len()))?;
         Ok(Outcome::with_raw(format!("{}", ids.len()).into_bytes(), projection))
     }
+
+    pub fn patch_object_dispatch(_ctx: &Context) -> Result<Outcome, String> {
+        let mut snapshot = LowpolySnapshot::default();
+        snapshot.objects.push(LowpolyObject {
+            id: "obj-1".into(),
+            name: "Original".into(),
+            transform: Default::default(),
+            smooth_shading: false,
+            mesh: None,
+            paint_layers: Vec::new(),
+        });
+        let history = HistoryView::empty();
+        let document = ArtifactView::new(&snapshot, &history);
+        let config = LowpolyConfig::default();
+        let config_view = ConfigView { snapshot: &config };
+        let mut scratch = LowpolyScratch::default();
+        let emit = patch_object::handle(
+            &patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some("\"Renamed\"".into()) },
+            &document,
+            &config_view,
+            &mut scratch,
+        )
+        .map_err(|fault| format!("patchObject handler failed: {fault:?}"))?;
+        if !emit.config_mutations.is_empty() {
+            return Err(format!("patchObject emitted {} config mutation(s), expected none", emit.config_mutations.len()));
+        }
+        let [LowpolyMutation::RenameObject(mutation)] = emit.artifact_mutations.as_slice() else {
+            return Err(format!("patchObject emitted {:?}, expected one RenameObject mutation", emit.artifact_mutations));
+        };
+        if mutation.id != "obj-1" || mutation.new_name != "Renamed" {
+            return Err(format!("patchObject emitted RenameObject {{ id: {:?}, new_name: {:?} }}, expected obj-1 -> Renamed", mutation.id, mutation.new_name));
+        }
+        let projection = semio_repo_test_host::parse_json(r#"{"artifactMutations":1,"configMutations":0,"objectId":"obj-1","newName":"Renamed"}"#)?;
+        Ok(Outcome::with_raw(b"RenameObject:obj-1:Renamed".to_vec(), projection))
+    }
 }
 
 //#region 🔖️Registration
@@ -87,6 +121,7 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built.subject("catalog-size", subject::catalog_size);
+        built = built.subject("patch-object-dispatch", subject::patch_object_dispatch);
     }
     built
 }

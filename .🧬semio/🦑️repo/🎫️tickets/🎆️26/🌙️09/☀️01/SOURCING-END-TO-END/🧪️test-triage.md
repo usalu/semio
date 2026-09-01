@@ -27,13 +27,26 @@ Migrating them is not a one-line registry flip: they publish on the `Artifact` l
 config-lane one, `SourcingCurateConfigPreparationFactory`). The document-lane equivalent has to be
 written; `🗒️note`, `📐️cad`, `🌊️flow` and `🌍️gis` already have theirs.
 
-### B. World3d scene payload over its fixed cap (1 test)
+### B. World3d scene admission refused (1 test) — MEASURED, and it is NOT an overflow
 `grid::renders_via_the_app` → `ui.fixed-capacity: fixed UI admission failed at mesh-window.scene`.
-`semio_framework_ui_scene::encode` packs the whole `World3dScene` into `UiFixedBytes`, capped at
-`UI_FIXED_BYTES = 32 KiB`. The grid window inlines every filtered kind's full mesh (positions,
-normals, indices) as JSON, so the unfiltered demo stock overflows it. **This is a runtime defect, not
-just a test one** — the same render runs in the browser. `World3dScene` already carries an optional
-`World3dSnapshotLease` for exactly this case, but no plugin has adopted the page-based path yet.
+
+The obvious reading is a payload overflow: `semio_framework_ui_scene::encode` packs the whole
+`World3dScene` into `UiFixedBytes`, capped at `UI_FIXED_BYTES = 32 KiB`, and the grid inlines every
+filtered kind's full mesh (positions, normals, indices) as JSON. `measure-grid-scene.py` in this
+ticket folder replicates `box_mesh_spec`/`frame_mesh_spec`/`instance_json`/`grid_placement`/
+`grid_scale` against the committed demo stock and settles it:
+
+```
+meshes_json      16308 bytes   (7 boxes/slabs @ ~850 B, 3 frames @ ~3.4 KB)
+instances_json    2298 bytes
+TOTAL            18606 bytes   (57% of UI_FIXED_BYTES)
+```
+
+So the payload has ~14 KB of headroom and the refusal is a DIFFERENT `SurfaceEncodeError` variant.
+`MeshWindowKit::render` maps all three (`Pack`, `Payload`, `Schema`) onto the same
+`ui_assembly_error("mesh-window.scene")` message, which is why the distinction was invisible. Re-triage
+against the real variant once the suite runs — and note the app-level path may simply have been a
+knock-on of the `interactive-job.live-instance` fault that preceded it in the same test.
 
 ### C. Scene assertions written against the pre-pack encoding (2 tests)
 `grid::grid_instance_count_matches_filtered_stock_and_normalizes_scale` and

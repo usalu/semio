@@ -66,14 +66,14 @@ pub fn angle_diff(a: f64, b: f64) -> f64 {
 // #region 🔖️Vec2
 
 /// 📐️ A free 2D direction/displacement (no fixed origin).
-#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Vec2 {
     pub x: f64,
     pub y: f64,
 }
 
 /// 📐️ A located 2D point, e.g. a parametric-domain (u, v) coordinate.
-#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Pnt2 {
     pub x: f64,
     pub y: f64,
@@ -194,7 +194,7 @@ impl std::ops::Add<Vec2> for Pnt2 {
 // #region 🔖️Vec3
 
 /// 📐️ A free 3D direction/displacement (no fixed origin).
-#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
@@ -202,7 +202,7 @@ pub struct Vec3 {
 }
 
 /// 📐️ A located 3D point in model space.
-#[derive(Clone, Copy, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Pnt3 {
     pub x: f64,
     pub y: f64,

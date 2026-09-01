@@ -151,6 +151,27 @@ impl<T: FromValue> FromValue for Vec<T> {
     }
 }
 
+/// 📐️ A fixed-size array encodes exactly like a `Vec<T>` (a plain JSON array) — the length is
+/// carried by `N`, not the wire, so decode rejects any array whose length doesn't match `N`
+/// (matches what a fixed-size `[T; N]` field means: this many, no more, no fewer).
+impl<T: ToValue, const N: usize> ToValue for [T; N] {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+impl<T: FromValue, const N: usize> FromValue for [T; N] {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Array(items) => {
+                let found = items.len();
+                let decoded: Vec<T> = items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect::<Result<_, _>>()?;
+                decoded.try_into().map_err(|_| ValueError::new(format!("expected an array of length {N}, found {found}")))
+            }
+            other => Err(ValueError::new(format!("expected an array, found {other:?}"))),
+        }
+    }
+}
+
 impl<T: ToValue> ToValue for Box<T> {
     fn to_value(&self) -> DslValue {
         (**self).to_value()
@@ -159,6 +180,22 @@ impl<T: ToValue> ToValue for Box<T> {
 impl<T: FromValue> FromValue for Box<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         T::from_value(value).map(Box::new)
+    }
+}
+
+/// 🌳️ A `BTreeSet<T>` encodes exactly like a `Vec<T>` (a plain JSON array), in the set's own sorted
+/// iteration order — matches `serde`'s own `BTreeSet` representation.
+impl<T: ToValue + Ord> ToValue for std::collections::BTreeSet<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+impl<T: FromValue + Ord> FromValue for std::collections::BTreeSet<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Array(items) => items.into_iter().enumerate().map(|(index, item)| T::from_value(item).map_err(|error| error.under(index))).collect(),
+            other => Err(ValueError::new(format!("expected an array, found {other:?}"))),
+        }
     }
 }
 
@@ -184,6 +221,41 @@ impl ToValue for DslValue {
 impl FromValue for DslValue {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         Ok(value)
+    }
+}
+
+/// 👻️ `PhantomData<T>` is zero-sized and carries no data regardless of `T` — matches `serde`'s own
+/// blanket impl (encodes as a unit value, decodes from anything). Unconditional on `T` (no `T:
+/// ToValue`/`FromValue` bound) so a generic struct with a `PhantomData<SomeUnrelatedType>` marker
+/// field never forces that unrelated type to implement these traits too.
+impl<T: ?Sized> ToValue for std::marker::PhantomData<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Null
+    }
+}
+impl<T: ?Sized> FromValue for std::marker::PhantomData<T> {
+    fn from_value(_value: DslValue) -> Result<Self, ValueError> {
+        Ok(std::marker::PhantomData)
+    }
+}
+
+/// 🔗️ A 2-tuple encodes as a fixed-length array — the same shape `serde_json` gives a Rust tuple.
+impl<A: ToValue, B: ToValue> ToValue for (A, B) {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(vec![self.0.to_value(), self.1.to_value()])
+    }
+}
+impl<A: FromValue, B: FromValue> FromValue for (A, B) {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::Array(items) if items.len() == 2 => {
+                let mut iter = items.into_iter();
+                let a = A::from_value(iter.next().expect("len == 2")).map_err(|error| error.under(0))?;
+                let b = B::from_value(iter.next().expect("len == 2")).map_err(|error| error.under(1))?;
+                Ok((a, b))
+            }
+            other => Err(ValueError::new(format!("expected a 2-element array, found {other:?}"))),
+        }
     }
 }
 //#endregion 🔖️Containers
@@ -239,6 +311,38 @@ mod tests {
         let encoded = map.to_value();
         assert_eq!(encoded, DslValue::object([("a".to_string(), DslValue::Number(1.0)), ("b".to_string(), DslValue::Number(2.0))]));
         assert_eq!(std::collections::BTreeMap::<String, i64>::from_value(encoded), Ok(map));
+    }
+
+    #[test]
+    fn tuple_round_trips_as_two_element_array_like_serde_json() {
+        let pair = ("a".to_string(), vec!["b".to_string(), "c".to_string()]);
+        let encoded = pair.to_value();
+        assert_eq!(encoded, DslValue::Array(vec![DslValue::String("a".to_string()), DslValue::Array(vec![DslValue::String("b".to_string()), DslValue::String("c".to_string())])]));
+        assert_eq!(<(String, Vec<String>)>::from_value(encoded), Ok(pair));
+        let bad = DslValue::Array(vec![DslValue::Number(1.0)]);
+        assert_eq!(<(i64, i64)>::from_value(bad), Err(ValueError::new("expected a 2-element array, found Array([Number(1.0)])")));
+    }
+
+    #[test]
+    fn fixed_size_array_round_trips_and_rejects_wrong_length() {
+        let values: [f64; 3] = [1.0, 2.0, 3.0];
+        let encoded = values.to_value();
+        assert_eq!(encoded, DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.0), DslValue::Number(3.0)]));
+        assert_eq!(<[f64; 3]>::from_value(encoded), Ok(values));
+
+        let too_short = DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.0)]);
+        assert_eq!(<[f64; 3]>::from_value(too_short), Err(ValueError::new("expected an array of length 3, found 2")));
+
+        let too_long = DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.0), DslValue::Number(3.0), DslValue::Number(4.0)]);
+        assert_eq!(<[f64; 3]>::from_value(too_long), Err(ValueError::new("expected an array of length 3, found 4")));
+    }
+
+    #[test]
+    fn phantom_data_encodes_as_null_and_decodes_from_anything() {
+        struct Marker;
+        let phantom: std::marker::PhantomData<Marker> = std::marker::PhantomData;
+        assert_eq!(phantom.to_value(), DslValue::Null);
+        assert_eq!(std::marker::PhantomData::<Marker>::from_value(DslValue::Bool(true)), Ok(std::marker::PhantomData));
     }
 }
 //#endregion 🧪️Tests

@@ -4,7 +4,6 @@
 use crate::engine::space::terminology::SStudioLabels;
 use semio_framework_os::{WorkflowSnapshot, OS_WORKFLOW_VFS_ROOT_ID};
 use semio_framework_plugin::{build_virtual_file_system_scene, resolve_labels_for_locale, LocalizedLabel, SurfaceKind, UiNode, VirtualFileSystemScene, WindowKindDefinition};
-use serde_json::json;
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_MEDIA_VFS: &str = "s-media-vfs";
@@ -58,8 +57,8 @@ pub async fn render(projection: &WorkflowSnapshot, locale: &str) -> UiNode {
         S_PLAY_SURFACE_MEDIA_VFS,
         crate::engine::space::S_PLAY_CONTROLLER_ID,
         VirtualFileSystemScene {
-            schema_json: serde_json::to_string(&schema).unwrap_or_else(|_| "{}".into()),
-            rows_json: serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
+            schema_json: pack::to_json_string(&schema),
+            rows_json: pack::to_json_string(&rows),
             selected_row_ids_json: None,
             hovered_row_id: None,
             empty_message: Some(labels.media_vfs_empty_message.into()),

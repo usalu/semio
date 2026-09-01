@@ -1,11 +1,21 @@
 //! 🖌️ Headless offscreen rasterization of first-party vector scenes to RGBA8 pixel buffers.
 //!
-//! This is the ONLY place `vello` and `wgpu` are named in this module — every public type below is
-//! first-party (`semio_framework_geometry::{BezPath, Affine}` plus plain Rust types), so a caller
-//! never needs to import either crate itself (CLAUDE.md: "use external libraries behind an
-//! interface" / "MUST NOT export api that ... requires an interface/class/type outside of this
-//! codebase"). Relocated from `🎞️animate`'s `⚙️engine/🎥️video` `VelloRenderer` (ticket
-//! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+//! Every public type is first-party (`semio_framework_geometry::{BezPath, Affine}` plus plain Rust
+//! types), so a caller never needs to import `vello`/`wgpu` itself (CLAUDE.md: "use external
+//! libraries behind an interface" / "MUST NOT export api that ... requires an interface/class/type
+//! outside of this codebase"). Relocated from `🎞️animate`'s `⚙️engine/🎥️video` `VelloRenderer`
+//! (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS).
+//!
+//! Tier split (same ticket, `🔍️research/📓️raster-tier-split.md`): `FillOp`/`StrokeOp`/`DrawOp`/
+//! `VectorScene`/`RasterError` are scene-description value types with zero `wgpu::`/`vello::`
+//! reference — they stay unconditional, including on `wasm32-wasip2`. `SceneRasterizer` (and every
+//! private fn it alone uses) genuinely opens a GPU device, which a `wasm32-wasip2` guest component
+//! cannot do (WASI Preview 2 defines no graphics API), so it is gated
+//! `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`. `target_arch = "wasm32"` alone is
+//! TRUE for `wasm32-wasip2` (confirm with `rustc --print cfg --target wasm32-wasip2`), so a bare
+//! `cfg(not(target_arch = "wasm32"))` would NOT exclude this target and the shipped component would
+//! still link `wgpu`/`vello` and their `wasm-bindgen`/`js-sys`/`web-sys` transitive edge — this is
+//! the exact bug class `🔍️research/📓️verified-outcomes.md` already found once in `🧩️puzzle`.
 
 use semio_framework_geometry::{Affine, BezPath};
 
@@ -91,7 +101,9 @@ impl std::error::Error for RasterError {}
 //#region 🔖️SceneRasterizer
 
 /// 🖥️ A headless wgpu + Vello device, sized once at construction, that rasterizes any number of
-/// [`VectorScene`]s to RGBA8 pixel buffers of that fixed size.
+/// [`VectorScene`]s to RGBA8 pixel buffers of that fixed size. Native/host-only — see module
+/// docstring; a `wasm32-wasip2` guest has no GPU device access.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub struct SceneRasterizer {
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -101,8 +113,19 @@ pub struct SceneRasterizer {
     target_texture: wgpu::Texture,
     target_view: wgpu::TextureView,
     readback_buffer: wgpu::Buffer,
+    readback_bytes_per_row: u32,
 }
 
+/// 📏️ Rounds `unpadded` up to `wgpu::COPY_BYTES_PER_ROW_ALIGNMENT` — wgpu rejects a
+/// `copy_texture_to_buffer` whose row stride isn't aligned, and `4 * width` only happens to be
+/// aligned when `width` is itself a multiple of 64.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+const fn align_bytes_per_row(unpadded: u32) -> u32 {
+    let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    unpadded.div_ceil(align) * align
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 impl SceneRasterizer {
     /// 🏗️ Creates a headless wgpu + Vello rasterizer at `width` × `height`.
     pub async fn new(width: u32, height: u32) -> Result<Self, RasterError> {
@@ -130,9 +153,14 @@ impl SceneRasterizer {
         )
         .map_err(|err| RasterError::Render(format!("{err:?}")))?;
         let (target_texture, target_view) = create_target_texture(&device, width, height);
-        let readback_buffer =
-            device.create_buffer(&wgpu::BufferDescriptor { label: Some("semio_framework_raster_readback"), size: u64::from(width * height * 4), usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ, mapped_at_creation: false });
-        Ok(Self { device, queue, renderer, width, height, target_texture, target_view, readback_buffer })
+        let readback_bytes_per_row = align_bytes_per_row(width * 4);
+        let readback_buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("semio_framework_raster_readback"),
+            size: u64::from(readback_bytes_per_row) * u64::from(height),
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        Ok(Self { device, queue, renderer, width, height, target_texture, target_view, readback_buffer, readback_bytes_per_row })
     }
 
     /// 🖼️ Renders `scene` over `background` and reads the result back as tightly packed RGBA8 rows.
@@ -140,10 +168,11 @@ impl SceneRasterizer {
         let vello_scene = build_vello_scene(scene);
         let params = vello::RenderParams { base_color: vello::peniko::Color::new(background), width: self.width, height: self.height, antialiasing_method: vello::AaConfig::Area };
         self.renderer.render_to_texture(&self.device, &self.queue, &vello_scene, &self.target_view, &params).map_err(|err| RasterError::Render(format!("{err:?}")))?;
-        read_pixels(&self.device, &self.queue, &self.target_texture, &self.readback_buffer, self.width, self.height)
+        read_pixels(&self.device, &self.queue, &self.target_texture, &self.readback_buffer, self.width, self.height, self.readback_bytes_per_row)
     }
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("semio_framework_raster_target"),
@@ -159,6 +188,7 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
     (texture, view)
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn build_vello_scene(scene: &VectorScene) -> vello::Scene {
     let mut vello_scene = vello::Scene::new();
     for op in &scene.ops {
@@ -175,11 +205,12 @@ fn build_vello_scene(scene: &VectorScene) -> vello::Scene {
     vello_scene
 }
 
-fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Texture, readback_buffer: &wgpu::Buffer, width: u32, height: u32) -> Result<Vec<u8>, RasterError> {
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Texture, readback_buffer: &wgpu::Buffer, width: u32, height: u32, bytes_per_row: u32) -> Result<Vec<u8>, RasterError> {
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("semio_framework_raster_readback") });
     encoder.copy_texture_to_buffer(
         wgpu::TexelCopyTextureInfo { texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
-        wgpu::TexelCopyBufferInfo { buffer: readback_buffer, layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(4 * width), rows_per_image: Some(height) } },
+        wgpu::TexelCopyBufferInfo { buffer: readback_buffer, layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(bytes_per_row), rows_per_image: Some(height) } },
         wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
     );
     queue.submit(Some(encoder.finish()));
@@ -191,7 +222,18 @@ fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Textu
     let _ = device.poll(wgpu::PollType::wait_indefinitely());
     receiver.recv().map_err(|_| RasterError::ReadbackChannelClosed)?.map_err(|err| RasterError::ReadbackMap(format!("{err:?}")))?;
     let data = slice.get_mapped_range();
-    let pixels = data.to_vec();
+    let unpadded_bytes_per_row = (width * 4) as usize;
+    let padded_bytes_per_row = bytes_per_row as usize;
+    let pixels = if padded_bytes_per_row == unpadded_bytes_per_row {
+        data.to_vec()
+    } else {
+        let mut out = Vec::with_capacity(unpadded_bytes_per_row * height as usize);
+        for row in 0..height as usize {
+            let start = row * padded_bytes_per_row;
+            out.extend_from_slice(&data[start..start + unpadded_bytes_per_row]);
+        }
+        out
+    };
     drop(data);
     readback_buffer.unmap();
     Ok(pixels)
@@ -235,6 +277,21 @@ mod tests {
         assert_eq!(scene.ops.len(), 1);
     }
 
+    /// 🔬️ Pure fixture, no GPU: `width=32` gives an unpadded row of `4*32=128` bytes, which is NOT
+    /// a multiple of `wgpu::COPY_BYTES_PER_ROW_ALIGNMENT` (256) — this is exactly the case that
+    /// made `scene_rasterizer_renders_expected_pixel_count` fail with wgpu's own validation error
+    /// ("Bytes per row does not respect COPY_BYTES_PER_ROW_ALIGNMENT") before `read_pixels` learned
+    /// to pad the copy and strip the padding back out. `width=64` stays aligned (`256 == 256`).
+    /// Exercises `align_bytes_per_row`, itself gated with `SceneRasterizer` — native/host-only.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    #[test]
+    fn align_bytes_per_row_pads_to_wgpu_alignment() {
+        assert_eq!(align_bytes_per_row(32 * 4), 256);
+        assert_eq!(align_bytes_per_row(64 * 4), 256);
+        assert_eq!(align_bytes_per_row(65 * 4), 512);
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     #[semio_framework_async_macros::async_test]
     async fn scene_rasterizer_renders_expected_pixel_count() {
         let Ok(mut rasterizer) = SceneRasterizer::new(32, 32).await else {

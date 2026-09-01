@@ -37,11 +37,5 @@ serde_json.workspace = true
 ui_render = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔢️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-js-sys = "0.3.83"
-semio-framework-async = { workspace = true }
-wasm-bindgen = "0.2.106"
-web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
-
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

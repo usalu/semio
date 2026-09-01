@@ -1,10 +1,10 @@
 //! 🧬️ schema leaf
 use crate::artifacts::fem2d::FemCamera;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.2d.config")]
 pub struct Fem2dConfig {
     #[state(config)]

@@ -3,7 +3,6 @@
 use crate::artifacts::zip::schema::diff::{self, ZipDiff};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;
 use crate::artifacts::zip::ZipSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Model
 //#region 🔖️Leaves
@@ -21,9 +20,9 @@ pub mod rename_entry;
 pub mod set_entry_data;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetArchiveComment(set_archive_comment::SetArchiveComment),

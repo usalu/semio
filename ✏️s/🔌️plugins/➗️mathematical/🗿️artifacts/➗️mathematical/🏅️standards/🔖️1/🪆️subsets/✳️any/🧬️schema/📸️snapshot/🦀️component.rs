@@ -3,6 +3,10 @@
 use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted mathematical document snapshot. Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
@@ -35,6 +39,36 @@ pub struct MathematicalSnapshot {
     pub equation: EquationSnapshot,
 }
 
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
+// (carries a `local_owner: Option<Arc<dyn Any>>` field and a `#[serde(bound = "")]` generic
+// shape `#[derive(ToValue, FromValue)]` cannot route through; see `semio-framework-value-derive`'s
+// fan-out playbook trap #3). Bridged per composed field through the PRE-EXISTING
+// `to_dsl_value`/`from_dsl_value` serde bridge (`ArtifactChild<S>` already implements
+// `Serialize`/`Deserialize` as a framework type — framework is exempt from the ban); `equation`
+// goes through `ToValue`/`FromValue` directly like every other field.
+impl ToValue for MathematicalSnapshot {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("notation".to_string(), to_dsl_value(&self.notation).unwrap_or(DslValue::Null)),
+            ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
+            ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
+            ("equation".to_string(), self.equation.to_value()),
+        ])
+    }
+}
+impl FromValue for MathematicalSnapshot {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        Ok(Self {
+            notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
+            results: from_dsl_value(field("results")).map_err(ValueError::new)?,
+            computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
+            equation: EquationSnapshot::from_value(field("equation"))?,
+        })
+    }
+}
+
 //#region 🔖️Equation
 /// 🪪 A never-reused node identity issued at node birth and carried in the snapshot — mirrors
 /// `✳️brep`'s `PersistentLabel` shape. A mutation address built from THIS survives unrelated
@@ -47,6 +81,19 @@ pub struct MathematicalSnapshot {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EquationNodeLabel(pub u64);
+
+// 🌱️ Hand-written — `#[derive(ToValue, FromValue)]` only supports named-field structs, not a
+// tuple struct like this one (see `semio-framework-value-derive`'s own docstring).
+impl ToValue for EquationNodeLabel {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for EquationNodeLabel {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u64::from_value(value).map(EquationNodeLabel)
+    }
+}
 
 /// 🌳 One labeled node of the persisted expression tree — deliberately a SEPARATE, plain,
 /// serde-friendly type from `cas::expr::Expr` (the `Rc`-shared, hash-cached, auto-simplifying
@@ -63,15 +110,17 @@ pub struct EquationNodeLabel(pub u64);
 /// `roots` vertical slice this wave proves end-to-end). `Fn`/`Piecewise`/`Rel`/`Wild`/`RootOf`/
 /// `Constant` are future work for whichever wave extends the mutation/inference table beyond
 /// `roots`/`change-coefficient`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct EquationNode {
     pub label: EquationNodeLabel,
     pub kind: EquationNodeKind,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum EquationNodeKind {
     /// 🔢️ Arbitrary-precision integer, round-tripped through `number::Integer`'s own
     /// `Display`/`FromStr` (decimal, sign-prefixed) — never `i64`, which would silently truncate.
@@ -101,8 +150,9 @@ pub enum EquationNodeKind {
 /// 📸️ Persisted equation content: the expression AST plus the label allocator that guarantees
 /// every future `create-term` mints a label no earlier mutation (or its inverse) could ever
 /// collide with — `next_label` only ever increases, even across delete+undo cycles.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct EquationSnapshot {
     pub expr: EquationNode,
     pub next_label: u64,
@@ -232,13 +282,13 @@ pub fn mathematical_identity_report_json(dsl_text: &str) -> Result<String, Strin
     let canonical_again = <MathematicalSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <MathematicalSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <MathematicalSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = pack::json::object([
+        ("parsed".to_string(), pack::json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), pack::json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), pack::json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), pack::json::Value::String(canonical.clone())),
+        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again.clone())),
+    ]);
+    Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge

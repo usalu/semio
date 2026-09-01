@@ -7,7 +7,7 @@
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-const S_STORY_ID = "🛠️framework🖥️os-plugins--S";
+const S_STORY_ID = "🛠️framework🖥️os-plugins--s";
 const S_PLUGIN_ID = "s";
 const READY_TIMEOUT_MS = 60_000;
 

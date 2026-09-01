@@ -15,7 +15,6 @@
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[cfg(test)]
@@ -27,8 +26,8 @@ use super::aabb::SemioAabb;
 /// `💡️inferences/` (currently: `aabb`, backed by the `📦aabb/` slug dir), keyed per
 /// `"{meshId}:{primitiveId}"`. `BTreeMap` (not `HashMap`) — `store::infer_field`'s own real
 /// return type, ordered/deterministic by key.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh.inference")]
 pub struct SemioMeshInference {
     #[derived]

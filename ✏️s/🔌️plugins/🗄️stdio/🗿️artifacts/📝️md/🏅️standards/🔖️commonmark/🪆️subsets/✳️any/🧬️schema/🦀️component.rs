@@ -3,18 +3,17 @@
 use crate::artifacts::md::schema::snapshot::MdBlock;
 use crate::artifacts::md::MdSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.md` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md")]
 pub struct MdArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<MdBlock>,
 }
 //#endregion 🔖️Artifact

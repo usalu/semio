@@ -425,7 +425,15 @@ if (import.meta.vitest) {
 
   it("actor instance close worker activation preserves the new generation across a delayed dispose", async () => {
     const { readFileSync } = await import("node:fs");
-    const { shardWorkerSource } = await import("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts");
+    // 🚧️ Specifier held in a variable, and `@vite-ignore`d, so no bundler follows it. This whole
+    // block is `import.meta.vitest`-only and Node-only (`node:worker_threads` below), but Vite
+    // statically analyses dynamic imports regardless of the guard: following this one pulls
+    // `🌐plugin-web-materialize.ts` — a BUILD-time module importing `node:child_process`,
+    // `node:fs` and `typescript`, plus repo-lib's `🔍️discovery` — into the browser worker bundle,
+    // which fails the storybook preview build and the os/dev server alike with
+    // `"node:url" doesn't have a matching export named "fileURLToPath"`.
+    const materializeSpecifier = "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts";
+    const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture.json", import.meta.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);
     const current = prior + 1n;

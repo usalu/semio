@@ -1,11 +1,13 @@
 //! 📝️ Direct publication-transient replacement payload and inverse behavior.
 
 use super::super::{PublicationTransient, PublicationTransientMutation};
+use semio_framework_value_derive::{FromValue, ToValue};
 use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangePublicationTransient {
     pub revision: u64,
 }

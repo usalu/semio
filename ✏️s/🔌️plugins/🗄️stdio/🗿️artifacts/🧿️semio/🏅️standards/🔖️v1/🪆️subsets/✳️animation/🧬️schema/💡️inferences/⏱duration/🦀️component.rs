@@ -5,12 +5,11 @@
 //! `InferredField` needed.
 
 use crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ Semio animation's keyframe-derived playback duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAnimationDuration {
     pub duration_seconds: f64,
     pub timeline_count: u32,

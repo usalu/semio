@@ -37,7 +37,6 @@ use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::MAX_RUNG;
 use crate::artifacts::step::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{apply_step_mutation, StepMutation};
 
@@ -64,7 +63,7 @@ pub mod remove_shape_representation;
 /// with no vocabulary entry behind it. `SetSnapshot` is KEPT: the derive checks `SEMANTICS.verb`,
 /// not the kind, and `set` is approved, so CC1's documented escape hatch (undoing a representation
 /// removal by restoring the whole projection) survives the migration intact.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc1")]
 pub enum StepCc1Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),

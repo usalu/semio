@@ -52,15 +52,15 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 # 🧵️ The generated `🧬️mutations/💾️binary` decoders yield through `semio_framework_job::StepOutcome`,
 # so the job crate has to be linked here the same way `🌍️gis` links it.
 semio-framework-job = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-semio-framework-async = { workspace = true }
-wasm-bindgen = { workspace = true }
-js-sys = "0.3.83"
-web-sys = { version = "0.3.98", features = ["console", "HtmlCanvasElement"] }
-
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🌱️ Test-only: every production/`#[cfg(test)]`-adjacent call site now runs on `ToValue`/`FromValue`
+# (ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`). What remains is the
+# `🧪️tests/<case>/🦀️component.rs` per-mutation fixture-comparison suite, which deliberately keeps
+# `serde_json` as the differential third-party oracle its own assertions are named after (CLAUDE.md:
+# "You SHOULD use existing libraries as possible to test our implementation").
+serde = { workspace = true }
+serde_json = { workspace = true }

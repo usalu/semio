@@ -9,7 +9,7 @@ use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot, Work
 use crate::editor::process3d::catalog_machine;
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Helpers
 fn add_workshop_machine_operation(fixture: &Process3dSnapshot, machine: WorkshopMachine) -> Option<Process3dMutation> {
@@ -29,7 +29,7 @@ fn remove_workshop_machine_operation(fixture: &Process3dSnapshot, id: &str) -> O
 pub mod add_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-workshop-machine")]
     pub struct AddWorkshopMachine {
         pub catalog_id: String,
@@ -58,7 +58,7 @@ pub mod add_workshop_machine {
 pub mod remove_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-workshop-machine")]
     pub struct RemoveWorkshopMachine {
         pub id: String,
@@ -83,7 +83,7 @@ pub mod remove_workshop_machine {
 pub mod update_workshop_machine {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "update-workshop-machine")]
     pub struct UpdateWorkshopMachine {
         #[dsl(block)]

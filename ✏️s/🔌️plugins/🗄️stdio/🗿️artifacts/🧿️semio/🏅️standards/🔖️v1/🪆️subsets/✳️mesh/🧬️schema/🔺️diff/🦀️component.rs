@@ -14,7 +14,6 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️NamedAdded
 /// 🏷️ Local wrapper carrying the real target position for a `NamedTripleDiff<K,D,T>.added` entry.
@@ -24,8 +23,8 @@ use serde::{Deserialize, Serialize};
 /// reconstructed snapshot whenever a remove+re-add happened together in the same `between()`.
 /// Fixed locally (shared `⚙️engine/🧰️triples` is out of this subset's write scope) — same fix,
 /// same shape, as `value`'s own `NamedAdded<T>` (`w2a-verify-report.md`'s mesh finding).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedAdded<T> {
     pub index: usize,
     pub item: T,
@@ -149,67 +148,67 @@ pub type SemioMaterialsDiff = NamedTripleDiff<String, SemioMaterialDiff, NamedAd
 pub type SemioTexturesDiff = NamedTripleDiff<String, SemioTextureDiff, NamedAdded<SemioTexture>>;
 
 /// 🔺️ Diff for `s.stdio.semio.mesh`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioMeshDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub meshes: Option<SemioMeshesDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub materials: Option<SemioMaterialsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub textures: Option<SemioTexturesDiff>,
 }
 
 /// 🔺️ Per-mesh sparse diff — `id` is the key, so only `primitives` (a nested id-keyed triple)
 /// can change.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioMeshItemDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub primitives: Option<SemioPrimitivesDiff>,
 }
 
 /// 🔺️ Per-primitive sparse diff. `positions`/`normals`/`uvs`/`colors`/`indices` are weak
 /// parallel-buffer fields (whole-value replaced, per the recipe — never sub-diffed per vertex).
 /// `material_id` is tri-state (`Some(None)` = material reference cleared).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioPrimitiveDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub topology: Option<SemioTopology>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub positions: Option<Vec<SemioPoint3>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub normals: Option<Vec<SemioPoint3>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub uvs: Option<Vec<SemioUv>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub colors: Option<Vec<SemioRgba>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub indices: Option<Vec<u32>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub material_id: Option<Option<String>>,
 }
 
 /// 🔺️ Per-material sparse diff — `id` is the key.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioMaterialDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub base_color: Option<SemioRgba>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub metallic: Option<f32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub roughness: Option<f32>,
 }
 
 /// 🔺️ Per-texture sparse diff — `id` is the key.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTextureDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mime: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bytes: Option<Vec<u8>>,
 }
 //#endregion 🔖️DiffTypes

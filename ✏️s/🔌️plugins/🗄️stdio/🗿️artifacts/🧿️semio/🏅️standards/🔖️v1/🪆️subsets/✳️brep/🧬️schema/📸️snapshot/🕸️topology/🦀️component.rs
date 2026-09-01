@@ -23,7 +23,7 @@ use semio_framework_os_kernel::EngineRep;
 
 // #region 🔖️Entities
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Vertex {
     pub position: Pnt3,
     pub tol: Tol,
@@ -32,7 +32,7 @@ pub struct Vertex {
 
 /// 🧱️ An edge's `curve` is shared geometry; `range` is *this edge's* portion of that curve's
 /// parameter domain, so two edges split from one original edge share `curve` with disjoint ranges.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Edge {
     pub curve: Curve3Id,
     pub range: (f64, f64),
@@ -46,7 +46,7 @@ pub struct Edge {
 /// the edge's own `v0 → v1` direction. `pcurve`/`prange` are the edge's curve reparametrized into
 /// the owning face's `(u, v)` domain — `None` only ever transiently, before a producer has filled
 /// it in; a face with a missing pcurve on a non-planar surface fails validation (see `validate.rs`).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Coedge {
     pub edge: EdgeId,
     pub forward: bool,
@@ -58,13 +58,13 @@ pub struct Coedge {
 }
 
 /// 🧱️ A closed cycle of coedges bounding one region of a face (the outer boundary, or one hole).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Loop {
     pub first: CoedgeId,
     pub face: FaceId,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Face {
     pub surface: SurfaceId,
     pub outer: Option<LoopId>,
@@ -76,13 +76,13 @@ pub struct Face {
     pub label: PersistentLabel,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Shell {
     pub faces: Vec<FaceId>,
     pub label: PersistentLabel,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Solid {
     pub outer: ShellId,
     pub inners: Vec<ShellId>,
@@ -95,7 +95,7 @@ pub struct Solid {
 
 /// 🧱️ One B-Rep model: topology arenas + geometry pools + the label counter that stamps every
 /// newly-born entity with a [`PersistentLabel`].
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Body {
     pub vertices: Store<Vertex, VertexId>,
     pub edges: Store<Edge, EdgeId>,
@@ -216,7 +216,7 @@ impl Body {
 /// — translating a snapshot's own id convention into `PersistentLabel` is the caller's job (see
 /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history`]'s own docstring on why a label is never reused), done once per
 /// diff-constructor call, not baked into this ephemeral seed's own shape.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedVertex {
     pub label: PersistentLabel,
     pub position: Pnt3,
@@ -224,7 +224,7 @@ pub struct SeedVertex {
 }
 
 /// 🌱 One restored edge; `v0`/`v1` reference [`SeedVertex::label`]s, not arena ids.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedEdge {
     pub label: PersistentLabel,
     pub v0: PersistentLabel,
@@ -237,7 +237,7 @@ pub struct SeedEdge {
 /// 🌱 One restored face; `outer`/`inners` are indices into [`BrepArenaSeed::loops`] — loops carry
 /// no [`PersistentLabel`] of their own (structural, not independently document-nameable, per
 /// [`crate::artifacts::semio::standards::v1::subsets::brep::schema::diff::euler::make_loop`]'s own docstring), so an ordinal index is the only address.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedFace {
     pub label: PersistentLabel,
     pub surface: Surface,
@@ -248,14 +248,14 @@ pub struct SeedFace {
 }
 
 /// 🌱 One restored shell; `faces` references [`SeedFace::label`]s.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedShell {
     pub label: PersistentLabel,
     pub faces: Vec<PersistentLabel>,
 }
 
 /// 🌱 One restored solid; `outer`/`inners` reference [`SeedShell::label`]s.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct SeedSolid {
     pub label: PersistentLabel,
     pub outer: PersistentLabel,
@@ -266,7 +266,7 @@ pub struct SeedSolid {
 /// `EngineRep<P>`. Never persisted, never registered as an artifact schema, never a second
 /// `SemioBrepSnapshot`: it exists only for the span of one diff-constructor call, built from
 /// whatever snapshot the caller (stdio's `✳️brep` subset, once its mutation triads land) owns.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct BrepArenaSeed {
     /// 🌱 The label high-water-mark to seed [`LabelSource::from_next`] with — MUST be carried
     /// forward from the persisted snapshot, never reset to 0, or two independent diff-constructor
@@ -412,11 +412,12 @@ pub mod history {
     /// increasing counter at birth. Unlike an arena [`crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::arena::ArenaId`] (which can be reused
     /// after removal once its generation increments), a label is never reused — it survives arena
     /// compaction and is the identity the document layer's persistent naming keys off of.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+    #[value(transparent)]
     pub struct PersistentLabel(pub u64);
 
     /// 📜️ Issues fresh, never-repeating labels for one `Body`.
-    #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, Default, value_derive::ToValue, value_derive::FromValue)]
     pub struct LabelSource {
         next: u64,
     }
@@ -455,7 +456,7 @@ pub mod history {
     /// than arena ids (which can be reused after removal): every entity the operation created, every
     /// entity it modified (paired with its label so the same entity's before/after states are
     /// linkable), and every entity it deleted.
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
     pub struct OpDelta {
         pub generated: Vec<PersistentLabel>,
         pub modified: Vec<PersistentLabel>,

@@ -11,25 +11,24 @@
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️RunList
 /// 📋 Whole-list wrapper for the `runs` field diff — every mutation triad rebuilds the full
 /// ordered `values` vec from `base` and wraps it here (`din4108::Din4108LayerList`'s own shape).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct SemioTextRunList {
     pub values: Vec<SemioTextRun>,
 }
 //#endregion 🔖️RunList
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text.diff")]
 pub struct SemioTextDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub runs: Option<SemioTextRunList>,
 }
 

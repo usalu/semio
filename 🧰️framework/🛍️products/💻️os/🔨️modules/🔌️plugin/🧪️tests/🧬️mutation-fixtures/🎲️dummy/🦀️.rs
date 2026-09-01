@@ -9,6 +9,7 @@ use crate::app::testkit::{assert_registered_ingest_idempotent, assert_two_regist
 use protocol::{Mutation, MutationDiff};
 use semio_framework::{ActionKind, Fault, IconName, ToolFactoryKey, ToolJobFactory, ToolOperationSpec, ToolExecutionContract};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 use ui_wgpu::wgpu::LocalizedLabel;
 
@@ -44,7 +45,7 @@ impl store::ArtifactPack for DummySnapshot {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub(crate) struct DummyDiff {
     count: Option<i32>,
 }

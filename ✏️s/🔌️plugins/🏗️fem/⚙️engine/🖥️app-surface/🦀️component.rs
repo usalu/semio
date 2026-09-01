@@ -6,7 +6,7 @@
 use crate::model::Dof;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, BuiltNode, LocalizedLabel};
 use semio_framework_ui_contract::{Buildable, HasBase};
-use serde_json::Value;
+use dsl::DslValue;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -111,10 +111,15 @@ pub enum DisplayMode {
 
 /// 👁️ Parses `setResultDisplay`'s `{"sourceId"?, "mode": "static"|"modal"|"buckling", "modeIndex"?}`
 /// args into a `ResultDisplay` — unknown/missing `mode` falls back to `Static`.
-pub fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
-    let source_id = args.and_then(|v| v.get("sourceId")).and_then(Value::as_str).map(str::to_string);
-    let mode_index = args.and_then(|v| v.get("modeIndex")).and_then(Value::as_u64).unwrap_or(0) as usize;
-    let mode = match args.and_then(|v| v.get("mode")).and_then(Value::as_str) {
+pub fn parse_result_display(args: Option<&DslValue>) -> ResultDisplay {
+    let source_id = args.and_then(|v| v.get("sourceId")).and_then(DslValue::as_str).map(str::to_string);
+    let mode_index = args
+        .and_then(|v| v.get("modeIndex"))
+        .and_then(DslValue::as_f64)
+        .filter(|value| value.is_finite() && *value >= 0.0 && value.fract() == 0.0 && *value <= usize::MAX as f64)
+        .map(|value| value as usize)
+        .unwrap_or(0);
+    let mode = match args.and_then(|v| v.get("mode")).and_then(DslValue::as_str) {
         Some("modal") => DisplayMode::Modal(mode_index),
         Some("buckling") => DisplayMode::Buckling(mode_index),
         _ => DisplayMode::Static,
@@ -167,7 +172,8 @@ mod tests {
 
     #[test]
     fn parse_result_display_unknown_mode_falls_back_to_static() {
-        assert_eq!(parse_result_display(Some(&serde_json::json!({ "mode": "bogus" }))).mode, DisplayMode::Static);
+        let args = DslValue::object([("mode".to_string(), DslValue::String("bogus".to_string()))]);
+        assert_eq!(parse_result_display(Some(&args)).mode, DisplayMode::Static);
     }
 
     #[test]

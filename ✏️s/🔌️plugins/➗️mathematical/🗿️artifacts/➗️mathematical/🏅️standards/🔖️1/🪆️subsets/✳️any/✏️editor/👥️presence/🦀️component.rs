@@ -2,12 +2,16 @@
 
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ No shareable live surface state yet — graph edits are document mutations and viewport/locale live in config.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct MathematicalPresence {}
 
 impl protocol::MutationDiff<MathematicalPresence> for MathematicalPresence {
@@ -47,8 +51,9 @@ impl ArtifactPack for MathematicalPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslOps)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum MathematicalPresenceMutation {
     Noop,
 }

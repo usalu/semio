@@ -31,7 +31,6 @@ use crate::artifacts::ply::PlySnapshot;
 use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.ply`.
@@ -58,9 +57,9 @@ pub mod set_row_property;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = PlySnapshot, diff = PlyDiff, schema = "PlyMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PlyMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetFormat(set_format::SetFormat),

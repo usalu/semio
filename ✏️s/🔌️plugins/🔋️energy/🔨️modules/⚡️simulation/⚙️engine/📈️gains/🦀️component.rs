@@ -1,10 +1,11 @@
 //! 🔥️ Internal gains: people, lighting, equipment, process, data center decomposition.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️GainDecomposition
 /// 📊️ Internal gain split into sensible, radiant, latent, and return-air fractions [W].
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct GainDecomposition {
     pub total_w: f64,
     pub sensible_w: f64,
@@ -30,7 +31,7 @@ impl GainDecomposition {
 
 // #region 🔖️People
 /// 👤️ Metabolic rate presets [W/person] per ASHRAE 55 activity levels.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ActivityLevel {
     SeatedQuiet,
     OfficeWork,

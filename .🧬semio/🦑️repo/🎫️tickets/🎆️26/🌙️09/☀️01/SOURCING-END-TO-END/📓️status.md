@@ -44,8 +44,44 @@ and the app mounts on :6081 with its four windows.
    `test_support::assert_document_{text,pack}_round_trip` retires the comparison document it parses.
    115 passed / 11 failed, down from "does not compile".
 
+## 🚧️ Blocked: a peer's `ToValue`/`FromValue` serde-removal migration
+Since ~13:20 the workspace has not compiled, in crates this ticket never touched. The breakage walked
+up the dependency chain over ~2h of retries — `semio-framework-mesh-engine` → `semio-framework` →
+`semio-framework-plugin` → `semio-framework-os-kernel` → `semio-framework-ui` → `semio-s-plugin-stdio`
+— which is a refactor in progress, not a stuck one. It currently stops at **2206 errors in
+`semio-s-plugin-stdio`**, all of one shape: the new derives reject tuple structs and multi-payload
+enum variants that stdio's artifacts are full of, e.g.
+
+```
+#[derive(ToValue, FromValue)] supports named-field structs …, not tuple/unit structs
+  📰xml/…/🧬️mutation-support/🦀️component.rs:6   pub struct XmlNodePath(pub Vec<usize>);
+#[derive(ToValue)] enum variants must be unit, a single unnamed payload, or named fields
+  🏗️ifc/…/📸️snapshot/🦀️component.rs:39          TypedValue(String, Vec<IfcValue>),
+```
+
+`semio-s-plugin-sourcing` depends on `semio-s-plugin-stdio`, so nothing here can be built or tested
+until that lands. Retry with `cargo test -p semio-s-plugin-sourcing`; the ticket's own work needs no
+changes to resume. Everything in this ticket that COULD be verified was: the migration compiled clean
+for `wasm32-wasip2` at ~13:07, before the first of these errors appeared.
+
+**17:36 recheck — every framework crate has recovered; only stdio is left.** A
+`cargo check -p semio-s-plugin-sourcing --target wasm32-wasip2` now reports **zero** errors outside
+`semio-s-plugin-stdio`, and 2196 inside it, concentrated in its largest artifacts:
+
+| artifact | errors | | artifact | errors |
+| --- | ---: | --- | --- | ---: |
+| `🧿️semio` | 593 | | `🎞️gif` | 74 |
+| `🧊️gltf` | 259 | | `🏗️ifc` | 72 |
+| `📄️pdf` | 220 | | `🎨️svg` | 62 |
+| `📐️step` | 82 | | `📜️docx` | 58 |
+
+The peer has landed a new `🧰️framework/🔨️modules/🌱️value/✨️derive` crate and worked the migration down
+the dependency chain to its largest consumer, so this reads as nearly through rather than stalled. Not
+picked up here: those are files a peer is editing right now, and 2200 mechanical derive fixes across
+someone else's in-flight refactor is the one thing guaranteed to collide.
+
 ## Open
-- The remaining test failures, re-run after the migration (in flight).
+- The remaining test failures, re-run after the migration (blocked, above).
 - **Grid window scene overflows its fixed 32 KiB surface payload** (`ui.fixed-capacity` at
   `mesh-window.scene`) for the unfiltered demo stock — a runtime defect, not just a test one. Needs
   measuring before choosing between a smaller payload and the `World3dSnapshotLease` page path.

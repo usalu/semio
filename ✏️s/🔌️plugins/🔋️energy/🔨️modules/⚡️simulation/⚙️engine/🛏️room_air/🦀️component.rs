@@ -1,10 +1,11 @@
 //! 🌀️ Room air distribution models: mixed, stratified, displacement, UFAD, surface-specific.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️RoomAirInput
 /// 📥️ Inputs for room air model evaluation.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RoomAirInput {
     pub zone_temp_c: f64,
     pub supply_temp_c: f64,
@@ -19,7 +20,7 @@ pub struct RoomAirInput {
 
 // #region 🔖️RoomAirOutput
 /// 📤️ Room air model temperatures [°C].
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RoomAirOutput {
     pub occupied_temp_c: f64,
     pub return_temp_c: f64,
@@ -32,7 +33,7 @@ pub struct RoomAirOutput {
 
 // #region 🔖️RoomAirModel
 /// 🌀️ Room air distribution model per ASHRAE / ISO 7730 room air classifications.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum RoomAirModel {
     FullyMixed,
     VerticalGradient { gradient_k_per_m: f64 },

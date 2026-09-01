@@ -11,7 +11,7 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
 #[dsl(keyword = "set-mtllib")]
 pub struct SetMtllib {

@@ -12,7 +12,6 @@ use crate::artifacts::step::engine::part21::Part21Value;
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Header, Part21Instance};
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.ifc.2x3`.
@@ -29,9 +28,9 @@ pub mod set_header;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3Mutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum Ifc2x3Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     UpsertInstance(upsert_instance::UpsertInstance),
@@ -276,7 +275,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<Ifc2x3Mutation> {
                             Part21Value::Enum("EDGE".into()),
                             Part21Value::Ref(42),
                             Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]),
-                            Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())]),
+                            Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] },
                         ],
                     ),
                     ("IFCPHYSICALSIMPLEQUANTITY".into(), vec![Part21Value::Unset]),

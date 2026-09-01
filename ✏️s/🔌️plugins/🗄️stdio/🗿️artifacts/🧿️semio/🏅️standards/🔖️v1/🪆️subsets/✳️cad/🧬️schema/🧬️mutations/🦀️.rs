@@ -12,7 +12,6 @@ use crate::artifacts::semio::standards::v1::subsets::cad::schema::diff::{
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed document mutation for `stdio.semio.cad`. Every variant addresses one facet of the CAD
@@ -52,9 +51,9 @@ pub mod set_block_entity_layer;
 pub mod set_block_entity_geometry;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioCadSnapshot, diff = SemioCadDiff, schema = "SemioCadMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioCadMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     AddLayer(add_layer::AddLayer),

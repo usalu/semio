@@ -33,15 +33,14 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::io::check_brep_referential_integrity;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 🩺 One referential-integrity finding — a small, owned, `Serialize`/`Deserialize` projection of
 /// `dsl::Diagnostic` (whose own `FaultCode`/`Severity`/`TextSpan`/`ExpectedSet` machinery is built
 /// for parser diagnostics, not for a cache `Value`; this leaf only needs the two fields that
 /// actually carry validation content).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepValidationDiagnostic {
     pub code: String,
     pub message: String,
@@ -77,7 +76,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     /// covers every field the check touches — cheaper and less error-prone than hand-rolling a
     /// bespoke byte encoder for a root-only, single-key chain.
     fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
-        #[derive(Serialize)]
+        #[derive(value_derive::ToValue)]
         struct DepInput<'a> {
             vertices: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex],
             edges: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepEdge],

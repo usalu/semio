@@ -10,7 +10,6 @@
 //! merged into csv's (different standard, different grammar, no shared quoting semantics).
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
@@ -18,8 +17,8 @@ pub const STDIO_TSV_DOCUMENT_SCHEMA: &str = "stdio.tsv";
 
 //#region 🔖️LineEnding
 /// ↩️ The file's own line-ending convention. IANA TSV doesn't mandate one; real files use either.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum LineEnding {
     Lf,
     Crlf,
@@ -46,20 +45,20 @@ impl Default for LineEnding {
 /// 📸️ Persisted `stdio.tsv` snapshot — a raw row grid (no header/data distinction; IANA TSV
 /// draws none structurally) + the two pieces of whole-file retention metadata a byte-exact
 /// split/rejoin needs: whether the source ended with a line terminator, and which one it used.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv")]
 pub struct TsvSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<Vec<String>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trailing_newline: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub line_ending: LineEnding,
 }
 

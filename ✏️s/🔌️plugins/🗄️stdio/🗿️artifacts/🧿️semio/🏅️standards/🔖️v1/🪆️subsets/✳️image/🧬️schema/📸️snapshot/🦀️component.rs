@@ -10,7 +10,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — the semio design
@@ -25,8 +24,8 @@ pub const STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.image";
 /// 🎨️ Source pixel colorspace — every frame's `rgba8` buffer is always normalized to RGBA8 on
 /// decode (per the master plan's snapshot spec), so this field records the SOURCE colorspace for
 /// honest round-trip/re-encode decisions, not a second in-memory pixel layout.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum SemioColorspace {
     #[default]
     Rgb,
@@ -41,11 +40,11 @@ pub enum SemioColorspace {
 /// 🖼️ One decoded frame: always-RGBA8 pixels (row-major, `width*height*4` bytes) plus its
 /// animation delay. A single-frame image (png/jpg/bmp/tiff) has exactly one `SemioImageFrame`
 /// with `delay_ms: 0`. Strong entity — per-field diffable (see `🔺️diff`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioImageFrame {
     pub delay_ms: u32,
-    #[serde(default)]
+    #[value(default)]
     pub rgba8: Vec<u8>,
 }
 //#endregion 🔖️Frame
@@ -53,18 +52,18 @@ pub struct SemioImageFrame {
 //#region 🔖️Metadata
 /// 🏷️ One textual metadata entry (png tEXt/iTXt, exif-as-text, gif comment-extension-derived, …)
 /// — name-keyed by `key`. Weak/value entity: its "diff" is the whole new value, never sub-diffed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioImageMetadataEntry {
     pub key: String,
-    #[serde(default)]
+    #[value(default)]
     pub value: String,
 }
 //#endregion 🔖️Metadata
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image")]
 pub struct SemioImageSnapshot {
     #[state(artifact)]
@@ -74,20 +73,20 @@ pub struct SemioImageSnapshot {
     #[state(artifact)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub colorspace: SemioColorspace,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub bit_depth: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<SemioImageFrame>,
     /// 🎨️ Embedded ICC color profile bytes, verbatim — `None` when the source carried none.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub icc: Option<Vec<u8>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub metadata: Vec<SemioImageMetadataEntry>,
 }
 

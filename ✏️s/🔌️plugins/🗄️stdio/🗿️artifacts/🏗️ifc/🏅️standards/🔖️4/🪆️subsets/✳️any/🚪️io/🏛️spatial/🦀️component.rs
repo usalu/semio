@@ -7,12 +7,11 @@
 //! this session's own convention (ticket `26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION`).
 
 use crate::artifacts::step::engine::part21::{Part21Document, Part21Value};
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
 /// 🌳️ One node of the `IfcRelAggregates`/`IfcRelContainedInSpatialStructure` decomposition tree.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 pub struct SpatialNode {
     pub id: u64,
     pub ifc_type: String,
@@ -24,7 +23,8 @@ pub struct SpatialNode {
 }
 
 /// 🧮️ Row-major affine 4x4 matrix; point transform is `p' = M * p`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(transparent)]
 pub struct Mat4(pub [[f64; 4]; 4]);
 
 impl Default for Mat4 {
@@ -59,13 +59,13 @@ impl Mat4 {
 
 /// 🏷️ One `IfcPropertySingleValue` — value kept as the raw generic `Part21Value` (may be a
 /// `Typed` wrapper like `IFCLENGTHMEASURE(3000.)`), nothing schema-narrowed away.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PropertyValue {
     pub name: String,
     pub value: Part21Value,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct PropertySet {
     pub id: u64,
     pub name: String,
@@ -73,7 +73,7 @@ pub struct PropertySet {
 }
 
 /// 🧐️ Full spatial/placement/pset analysis of an IFC4 Part-21 document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 pub struct SpatialAnalysis {
     pub roots: Vec<SpatialNode>,
     /// 🗺️ `IfcLocalPlacement` id -> composed world matrix.

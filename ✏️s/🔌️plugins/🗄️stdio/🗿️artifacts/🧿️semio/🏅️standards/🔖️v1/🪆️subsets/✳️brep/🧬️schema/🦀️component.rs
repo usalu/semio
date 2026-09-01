@@ -3,31 +3,30 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.brep")]
 pub struct SemioBrepArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub vertices: Vec<BrepVertex>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<BrepEdge>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub loops: Vec<BrepLoop>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<BrepFace>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub shells: Vec<BrepShell>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub solids: Vec<BrepSolid>,
 }
 

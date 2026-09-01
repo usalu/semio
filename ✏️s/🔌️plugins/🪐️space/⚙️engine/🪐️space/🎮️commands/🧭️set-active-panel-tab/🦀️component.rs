@@ -4,9 +4,8 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "active-panel-tab")]
 pub struct SetActivePanelTab {
     pub tab_id: String,
@@ -39,7 +38,6 @@ mod tests {
         use crate::engine::space::SpaceCommand;
         use semio_framework_os::{empty_workflow_snapshot, os_app_registration, workflow_palette, ArtifactPresentation, MediaClass, MediaForm, MediaType};
         use semio_framework_plugin::{App, AppIo, LocalizedLabel, SurfaceKind};
-        use serde_json::json;
         // 🌉️ `AppBuilder::build_definition` itself hard-asserts a non-empty `document` — so the
         // empty-breadcrumb case can only ever reach `register_app_io` via a wire-decoded `AppDefinition`
         // that bypassed the builder entirely. Simulate that faithfully: build a normal, valid
@@ -59,15 +57,17 @@ mod tests {
                 ArtifactPresentation { id: "root-tool".into(), name: "Root Tool".into(), dimension: String::new(), component_kind: "root-tool".into() },
             ))
             .build_definition();
-        let mut app_json = serde_json::to_value(&definition).expect("serialize AppDefinition");
+        let mut app_json = pack::json_from_dsl_value(&dsl::to_dsl_value(&definition).expect("serialize AppDefinition"));
         // 🩹️ `AppDefinition`'s wire field is `breadcrumb` (`AppBuilder::document(...)` is the builder
         // METHOD name that sets it, not the serialized field name — `#[serde(rename_all =
         // "camelCase")]` leaves the single-word `breadcrumb` unchanged). Blanking `"document"` here was
         // a no-op that silently left the real `"breadcrumb": ["root-tool"]` untouched, so this test's
         // "empty breadcrumb" simulation never actually happened — masked until now by the canonical-id
         // panic this lane fixed, which never let execution reach this far before.
-        app_json["breadcrumb"] = json!([]);
-        let wire = json!([{ "pluginId": "root", "app": app_json }]).to_string();
+        if let pack::JsonValue::Object(object) = &mut app_json {
+            object.insert("breadcrumb", pack::json!([]));
+        }
+        let wire = pack::json!([{ "pluginId": "root", "app": app_json }]).to_string();
         let projection = empty_workflow_snapshot();
         let config = SpaceConfig::default();
         studio_emit(&projection, &config, &SpaceCommand::SetAppRegistrations(crate::engine::space::commands::set_app_registrations::SetAppRegistrations { json: wire })).expect("handle");
@@ -75,7 +75,7 @@ mod tests {
         assert!(workflow_palette().iter().any(|entry| entry.plugin_id == "root" && entry.app_id == root_tool_id), "workflow_palette must surface the pushed app");
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::engine::space::terminology::SStudioLabels>(&config.locale);
         let tree = crate::engine::space::panels::catalogue::build_catalogue_tree(labels, semio_framework_plugin::locale_from_str(&config.locale));
-        let json_tree = serde_json::to_string(&tree).unwrap();
+        let json_tree = pack::to_json_string(&tree);
         assert!(json_tree.contains(&format!("s-play-catalogue.document.{root_tool_id}")), "an empty-document app must still surface as a top-level catalogue leaf, json={json_tree}");
     }
 }

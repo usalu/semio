@@ -69,16 +69,17 @@ pub fn config_sun(cfg: &Process3dConfig) -> WorldSunConfig {
 /// migrated world3d call site's empty-selection `world3d_selection_json` call (e.g. `📐️cad`'s
 /// `world_selection_json`).
 fn process3d_selection_json(active_utility: &str) -> String {
-    let mut value: serde_json::Value = serde_json::from_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| json!({}));
-    if let Some(object) = value.as_object_mut() {
-        object.insert("engagementSessionActive".into(), json!(active_utility != "select"));
-        object.insert("faceDragActive".into(), json!(active_utility == "select"));
+    let mut value: semio_framework::DslValue = semio_framework_os_kernel::json::from_json_str(&world3d_selection_json("rectangle", &[], None)).unwrap_or_else(|_| semio_framework::DslValue::Object(Vec::new()));
+    if let semio_framework::DslValue::Object(entries) = &mut value {
+        entries.retain(|(key, _)| key != "engagementSessionActive" && key != "faceDragActive");
+        entries.push(("engagementSessionActive".to_string(), semio_framework::DslValue::Bool(active_utility != "select")));
+        entries.push(("faceDragActive".to_string(), semio_framework::DslValue::Bool(active_utility == "select")));
     }
-    value.to_string()
+    semio_framework_os_kernel::json::to_json_string(&value)
 }
 
-fn process3d_window_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: crate::editor::process3d::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+fn process3d_window_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: crate::editor::process3d::PROCESS_3D_PLAY_APP_ID.into(), action: action.into(), args }
 }
 //#endregion 🔖️Selection
 

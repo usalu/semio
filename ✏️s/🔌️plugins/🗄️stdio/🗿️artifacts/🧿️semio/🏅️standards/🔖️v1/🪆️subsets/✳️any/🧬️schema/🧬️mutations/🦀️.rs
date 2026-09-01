@@ -48,11 +48,10 @@ use crate::artifacts::semio::standards::v1::subsets::video::schema::{mutations::
 use protocol::Mutation;
 use protocol::OpBinary;
 use protocol::OpText;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔧️ Adjacently tagged (`tag = "mutation"`, `content = "payload"`), NOT internally tagged like
-/// every one of the 18 wrapped subset enums' own `#[serde(tag = "mutation", ...)]` — an
+/// every one of the 18 wrapped subset enums' own `#[value(tag = "mutation", ...)]` — an
 /// internally-tagged wrapper here would collide key-for-key with a wrapped variant's OWN
 /// `"mutation"` discriminator field when serde flattens a newtype variant's fields into the
 /// outer value (real bug caught by this file's own `op_text_binary_roundtrip_law` test: printed
@@ -66,7 +65,7 @@ use serde::{Deserialize, Serialize};
 /// least one hyphen, so a single-word kind like `brep` is rejected outright. `apply` is the
 /// approved verb every leaf already carried in its `SEMANTICS.verb`, so the variant becomes
 /// `ApplyBrep` / kind `apply-brep` — the same treatment `stdio.binary`'s `Splice` →
-/// `ReplaceByteRange` just got. Each renamed variant carries `#[serde(rename = "<noun>")]` so the
+/// `ReplaceByteRange` just got. Each renamed variant carries `#[value(rename = "<noun>")]` so the
 /// wire tag (`"brep"`, `"mesh"`, …) is unchanged — the catalog, the feature files and every
 /// committed fixture still speak the bare noun.
 //#region 🔖️Leaves
@@ -112,48 +111,48 @@ pub mod apply_kit;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioSnapshot, diff = SemioDiff, schema = "SemioMutation")]
-#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 pub enum SemioMutation {
     /// 🧨 Full-snapshot replace — the only way to change SUBSET KIND (there is no sparse
     /// representation for "this artifact used to be a video, now it's a flow").
     SetSnapshot(set_snapshot::SetSnapshot),
-    #[serde(rename = "brep")]
+    #[value(rename = "brep")]
     ApplyBrep(apply_brep::ApplyBrep),
-    #[serde(rename = "mesh")]
+    #[value(rename = "mesh")]
     ApplyMesh(apply_mesh::ApplyMesh),
-    #[serde(rename = "model")]
+    #[value(rename = "model")]
     ApplyModel(apply_model::ApplyModel),
-    #[serde(rename = "value")]
+    #[value(rename = "value")]
     ApplyValue(apply_value::ApplyValue),
-    #[serde(rename = "document")]
+    #[value(rename = "document")]
     ApplyDocument(apply_document::ApplyDocument),
-    #[serde(rename = "cad")]
+    #[value(rename = "cad")]
     ApplyCad(apply_cad::ApplyCad),
-    #[serde(rename = "drawing")]
+    #[value(rename = "drawing")]
     ApplyDrawing(apply_drawing::ApplyDrawing),
-    #[serde(rename = "image")]
+    #[value(rename = "image")]
     ApplyImage(apply_image::ApplyImage),
-    #[serde(rename = "video")]
+    #[value(rename = "video")]
     ApplyVideo(apply_video::ApplyVideo),
-    #[serde(rename = "audio")]
+    #[value(rename = "audio")]
     ApplyAudio(apply_audio::ApplyAudio),
-    #[serde(rename = "animation")]
+    #[value(rename = "animation")]
     ApplyAnimation(apply_animation::ApplyAnimation),
-    #[serde(rename = "presentation")]
+    #[value(rename = "presentation")]
     ApplyPresentation(apply_presentation::ApplyPresentation),
-    #[serde(rename = "flow")]
+    #[value(rename = "flow")]
     ApplyFlow(apply_flow::ApplyFlow),
-    #[serde(rename = "text")]
+    #[value(rename = "text")]
     ApplyText(apply_text::ApplyText),
-    #[serde(rename = "table")]
+    #[value(rename = "table")]
     ApplyTable(apply_table::ApplyTable),
-    #[serde(rename = "graph")]
+    #[value(rename = "graph")]
     ApplyGraph(apply_graph::ApplyGraph),
-    #[serde(rename = "object")]
+    #[value(rename = "object")]
     ApplyObject(apply_object::ApplyObject),
-    #[serde(rename = "kit")]
+    #[value(rename = "kit")]
     ApplyKit(apply_kit::ApplyKit),
 }
 

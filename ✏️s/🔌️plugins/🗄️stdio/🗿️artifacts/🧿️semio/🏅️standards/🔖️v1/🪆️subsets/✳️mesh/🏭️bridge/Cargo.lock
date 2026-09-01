@@ -48,60 +48,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
 
 [[package]]
-name = "blake3"
-version = "1.8.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
-dependencies = [
- "arrayvec",
- "cc",
- "cfg-if",
- "constant_time_eq",
- "cpufeatures",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649"
 
 [[package]]
-name = "byteorder"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
-
-[[package]]
-name = "cc"
-version = "1.4.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ad534f4357a5264cce5019c989cf66a4f0dc4e0d1b1d15f8aacec0ff7360273"
-dependencies = [
- "find-msvc-tools",
- "shlex",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
-
-[[package]]
-name = "constant_time_eq"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
-
-[[package]]
-name = "cpufeatures"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "crc32fast"
@@ -156,19 +112,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "find-msvc-tools"
-version = "0.1.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d45db016d36b838f563236e9193d0ee6ce38f3f68b6c94e914b4929c96bbb890"
-
-[[package]]
 name = "flate2"
 version = "1.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e634e2e0ebac1ee034020da1ca582e17ffe4e0f5e985823721e168928136dcb"
 dependencies = [
  "crc32fast",
- "miniz_oxide 0.9.1",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -266,42 +216,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gltf"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3ce1918195723ce6ac74e80542c5a96a40c2b26162c1957a5cd70799b8cacf7"
-dependencies = [
- "byteorder",
- "gltf-json",
- "lazy_static",
- "serde_json",
-]
-
-[[package]]
-name = "gltf-derive"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14070e711538afba5d6c807edb74bcb84e5dbb9211a3bf5dea0dfab5b24f4c51"
-dependencies = [
- "inflections",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
-name = "gltf-json"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6176f9d60a7eab0a877e8e96548605dedbde9190a7ae1e80bbcc1c9af03ab14"
-dependencies = [
- "gltf-derive",
- "serde",
- "serde_derive",
- "serde_json",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -335,12 +249,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inflections"
-version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
-
-[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -368,12 +276,6 @@ dependencies = [
  "polycool",
  "smallvec",
 ]
-
-[[package]]
-name = "lazy_static"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "leb128fmt"
@@ -409,15 +311,6 @@ name = "memchr"
 version = "2.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
-
-[[package]]
-name = "miniz_oxide"
-version = "0.8.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
-dependencies = [
- "adler2",
-]
 
 [[package]]
 name = "miniz_oxide"
@@ -508,7 +401,6 @@ checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 name = "semio-framework"
 version = "0.1.0"
 dependencies = [
- "gltf",
  "semio-framework-actor",
  "semio-framework-hash",
  "semio-framework-job",
@@ -516,6 +408,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "semio-framework-ui-contract",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -541,6 +434,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-deflate"
+version = "0.1.0"
+
+[[package]]
 name = "semio-framework-dispatch-macros"
 version = "0.1.0"
 dependencies = [
@@ -560,9 +457,10 @@ dependencies = [
 [[package]]
 name = "semio-framework-hash"
 version = "0.1.0"
-dependencies = [
- "blake3",
-]
+
+[[package]]
+name = "semio-framework-io-base64"
+version = "0.1.0"
 
 [[package]]
 name = "semio-framework-job"
@@ -576,7 +474,8 @@ dependencies = [
 name = "semio-framework-mesh-engine"
 version = "0.1.0"
 dependencies = [
- "gltf",
+ "semio-framework-io-base64",
+ "semio-framework-pack",
  "serde",
 ]
 
@@ -585,16 +484,15 @@ name = "semio-framework-os-kernel"
 version = "0.1.0"
 dependencies = [
  "base64",
- "blake3",
  "futures",
  "js-sys",
- "miniz_oxide 0.8.9",
  "semio-framework-async",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "tokio",
@@ -618,8 +516,8 @@ dependencies = [
 name = "semio-framework-pack"
 version = "0.1.0"
 dependencies = [
- "blake3",
  "semio-framework-async",
+ "semio-framework-hash",
  "semio-framework-replication",
 ]
 
@@ -639,6 +537,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
  "semio-framework-ui-scene",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wit-bindgen",
@@ -648,11 +547,11 @@ dependencies = [
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
- "blake3",
- "miniz_oxide 0.8.9",
+ "semio-framework-deflate",
+ "semio-framework-hash",
+ "semio-framework-io-base64",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -720,14 +619,22 @@ name = "semio-framework-ui-styling"
 version = "0.1.0"
 
 [[package]]
+name = "semio-framework-value-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "semio-semio-v1-mesh-bridge"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -778,12 +685,6 @@ dependencies = [
  "serde_core",
  "zmij",
 ]
-
-[[package]]
-name = "shlex"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "simd-adler32"

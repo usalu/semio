@@ -37,6 +37,42 @@ impl Default for SemioObjectArtifact {
     }
 }
 
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `brep`/`mesh`/`properties` are `store::ArtifactChild<S>`
+/// composed-artifact handles, which speak `serde` (framework-internal — `ArtifactChild<S>` derives
+/// with `#[serde(bound = "")]`, so it implements `Serialize`/`Deserialize` for ANY `S`, including
+/// an `S` that itself no longer does) rather than `ToValue`/`FromValue` directly — bridged
+/// per-field through the pre-existing `to_dsl_value`/`from_dsl_value` seam (`🌱️value/🔀️serde`)
+/// instead of widening the derive macro to understand child-slot handles. See the fan-out
+/// playbook's "composed artifact fields" trap and `📖️playbook`'s own `PlaybookArtifact` for the
+/// worked reference this mirrors.
+impl dsl::ToValue for SemioObjectArtifact {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("transform".to_string(), dsl::ToValue::to_value(&self.transform)),
+            ("brep".to_string(), dsl::to_dsl_value(&self.brep).expect("ArtifactChild serializes")),
+            ("mesh".to_string(), dsl::to_dsl_value(&self.mesh).expect("ArtifactChild serializes")),
+            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
+        ])
+    }
+}
+impl dsl::FromValue for SemioObjectArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = dsl::DslValue::into_object(value)?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: dsl::FromValue::from_value(field("schema")?)?,
+            transform: dsl::FromValue::from_value(field("transform")?)?,
+            brep: dsl::from_dsl_value(field("brep")?).map_err(dsl::ValueError::new)?,
+            mesh: dsl::from_dsl_value(field("mesh")?).map_err(dsl::ValueError::new)?,
+            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
+
 impl SemioObjectArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioObjectSnapshot {

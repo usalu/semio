@@ -198,7 +198,7 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub async fn clipboard_write_text(text: &str) {
     if let Some(window) = web_sys::window() {
         let _ = window.navigator().clipboard().write_text(text);
@@ -209,7 +209,7 @@ pub async fn clipboard_write_text(text: &str) {
  * is Promise-based with no synchronous escape hatch; a caller drives this from a
  * owned browser-local task (see `report-w3-clipboard-dnd.md`), since the OS
  * clipboard permission prompt/read can't resolve within one synchronous per-frame call. */
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub async fn clipboard_read_text() -> Option<String> {
     let promise = web_sys::window()?.navigator().clipboard().read_text();
     semio_framework_async::browser::JsFuture::from(promise).await.ok()?.as_string()

@@ -127,7 +127,7 @@ fn pset_value_from_part21(v: &Part21Value) -> Option<PsetValue> {
             "F" | "FALSE" | ".F." => Some(PsetValue::Boolean { value: false }),
             other => Some(PsetValue::Text { value: other.to_string() }),
         },
-        Part21Value::Typed(_, inner) => inner.first().and_then(pset_value_from_part21),
+        Part21Value::Typed { items: inner, .. } => inner.first().and_then(pset_value_from_part21),
         Part21Value::List(_) | Part21Value::Ref(_) | Part21Value::Unset | Part21Value::Derived => None,
     }
 }

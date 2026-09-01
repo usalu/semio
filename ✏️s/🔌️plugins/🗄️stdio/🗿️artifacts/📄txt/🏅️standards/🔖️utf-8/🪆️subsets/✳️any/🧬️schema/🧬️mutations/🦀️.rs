@@ -2,7 +2,6 @@
 //#region 🔖️Aggregate
 use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::txt::schema::diff::TxtDiff;
-use serde::{Deserialize, Serialize};
 
 #[path = "📥️insert-line/🦀️.rs"]
 pub mod insert_line;
@@ -21,8 +20,8 @@ pub use self::set_line::{SetLineMutation, SetLinePayload};
 pub use self::set_line_ending::{SetLineEndingMutation, SetLineEndingPayload};
 pub use self::set_trailing_newline::{SetTrailingNewlineMutation, SetTrailingNewlinePayload};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = TxtSnapshot, diff = TxtDiff, schema = "s.stdio.txt")]
 pub enum TxtMutation {
     SetTrailingNewline(SetTrailingNewlineMutation),

@@ -4,7 +4,6 @@
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "🔤️embed-font-file/🦀️.rs"]
@@ -55,8 +54,8 @@ pub use set_output_intent::SetOutputIntent;
 //#region 🔖️Aggregate
 /// 📐️ Typed PDF/A-2 and PDF/A-3 conformance mutation vocabulary. Every variant directly wraps its
 /// authoritative semantic leaf payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.a")]
 pub enum PdfAMutation {
     InsertEncryptionDictionary(InsertEncryptionDictionary),

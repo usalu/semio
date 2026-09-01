@@ -7,13 +7,12 @@
 
 use crate::artifacts::png::STDIO_PNG_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region ColorModel
 /// 🎨️ PNG §11.2.2 `IHDR` color type. `Palette` requires a `PLTE` chunk; `compression method`
 /// and `filter method` are always `0` per spec and are validated on decode, never modeled here.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum PngColorType {
     Grayscale,
     Rgb,
@@ -60,8 +59,8 @@ impl PngColorType {
 
 //#region Palette
 /// 🎨️ One `PLTE` entry — a weak value (whole-value replaced in diffs, never sub-diffed).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PngRgb {
     pub r: u8,
     pub g: u8,
@@ -72,8 +71,8 @@ pub struct PngRgb {
 //#region Transparency
 /// 👁️ Typed `tRNS` payload — shape depends on `color_type` (§11.3.3). Grayscale/RGB store
 /// full 16-bit samples per spec regardless of `bit_depth`; a whole-value weak entity.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "colorType", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "colorType", rename_all = "camelCase")]
 pub enum PngTransparency {
     Indexed { alpha: Vec<u8> },
     Grayscale { gray: u16 },
@@ -83,8 +82,8 @@ pub enum PngTransparency {
 
 //#region Ancillary
 /// 📐️ `cHRM` — CIE xy chromaticity coordinates, each an int of `value * 100000` (§11.3.5.2).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PngChromaticities {
     pub white_x: u32,
     pub white_y: u32,
@@ -97,8 +96,8 @@ pub struct PngChromaticities {
 }
 
 /// 🖌️ `sRGB` rendering intent (§11.3.5.3).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum PngSrgbIntent {
     #[default]
     Perceptual,
@@ -130,8 +129,8 @@ impl PngSrgbIntent {
 }
 
 /// 📏️ `pHYs` — pixel-per-unit density (§11.3.5.4).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PngPhysicalDims {
     pub ppu_x: u32,
     pub ppu_y: u32,
@@ -139,8 +138,8 @@ pub struct PngPhysicalDims {
 }
 
 /// 🕰️ `tIME` — last modification time, UTC (§11.3.6.1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PngTimestamp {
     pub year: u16,
     pub month: u8,
@@ -151,8 +150,8 @@ pub struct PngTimestamp {
 }
 
 /// 🖼️ `bKGD` — default background color; shape depends on `color_type` (§11.3.5.1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "colorType", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "colorType", rename_all = "camelCase")]
 pub enum PngBackground {
     Grayscale { gray: u16 },
     Rgb { r: u16, g: u16, b: u16 },
@@ -162,8 +161,8 @@ pub enum PngBackground {
 
 //#region Text
 /// 🔤️ Which of the three PNG text chunk types (§11.3.4) a [`PngTextChunk`] came from.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum PngTextKind {
     #[default]
     Text,
@@ -176,18 +175,18 @@ pub enum PngTextKind {
 /// keywords be unique"), so keyword identity is unsound as a diff key; position is the only
 /// safe stable-enough identity within one decode. `language_tag`/`translated_keyword` are
 /// iTXt-only and stay empty strings for `Text`/`ZText` kinds (documented normalization).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PngTextChunk {
     pub keyword: String,
     pub value: String,
-    #[serde(default)]
+    #[value(default)]
     pub compressed: bool,
-    #[serde(default)]
+    #[value(default)]
     pub kind: PngTextKind,
-    #[serde(default)]
+    #[value(default)]
     pub language_tag: String,
-    #[serde(default)]
+    #[value(default)]
     pub translated_keyword: String,
 }
 //#endregion Text
@@ -195,8 +194,8 @@ pub struct PngTextChunk {
 //#region UnknownChunks
 /// 🗃️ A chunk the codec doesn't specifically model, retained VERBATIM (typed raw-retention —
 /// "nothing real on disk silently dropped").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PngChunk {
     pub kind: [u8; 4],
     pub data: Vec<u8>,
@@ -211,8 +210,8 @@ pub struct PngChunk {
 /// mutations that insert/remove those collections renumber the markers referencing shifted
 /// positions (see `schema::mutations`). This is what makes chunk order genuinely diffable as
 /// its own index-keyed collection instead of merely implied by insertion order elsewhere.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "chunk", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "chunk", rename_all = "camelCase")]
 pub enum PngChunkMarker {
     Ihdr,
     Plte,
@@ -232,8 +231,8 @@ pub enum PngChunkMarker {
 
 //#region Snapshot
 /// 🧬️ Complete `stdio.png` 1.2 semantic snapshot. `schema` is an identity field, never diffed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png")]
 pub struct PngSnapshot {
     #[state(artifact)]
@@ -252,34 +251,34 @@ pub struct PngSnapshot {
     pub interlace: bool,
     // PLTE (§11.2.3) — index-keyed collection, optional.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub plte: Option<Vec<PngRgb>>,
     // tRNS (§11.3.3).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trns: Option<PngTransparency>,
     // Typed ancillary set (§11.3.5-11.3.6).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub gama: Option<u32>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub chrm: Option<PngChromaticities>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub srgb: Option<PngSrgbIntent>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub phys: Option<PngPhysicalDims>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub time: Option<PngTimestamp>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub bkgd: Option<PngBackground>,
     // tEXt/zTXt/iTXt (§11.3.4) — index-keyed, see `PngTextChunk` doc for why.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub text_chunks: Vec<PngTextChunk>,
     // Decoded raster payload — legitimate `Vec<u8>` exception (the format's payload IS
     // pixels): always canonical 8-bit-per-channel RGBA, width*height*4 bytes, row-major,
@@ -287,14 +286,14 @@ pub struct PngSnapshot {
     // engine's `EncodeScopeNote` — decode fully supports every color type/bit depth/Adam7,
     // encode always canonicalizes).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
     // Chunk order + raw retention — see `PngChunkMarker`/`PngChunk` docs.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub chunk_order: Vec<PngChunkMarker>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub unknown_chunks: Vec<PngChunk>,
 }
 

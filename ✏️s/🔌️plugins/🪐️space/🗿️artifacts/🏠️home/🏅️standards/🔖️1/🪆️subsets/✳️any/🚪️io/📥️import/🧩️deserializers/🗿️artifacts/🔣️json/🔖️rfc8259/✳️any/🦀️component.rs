@@ -7,7 +7,7 @@ pub async fn register() {}
 
 pub async fn deserialize(from: &JsonSnapshot) -> Result<SHomeSnapshot, store::TextError> {
     let _ = S_HOME_DOCUMENT_SCHEMA;
-    let mut out: SHomeSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("home<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let mut out: SHomeSnapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&from.to_pack_value())).map_err(|e: dsl::ValueError| store::TextError::new(format!("home<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     if out.schema.is_empty() {
         out.schema = S_HOME_DOCUMENT_SCHEMA.into();
     }
@@ -16,6 +16,6 @@ pub async fn deserialize(from: &JsonSnapshot) -> Result<SHomeSnapshot, store::Te
 
 pub async fn deserialize_bytes(bytes: &[u8]) -> Result<SHomeSnapshot, store::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    let value: serde_json::Value = serde_json::from_str(text).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let value: pack::JsonValue = pack::parse_json(text).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
     deserialize(&JsonSnapshot::from_value(value))
 }

@@ -6,15 +6,14 @@ use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
     snapshot::PdfSnapshot,
 };
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
 /// 📐️ A4 geometry used by the independent PDF/X conformance oracle.
 pub const CONFORMANT_WIDTH: f64 = 595.276;
 pub const CONFORMANT_HEIGHT: f64 = 841.89;
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SetPageSize {
     pub width: f64,
     pub height: f64,

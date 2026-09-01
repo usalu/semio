@@ -7,7 +7,6 @@ use crate::artifacts::rewrite::schema::Rhs;
 use crate::artifacts::rewrite::RewriteSnapshot;
 use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
-use serde_json::Value;
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
@@ -69,10 +68,10 @@ fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
-    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return false;
     };
     let changed = match clause_ref {
@@ -96,8 +95,8 @@ fn delete_rule_clause(state: &mut RewriteSnapshot, node_id: &str) -> bool {
         }
     };
     if changed {
-        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
-        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
+        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
         state.rule_layout.remove(node_id);
     }
     changed
@@ -164,7 +163,7 @@ fn apply_rewrite_node_graph_edit_operations(state: &mut RewriteSnapshot, selecte
 /// domain's selection against the fresh `interaction_topology` right after this document dispatch
 /// lands, so no explicit selection-clearing mutation is emitted anymore.
 pub(crate) fn node_graph_edit(state: &RewriteSnapshot, selected_node_ids: &[String], surface_id: &str, operations_json: &str) -> Result<Emit<RewriteRuleMutation, RewriteConfigMutation>, Fault> {
-    let operations: Vec<Value> = serde_json::from_str(operations_json).unwrap_or_default();
+    let operations: Vec<Value> = pack::from_json_str(operations_json).unwrap_or_default();
     let mut next = state.clone();
     let changed = apply_rewrite_node_graph_edit_operations(&mut next, selected_node_ids, surface_id, &operations);
     if !changed {

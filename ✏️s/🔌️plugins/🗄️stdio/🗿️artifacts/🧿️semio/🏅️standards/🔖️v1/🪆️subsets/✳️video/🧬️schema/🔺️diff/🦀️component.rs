@@ -20,7 +20,6 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{dec_
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️CollectionDiffTypes
 pub type SemioVideoStreamsDiff = IndexedTripleDiff<SemioVideoStreamDiff, SemioVideoStream>;
@@ -29,42 +28,42 @@ pub type SemioVideoSamplesDiff = IndexedTripleDiff<SemioVideoSampleDiff, SemioVi
 /// 🎯️ Per-sample sparse diff — every field of `SemioVideoSample` is a plain scalar/opaque-bytes
 /// value (no nested enum/collection), so this is a flat `Option<T>` bag, no tri-state needed
 /// (the spec never marks any of `pts`/`key`/`data` as nullable).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoSampleDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pts: Option<u64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub key: Option<bool>,
     /// 🗄️ Opaque payload replacement — honest boundary, whole-value only (never sub-diffed).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<u8>>,
 }
 
 /// 🎞️ Per-stream sparse diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoStreamDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub kind: Option<SemioVideoStreamKind>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub codec: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rate: Option<SemioRational>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub samples: Option<SemioVideoSamplesDiff>,
 }
 //#endregion 🔖️CollectionDiffTypes
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub streams: Option<SemioVideoStreamsDiff>,
 }
 //#endregion 🔖️Diff

@@ -28,9 +28,12 @@ type Story = StoryObj<typeof meta>;
 // loop (see header note); `toPascalCase(pluginId)` names each export.
 export const Animate: Story = { args: { plugin: "animate" } satisfies OsBootHostProps };
 export const Architect: Story = { args: { plugin: "architect" } satisfies OsBootHostProps };
+export const Block: Story = { args: { plugin: "block" } satisfies OsBootHostProps };
 export const Cad: Story = { args: { plugin: "cad" } satisfies OsBootHostProps };
 export const Dag: Story = { args: { plugin: "dag" } satisfies OsBootHostProps };
+export const Demonstrator: Story = { args: { plugin: "demonstrator" } satisfies OsBootHostProps };
 export const Draw: Story = { args: { plugin: "draw" } satisfies OsBootHostProps };
+export const Energy: Story = { args: { plugin: "energy" } satisfies OsBootHostProps };
 export const Fem: Story = { args: { plugin: "fem" } satisfies OsBootHostProps };
 export const Flow: Story = { args: { plugin: "flow" } satisfies OsBootHostProps };
 export const Forms: Story = { args: { plugin: "forms" } satisfies OsBootHostProps };
@@ -42,7 +45,6 @@ export const Mathematical: Story = { args: { plugin: "mathematical" } satisfies 
 export const Norm: Story = { args: { plugin: "norm" } satisfies OsBootHostProps };
 export const Note: Story = { args: { plugin: "note" } satisfies OsBootHostProps };
 export const Playbook: Story = { args: { plugin: "playbook" } satisfies OsBootHostProps };
-export const PlaybookModuleProcedural: Story = { args: { plugin: "playbook-module-procedural" } satisfies OsBootHostProps };
 export const Procedural: Story = { args: { plugin: "procedural" } satisfies OsBootHostProps };
 export const Process: Story = { args: { plugin: "process" } satisfies OsBootHostProps };
 export const Puzzle: Story = { args: { plugin: "puzzle" } satisfies OsBootHostProps };
@@ -53,9 +55,7 @@ export const S: Story = { args: { plugin: "s" } satisfies OsBootHostProps };
 export const Sequence: Story = { args: { plugin: "sequence" } satisfies OsBootHostProps };
 export const Shooting: Story = { args: { plugin: "shooting" } satisfies OsBootHostProps };
 export const Sourcing: Story = { args: { plugin: "sourcing" } satisfies OsBootHostProps };
-export const SourcingModuleBeams: Story = { args: { plugin: "sourcing-module-beams" } satisfies OsBootHostProps };
-export const SourcingModuleSlabs: Story = { args: { plugin: "sourcing-module-slabs" } satisfies OsBootHostProps };
-export const SourcingModuleWindows: Story = { args: { plugin: "sourcing-module-windows" } satisfies OsBootHostProps };
+export const Stdio: Story = { args: { plugin: "stdio" } satisfies OsBootHostProps };
 export const Trinity: Story = { args: { plugin: "trinity" } satisfies OsBootHostProps };
 export const Vcs: Story = { args: { plugin: "vcs" } satisfies OsBootHostProps };
 export const Writer: Story = { args: { plugin: "writer" } satisfies OsBootHostProps };
@@ -73,9 +73,12 @@ function toPascalCase(pluginId: string): string {
 const EXPORTED_STORIES: Record<string, Story> = {
   Animate,
   Architect,
+  Block,
   Cad,
   Dag,
+  Demonstrator,
   Draw,
+  Energy,
   Fem,
   Flow,
   Forms,
@@ -87,7 +90,6 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Norm,
   Note,
   Playbook,
-  PlaybookModuleProcedural,
   Procedural,
   Process,
   Puzzle,
@@ -98,9 +100,7 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Sequence,
   Shooting,
   Sourcing,
-  SourcingModuleBeams,
-  SourcingModuleSlabs,
-  SourcingModuleWindows,
+  Stdio,
   Trinity,
   Vcs,
   Writer,

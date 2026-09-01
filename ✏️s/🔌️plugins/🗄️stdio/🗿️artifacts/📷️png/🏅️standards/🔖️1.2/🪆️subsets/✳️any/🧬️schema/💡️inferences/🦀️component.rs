@@ -6,15 +6,14 @@
 
 use crate::artifacts::png::PngSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::dimensions::{compute_png_dimensions, PngDimensions};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a png snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `dimensions`, backed by the `📐dimensions/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png.inference")]
 pub struct PngInference {
     #[derived]

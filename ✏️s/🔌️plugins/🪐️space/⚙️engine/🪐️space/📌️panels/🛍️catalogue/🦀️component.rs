@@ -7,7 +7,6 @@ use semio_framework_os::{os_app_primary_output_kind, os_app_registration, workfl
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
 use semio_framework_plugin::{Label, Locale, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, Terminology, UiFixedList, UiFixedMap, UiText};
 use semio_framework_ui_contract as ui;
-use serde_json::json;
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
@@ -136,7 +135,7 @@ mod tests {
         seed_app("puzzle", "s.puzzle3d@1/*#editor", "Puzzle 3D", &["semio", "puzzle", "3d"], "puzzle3d.document");
         let config = crate::engine::space::config::SpaceConfig::default();
         let tree = build_catalogue_tree(semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale), semio_framework_plugin::locale_from_str(&config.locale));
-        let json = serde_json::to_string(&tree).unwrap();
+        let json = pack::to_json_string(&tree);
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
         assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
         assert_eq!(json.matches("\"label\":\"puzzle\"").count(), 1);

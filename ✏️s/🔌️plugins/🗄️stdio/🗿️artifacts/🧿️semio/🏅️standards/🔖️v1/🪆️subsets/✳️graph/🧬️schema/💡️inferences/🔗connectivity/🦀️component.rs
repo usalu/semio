@@ -21,7 +21,6 @@ use crate::artifacts::semio::standards::v1::subsets::graph::schema::normal_inter
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
 use graph_core::{NodeId, PropertyBag};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Value
@@ -29,8 +28,8 @@ use std::collections::BTreeMap;
 /// convention) and its weakly-connected-component id (stable within one `compute()` call, assigned
 /// in ascending node-id discovery order — NOT stable across snapshot edits that add/remove earlier
 /// components, same convention graph algorithms libraries use for arbitrary component labels).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioGraphNodeConnectivity {
     pub degree: u32,
     pub component: u32,

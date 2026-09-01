@@ -10,13 +10,12 @@
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️NodeList
 /// 📋 Whole-list wrapper for the `nodes` field diff — every mutation triad rebuilds the full
 /// `values` vec from `base` and wraps it here (`SemioTextRunList`'s own shape).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct SemioGraphNodeList {
     pub values: Vec<SemioGraphNode>,
 }
@@ -24,23 +23,23 @@ pub struct SemioGraphNodeList {
 
 //#region 🔖️EdgeList
 /// 📋 Whole-list wrapper for the `edges` field diff — same shape as [`SemioGraphNodeList`].
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct SemioGraphEdgeList {
     pub values: Vec<SemioGraphEdge>,
 }
 //#endregion 🔖️EdgeList
 
 //#region 🔖️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph.diff")]
 pub struct SemioGraphDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<SemioGraphNodeList>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub edges: Option<SemioGraphEdgeList>,
 }
 

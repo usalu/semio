@@ -97,7 +97,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn empty_config_renders_the_empty_state() {
         let node = render(&SpaceIndexConfig::default());
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("s-space-members-empty"));
         assert!(json.contains("s-space-invite"));
         assert!(json.contains("s-space-share"));
@@ -107,7 +107,7 @@ mod tests {
     async fn members_render_with_a_remove_action_each() {
         let config = SpaceIndexConfig { members: vec![SpaceIndexMember { user_id: "u-1".into(), email: "a@example.com".into(), display_name: "Alice".into(), role: "author".into() }], ..Default::default() };
         let node = render(&config);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("member:u-1"));
         assert!(json.contains("removeMember"));
         assert!(json.contains("author"));
@@ -117,7 +117,7 @@ mod tests {
     async fn public_visibility_offers_make_private() {
         let config = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
         let node = render(&config);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("\"visibility\":\"private\""));
     }
 }

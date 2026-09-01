@@ -11,7 +11,8 @@ use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRul
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted process3d document snapshot (persistent fields of the artifact). `stock_solid`/
@@ -19,8 +20,8 @@ use serde::{Deserialize, Serialize};
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Children must sit directly
 /// on this struct (not nested inside a helper record) for the derive to see them — confirmed against
 /// `🧬️schema/✨️derive/🦀️component.rs`'s field-walk, which only iterates a struct's own direct fields.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dSnapshot {
     #[state(artifact)]
@@ -40,14 +41,14 @@ pub struct Process3dSnapshot {
     #[child(kind = "s.stdio.semio.flow")]
     pub steps: store::ArtifactChild<SemioFlowSnapshot>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.brep")]
-    #[serde(default)]
+    #[value(default)]
     pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub resolved_up_to: Option<usize>,
 }
 
@@ -128,11 +129,11 @@ pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::ArtifactChild<S>>,
 /// 🧾️ `workshop`/`stock_pose` are structured but child-free — JSON-serialize then hex-encode
 /// through the shared `enc_str`/`dec_str`, matching `📐️cad`'s established `enc_json`/`dec_json`
 /// convention for structured fields that don't need a bespoke wire shape.
-fn enc_json<T: Serialize>(value: &T) -> String {
-    enc_str(&serde_json::to_string(value).expect("process3d structured fields are always JSON-serializable"))
+fn enc_json<T: ToValue>(value: &T) -> String {
+    enc_str(&semio_framework_os_kernel::json::to_json_string(value))
 }
-fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
-    serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
+fn dec_json<T: FromValue>(s: &str) -> Result<T, String> {
+    semio_framework_os_kernel::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
 //#endregion 🔖️JsonFieldPrimitives
 
@@ -1871,13 +1872,13 @@ pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> 
     let canonical_again = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <Process3dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <Process3dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = semio_framework_os_kernel::json::object([
+        ("parsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&parsed))),
+        ("reparsed".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&reparsed))),
+        ("packDecoded".to_string(), semio_framework_os_kernel::json::from_dsl_value(&ToValue::to_value(&unpacked))),
+        ("canonicalText".to_string(), semio_framework_os_kernel::json::Value::String(canonical.clone())),
+        ("canonicalTextAgain".to_string(), semio_framework_os_kernel::json::Value::String(canonical_again.clone())),
+    ]);
+    Ok(semio_framework_os_kernel::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge

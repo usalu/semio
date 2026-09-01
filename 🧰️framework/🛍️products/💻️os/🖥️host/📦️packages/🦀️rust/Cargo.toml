@@ -24,6 +24,7 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value-derive = { path = "../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 semio-framework = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }

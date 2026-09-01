@@ -14,7 +14,6 @@ use crate::artifacts::md::MdSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.md`.
@@ -28,14 +27,14 @@ use serde::{Deserialize, Serialize};
 /// same `classify_field` single-peel blocker `GifFrameDiff` hit (no `impl<T: DslField> DslField for
 /// Option<T>` exists anywhere in the `dsl` crate). `DiffCodec` is hand-rolled below
 /// (`#region 🔖️HandcraftedDiffCodec`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md.diff")]
 pub struct MdDiff {
     /// 🌳 `None` = top-level block sequence unchanged; `Some(diff)` = index-keyed recursive
     /// triple over it.
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<MdBlocksDiff>,
 }
 //#endregion 🔖️Diff
@@ -45,26 +44,26 @@ pub struct MdDiff {
 /// state (descending removal order on apply); `added` indices refer to FINAL state (ascending
 /// insert). Reused verbatim (same type) for `List.items[n]`'s content AND `BlockQuote.blocks` --
 /// both are `Vec<MdBlock>`, exactly what this type diffs.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdBlocksDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<MdBlockModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<MdBlockAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdBlockModified {
     pub index: usize,
     pub diff: MdBlockDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdBlockAdded {
     pub index: usize,
     pub item: MdBlock,
@@ -73,41 +72,41 @@ pub struct MdBlockAdded {
 /// 🌳 Per-block diff, shaped like the `MdBlock` it targets. `Replace` is the fallback for a
 /// block-KIND change (e.g. `Paragraph` -> `Heading`) -- every other variant assumes the target
 /// keeps its kind.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdBlockDiff {
     Heading {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         level: Option<u8>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         inlines: Option<Vec<MdInline>>,
     },
     Paragraph {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         inlines: Option<Vec<MdInline>>,
     },
     List {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         ordered: Option<bool>,
         /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = start number cleared, `Some(Some(n))`
         /// = set.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         start: Option<Option<u32>>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         tight: Option<bool>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         items: Option<MdListItemsDiff>,
     },
     CodeBlock {
         /// 🏳️ Tri-state: `None` = unchanged, `Some(None)` = info string cleared, `Some(Some(s))`
         /// = set.
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         info: Option<Option<String>>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         literal: Option<String>,
     },
     BlockQuote {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         blocks: Option<MdBlocksDiff>,
     },
     /// 🔳 `ThematicBreak` carries no fields -- this variant only appears via a kind-preserving
@@ -116,7 +115,7 @@ pub enum MdBlockDiff {
     /// other `MdBlock` kind).
     ThematicBreak,
     HtmlBlock {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         raw: Option<String>,
     },
     /// 🔁 Wholesale block replace -- used when the block's KIND changes.
@@ -129,26 +128,26 @@ pub enum MdBlockDiff {
 /// diffed with the same recursive `MdBlocksDiff` used everywhere else (a list item's content IS a
 /// `Vec<MdBlock>`), so nested sub-lists/quotes inside an item fall out of the existing recursion
 /// for free.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdListItemsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<MdListItemModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<MdListItemAdded>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdListItemModified {
     pub index: usize,
     pub diff: MdBlocksDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdListItemAdded {
     pub index: usize,
     pub item: Vec<MdBlock>,
@@ -162,8 +161,8 @@ pub struct MdListItemAdded {
 /// `crate::artifacts::md::schema::mutations` for ergonomic access -- kept here, not in the
 /// mutations module, so this module never needs to depend on it (mutations already depends on
 /// diff).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "step", rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "step", rename_all = "camelCase")]
 pub enum MdPathStep {
     BlockQuote { index: usize },
     ListItem { index: usize, item: usize },

@@ -537,7 +537,10 @@ pub fn dispose_geometry(handle: &str) {
 /// 🌐️ Direct JS-callable wasm-bindgen exports for the flow-core brep tessellation bridge
 /// (see `🧰️framework/🔨️modules/🧊️3d/🟦️.ts`'s `ensureBrepWasmLoaded`), distinct from the
 /// byte-oriented `flow_bridge_*` ABI used by the `FlowActionState` job dispatch above.
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; these are direct JS-callable
+// wasm-bindgen exports for the browser flow-core bundle, so this is narrowed to exclude the
+// WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 

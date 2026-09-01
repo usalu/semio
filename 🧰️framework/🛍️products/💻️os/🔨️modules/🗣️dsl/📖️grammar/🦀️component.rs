@@ -2695,6 +2695,48 @@ pub fn verify_protocol_source(source: &str, bytes: &[u8]) -> Result<(), String> 
 mod tests {
     use super::*;
 
+    /// 🌾️ Walks every handcrafted `📖️component.grammar.semio` shipped under `✏️s/🔌️plugins` and
+    /// asserts it parses and compiles into a `Recognizer`. This is the runtime guard for the
+    /// normative grammar sources: it needs only `parse_grammar`/`Recognizer` from this crate, so
+    /// unlike `🧪️fixture-sweep`'s `m5_handcrafted_grammar_conformance` it does not pull the plugin
+    /// crates in as dev-dependencies and therefore stays runnable while those are mid-migration.
+    #[semio_framework_async_macros::async_test]
+    async fn every_shipped_grammar_semio_parses_and_compiles() {
+        fn collect(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+            let Ok(entries) = std::fs::read_dir(dir) else { return };
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    collect(&path, out);
+                } else if path.file_name().and_then(|n| n.to_str()) == Some("\u{1f4d6}\u{fe0f}component.grammar.semio") {
+                    out.push(path);
+                }
+            }
+        }
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../..");
+        let plugins = root.join("\u{270f}\u{fe0f}s/\u{1f50c}\u{fe0f}plugins");
+        let mut files = Vec::new();
+        collect(&plugins, &mut files);
+        assert!(!files.is_empty(), "found zero component.grammar.semio under {}", plugins.display());
+
+        let mut failures: Vec<String> = Vec::new();
+        for file in &files {
+            let text = std::fs::read_to_string(file).unwrap_or_else(|e| panic!("read {}: {e}", file.display()));
+            match parse_grammar(&text) {
+                Err(error) => failures.push(format!("{}: parse: {error:?}", file.display())),
+                Ok(grammar) => {
+                    if grammar.dialect != SemioDialect::Grammar {
+                        failures.push(format!("{}: dialect {:?}, expected Grammar", file.display(), grammar.dialect));
+                        continue;
+                    }
+                    let _ = Recognizer::compile(&grammar);
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{} of {} grammars failed:\n{}", failures.len(), files.len(), failures.join("\n"));
+        println!("[grammar-sweep] {} handcrafted grammars parsed and compiled", files.len());
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn parses_minimal_grammar_header() {
         let g = parse_grammar("grammar demo\nstart doc\ndoc = \"hello\"\n").expect("parse_grammar");

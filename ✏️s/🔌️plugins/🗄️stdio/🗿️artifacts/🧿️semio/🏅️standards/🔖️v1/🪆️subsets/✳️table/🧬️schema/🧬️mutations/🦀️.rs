@@ -19,7 +19,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::create_column;
@@ -38,7 +37,7 @@ use super::reorder_rows;
 /// `🦠️mutation/🦀️component.rs`. This plugin crate reaches the derive through the `dsl` extern-crate
 /// alias `📦️glue.rs` declares (`extern crate semio_framework_os_kernel as dsl;`), the same spelling
 /// `✳️text`'s already-compiling facet uses.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTableSnapshot, diff = SemioTableDiff, schema = "s.stdio.semio.table")]
 pub enum SemioTableMutation {
     CreateColumn(create_column::CreateColumn),
@@ -81,7 +80,7 @@ pub fn inverse_semio_table_mutation(mutation: &SemioTableMutation, base: &SemioT
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioTableMutation`]. `reorder-columns`/`reorder-rows` address positions (`to_index`) while the rename/edit kinds
 /// address names — decoding keeps those two addressing modes exactly as the vector states them.

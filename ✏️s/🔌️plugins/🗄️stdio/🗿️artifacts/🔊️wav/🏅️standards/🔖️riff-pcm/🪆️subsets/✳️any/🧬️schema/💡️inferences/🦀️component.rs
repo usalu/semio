@@ -8,15 +8,14 @@
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::duration::{compute_wav_duration, WavDuration};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a wav snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `duration`, backed by the `⏱duration/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav.inference")]
 pub struct WavInference {
     #[derived]

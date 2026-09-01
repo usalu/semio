@@ -2,7 +2,6 @@
 //! transform, inverse, codec, schema, and test is owned by its direct semantic leaf.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "🔒️insert-encryption-dictionary/🦀️.rs"]
@@ -46,8 +45,8 @@ pub use set_output_intent::SetOutputIntent;
 
 //#region 🔖️Aggregate
 /// 📐️ Typed PDF/E-1 conformance vocabulary with one direct wrapped variant per semantic operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.e")]
 pub enum PdfEMutation {
     InsertEncryptionDictionary(InsertEncryptionDictionary),

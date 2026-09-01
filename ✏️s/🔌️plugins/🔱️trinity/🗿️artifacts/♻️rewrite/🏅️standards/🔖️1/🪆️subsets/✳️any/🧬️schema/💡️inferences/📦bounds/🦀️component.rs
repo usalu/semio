@@ -5,12 +5,11 @@
 //! guidance) — no `InferredField`/incremental caching needed for a handful of `{x, y}` points.
 
 use crate::artifacts::rewrite::RewriteSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦 Axis-aligned 2d bounding box over `rule_layout`'s node positions.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RewriteBoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -19,8 +18,8 @@ pub struct RewriteBoundingBox {
 }
 
 /// 📦 Bounding box + node count over `rule_layout`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RewriteBounds {
     pub bounding_box: RewriteBoundingBox,
     pub node_count: u32,

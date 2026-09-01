@@ -7,13 +7,12 @@
 
 use crate::artifacts::gif::STDIO_GIF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region ColorTable
 /// 🎨️ One color table entry (GCT/LCT), stored exactly as read from disk — including any
 /// power-of-two padding entries past the meaningful palette, since those are real on-disk bytes.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifRgb {
     pub r: u8,
     pub g: u8,
@@ -23,12 +22,12 @@ pub struct GifRgb {
 /// 🎨️ A Global or Local Color Table. `colors.len()` must be a power of two in `2..=256` on encode
 /// (the on-disk "size" field is `log2(len)-1`). `sorted` mirrors the packed byte's sort flag
 /// (decreasing importance ordering — rarely used in practice, but real on-disk state).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifColorTable {
-    #[serde(default)]
+    #[value(default)]
     pub sorted: bool,
-    #[serde(default)]
+    #[value(default)]
     pub colors: Vec<GifRgb>,
 }
 //#endregion ColorTable
@@ -36,22 +35,22 @@ pub struct GifColorTable {
 //#region ImageModel
 /// 🖼️ One Table-Based Image (GIF87a §20-22): its own screen sub-rectangle, optional Local Color
 /// Table, interlace flag, and losslessly-retained palette indices (NOT decoded RGBA).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifImage {
     pub left: u32,
     pub top: u32,
     pub width: u32,
     pub height: u32,
-    #[serde(default)]
+    #[value(default)]
     pub interlace: bool,
     #[dsl(block)]
-    #[serde(default)]
+    #[value(default)]
     pub lct: Option<GifColorTable>,
     /// 🎞️ Palette indices, row-major, natural (non-interlaced) order — length must equal
     /// `width * height`. The lossless-payload exception: this is the format's actual pixel data.
     #[dsl(base64)]
-    #[serde(default)]
+    #[value(default)]
     pub indices: Vec<u8>,
 }
 
@@ -73,8 +72,8 @@ impl GifImage {
 //#endregion ImageModel
 
 //#region Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
 pub struct GifSnapshot {
     #[state(artifact)]
@@ -84,17 +83,17 @@ pub struct GifSnapshot {
     #[state(artifact)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub gct: Option<GifColorTable>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub background_color_index: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixel_aspect_ratio: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub images: Vec<GifImage>,
 }
 

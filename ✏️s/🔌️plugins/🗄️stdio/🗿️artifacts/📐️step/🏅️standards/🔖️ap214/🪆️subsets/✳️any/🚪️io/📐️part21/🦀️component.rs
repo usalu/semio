@@ -5,14 +5,13 @@
 //! Escape/matrix logic below was pre-verified via a standalone scratch binary per this
 //! session's own convention (ticket `26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION`).
 
-use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Write as _;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Part21Decimal {
     pub negative: bool,
     pub coefficient: String,
@@ -84,7 +83,7 @@ impl fmt::Display for Part21Decimal {
 }
 
 /// 🔤️ A single typed value in Part-21 argument-list syntax.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Part21Value {
     Ref(u64),
     Str(String),
@@ -93,7 +92,7 @@ pub enum Part21Value {
     Real(Part21Decimal),
     List(Vec<Part21Value>),
     /// 🏷️ A "defined type" wrapper appearing as an argument, e.g. `IFCLENGTHMEASURE(3000.)`.
-    Typed(String, Vec<Part21Value>),
+    Typed { name: String, items: Vec<Part21Value> },
     Unset,
     Derived,
 }
@@ -141,7 +140,7 @@ impl Part21Value {
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn as_typed(&self) -> Option<(&str, &[Part21Value])> {
-        if let Part21Value::Typed(name, items) = self {
+        if let Part21Value::Typed { name, items } = self {
             Some((name.as_str(), items.as_slice()))
         } else {
             None
@@ -157,7 +156,7 @@ impl Part21Value {
 //#region 🔖️Instance
 /// 🧩️ One `#N = TYPE(args...)` line, or `#N = (TYPE1(...) TYPE2(...))` for a complex instance —
 /// every `(type_name, args)` pair is kept, nothing about a multi-type instance is dropped.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Part21Instance {
     pub id: u64,
     pub entities: Vec<(String, Vec<Part21Value>)>,
@@ -182,7 +181,7 @@ impl Part21Instance {
 //#region 🔖️Header
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`),
 /// each a parenthesized tuple of typed values — kept verbatim, not schema-interpreted.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Part21Header {
     pub file_description: Vec<Part21Value>,
     pub file_name: Vec<Part21Value>,
@@ -255,7 +254,7 @@ impl Default for Part21Header {
 
 //#region 🔖️Document
 /// 📦️ The full, lossless generic Part-21 graph: header + every `DATA;` instance.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
 pub struct Part21Document {
     pub header: Part21Header,
     pub instances: Vec<Part21Instance>,
@@ -678,7 +677,7 @@ impl Lexer {
                     self.pos += 1;
                     let items = self.read_value_list()?;
                     self.expect_literal(")")?;
-                    Ok(Part21Value::Typed(kw, items))
+                    Ok(Part21Value::Typed { name: kw, items })
                 } else {
                     Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "( after typed value keyword" })
                 }
@@ -964,7 +963,7 @@ fn write_value(out: &mut String, v: &Part21Value) {
             write_value_list(out, items);
             out.push(')');
         }
-        Part21Value::Typed(name, items) => {
+        Part21Value::Typed { name, items } => {
             out.push_str(name);
             out.push('(');
             write_value_list(out, items);

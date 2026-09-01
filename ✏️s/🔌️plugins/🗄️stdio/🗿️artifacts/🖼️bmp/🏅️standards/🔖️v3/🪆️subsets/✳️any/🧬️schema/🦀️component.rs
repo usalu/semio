@@ -3,13 +3,12 @@
 use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::artifacts::bmp::BmpSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.bmp` artifact state — mirrors `BmpSnapshot`'s complete BITMAPINFOHEADER +
 /// palette + pixels model field-for-field.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
 pub struct BmpArtifact {
     #[state(artifact)]
@@ -39,10 +38,10 @@ pub struct BmpArtifact {
     #[state(artifact)]
     pub colors_important: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub palette: Vec<BmpPaletteEntry>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
 }
 //#endregion 🔖️Artifact

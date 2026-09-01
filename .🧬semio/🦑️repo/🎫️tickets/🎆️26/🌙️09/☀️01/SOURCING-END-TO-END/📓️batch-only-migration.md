@@ -31,6 +31,21 @@ document lane implements (`🗒️note`, `📐️cad`, `🌊️flow`, `🌍️gi
 - treats an `Error`/`Fatal` outcome as a refusal. `MutationOutcome::error`/`fatal` force an EMPTY
   diff, so publishing anyway would write a no-op edit into history.
 
+**Defect caught in self-review, before it ever ran.** The first draft gated `advance`/`close_step` on
+the MEASURED base size (`grant.maximum_bytes < sourcing_curate_document_bytes(base)`), copying the
+config lane's shape without copying its arithmetic. The host drives this lane with a fixed
+`ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` —
+**4 KiB, always** (🔌️plugin/🦀️component.rs:22029, :12882). The demo document measures ~2.2 KB, so it
+would have worked; a curation of a few dozen rows would have pushed the measurement past 4 KiB and the
+gate would have returned `Blocked` on every turn — the operation stalling forever rather than failing.
+Nothing compares the grant to the preflight footprint at admission (`begin_apply_one_owned` only checks
+`is_admissible()`, ≤ 1 MiB), so there is no earlier guard to catch it either.
+
+Fixed by separating the two concerns the config lane happens to conflate: `SOURCING_CURATE_DOCUMENT_GRANT_BYTES`
+(4 KiB) is the per-turn cost and the only figure the grant is compared against — "demand exactly one
+full grant", the same shape the config lane uses — while the document's own size stays a VALIDATION
+that rejects past `SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES`. Loud rejection over silent stall.
+
 ### 2. `SetFilterModules` on the config lane
 `sourcing_curate_config_mutation_footprint` explicitly rejected `SetFilterModules` as "non-retained",
 which is what kept `setFilterModule` off the lane. Given a footprint (one work item per module id,

@@ -103,7 +103,7 @@ describe.skipIf(!BIN_PRESENT)("semio-os-mcp — legacy era (@modelcontextprotoco
     expect(Array.isArray(templates.resourceTemplates)).toBe(true);
   });
 
-  it("resources/read on an unresolvable URI returns a well-formed MCP error (NullBackend/empty registry today)", async () => {
+  it("resources/read on an unresolvable URI returns a well-formed MCP error", async () => {
     let threw = false;
     try {
       await client.readResource({ uri: "semio://capability/does-not-exist" });
@@ -119,9 +119,14 @@ describe.skipIf(!BIN_PRESENT)("semio-os-mcp — legacy era (@modelcontextprotoco
     expect(threw, "an unresolvable resource URI must reject, not resolve").toBe(true);
   });
 
-  it("prompts/list is empty (no registrations yet) and prompts/get on an unknown name is a well-formed MCP error", async () => {
+  it("prompts/list serves the real registered prompts and prompts/get on an unknown name is a well-formed MCP error", async () => {
     const prompts = await client.listPrompts();
     expect(Array.isArray(prompts.prompts)).toBe(true);
+    // 🎫️ 26/08/29/AI-MCP-END-TO-END registered the first real prompts; this assertion used to read
+    // "empty (no registrations yet)" in its NAME while only ever checking the array shape, so it
+    // would have kept passing either way. It now actually pins the registered set.
+    expect(prompts.prompts.length).toBeGreaterThan(0);
+    for (const prompt of prompts.prompts) expect(prompt.name).toMatch(/^[a-z][a-z0-9_]*$/);
     await expect(client.getPrompt({ name: "does-not-exist" })).rejects.toBeInstanceOf(McpError);
   });
 

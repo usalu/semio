@@ -3,24 +3,23 @@ use crate::artifacts::json::schema::diff::{JsonArrayAdded, JsonArrayDiff, JsonDi
 use crate::artifacts::json::schema::mutation_support::{diff_at_path, resolve, JsonPath};
 use crate::artifacts::json::schema::snapshot::JsonValue;
 use crate::artifacts::json::JsonSnapshot;
-use serde::{Deserialize, Serialize};
 
 #[path = "📝️text/🦀️component.rs"]
 pub mod text;
 #[path = "💾️binary/🦀️component.rs"]
 pub mod binary;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct RemoveArrayElementPayload {
     pub path: JsonPath,
     pub index: usize,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum RemoveArrayElementMutation { Apply(RemoveArrayElementPayload), Restore(JsonDiff) }
 
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveArrayElementMutation {

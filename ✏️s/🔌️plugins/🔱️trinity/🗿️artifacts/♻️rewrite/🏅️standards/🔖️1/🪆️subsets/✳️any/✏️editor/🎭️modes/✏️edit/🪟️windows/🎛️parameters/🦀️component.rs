@@ -22,7 +22,7 @@ impl ParameterKindLabel for crate::artifacts::rewrite::schema::ParameterSpec {
 }
 
 pub(crate) fn render(state: &RewriteSnapshot, labels: &TrinityRewriteLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return semio_framework_plugin::built_text_node(Label::data("Invalid RHS")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.parameters.invalid", "the fixed invalid-RHS label exceeds its UI bound"));
     };
     let mut children = semio_framework_plugin::UiFixedList::default();

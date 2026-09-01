@@ -7,7 +7,6 @@ use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord};
 use crate::artifacts::csv::CsvSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.csv`.
@@ -39,7 +38,7 @@ pub mod set_field;
 
 /// 📐️ Typed content mutation for `stdio.csv`. `NoMutation` was dropped: the derive requires every
 /// variant to wrap exactly one leaf payload, and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = CsvSnapshot, diff = CsvDiff, schema = "s.stdio.csv")]
 pub enum CsvMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

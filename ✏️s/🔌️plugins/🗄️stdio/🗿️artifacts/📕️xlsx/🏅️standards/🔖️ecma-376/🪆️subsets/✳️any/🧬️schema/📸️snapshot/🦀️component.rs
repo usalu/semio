@@ -10,7 +10,6 @@
 use crate::artifacts::xlsx::STDIO_XLSX_DOCUMENT_SCHEMA;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️XlsxModel
 /// 🔢️ A cell's decoded value — a real typed union over every SpreadsheetML cell-type ECMA-376
@@ -21,8 +20,8 @@ use serde::{Deserialize, Serialize};
 /// `Boolean` (`t="b"`), `Formula` (a `<f>` child present; `cached` is the cell's own `<v>`,
 /// re-typed by ITS `t` attribute, `None` when the workbook has no cached value), `Empty` (no
 /// `<v>` at all).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum XlsxCellValue {
     Number(f64),
     SharedString(usize),
@@ -30,7 +29,7 @@ pub enum XlsxCellValue {
     Boolean(bool),
     Formula {
         expr: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         cached: Option<Box<XlsxCellValue>>,
     },
     Empty,
@@ -46,12 +45,12 @@ impl Default for XlsxCellValue {
 /// 1-based (the literal SpreadsheetML `<row r="N">` index), `col` is 0-based (matches
 /// `engine::column_letter`'s `0 -> "A"` convention). `row`/`col` are this cell's IDENTITY (the
 /// key `XlsxCellsDiff` diffs by) and are never themselves diffed — only `value` is.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxCell {
     pub row: u32,
     pub col: u32,
-    #[serde(default)]
+    #[value(default)]
     pub value: XlsxCellValue,
 }
 
@@ -60,11 +59,11 @@ pub struct XlsxCell {
 /// `XlsxSheetsDiff` diffs by, per the recipe's name-keyed-collection convention); renaming a
 /// sheet is therefore a remove-old-name + add-new-name at the diff level (documented — same
 /// category as docx's OPC-part-rename gotcha), never a `name` field mutation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxSheet {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub cells: Vec<XlsxCell>,
 }
 
@@ -72,28 +71,28 @@ pub struct XlsxSheet {
 /// through `xl/_rels/workbook.xml.rels` to its `xl/worksheets/sheetN.xml` part, plus the SST
 /// (`xl/sharedStrings.xml`) kept as its own index-keyed `shared_strings` table — `t="s"` cells
 /// reference it by index (`XlsxCellValue::SharedString(usize)`), never resolved eagerly.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxWorkbook {
-    #[serde(default)]
+    #[value(default)]
     pub sheets: Vec<XlsxSheet>,
-    #[serde(default)]
+    #[value(default)]
     pub shared_strings: Vec<String>,
 }
 //#endregion 🔖️XlsxModel
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xlsx")]
 pub struct XlsxSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub opc: OpcPackage,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub workbook: XlsxWorkbook,
 }
 

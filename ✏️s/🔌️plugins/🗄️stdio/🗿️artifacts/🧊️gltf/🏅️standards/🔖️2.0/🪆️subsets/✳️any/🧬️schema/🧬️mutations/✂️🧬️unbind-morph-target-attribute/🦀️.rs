@@ -1,13 +1,12 @@
 //! 🧬️ Direct unbind-morph-target-attribute mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-morph-target-attribute.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfUnbindMorphTargetAttributePayload { pub mesh: usize, pub primitive: usize, pub target: usize, pub semantic: String }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?; checked_index(payload.target, base.document.meshes[payload.mesh].primitives[payload.primitive].targets.len(), "document/meshes/primitives/targets")?; if !base.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.iter().any(|(semantic, _)| semantic == &payload.semantic) { return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/targets", "semantic is not bound")); } Ok(()) }
@@ -15,9 +14,9 @@ pub fn validate(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnap
 pub fn apply(payload: &GltfUnbindMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0.retain(|(semantic, _)| semantic != &payload.semantic); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum UnbindMorphTargetAttributeMutation {
     Apply(GltfUnbindMorphTargetAttributePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

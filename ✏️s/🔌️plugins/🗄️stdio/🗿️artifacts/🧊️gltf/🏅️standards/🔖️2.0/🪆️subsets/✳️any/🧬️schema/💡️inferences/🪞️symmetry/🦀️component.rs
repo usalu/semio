@@ -16,10 +16,9 @@ pub mod rotational_symmetry_score;
 use super::super::modules::measurement_contracts::*;
 use super::super::modules::mesh_topology::Topology;
 use super::{geometry_core::GltfGeometryContext, GltfPartInference};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfSymmetryIndicators {
     pub reflection_symmetry_score: GltfMeasure<f64>,
     pub rotational_symmetry_score: GltfMeasure<f64>,

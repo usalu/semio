@@ -9,9 +9,8 @@ pub fn apply(projection: &mut CsvSnapshot, mutation: &CsvMutation) {
 }
 
 //#region 🔖️Payload
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
     pub snapshot: CsvSnapshot,

@@ -5,7 +5,6 @@ use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::diff::{dif
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -22,8 +21,8 @@ pub mod set_other_chunks;
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none — and `no` is not an
 /// approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = WavSnapshot, diff = WavDiff, schema = "WavMutation")]
 pub enum WavMutation {
     /// 🔁️ Full-snapshot replace.

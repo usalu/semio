@@ -4,7 +4,6 @@
 
 use crate::artifacts::tiff::schema::snapshot::{TAG_BITS_PER_SAMPLE, TAG_SAMPLES_PER_PIXEL};
 use crate::artifacts::tiff::TiffSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ TIFF baseline-tag-derived raster geometry (TIFF6 §8/§19). `bit_depth` reads
@@ -14,8 +13,8 @@ use serde::{Deserialize, Serialize};
 /// retains `SamplesPerPixel`(277) but not `ExtraSamples`(338) (never decoded by this codec, see
 /// `⚙️engine`), so `samplesPerPixel > 3` (more channels than plain RGB) is the closest honest
 /// proxy available.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffDimensions {
     pub width: u32,
     pub height: u32,

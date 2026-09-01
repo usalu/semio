@@ -3,8 +3,8 @@
 //!
 //! Recorded no-oracle decision `lowpoly-io-native-round-trip`
 //! (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json`): exports the committed fixture
-//! through this subset's own `🚪️io/📤️export/🧵️serializers/…/serialize_bytes` for each of the nine
-//! `stdio.*` formats `import_stdio_kinds()`/`export_stdio_kinds()` declare, imports the produced
+//! through this subset's own `🚪️io/📤️export/🧵️serializers/…/serialize_bytes` for each non-PNG
+//! `stdio.*` format `import_stdio_kinds()`/`export_stdio_kinds()` declare, imports the produced
 //! bytes back through the matching `deserialize_bytes`, and requires the round trip to return the
 //! committed document unchanged. Gated behind the generated host's `sut` feature — this case links
 //! this subset's own plugin crate directly (it must, to reach `serialize_bytes`/`deserialize_bytes`),
@@ -13,10 +13,9 @@
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Vocabulary
-/// 🏷️ Mirrors `import_stdio_kinds()`/`export_stdio_kinds()`
-/// (`../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs`) — duplicated, not imported, so this
-/// host's OWN format list stays independently checkable against the production declaration by eye.
-const FORMATS: &[&str] = &["dwg", "gltf", "json", "las", "obj", "ply", "png", "stl", "txt"];
+/// 🏷️ Every declared non-PNG format. PNG is independently decoded by the sibling
+/// `io-lowpoly-png-1` Pillow case.
+const FORMATS: &[&str] = &["dwg", "gltf", "json", "las", "obj", "ply", "stl", "txt"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Subject
@@ -48,7 +47,6 @@ mod subject {
             "las" => export::las::v1_0::any::serialize_bytes(snapshot),
             "obj" => export::obj::v3_0::any::serialize_bytes(snapshot),
             "ply" => export::ply::v1_0::any::serialize_bytes(snapshot),
-            "png" => export::png::v1_2::any::serialize_bytes(snapshot),
             "stl" => export::stl::v_ascii::any::serialize_bytes(snapshot),
             "txt" => export::txt::v_utf_8::any::serialize_bytes(snapshot),
             other => return Err(format!("no serializer registered for format {other:?}")),
@@ -61,7 +59,6 @@ mod subject {
             "las" => import::las::v1_0::any::deserialize_bytes(&bytes),
             "obj" => import::obj::v3_0::any::deserialize_bytes(&bytes),
             "ply" => import::ply::v1_0::any::deserialize_bytes(&bytes),
-            "png" => import::png::v1_2::any::deserialize_bytes(&bytes),
             "stl" => import::stl::v_ascii::any::deserialize_bytes(&bytes),
             "txt" => import::txt::v_utf_8::any::deserialize_bytes(&bytes),
             other => return Err(format!("no deserializer registered for format {other:?}")),

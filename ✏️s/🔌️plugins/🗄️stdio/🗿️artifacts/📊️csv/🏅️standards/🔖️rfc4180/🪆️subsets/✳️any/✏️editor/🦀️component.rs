@@ -9,7 +9,6 @@ use crate::editor::csv::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — verified against `crate::artifacts::csv::schema::derived_analysis::
@@ -24,7 +23,7 @@ pub const CSV_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", 
 /// action (`set-cell`, contract §2.6) can trigger. `row`/`column` index the rendered grid (post
 /// header-split, see the window's own `render` doc comment) — `handle` below does the row-offset
 /// math back to `CsvMutation::SetField`'s `record_index`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum CsvEditorCommand {
     SetCell { row: u32, column: u32, value: String },
 }

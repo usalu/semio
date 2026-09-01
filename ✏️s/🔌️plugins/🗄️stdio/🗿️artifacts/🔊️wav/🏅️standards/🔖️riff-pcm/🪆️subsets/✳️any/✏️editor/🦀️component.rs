@@ -9,11 +9,10 @@ use crate::artifacts::wav::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use crate::editor::wav::modes::edit;
 use crate::editor::wav::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum WavEditCommand {
     SeekMedia { position_ms: u64 },
 }

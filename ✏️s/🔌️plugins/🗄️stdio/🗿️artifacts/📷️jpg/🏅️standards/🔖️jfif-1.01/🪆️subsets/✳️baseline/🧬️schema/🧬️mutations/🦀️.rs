@@ -66,7 +66,6 @@
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::diff::{JpgComponentDiff, JpgComponentModified, JpgComponentsDiff, JpgDiff, JpgFrameChange, JpgFrameFieldsDiff, JpgHuffmanTableAdded, JpgHuffmanTableKey, JpgHuffmanTablesDiff};
 use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::document::schema::snapshot::{JpgFrameComponent, JpgHuffmanTable, JpgSnapshot};
 use protocol::{Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🏷️ SOF0 — the baseline sequential DCT frame marker, T.81 Table B.1. The one value
@@ -104,7 +103,7 @@ pub mod set_component_sampling;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = JpgSnapshot, diff = JpgDiff, schema = "JpgBaselineMutation")]
 pub enum JpgBaselineMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

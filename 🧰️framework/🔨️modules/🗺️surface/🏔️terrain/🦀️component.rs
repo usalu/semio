@@ -390,7 +390,9 @@ impl TerrainSessionCore {
 //#endregion TerrainSession
 
 //#region WasmBindings
-#[cfg(all(target_arch = "wasm32", feature = "session-bindgen"))]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is
+// browser-only, so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "session-bindgen"))]
 mod wasm_bridge {
     use super::TerrainSessionCore;
     use wasm_bindgen::prelude::*;
@@ -439,7 +441,7 @@ mod wasm_bridge {
     }
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "session-bindgen"))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "session-bindgen"))]
 pub use wasm_bridge::TerrainSession;
 //#endregion WasmBindings
 

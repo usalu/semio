@@ -15,7 +15,6 @@ use semio_framework_plugin::Component;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -29,7 +28,7 @@ pub const BINARY_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bin
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
 /// `editable_window_kind()` action (`replace-text`, contract §2.6) can trigger.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum BinaryEditorCommand {
     #[dsl(key = "replace-binary-text")]
     ReplaceText { text: String },

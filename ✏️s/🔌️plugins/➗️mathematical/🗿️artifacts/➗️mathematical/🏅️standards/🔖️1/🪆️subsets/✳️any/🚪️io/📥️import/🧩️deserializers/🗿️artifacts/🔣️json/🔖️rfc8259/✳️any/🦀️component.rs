@@ -1,6 +1,15 @@
 //! 🚪️ mathematical <- json — foreign `Deserializer<MathematicalSnapshot>` (ticket
 //! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §3). Every `MathematicalSnapshot`
 //! field round-trips through `serde_json` untouched, so this hop is `IoFidelity::Exact`.
+//!
+//! 🌱️ NOT converted to `pack::json`/`ToValue` — `JsonSnapshot::from_value`/`.to_serde_value()`
+//! (`semio_s_plugin_stdio::artifacts::json`) are hard-typed to `serde_json::Value`, a foreign
+//! plugin's own API this crate does not own. Ticket
+//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s own `verified-outcomes.md`
+//! defers all of `🗄️stdio` (~563 real call-site files) to its own dedicated wave; this leaf's
+//! `serde_json` dependency is a direct consequence, not an oversight. The sibling `export/json` leaf
+//! (`🚪️io/📤️export/🧵️serializers/…/🦀️component.rs`) never touches `JsonSnapshot` and IS fully
+//! converted — only this read direction is blocked.
 
 use crate::artifacts::mathematical::MathematicalSnapshot;
 use semio_framework::io::io_mechanism::Deserializer;

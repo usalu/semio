@@ -13,15 +13,14 @@
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::census::{compute_semio_value_census, SemioValueCensus};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio value snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `census`, backed by the `🌳census/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value.inference")]
 pub struct SemioValueInference {
     #[derived]

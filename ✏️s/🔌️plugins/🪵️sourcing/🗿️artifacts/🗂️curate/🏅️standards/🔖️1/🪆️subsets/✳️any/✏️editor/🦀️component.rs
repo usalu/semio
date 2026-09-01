@@ -553,6 +553,15 @@ const SOURCING_CURATE_DOCUMENT_MAXIMUM_ITEMS: usize = 4_096;
 const SOURCING_CURATE_DOCUMENT_TEXT_BYTES: usize = 256;
 const SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES: usize = 512 * 1_024;
 const SOURCING_CURATE_DOCUMENT_METADATA_BYTES: usize = 64;
+/// 🎟️ What one `advance`/`close_step` turn costs, and the ONLY figure the grant is ever compared
+/// against. The host drives this lane with a fixed `ArtifactStoreOneItemGrant { maximum_items: 1,
+/// maximum_bytes: TYPED_OPERATION_RESULT_PAGE_BYTES }` (4 KiB), so a gate that scaled with the
+/// document — `grant.maximum_bytes < measured_base_bytes` — would go `Blocked` forever the moment a
+/// curation outgrew one page, stalling the operation instead of failing it. The base's own size is a
+/// VALIDATION (`sourcing_curate_document_bytes`, rejected past
+/// `SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES`), never the gate. Same "demand exactly one full grant"
+/// shape as the config lane above.
+const SOURCING_CURATE_DOCUMENT_GRANT_BYTES: usize = 4_096;
 
 struct SourcingCurateArtifactPreparationFactory;
 
@@ -654,7 +663,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<CurateSnapshot, SourcingMutat
             return Err("Sourcing Curate preparation rejected its lane or description envelope".into());
         }
         sourcing_curate_mutation_footprint(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATE_DOCUMENT_MAXIMUM_BYTES })
+        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: SOURCING_CURATE_DOCUMENT_GRANT_BYTES })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurateSnapshot, SourcingMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<CurateSnapshot, SourcingMutation>>, store::ArtifactStoreOneItemPreparationRequest<CurateSnapshot, SourcingMutation>> {
@@ -679,7 +688,8 @@ impl store::ArtifactStoreOneItemPreparation<CurateSnapshot, SourcingMutation> fo
         if self.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint)); }
         if self.candidate.is_none() {
             let base = self.base.as_ref().ok_or_else(|| "Sourcing Curate preparation lost its exact base root".to_string())?.get();
-            let bytes = sourcing_curate_document_bytes(base)?;
+            sourcing_curate_document_bytes(base)?;
+            let bytes = SOURCING_CURATE_DOCUMENT_GRANT_BYTES;
             if grant.maximum_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.mutation.take().ok_or_else(|| "Sourcing Curate preparation lost its mutation owner".to_string())?;
             self.candidate = Some(prepare_sourcing_curate_document(base, mutation)?);

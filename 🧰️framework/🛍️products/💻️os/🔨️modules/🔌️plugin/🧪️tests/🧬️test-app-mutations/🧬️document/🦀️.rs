@@ -2,6 +2,7 @@
 //! 🧪️ Shared document state and direct mutation fixtures for the Plugin contract.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🧫️Snapshot
@@ -55,7 +56,7 @@ impl ArtifactPack for TestSnapshot {
 //#endregion 🧫️Snapshot
 
 //#region 🔺️Diff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub(crate) struct TestDiff {
     pub(crate) count: Option<i32>,
     pub(crate) label: Option<String>,

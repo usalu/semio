@@ -2,11 +2,13 @@
 use super::super::{CreateSpaceAlternative, RestoreActiveSpaceAlternative, SpaceHistoryMutation};
 use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RemoveSpaceAlternative { pub alternative_id: String }
 //#endregion 🔖️Payload
 

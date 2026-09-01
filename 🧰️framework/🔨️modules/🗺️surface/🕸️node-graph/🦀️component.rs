@@ -680,7 +680,10 @@ impl Drop for GraphHostRetirement {
 //#endregion 🔖️GraphHost
 
 //#region 🔖️Wasm
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is
+// browser-only (attaches an `HtmlCanvasElement`), so it is narrowed to exclude the WASI
+// component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_session {
     use super::*;
     use semio_framework_async::browser::future_to_promise;
@@ -962,7 +965,7 @@ mod wasm_session {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use wasm_session::GraphSession;
 //#endregion 🔖️Wasm
 

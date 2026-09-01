@@ -1,14 +1,24 @@
-//! 🔺️ `change-step-enabled` sparse diff construction.
-//!
-//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: DOCUMENTED NO-OP — see
-//! `🌱create-step/🔺️diff/🦀️component.rs`'s doc comment for the full rationale.
+//! 🔺️ `change-step-enabled` sparse diff construction — sets an id-keyed [`ProcessStep`]'s
+//! `enabled` flag in the durable `step_payloads` timeline and re-mints `steps`/`tool_solids` via
+//! [`process3d_step_timeline_diff`](crate::artifacts::process3d::process3d_step_timeline_diff).
+//! Error `target-missing` when the step is absent, Warning `no-op` when the flag is unchanged.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::artifacts::process3d::{process3d_step_timeline_diff, Process3dSnapshot};
 
 //#region 🔖️Diff
-/// 🚧️ Documented no-op — see file doc comment. Surfaced as Warning `mutation.no-op`.
-pub fn diff(_payload: &super::ChangeStepEnabled, _base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
-    protocol::MutationOutcome::empty().warn("mutation.no-op", "Changing step-enabled is a documented no-op pending a link resolver for the composed steps child.".to_string())
+pub fn diff(payload: &super::ChangeStepEnabled, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    let Some(existing) = base.step_payloads.iter().find(|step| step.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if existing.enabled == payload.new_enabled {
+        let state = if payload.new_enabled { "enabled" } else { "disabled" };
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already {state}.", payload.id));
+    }
+    let mut steps = base.step_payloads.clone();
+    if let Some(step) = steps.iter_mut().find(|step| step.id == payload.id) {
+        step.enabled = payload.new_enabled;
+    }
+    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, steps))
 }
 //#endregion 🔖️Diff

@@ -6,7 +6,7 @@ pub struct MiniDoc {
     pub name: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 pub struct MiniDiff {
     pub name: Option<String>,
 }

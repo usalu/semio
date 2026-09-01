@@ -1,10 +1,12 @@
 //! 🧪️ Counter domain and direct operations used by the law helper's own tests.
 
 use crate::os_spr::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔺️StructuralDiff
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub struct CounterDiff {
     pub deltas: Vec<i64>,
 }

@@ -2,13 +2,20 @@
 //! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
 //! aggregate value and delegates, so the semantics are preserved by construction rather than
 //! re-derived.
+//! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
+//! `record_codegen` built when this field lived inline in the enum variant — the aggregate's
+//! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
+//! delegates straight through to this leaf's own record, keeping the committed mutations
+//! grammar/protocol facets byte-identical to before this leaf existed.
 
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, dsl::DslRecord)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-snapshot")]
 pub struct SetSnapshot {
+    #[dsl(block)]
     pub snapshot: BinarySnapshot,
 }
 

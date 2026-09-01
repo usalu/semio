@@ -6,17 +6,15 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "set-visibility")]
 pub struct SetVisibility {
     pub visibility: String,
 }
 
 pub async fn handle(payload: &SetVisibility, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.set-visibility".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "visibility": payload.visibility }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.set-visibility".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": doc.snapshot.space_id, "visibility": payload.visibility }))) }))
 }
 
 //#region 🧪️Tests
@@ -33,7 +31,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.directory.set-visibility");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
+                let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("visibility").and_then(|v| v.as_str()), Some("public"));
             }
             other => panic!("expected ReplayShellCommand, got {other:?}"),

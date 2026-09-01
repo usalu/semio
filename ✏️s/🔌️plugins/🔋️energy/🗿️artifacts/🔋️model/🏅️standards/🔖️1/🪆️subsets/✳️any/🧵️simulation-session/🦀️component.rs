@@ -8,6 +8,9 @@ use semio_framework::kernel::{Effect, JobPlacement};
 use semio_framework_job::{CancelToken, Generation, InteractiveJob, Operation, OperationId, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
+// 🌱️ Additive `ToValue`/`FromValue` — see the artifact root `🦀️component.rs`'s own docstring note
+// on this crate's interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -23,7 +26,7 @@ const INPUT_BYTES: usize = 95;
 const JOB_TAG: u64 = 0xe7c3_0000_0000_0000;
 const JOB_COUNTER_MAXIMUM: u64 = 0x0000_ffff_ffff_ffff;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationConfigProjection {
     pub locale_de: bool,
     pub checkpoint_token: u64,
@@ -97,7 +100,7 @@ impl EnergySimulationConfigProjection {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EnergySimulationRequestIdentity {
     pub request: u64,
     pub operation: u64,

@@ -5,8 +5,8 @@
 /// tail (`cbSize` bytes) verbatim when present — `None` for the plain 16-byte PCM form. NO type
 /// sharing with `avi` (both are RIFF-based but deliberately distinct vocabularies per the master
 /// plan).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WavFmt {
     pub audio_format: u16,
     pub channels: u16,
@@ -14,7 +14,7 @@ pub struct WavFmt {
     pub byte_rate: u32,
     pub block_align: u16,
     pub bits_per_sample: u16,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub ext: Option<Vec<u8>>,
 }
 
@@ -30,8 +30,8 @@ impl Default for WavFmt {
 /// 🏷️ Adjacently tagged (`tag`+`content`), not purely internally tagged — serde cannot serialize
 /// an internally-tagged newtype variant wrapping a non-map type (`Vec<T>` here), the same
 /// constraint already on record for `HtmlNode`/`JsonValue` elsewhere in this codebase.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum WavData {
     Pcm16(Vec<i16>),
     Pcm8(Vec<u8>),
@@ -47,24 +47,23 @@ impl Default for WavData {
 
 /// 📦️ Owned by `wav`: any RIFF chunk other than `fmt `/`data`, retained byte-for-byte
 /// (`LIST`/`INFO`/`fact`/`cue `/…).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_WAV_DOCUMENT_SCHEMA: &str = "stdio.wav";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.wav")]
 pub struct WavSnapshot {
     #[state(artifact)]
@@ -74,7 +73,7 @@ pub struct WavSnapshot {
     #[state(artifact)]
     pub data: WavData,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub other_chunks: Vec<RiffChunk>,
 }
 

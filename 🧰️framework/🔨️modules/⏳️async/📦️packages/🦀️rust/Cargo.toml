@@ -32,7 +32,13 @@ entrypoint = []
 serde = { version = "1.0.228", features = ["derive"] }
 semio-framework-trace = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only `pub mod browser` (JS `Promise`/`JsValue` bridge — `spawn_local`/
+# `future_to_promise`/`JsFuture`). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"`
+# is TRUE for the WASI component target too. wasip2 does not need this bridge: task execution is
+# already covered target-neutrally by this crate's `WorkerPool`/`block_on` (the latter's own
+# `not(target_arch = "wasm32")` split is unrelated — it is about `std::thread::park`/`unpark`
+# availability, not JS, and stays bare since it is correct for wasip2 too).
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 

@@ -1,5 +1,5 @@
 //! 🏗️ The `fem2d@1/any` non-geometric mutation vocabulary, expressed over this subset's own JSON
-//! carrier and read back through `serde_json` — a third-party JSON implementation and nothing of ours.
+//! carrier and read back through the first-party JSON value tree.
 //!
 //! Why this exists: the two mesh oracles already registered for this subset (`three-fem2d-mesh-reader`,
 //! `manifold-fem2d-mesh-measure`) read the STL/OBJ export, so they witness GEOMETRY. A material's
@@ -9,13 +9,14 @@
 //!
 //! But this subset's JSON export is not a stub. Unlike its csv/md/txt leaves, which wrap the DSL text
 //! in a single blob, `🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json` emits
-//! `serde_json::to_value(snapshot)` — the real structured tree, every `Fem2dSnapshot` field. So all
+//! `dsl::ToValue::to_value(snapshot)` — the real structured tree, every `Fem2dSnapshot` field. So all
 //! nine arrays are carrier-level facts and a JSON reader witnesses every one of the 22.
 //!
 //! This is the same shape as the accepted `quick-xml`/svg and `burntsushi-csv`/mathematical readers:
 //! the judge is a third-party implementation of the CARRIER, and nothing here predicts its answer.
 
-use serde_json::{json, Map, Value};
+use pack::json::{Object, Value};
+use pack::json;
 
 pub const KINDS: &[&str] = &[
     "create-node",
@@ -44,8 +45,8 @@ pub const KINDS: &[&str] = &[
 
 /// 🌱️ A deterministic seed carrying at least TWO of every collection, because `delete-*` and
 /// `replace-*` are only observable when the collection does not empty to nothing, and a corpus whose
-/// mutations are not observable is not evidence. Field spelling follows the snapshot's own serde
-/// contract: `#[serde(rename_all = "camelCase")]` on every record, `#[serde(tag = "kind")]` on the
+/// mutations are not observable is not evidence. Field spelling follows the snapshot's value-codec
+/// contract: `#[value(rename_all = "camelCase")]` on every record, `#[value(tag = "kind")]` on the
 /// `FemElement` and `FemLoad` enums, and `FemDof` unrenamed (so `"Tx"`, not `"tx"`).
 pub fn build_seed() -> Value {
     json!({
@@ -170,16 +171,16 @@ pub fn apply(kind: &str, doc: &Value) -> Result<Value, String> {
 }
 
 /// 📄️ Canonicalises for comparison: object keys sorted, arrays left in ORDER (so a reordering is a
-/// difference, not a tie). Numbers are compared as `serde_json` parsed them — no rounding, because a
+/// difference, not a tie). Numbers are compared exactly as parsed — no rounding, because a
 /// tolerance here would silently accept a changed stiffness.
 fn canonical(value: &Value) -> Value {
     match value {
         Value::Object(map) => {
-            let mut sorted = Map::new();
-            let mut keys: Vec<&String> = map.keys().collect();
-            keys.sort();
-            for key in keys {
-                sorted.insert(key.clone(), canonical(&map[key]));
+            let mut sorted = Object::new();
+            let mut entries: Vec<_> = map.iter().collect();
+            entries.sort_by_key(|(key, _)| *key);
+            for (key, value) in entries {
+                sorted.insert(key.to_string(), canonical(value));
             }
             Value::Object(sorted)
         }
@@ -190,8 +191,8 @@ fn canonical(value: &Value) -> Value {
 
 /// 📄️ The projection: the nine collections the 22 kinds touch, canonicalised.
 pub fn project(bytes: &[u8]) -> Result<Value, String> {
-    let parsed: Value = serde_json::from_slice(bytes).map_err(|error| error.to_string())?;
-    let mut out = Map::new();
+    let parsed: Value = pack::json::parse_bytes(bytes).map_err(|error| error.to_string())?;
+    let mut out = Object::new();
     for key in ["nodes", "elements", "regions", "materials", "sections", "supports", "loadCases", "combinations", "analysis"] {
         out.insert(key.to_string(), canonical(parsed.get(key).unwrap_or(&Value::Null)));
     }

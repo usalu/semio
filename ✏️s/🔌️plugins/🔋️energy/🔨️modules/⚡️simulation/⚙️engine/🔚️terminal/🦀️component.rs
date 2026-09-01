@@ -4,10 +4,11 @@ use crate::coils::{heating_coil_output_w, CoilAirState, HeatingCoil};
 use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::units::RHO_AIR_REF;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️AirTerminal
 /// 🌬️ Zone air terminal unit types.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum AirTerminal {
     Cav { max_flow_m3_s: f64 },
     Vav { min_flow_m3_s: f64, max_flow_m3_s: f64, reheat: Option<HeatingCoil> },
@@ -17,7 +18,7 @@ pub enum AirTerminal {
 }
 
 /// 📥️ Terminal inlet air and zone load request.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TerminalRequest {
     pub supply_temperature_c: f64,
     pub supply_humidity_ratio: f64,
@@ -32,7 +33,7 @@ pub struct TerminalRequest {
 }
 
 /// 📤️ Terminal outlet air delivered to zone.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TerminalOutput {
     pub discharge_temperature_c: f64,
     pub discharge_humidity_ratio: f64,

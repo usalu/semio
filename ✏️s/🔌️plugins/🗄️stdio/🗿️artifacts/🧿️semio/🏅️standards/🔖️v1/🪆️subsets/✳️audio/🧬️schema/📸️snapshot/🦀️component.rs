@@ -16,7 +16,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA: &str = "stdio.semio.audio";
@@ -28,8 +27,8 @@ pub const STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA: &str = "stdio.semio.audio";
 /// `wav`-shaped: mirrors PCM8/16/24/32 + IEEE float, the `fmt ` chunk's `wBitsPerSample`/
 /// `wFormatTag` space, without depending on wav's own (future, W3) types — own type, per the
 /// repo-wide "own types, not merged into a sibling format" convention (tsv-vs-csv, docx-vs-xlsx).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum SemioAudioFormat {
     Pcm8,
     #[default]
@@ -46,10 +45,10 @@ pub enum SemioAudioFormat {
 /// sample sequence — a strong, per-field-diffable entity (today one field, `samples`, but kept as
 /// its own struct + collection triple rather than `Vec<Vec<f32>>` so a future field, e.g. a
 /// per-channel gain/pan, slots in without reshaping the collection).
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAudioChannel {
-    #[serde(default)]
+    #[value(default)]
     pub samples: Vec<f32>,
 }
 //#endregion 🔖️Channel
@@ -57,8 +56,8 @@ pub struct SemioAudioChannel {
 //#region 🔖️Tag
 /// 🏷️ One metadata key/value pair (ID3/RIFF `LIST INFO`-shaped: `title`, `artist`, `comment`, …).
 /// A weak/value entity per the recipe (its "diff" is the whole new pair, never sub-diffed).
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAudioTag {
     pub key: String,
     pub value: String,
@@ -66,8 +65,8 @@ pub struct SemioAudioTag {
 //#endregion 🔖️Tag
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.audio")]
 pub struct SemioAudioSnapshot {
     #[state(artifact)]
@@ -75,13 +74,13 @@ pub struct SemioAudioSnapshot {
     #[state(artifact)]
     pub sample_rate: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub format: SemioAudioFormat,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub channels: Vec<SemioAudioChannel>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tags: Vec<SemioAudioTag>,
 }
 

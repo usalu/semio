@@ -28,7 +28,6 @@ use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifR
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.gif` (87a).
@@ -59,8 +58,8 @@ pub mod set_image_interlace;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = GifSnapshot, diff = GifDiff, schema = "GifMutation")]
 pub enum GifMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

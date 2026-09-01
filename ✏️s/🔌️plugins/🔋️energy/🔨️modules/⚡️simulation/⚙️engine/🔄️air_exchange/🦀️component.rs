@@ -3,10 +3,11 @@
 use crate::props::{latent_heat_vaporization, moist_air_density, moist_air_enthalpy_j_per_kg};
 use crate::units::{CP_DRY_AIR, GRAVITY, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️InfiltrationMethod
 /// 🚪️ Infiltration flow calculation method.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum InfiltrationMethod {
     ScheduledAch,
     PerExteriorArea,
@@ -17,7 +18,7 @@ pub enum InfiltrationMethod {
 
 // #region 🔖️InfiltrationSpec
 /// 💨️ Infiltration model parameters (EnergyPlus-style wind/stack coefficients).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct InfiltrationSpec {
     pub method: InfiltrationMethod,
     pub schedule_factor: f64,
@@ -35,7 +36,7 @@ pub struct InfiltrationSpec {
 
 // #region 🔖️VentilationSpec
 /// 🌬️ Mechanical ventilation specification.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct VentilationSpec {
     pub design_flow_m3_s: f64,
     pub schedule_factor: f64,
@@ -47,7 +48,7 @@ pub struct VentilationSpec {
 
 // #region 🔖️InterzoneMixing
 /// ↔ Interzone air mixing between adjacent zones.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct InterzoneMixing {
     pub flow_m3_s: f64,
     pub schedule_factor: f64,
@@ -56,7 +57,7 @@ pub struct InterzoneMixing {
 
 // #region 🔖️HybridControl
 /// 🎛️ Hybrid ventilation control: natural when conditions allow, mechanical otherwise.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HybridVentilationControl {
     pub outdoor_temp_min_c: f64,
     pub outdoor_temp_max_c: f64,
@@ -139,7 +140,7 @@ pub fn hybrid_ventilation_flow_m3_s(control: &HybridVentilationControl, zone_vol
 
 // #region 🔖️AirExchangeResult
 /// 📊️ Combined air exchange flows and loads for one zone.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct AirExchangeResult {
     pub infiltration_flow_m3_s: f64,
     pub ventilation_flow_m3_s: f64,

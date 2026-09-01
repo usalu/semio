@@ -38,6 +38,66 @@ pub struct SchemaVersion(pub u32);
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
 pub struct PayloadHash(pub [u8; 32]);
+
+/// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp` above (this crate
+/// sits below `os-kernel`, where the derive macro's generated code is rooted). `#[serde(transparent)]`
+/// means the wire shape is the bare inner value, mirrored here directly.
+impl crate::value::ToValue for MutationId {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for MutationId {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
+impl crate::value::ToValue for ActorId {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for ActorId {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
+impl crate::value::ToValue for SchemaId {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::ToValue::to_value(&self.0)
+    }
+}
+impl crate::value::FromValue for SchemaId {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        Ok(Self(<String as crate::value::FromValue>::from_value(value)?))
+    }
+}
+
+/// 🌉️ `[u8; 32]` has no blanket `ToValue`/`FromValue` (unlike serde, which supports fixed arrays
+/// natively) — encoded/decoded element-by-element as a `DslValue::Array`, matching serde's default
+/// `[u8; N]` wire shape (a plain JSON array of numbers) byte for byte.
+impl crate::value::ToValue for PayloadHash {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::Array(self.0.iter().map(crate::value::ToValue::to_value).collect())
+    }
+}
+impl crate::value::FromValue for PayloadHash {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Array(items) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an array for PayloadHash, found {value:?}")));
+        };
+        if items.len() != 32 {
+            return Err(crate::value::ValueError::new(format!("expected exactly 32 bytes for PayloadHash, found {}", items.len())));
+        }
+        let mut bytes = [0u8; 32];
+        for (index, item) in items.into_iter().enumerate() {
+            bytes[index] = <u8 as crate::value::FromValue>::from_value(item).map_err(|error| error.under(index))?;
+        }
+        Ok(Self(bytes))
+    }
+}
 //#endregion 🔖️Identifiers
 
 //#region 🔖️HybridLogicalTimestamp
@@ -96,6 +156,45 @@ impl Ord for HybridLogicalTimestamp {
 impl PartialOrd for HybridLogicalTimestamp {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
+    }
+}
+
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`)
+/// roots its generated code at `::semio_framework_os_kernel::…`, which this crate sits BELOW in
+/// the dependency DAG (os-kernel depends on replication, not the reverse) — the path could never
+/// resolve here. `crate::value` is the raw first-party value module mounted directly by `#[path]`
+/// (see the crate root), so it needs no such dependency edge. Field names match the pre-existing
+/// serde wire shape (no `rename_all`, so `physical_ms` stays snake_case, not `physicalMs`).
+impl crate::value::ToValue for HybridLogicalTimestamp {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::object([
+            ("actor".to_string(), crate::value::ToValue::to_value(&self.actor)),
+            ("physical_ms".to_string(), crate::value::ToValue::to_value(&self.physical_ms)),
+            ("logical".to_string(), crate::value::ToValue::to_value(&self.logical)),
+        ])
+    }
+}
+impl crate::value::FromValue for HybridLogicalTimestamp {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for HybridLogicalTimestamp, found {value:?}")));
+        };
+        let mut actor = None;
+        let mut physical_ms = None;
+        let mut logical = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "actor" => actor = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
+                "physical_ms" => physical_ms = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("physical_ms"))?),
+                "logical" => logical = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("logical"))?),
+                _ => {}
+            }
+        }
+        Ok(HybridLogicalTimestamp {
+            actor: actor.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing actor"))?,
+            physical_ms: physical_ms.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing physical_ms"))?,
+            logical: logical.ok_or_else(|| crate::value::ValueError::new("HybridLogicalTimestamp missing logical"))?,
+        })
     }
 }
 //#endregion 🔖️HybridLogicalTimestamp

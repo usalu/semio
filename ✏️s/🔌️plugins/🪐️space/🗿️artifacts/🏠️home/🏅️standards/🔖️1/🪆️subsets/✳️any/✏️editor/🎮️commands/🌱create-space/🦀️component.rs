@@ -9,11 +9,9 @@ use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "create-space")]
 pub struct CreateSpace {
     pub name: String,
@@ -29,7 +27,7 @@ pub async fn handle(payload: &CreateSpace, _doc: &ArtifactView<'_, SHomeSnapshot
     }
     let kind = if payload.kind.trim().is_empty() { "atelier".to_string() } else { payload.kind.clone() };
     let visibility = if payload.visibility.trim().is_empty() { "private".to_string() } else { payload.visibility.clone() };
-    let args = dsl::to_dsl_value(&json!({ "name": payload.name, "spaceKind": kind, "visibility": visibility })).ok();
+    let args = Some(pack::json_to_dsl_value(&pack::json!({ "name": payload.name, "spaceKind": kind, "visibility": visibility })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.create-space".into(), args }))
 }
 //#endregion 🔖️Handle
@@ -71,7 +69,7 @@ mod tests {
             })
             .expect("a ReplayShellCommand effect");
         assert_eq!(action_id, "os.directory.create-space");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args present")).expect("args decode as json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args present"));
         assert_eq!(args_value["name"], "Atelier");
         assert_eq!(args_value["spaceKind"], "atelier");
         assert_eq!(args_value["visibility"], "private");
@@ -93,7 +91,7 @@ mod tests {
                 _ => None,
             })
             .expect("args present");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
         assert_eq!(args_value["spaceKind"], "atelier");
         assert_eq!(args_value["visibility"], "private");
     }

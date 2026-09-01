@@ -8,7 +8,6 @@
 
 use crate::artifacts::las::STDIO_LAS_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Header
 /// 📋 The LAS 1.0 public header block, minus the fixed 4-byte "LASF" signature (checked, never
@@ -20,8 +19,8 @@ use serde::{Deserialize, Serialize};
 /// the pre-existing `header_size` precedent) so a stale value here can never corrupt a re-encode;
 /// they stay typed + diffable because they're real bytes on disk that `decode_las` retains
 /// verbatim from whatever was actually read.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LasHeader {
     pub version_major: u8,
     pub version_minor: u8,
@@ -98,8 +97,8 @@ impl Default for LasHeader {
 /// 📦 One Variable Length Record — `data` is retained byte-verbatim (VLR content is registered
 /// per `(user_id, record_id)` by third parties and is proprietary/unmodeled by spec, the
 /// recipe's typed raw-retention exception, same shape as `PngChunk`/`GifAppExtension`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LasVlr {
     pub user_id: String,
     pub record_id: u16,
@@ -114,8 +113,8 @@ pub struct LasVlr {
 /// already-tested content the recipe's "nothing real on disk silently dropped" rule forbids
 /// regressing). `gps_time` / `rgb` are `None` for point data formats that don't carry them (0/2
 /// and 0/1 respectively).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LasPoint {
     pub x: f64,
     pub y: f64,
@@ -129,28 +128,28 @@ pub struct LasPoint {
     pub scan_angle_rank: i8,
     pub user_data: u8,
     pub point_source_id: u16,
-    #[serde(default)]
+    #[value(default)]
     pub gps_time: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub rgb: Option<(u16, u16, u16)>,
 }
 //#endregion 🔖️PointModel
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.las")]
 pub struct LasSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: LasHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub vlrs: Vec<LasVlr>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub points: Vec<LasPoint>,
 }
 

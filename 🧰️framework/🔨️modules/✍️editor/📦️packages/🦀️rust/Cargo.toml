@@ -38,7 +38,10 @@ infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only `EditorSession` canvas bridge (`🦀️component.rs`'s `Wasm` region). Excluded from
+# `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too — the
+# wasip2 guest never attaches an `HtmlCanvasElement`.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = { workspace = true }
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

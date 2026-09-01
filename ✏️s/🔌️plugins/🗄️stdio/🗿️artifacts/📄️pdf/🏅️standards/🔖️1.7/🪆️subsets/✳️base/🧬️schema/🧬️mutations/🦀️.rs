@@ -2,7 +2,6 @@
 //! schema, and test is owned by its direct semantic folder.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "➕️append-page-content/🦀️.rs"]
@@ -57,8 +56,8 @@ pub use set_trailer_entry::SetTrailerEntry;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7")]
 pub enum PdfMutation {
     InsertPage(InsertPage),

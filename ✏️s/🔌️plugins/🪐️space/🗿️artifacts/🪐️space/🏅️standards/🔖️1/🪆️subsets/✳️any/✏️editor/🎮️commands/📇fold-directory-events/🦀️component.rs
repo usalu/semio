@@ -11,9 +11,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation, SpaceIndexMember};
 use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "fold-directory-events")]
 pub struct FoldDirectoryEvents {
     pub events_json: String,
@@ -34,7 +33,7 @@ async fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
 }
 
 pub async fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    let events: Vec<DirectoryEvent> = serde_json::from_str(&payload.events_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
+    let events: Vec<DirectoryEvent> = pack::from_json_str(&payload.events_json).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
     let model = fold_all(DirectoryReadModel::default(), &events);
     let Some(space) = model.spaces.get(&doc.snapshot.space_id) else {
         return Ok(Emit::default());
@@ -83,7 +82,7 @@ mod tests {
             event(2, DirectoryEventBody::SpaceCreated { space_id: "space-1".into(), name: "Space 1".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-1")),
             event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
         ];
-        let events_json = serde_json::to_string(&events).unwrap();
+        let events_json = pack::to_json_string(&events);
         let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
         assert_eq!(result.config_mutations.len(), 1);
         let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
@@ -102,7 +101,7 @@ mod tests {
         let cfg = ConfigView { snapshot: &config_snapshot };
         let events =
             vec![event(1, DirectoryEventBody::SpaceCreated { space_id: "space-2".into(), name: "Other".into(), space_kind: DirectorySpaceKind::Atelier, visibility: DirectorySpaceVisibility::Public, owner_user_id: "u-1".into() }, Some("space-2"))];
-        let events_json = serde_json::to_string(&events).unwrap();
+        let events_json = pack::to_json_string(&events);
         let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
         assert!(result.config_mutations.is_empty(), "unrelated-space events never touch this space's config");
         assert!(result.artifact_mutations.is_empty());

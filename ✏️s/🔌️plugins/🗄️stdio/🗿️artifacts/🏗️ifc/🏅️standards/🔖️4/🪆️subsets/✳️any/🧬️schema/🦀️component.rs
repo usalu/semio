@@ -6,21 +6,20 @@
 use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader};
 use crate::artifacts::ifc::{IfcMutation, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcArtifact {
     #[state(artifact)]
     pub schema: String,
     /// 📦️ The full, lossless IFC4 graph in IFC's own typed model — the actual persisted state.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: IfcHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<IfcEntity>,
 }
 //#endregion 🔖️Artifact

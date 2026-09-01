@@ -172,7 +172,7 @@ pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub fn apply_canvas_cursor(canvas: &web_sys::HtmlCanvasElement, cursor: SemioCursor, dark: bool, last: &mut Option<(SemioCursor, bool)>) {
     use wasm_bindgen::JsCast;
     let key = (cursor, dark);

@@ -3,11 +3,10 @@
 mod tests {
     use crate::artifacts::gltf::schema::mutations::change_node_extra_data::{diff, inverse, mutation};
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector { base: GltfSnapshot, mutation: mutation::GltfChangeNodeExtraDataPayload, diff: diff::GltfChangeNodeExtraDataDiff, inverse: inverse::GltfChangeNodeExtraDataInverse, after: GltfSnapshot }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract { vectors: Vec<Vector> }
 
     #[semio_framework_async_macros::async_test]

@@ -5,12 +5,11 @@
 //! scalar (one max-length fold over `channels`) — no `InferredField` needed.
 
 use crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ Semio audio's sample-count-derived playback duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAudioDuration {
     pub duration_seconds: f64,
     pub sample_count: u64,

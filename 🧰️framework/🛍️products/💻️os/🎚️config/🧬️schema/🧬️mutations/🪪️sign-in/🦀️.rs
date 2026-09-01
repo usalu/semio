@@ -4,11 +4,14 @@ use super::sign_out::SignOut;
 use super::IdentityConfigMutation;
 use protocol::{MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🪪️ The OS-wide signed-in session.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Identity {
     pub user_id: String,
     pub email: String,
@@ -22,6 +25,20 @@ pub struct Identity {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct IdentitySetting(pub Option<Identity>);
+
+/// 🔀️ Hand-written, not derived: `#[serde(transparent)]` tuple structs are not one of
+/// `#[derive(ToValue, FromValue)]`'s supported shapes (named-field structs and internally-/
+/// adjacently-tagged enums only) — see the fan-out playbook's attribute-coverage table.
+impl ToValue for IdentitySetting {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::ToValue::to_value(&self.0)
+    }
+}
+impl FromValue for IdentitySetting {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        Ok(Self(::semio_framework_os_kernel::FromValue::from_value(value)?))
+    }
+}
 
 /// 🪪️ The schema id for the identity config facet.
 pub const IDENTITY_CONFIG_SCHEMA: &str = "os.config.identity";
@@ -39,9 +56,10 @@ impl MutationDiff<IdentitySetting> for IdentitySetting {
 
 //#region 🔖️Mutation
 /// 🪪️ Establishes or replaces the OS-wide signed-in session.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SignIn {
     pub user_id: String,
     pub email: String,

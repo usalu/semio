@@ -10,8 +10,6 @@ use semio_framework_os::{
     create_default_workflow_parameter, create_os_id, media_port_spec_id, negotiate_media_contract, os_app_registration, patch_workflow_parameter, register_app_io, resolve_os_app_definition, workflow_node_for_app, workflow_parameter_id_from_port_id,
     AppDefinition, MediaContract, WorkflowMutation, WorkflowParameter, WorkflowParameterBinding, WorkflowParameterType, WorkflowPosition, WorkflowSnapshot,
 };
-use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 
 //#region 🔖️Parameters
@@ -217,11 +215,25 @@ pub async fn os_parameter_types_compatible_shim(parameter: &WorkflowParameter, t
 /// builds from `loadedPlugins.flatMap(entry => entry.manifest.apps.map(app => ({pluginId, app})))`.
 /// `app` deserializes straight off `AppDefinition`'s own `Deserialize` impl since it's the literal
 /// manifest-JSON `AppDefinition` object, unmodified across the wasm boundary.
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct AppRegistrationWireEntry {
     plugin_id: String,
     app: AppDefinition,
+}
+
+/// 🌱️ Hand-written (not derived) — `AppDefinition` is a deeply framework-owned manifest type
+/// (`Modes`/`WindowKinds` carry a hand-rolled `serde(try_from/into = "Vec<T>")` wire shape, not a
+/// derivable one) that only implements `serde::Deserialize` today, so `app` bridges through the
+/// OLD `dsl::from_dsl_value::<T: DeserializeOwned>` path per the fan-out playbook's composed-field
+/// pattern (`ArtifactChild<S>`), rather than a `ToValue`/`FromValue` cascade through the whole
+/// manifest module — out of this ticket's plugin-manifest scope. `plugin_id` still goes through
+/// `FromValue` directly.
+impl dsl::FromValue for AppRegistrationWireEntry {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self { plugin_id: dsl::FromValue::from_value(field("pluginId")?)?, app: dsl::from_dsl_value(field("app")?).map_err(dsl::ValueError::new)? })
+    }
 }
 
 /// 🪐️ Registers every `{pluginId, app}` entry `json` carries into this wasm instance's OWN
@@ -235,7 +247,7 @@ struct AppRegistrationWireEntry {
 /// dispatch-only and the one production `register_app_io` call for this app sits beside its other
 /// OS-registry bridge functions.
 pub async fn apply_app_registrations(json: &str) {
-    let Ok(entries) = serde_json::from_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
+    let Ok(entries) = pack::from_json_str::<Vec<AppRegistrationWireEntry>>(json) else { return };
     for entry in entries {
         register_app_io(&entry.plugin_id, &entry.app);
     }
@@ -247,7 +259,6 @@ pub async fn apply_app_registrations(json: &str) {
 mod tests {
     use super::*;
     use crate::demo_space_projection;
-    use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
     async fn patch_parameter_op_updates_numeric_value() {

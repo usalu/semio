@@ -9,11 +9,10 @@ use crate::artifacts::jpg::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::editor::jpg_baseline::modes::edit;
 use crate::editor::jpg_baseline::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum JpgBaselineEditCommand {
     SetPixelRegion { pixels: Vec<u8> },
 }

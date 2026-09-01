@@ -47,7 +47,7 @@
 //! `26/08/29/S-END-TO-END`): `NoMutation` was dropped (`#[derive(dsl::Mutations)]` requires every
 //! variant to wrap exactly one leaf payload and a unit variant wraps none; `no` is not an approved
 //! semantic verb either), and every remaining variant now wraps its own `dsl::MutationLeaf` struct
-//! instead of carrying its fields as a struct-literal directly. `#[serde(tag = "mutation", ...)]`
+//! instead of carrying its fields as a struct-literal directly. `#[value(tag = "mutation", ...)]`
 //! is kept so the wire shape this artifact's committed fixtures and the `OpText`/`OpBinary` codec
 //! `impl_serde_op_codec!` synthesizes stay byte-for-byte identical — serde's internally-tagged
 //! representation supports a newtype variant wrapping a plain struct.
@@ -63,7 +63,6 @@ use crate::artifacts::xml::standards::v1_0::subsets::base::schema::mutations::Xm
 use crate::artifacts::xml::standards::v1_0::subsets::valid::schema::check_valid_conformance;
 use crate::artifacts::xml::XmlSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.xml` 1.0/✳️valid. The snapshot type is the `✳️any` subset's
@@ -87,9 +86,9 @@ pub mod set_internal_subset;
 pub mod set_text;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = XmlSnapshot, diff = XmlDiff, schema = "XmlValidMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XmlValidMutation {
     /// 🔁 Replaces the whole document, REJECTED when the replacement carries a hard §2.8 violation.
     SetSnapshot(set_snapshot::SetSnapshot),

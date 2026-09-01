@@ -45,6 +45,12 @@ const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 /** @emoji 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
 function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
+    // 🧪️ More specific than the bare package alias, so it must come FIRST — Vite substitutes an
+    // alias by prefix, and without this `@semio-tech/ui-react/test` resolves to a literal
+    // `<uiReactDir>/test` that does not exist. `Interpreter/🟦️component.tsx` reaches it through a
+    // runtime `await import(...)`, which Vite still has to resolve at build time, so a plain
+    // (non-test) storybook build fails on it. Mirrors the same pair in os/dev's `⚙️vite.config.ts`.
+    "@semio-tech/ui-react/test": toVitePath(join(uiReactDir, "🧪️render.ts")),
     "@semio-tech/ui-react": toVitePath(uiReactDir),
     "@semio-tech/ui-styling": toVitePath(uiStylingDir),
     "@semio-tech/assets": toVitePath(assetsDir),
@@ -60,6 +66,12 @@ function buildStorybookAliases(): Record<string, string> {
 
 const config: StorybookConfig = {
   stories: buildScopeStoryGlobs(activeScopes),
+  // 🔌️ Serve the materialized plugin fleet at `/plugin-modules/`, the exact URL `OsBootHost` probes
+  // (`/plugin-modules/<pluginId>/<wasmOut>.js`). Without it every `framework/os` plugin story renders
+  // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
+  // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
+  // never triggers a cargo build itself.
+  staticDirs: [{ from: "../🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules", to: "/plugin-modules" }],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),

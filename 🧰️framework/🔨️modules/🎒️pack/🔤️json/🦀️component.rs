@@ -20,6 +20,8 @@
 
 use std::fmt;
 
+use protocol::value::{DslValue, FromValue, ToValue, ValueError};
+
 //#region 🔖️Errors
 /// @emoji 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -142,6 +144,16 @@ impl From<i32> for Number {
         Number::Int(v as i64)
     }
 }
+impl From<usize> for Number {
+    fn from(v: usize) -> Self {
+        Number::UInt(v as u64)
+    }
+}
+impl From<i8> for Number {
+    fn from(v: i8) -> Self {
+        Number::Int(v as i64)
+    }
+}
 //#endregion 🔖️Number
 
 //#region 🔖️Value
@@ -159,6 +171,10 @@ impl Object {
 
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.0.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+    }
+
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
+        self.0.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
@@ -255,9 +271,20 @@ impl Value {
         self.as_number().and_then(Number::as_u64)
     }
 
-    pub fn as_array(&self) -> Option<&[Value]> {
+    /// 🔎️ `serde_json::Value::as_array`'s own signature (`Option<&Vec<Value>>`, not a bare slice) —
+    /// on purpose: `Vec<Value>: Clone` lets `.and_then(Value::as_array).cloned()` call sites that
+    /// used to target `serde_json::Value` keep compiling unchanged (`[Value]` alone is unsized and
+    /// has no `Clone`).
+    pub fn as_array(&self) -> Option<&Vec<Value>> {
         match self {
-            Value::Array(v) => Some(v.as_slice()),
+            Value::Array(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn as_array_mut(&mut self) -> Option<&mut Vec<Value>> {
+        match self {
+            Value::Array(v) => Some(v),
             _ => None,
         }
     }
@@ -269,9 +296,97 @@ impl Value {
         }
     }
 
+    pub fn as_object_mut(&mut self) -> Option<&mut Object> {
+        match self {
+            Value::Object(v) => Some(v),
+            _ => None,
+        }
+    }
+
     /// 🔎️ Object-field lookup, mirroring `serde_json::Value::get` — `None` on any non-object.
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.as_object().and_then(|object| object.get(key))
+    }
+
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
+        self.as_object_mut().and_then(|object| object.get_mut(key))
+    }
+
+    /// 🔎️ Array-element lookup by position, mirroring `serde_json::Value::get(usize)` —
+    /// `None` on any non-array or out-of-bounds index.
+    pub fn get_index(&self, index: usize) -> Option<&Value> {
+        self.as_array().and_then(|array| array.get(index))
+    }
+}
+
+/// 🗝️ `value["key"]`, mirroring `serde_json::Value`'s own `Index<&str>` — panics if `self` is
+/// not an object, returns [`Value::Null`] for a missing key (never panics on a missing key,
+/// matching `serde_json`'s own permissive lookup semantics for assertions/fixtures).
+impl std::ops::Index<&str> for Value {
+    type Output = Value;
+    fn index(&self, key: &str) -> &Value {
+        static NULL: Value = Value::Null;
+        match self.get(key) {
+            Some(value) => value,
+            None => &NULL,
+        }
+    }
+}
+
+/// 🗝️ `value[index]`, mirroring `serde_json::Value`'s own `Index<usize>` — panics if `self` is
+/// not an array, returns [`Value::Null`] for an out-of-bounds index.
+impl std::ops::Index<usize> for Value {
+    type Output = Value;
+    fn index(&self, index: usize) -> &Value {
+        static NULL: Value = Value::Null;
+        match self.get_index(index) {
+            Some(value) => value,
+            None => &NULL,
+        }
+    }
+}
+
+/// 🪞️ Cross-type equality against Rust primitives, mirroring `serde_json::Value`'s own
+/// `impl_value_eq!` family — lets `assert_eq!(value["key"], "literal")`/`value == 3.0` read
+/// exactly like the `serde_json` call sites they replace, with no `.as_str()`/`.as_f64()` unwrap
+/// noise at the assertion site.
+macro_rules! impl_value_partial_eq {
+    ($($ty:ty => $variant_check:expr),+ $(,)?) => {
+        $(
+            impl PartialEq<$ty> for Value {
+                fn eq(&self, other: &$ty) -> bool {
+                    ($variant_check)(self, other)
+                }
+            }
+            impl PartialEq<Value> for $ty {
+                fn eq(&self, other: &Value) -> bool {
+                    ($variant_check)(other, self)
+                }
+            }
+        )+
+    };
+}
+
+impl_value_partial_eq! {
+    str => |value: &Value, other: &str| value.as_str() == Some(other),
+    String => |value: &Value, other: &String| value.as_str() == Some(other.as_str()),
+    bool => |value: &Value, other: &bool| value.as_bool() == Some(*other),
+    f64 => |value: &Value, other: &f64| value.as_f64() == Some(*other),
+    i64 => |value: &Value, other: &i64| value.as_i64() == Some(*other),
+    u64 => |value: &Value, other: &u64| value.as_u64() == Some(*other),
+    i32 => |value: &Value, other: &i32| value.as_i64() == Some(*other as i64),
+    u32 => |value: &Value, other: &u32| value.as_u64() == Some(*other as u64),
+    usize => |value: &Value, other: &usize| value.as_u64() == Some(*other as u64),
+}
+
+impl PartialEq<&str> for Value {
+    fn eq(&self, other: &&str) -> bool {
+        self.as_str() == Some(*other)
+    }
+}
+impl PartialEq<Value> for &str {
+    fn eq(&self, other: &Value) -> bool {
+        other.as_str() == Some(*self)
     }
 }
 
@@ -315,6 +430,16 @@ impl From<i32> for Value {
         Value::Number(Number::Int(v as i64))
     }
 }
+impl From<usize> for Value {
+    fn from(v: usize) -> Self {
+        Value::Number(Number::UInt(v as u64))
+    }
+}
+impl From<i8> for Value {
+    fn from(v: i8) -> Self {
+        Value::Number(Number::Int(v as i64))
+    }
+}
 impl From<Vec<Value>> for Value {
     fn from(v: Vec<Value>) -> Self {
         Value::Array(v)
@@ -323,6 +448,14 @@ impl From<Vec<Value>> for Value {
 impl From<Object> for Value {
     fn from(v: Object) -> Self {
         Value::Object(v)
+    }
+}
+impl<T: Into<Value>> From<Option<T>> for Value {
+    fn from(v: Option<T>) -> Self {
+        match v {
+            Some(inner) => inner.into(),
+            None => Value::Null,
+        }
     }
 }
 
@@ -335,7 +468,58 @@ pub fn array(items: impl IntoIterator<Item = Value>) -> Value {
 pub fn object(pairs: impl IntoIterator<Item = (String, Value)>) -> Value {
     Value::Object(pairs.into_iter().collect())
 }
+
+/// ⚖️ Structural equality that ignores object key order — [`Object`]'s derived `PartialEq`
+/// (insertion-order `Vec`-backed) is order-sensitive, unlike `serde_json::Map`'s default
+/// key-sorted `BTreeMap` backing; a decode→re-encode round trip through [`crate::json::to_json_string`]
+/// naturally reorders fields to Rust struct declaration order, so a "committed JSON is already
+/// canonical" style assertion needs this, not `==`, to match the old serde-era test semantics.
+pub fn value_eq_ignoring_object_order(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Object(x), Value::Object(y)) => {
+            x.len() == y.len() && x.iter().all(|(key, value)| y.get(key).is_some_and(|other| value_eq_ignoring_object_order(value, other)))
+        }
+        (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y.iter()).all(|(l, r)| value_eq_ignoring_object_order(l, r)),
+        _ => a == b,
+    }
+}
 //#endregion 🔖️Value
+
+//#region 🔖️DslValueBridge
+/// 🌉️ Structural conversion from `protocol::value::DslValue` (the in-memory tree
+/// `ToValue`/`FromValue` target onto — see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+/// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/
+/// 📓️serde-replacement-surface.md` §"pack::json::Value ↔ DslValue conversion") into this crate's
+/// own JSON-text-oriented [`Value`] — the two are sibling shapes with no shared type, so a
+/// `Mutation`/`MutationDiff` payload that needs literal JSON **text** (a wire byte string, not
+/// just an in-memory value) walks through here on the way to [`to_string`]/[`parse`].
+/// `DslValue::Number` is always `f64`; this always produces [`Number::Float`] (never
+/// `UInt`/`Int`) — exact per `DslValue`'s own single-`f64` contract, matching what a
+/// `serde_json`-via-`f64` round trip already did.
+pub fn from_dsl_value(value: &protocol::value::DslValue) -> Value {
+    match value {
+        protocol::value::DslValue::Null => Value::Null,
+        protocol::value::DslValue::Bool(b) => Value::Bool(*b),
+        protocol::value::DslValue::Number(n) => Value::Number(Number::Float(*n)),
+        protocol::value::DslValue::String(s) => Value::String(s.clone()),
+        protocol::value::DslValue::Array(items) => Value::Array(items.iter().map(from_dsl_value).collect()),
+        protocol::value::DslValue::Object(entries) => Value::Object(entries.iter().map(|(key, value)| (key.clone(), from_dsl_value(value))).collect()),
+    }
+}
+
+/// 🌉️ The reverse of [`from_dsl_value`] — widens every JSON number to `f64` on the way in,
+/// matching `DslValue::Number`'s own single-`f64` contract.
+pub fn to_dsl_value(value: &Value) -> protocol::value::DslValue {
+    match value {
+        Value::Null => protocol::value::DslValue::Null,
+        Value::Bool(b) => protocol::value::DslValue::Bool(*b),
+        Value::Number(n) => protocol::value::DslValue::Number(n.as_f64()),
+        Value::String(s) => protocol::value::DslValue::String(s.clone()),
+        Value::Array(items) => protocol::value::DslValue::Array(items.iter().map(to_dsl_value).collect()),
+        Value::Object(entries) => protocol::value::DslValue::object(entries.iter().map(|(key, value)| (key.to_string(), to_dsl_value(value)))),
+    }
+}
+//#endregion 🔖️DslValueBridge
 
 //#region 🔖️Lexer
 /// @emoji 🪙️ One structural token — the streaming layer everything else is built on. A future
@@ -396,8 +580,8 @@ impl<'a> Lexer<'a> {
 
     /// 🔢️ Reads one JSON number literal per RFC 8259 §6: `-? int frac? exp?`, no leading zeros.
     /// Falls back to `Number::Float` whenever a fractional part, exponent, or `u64`/`i64` overflow
-    /// is present — identical to `serde_json` without its `arbitrary_precision` feature (the only
-    /// configuration this repo ever built with).
+    /// is present — identical to `serde_json` with its `float_roundtrip` oracle configuration and
+    /// without `arbitrary_precision` (the only configuration this repo ever builds with).
     fn read_number(&mut self) -> Result<Token, JsonError> {
         let start = self.pos;
         let negative = self.peek_byte() == Some(b'-');
@@ -681,12 +865,73 @@ fn parse_object(lexer: &mut Lexer<'_>, depth: u32) -> Result<Value, JsonError> {
 //#endregion 🔖️Parser
 
 //#region 🔖️Writer
-/// ✍️ Writes `value` as compact JSON (no pretty-printing — no consumer needs it, see module docs).
+/// ✍️ Writes `value` as compact JSON.
 // 🚫️async: R9 pure in-memory format, no I/O.
 pub fn to_string(value: &Value) -> String {
     let mut out = String::new();
     write_value(value, &mut out);
     out
+}
+
+/// ✍️ Writes `value` as 2-space-indented JSON, matching `serde_json::to_string_pretty`'s own
+/// layout (`": "` after object keys, one array/object member per line, no trailing newline) — the
+/// `serde_json::to_string_pretty` replacement every human-facing JSON view (an example-document
+/// viewer, an exported fixture, a rule inspector) still needs even after its call site stops
+/// depending on `serde_json` for everything else.
+// 🚫️async: R9 pure in-memory format, no I/O.
+pub fn to_string_pretty(value: &Value) -> String {
+    let mut out = String::new();
+    write_value_pretty(value, &mut out, 0);
+    out
+}
+
+fn write_indent(out: &mut String, depth: usize) {
+    for _ in 0..depth {
+        out.push_str("  ");
+    }
+}
+
+fn write_value_pretty(value: &Value, out: &mut String, depth: usize) {
+    match value {
+        Value::Array(items) if !items.is_empty() => {
+            out.push_str("[\n");
+            for (index, item) in items.iter().enumerate() {
+                if index > 0 {
+                    out.push_str(",\n");
+                }
+                write_indent(out, depth + 1);
+                write_value_pretty(item, out, depth + 1);
+            }
+            out.push('\n');
+            write_indent(out, depth);
+            out.push(']');
+        }
+        Value::Object(object) if !object.is_empty() => {
+            out.push_str("{\n");
+            for (index, (key, value)) in object.iter().enumerate() {
+                if index > 0 {
+                    out.push_str(",\n");
+                }
+                write_indent(out, depth + 1);
+                write_string(key, out);
+                out.push_str(": ");
+                write_value_pretty(value, out, depth + 1);
+            }
+            out.push('\n');
+            write_indent(out, depth);
+            out.push('}');
+        }
+        other => write_value(other, out),
+    }
+}
+
+/// 🪞️ `value.to_string()`/`format!("{value}")`, mirroring `serde_json::Value`'s own `Display` —
+/// every plugin call site that used to write `serde_json::json!({...}).to_string()` keeps
+/// compiling unchanged against `pack::json!({...}).to_string()`.
+impl fmt::Display for Value {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(&to_string(self))
+    }
 }
 
 fn write_value(value: &Value, out: &mut String) {
@@ -815,6 +1060,99 @@ fn write_float(value: f64, out: &mut String) {
 }
 //#endregion 🔖️Writer
 
+//#region 🔖️ToFromValueBridge
+/// 🔤️ `serde_json::to_string`/`from_str` analogs over [`ToValue`]/[`FromValue`] instead of
+/// `Serialize`/`DeserializeOwned` — layered on the structural [`from_dsl_value`]/[`to_dsl_value`]
+/// walk above (`//#region 🔖️DslValueBridge`) rather than a second one: a concurrent session
+/// landed that walk in this same file while this one was in flight, so this region only adds the
+/// generic string convenience pair it didn't have, instead of a duplicate `DslValue <-> Value`
+/// conversion. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: the
+/// pair every plugin routes JSON text through once it stops deriving
+/// `serde::Serialize`/`Deserialize` in favor of `ToValue`/`FromValue`.
+pub fn to_json_string<T: ToValue>(value: &T) -> String {
+    to_string(&from_dsl_value(&value.to_value()))
+}
+
+/// 🔤️ `serde_json::from_str` analog over [`FromValue`] instead of `DeserializeOwned` — a parse
+/// failure and a decode failure both collapse onto [`ValueError`], matching `from_value`'s own.
+pub fn from_json_str<T: FromValue>(text: &str) -> Result<T, ValueError> {
+    let value = parse(text).map_err(|error| ValueError::new(error.to_string()))?;
+    T::from_value(to_dsl_value(&value))
+}
+//#endregion 🔖️ToFromValueBridge
+
+//#region 🔖️Macro
+/// 🧩️ `serde_json::json!` replacement — an object/array literal builder over [`Value`], expanded
+/// via the standard TT-muncher recursion (see `json_object_internal!`/`json_array_internal!`,
+/// `#[doc(hidden)]`, exported only so this macro's own expansion can call them from any crate).
+/// Object keys are string literals (`"key": value`); every leaf value goes through
+/// [`Value::from`] (or a nested `json!` for a bracketed/braced leaf), so any expression whose type
+/// already has a `From<_> for Value` impl — including `Option<T>` — works as a leaf.
+#[macro_export]
+macro_rules! json {
+    (null) => { $crate::json::Value::Null };
+    (true) => { $crate::json::Value::Bool(true) };
+    (false) => { $crate::json::Value::Bool(false) };
+    ([]) => { $crate::json::Value::Array(::std::vec::Vec::new()) };
+    ([ $($tt:tt)+ ]) => {
+        $crate::json::Value::Array($crate::json_array_internal!(@collect [] $($tt)+))
+    };
+    ({}) => { $crate::json::Value::Object($crate::json::Object::new()) };
+    ({ $($tt:tt)+ }) => {
+        $crate::json::Value::Object({
+            let mut __object = $crate::json::Object::new();
+            $crate::json_object_internal!(__object $($tt)+);
+            __object
+        })
+    };
+    ($other:expr) => {
+        $crate::json::Value::from($other)
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! json_array_internal {
+    (@collect [$($elems:expr,)*]) => {
+        ::std::vec![$($elems),*]
+    };
+    (@collect [$($elems:expr,)*] null $(, $($rest:tt)*)?) => {
+        $crate::json_array_internal!(@collect [$($elems,)* $crate::json!(null),] $($($rest)*)?)
+    };
+    (@collect [$($elems:expr,)*] [$($array:tt)*] $(, $($rest:tt)*)?) => {
+        $crate::json_array_internal!(@collect [$($elems,)* $crate::json!([$($array)*]),] $($($rest)*)?)
+    };
+    (@collect [$($elems:expr,)*] {$($object:tt)*} $(, $($rest:tt)*)?) => {
+        $crate::json_array_internal!(@collect [$($elems,)* $crate::json!({$($object)*}),] $($($rest)*)?)
+    };
+    (@collect [$($elems:expr,)*] $next:expr $(, $($rest:tt)*)?) => {
+        $crate::json_array_internal!(@collect [$($elems,)* $crate::json!($next),] $($($rest)*)?)
+    };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! json_object_internal {
+    ($object:ident) => {};
+    ($object:ident $key:literal : null $(, $($rest:tt)*)?) => {
+        $object.insert($key, $crate::json!(null));
+        $crate::json_object_internal!($object $($($rest)*)?);
+    };
+    ($object:ident $key:literal : [$($array:tt)*] $(, $($rest:tt)*)?) => {
+        $object.insert($key, $crate::json!([$($array)*]));
+        $crate::json_object_internal!($object $($($rest)*)?);
+    };
+    ($object:ident $key:literal : {$($inner:tt)*} $(, $($rest:tt)*)?) => {
+        $object.insert($key, $crate::json!({$($inner)*}));
+        $crate::json_object_internal!($object $($($rest)*)?);
+    };
+    ($object:ident $key:literal : $value:expr $(, $($rest:tt)*)?) => {
+        $object.insert($key, $crate::json!($value));
+        $crate::json_object_internal!($object $($($rest)*)?);
+    };
+}
+//#endregion 🔖️Macro
+
 #[cfg(test)]
 //#region 🔖️Tests
 mod tests {
@@ -860,6 +1198,22 @@ mod tests {
         assert_eq!(parse("1e10").unwrap(), Value::Number(Number::Float(1e10)));
         assert_eq!(parse("1.5e-3").unwrap(), Value::Number(Number::Float(1.5e-3)));
         assert_eq!(parse("-2E+2").unwrap(), Value::Number(Number::Float(-200.0)));
+    }
+
+    #[test]
+    fn parses_exact_fractional_zero_below_f64_mantissa_boundary() {
+        let text = "8322951083873004.0";
+        let expected = 8_322_951_083_873_004.0;
+        assert_eq!(parse(text).unwrap(), Value::Number(Number::Float(expected)));
+        assert_eq!(serde_json::from_str::<serde_json::Value>(text).unwrap().as_f64(), Some(expected));
+    }
+
+    #[test]
+    fn parses_exact_decimal_exponent_below_f64_mantissa_boundary() {
+        let text = "83229510838730040e-1";
+        let expected = 8_322_951_083_873_004.0;
+        assert_eq!(parse(text).unwrap(), Value::Number(Number::Float(expected)));
+        assert_eq!(serde_json::from_str::<serde_json::Value>(text).unwrap().as_f64(), Some(expected));
     }
 
     #[test]
@@ -969,6 +1323,125 @@ mod tests {
         assert!(matches!(parse(&text), Err(JsonError::MaxDepthExceeded(_))));
     }
     //#endregion 🔖️Containers
+
+    //#region 🔖️ToFromValueBridge
+    /// 🌉️ `from_dsl_value`/`to_dsl_value` (`//#region 🔖️DslValueBridge` above) had no direct test
+    /// yet — this exercises the structural walk this region's `to_json_string`/`from_json_str`
+    /// are built on.
+    #[test]
+    fn from_dsl_value_and_to_dsl_value_round_trip_every_shape() {
+        let value = DslValue::object([("a".to_string(), DslValue::Number(1.0)), ("b".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".to_string())]))]);
+        assert_eq!(to_dsl_value(&from_dsl_value(&value)), value);
+    }
+
+    #[test]
+    fn to_json_string_and_from_json_str_round_trip_a_dsl_value() {
+        let value = DslValue::object([("count".to_string(), DslValue::Number(3.0)), ("label".to_string(), DslValue::String("ok".to_string()))]);
+        let text = to_json_string(&value);
+        let parsed: DslValue = from_json_str(&text).unwrap();
+        assert_eq!(parsed, value);
+    }
+
+    #[test]
+    fn from_json_str_reports_a_value_error_on_malformed_text() {
+        assert!(from_json_str::<DslValue>("not json").is_err());
+    }
+
+    //#region 🔖️JsonMacro
+    #[test]
+    fn json_macro_builds_scalars_and_null() {
+        assert_eq!(crate::json!(null), Value::Null);
+        assert_eq!(crate::json!(true), Value::Bool(true));
+        assert_eq!(crate::json!(false), Value::Bool(false));
+        assert_eq!(crate::json!(1), Value::Number(Number::Int(1)));
+        assert_eq!(crate::json!(1.5), Value::Number(Number::Float(1.5)));
+        assert_eq!(crate::json!("hi"), Value::String("hi".to_string()));
+    }
+
+    #[test]
+    fn json_macro_builds_arrays_incl_empty_and_nested() {
+        assert_eq!(crate::json!([]), Value::Array(vec![]));
+        assert_eq!(crate::json!([1, 2, 3]), Value::Array(vec![Value::Number(Number::Int(1)), Value::Number(Number::Int(2)), Value::Number(Number::Int(3))]));
+        assert_eq!(crate::json!([[1], [2, 3]]), Value::Array(vec![Value::Array(vec![Value::Number(Number::Int(1))]), Value::Array(vec![Value::Number(Number::Int(2)), Value::Number(Number::Int(3))])]));
+    }
+
+    #[test]
+    fn json_macro_builds_objects_incl_empty_and_trailing_commas() {
+        assert_eq!(crate::json!({}), Value::Object(Object::new()));
+        let value = crate::json!({
+            "a": 1,
+            "b": [1, 2],
+        });
+        assert_eq!(value.get("a").unwrap().as_i64(), Some(1));
+        assert_eq!(value.get("b").unwrap().as_array().unwrap().len(), 2);
+    }
+
+    #[test]
+    fn json_macro_evaluates_arbitrary_expressions_and_options() {
+        let index = 3;
+        let value = crate::json!({
+            "id": format!("semio_text-{index}"),
+            "meshId": "box",
+            "position": [index as f64 * 2.0, 0.0, 0.0],
+            "rotation": [0.0, 0.0, 0.0, 1.0],
+            "scale": [1.0, 1.0, 1.0],
+            "label": format!("Semio Text {index}"),
+            "smoothShading": false,
+            "nested": { "deep": { "deeper": [1, 2, 3] } },
+            "present": Some(5),
+            "absent": Option::<i32>::None,
+        });
+        assert_eq!(value.get("id").unwrap().as_str(), Some("semio_text-3"));
+        assert_eq!(value.get("position").unwrap().as_array().unwrap()[0].as_f64(), Some(6.0));
+        assert_eq!(value.get("nested").unwrap().get("deep").unwrap().get("deeper").unwrap().as_array().unwrap().len(), 3);
+        assert_eq!(value.get("present").unwrap().as_i64(), Some(5));
+        assert!(value.get("absent").unwrap().is_null());
+    }
+
+    #[test]
+    fn json_macro_matches_to_string_of_equivalent_hand_built_value() {
+        let via_macro = crate::json!({"a": 1, "b": [true, null, "x"]});
+        let hand_built = Value::Object(Object::from_iter([("a".to_string(), Value::Number(Number::Int(1))), ("b".to_string(), Value::Array(vec![Value::Bool(true), Value::Null, Value::String("x".to_string())]))]));
+        assert_eq!(to_string(&via_macro), to_string(&hand_built));
+    }
+    #[test]
+    fn value_eq_ignoring_object_order_is_order_insensitive_but_still_structural() {
+        let a = crate::json!({"x": 1, "y": [1, 2, {"p": true, "q": "s"}]});
+        let b = crate::json!({"y": [1, 2, {"q": "s", "p": true}], "x": 1});
+        assert!(value_eq_ignoring_object_order(&a, &b));
+        let c = crate::json!({"x": 1, "y": [1, 2, {"p": true, "q": "different"}]});
+        assert!(!value_eq_ignoring_object_order(&a, &c));
+        let d = crate::json!({"x": 1});
+        assert!(!value_eq_ignoring_object_order(&a, &d));
+    }
+
+    #[test]
+    fn mutable_accessors_update_nested_members() {
+        let mut value = crate::json!({ "items": [{ "state": "before" }] });
+        value
+            .get_mut("items")
+            .and_then(Value::as_array_mut)
+            .and_then(|items| items.first_mut())
+            .and_then(Value::as_object_mut)
+            .and_then(|item| item.get_mut("state"))
+            .expect("nested state")
+            .clone_from(&Value::String("after".to_string()));
+        assert_eq!(to_string(&value), r#"{"items":[{"state":"after"}]}"#);
+    }
+    //#endregion 🔖️JsonMacro
+
+    /// 🔬️ Differential (single-key object — see the module's own note above on key-order
+    /// ambiguity): our bridge's bytes agree with the framework's existing `DslValue ->
+    /// serde_json::Value` path (`🌱️value/🦀️component.rs`'s `impl From<DslValue> for
+    /// serde_json::Value`), the oracle every framework-internal caller still speaks.
+    #[test]
+    fn to_json_string_bytes_match_the_serde_json_bridge() {
+        let value = DslValue::object([("nested".to_string(), DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.5)]))]);
+        let mine = to_json_string(&value);
+        let theirs = serde_json::to_string(&serde_json::Value::from(value)).unwrap();
+        assert_eq!(mine, theirs);
+    }
+    //#endregion 🔖️ToFromValueBridge
 
     //#region 🔖️PropertyTesting
     /// 🎲️ A tiny deterministic PRNG (SplitMix64) — property/differential tests need arbitrary

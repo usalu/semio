@@ -10,12 +10,11 @@
 
 use crate::artifacts::ply::schema::snapshot::{PlyProperty, PlyValue};
 use crate::artifacts::ply::PlySnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Ply vertex-element bounding box plus vertex/face row counts.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

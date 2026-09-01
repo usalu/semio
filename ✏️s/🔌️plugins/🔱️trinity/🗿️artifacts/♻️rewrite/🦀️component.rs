@@ -2,7 +2,6 @@
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity rewrite-engine errors.
@@ -13,7 +12,7 @@ pub enum TrinityRewriteError {
     /// 🧭️ VCS store/dispatch failure.
     Vcs(vcs::VcsError),
     /// 🧬️ JSON (de)serialization failure.
-    Json(serde_json::Error),
+    Json(dsl::ValueError),
     /// 🔤️ Jack query parse/execute failure (the shared `🫀️core` jack-query kernel's own API is not
     /// yet expressed as an owned error type).
     Jack(String),
@@ -61,8 +60,8 @@ impl From<vcs::VcsError> for TrinityRewriteError {
     }
 }
 
-impl From<serde_json::Error> for TrinityRewriteError {
-    fn from(error: serde_json::Error) -> Self {
+impl From<dsl::ValueError> for TrinityRewriteError {
+    fn from(error: dsl::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -73,8 +72,8 @@ impl From<serde_json::Error> for TrinityRewriteError {
 /// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
 /// value type is this named record instead, with `From`/`Into` conversions at this crate's own
 /// remaining `(f64, f64)` call sites (tests only — no production logic reads `rule_layout` today).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct LayoutPoint {
     pub x: f64,
     pub y: f64,

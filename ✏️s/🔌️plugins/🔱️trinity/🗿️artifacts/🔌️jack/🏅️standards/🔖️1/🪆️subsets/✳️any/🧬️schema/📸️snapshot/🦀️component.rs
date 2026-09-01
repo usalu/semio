@@ -7,12 +7,10 @@
 
 use crate::artifacts::jack::{Camera, JackContentChild, Manifest};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted trinity graph document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema)]
 #[artifact_schema(id = "s.trinity.jack")]
 pub struct JackSnapshot {
     #[state(artifact)]
@@ -20,10 +18,8 @@ pub struct JackSnapshot {
     #[state(artifact)]
     pub name: String,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[state(artifact)]
-    #[serde(default)]
     pub manifest: Manifest,
     #[state(artifact)]
     pub camera: Camera,
@@ -31,10 +27,47 @@ pub struct JackSnapshot {
     #[child(kind = "s.stdio.semio.graph")]
     pub content: JackContentChild,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_node_id: Option<String>,
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `content` is a `store::ArtifactChild<S>` composed-artifact
+/// handle — see `JackArtifact`'s identical trap in the sibling `🦀️component.rs` (this struct's
+/// non-child fields carried `#[serde(default, skip_serializing_if = "Option::is_none")]`
+/// before this wave; `manifest_id`/`root_node_id` are `Option<String>`, and the blanket
+/// `impl<T: FromValue> FromValue for Option<T>` already treats a missing key as `None` via the
+/// derive macro's own generated `missing` arm being unreachable here since every field is
+/// present below — no separate default handling needed in a hand-written impl).
+impl dsl::ToValue for JackSnapshot {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("name".to_string(), dsl::ToValue::to_value(&self.name)),
+            ("manifestId".to_string(), dsl::ToValue::to_value(&self.manifest_id)),
+            ("manifest".to_string(), dsl::ToValue::to_value(&self.manifest)),
+            ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
+            ("content".to_string(), dsl::to_dsl_value(&self.content).expect("ArtifactChild serializes")),
+            ("rootNodeId".to_string(), dsl::ToValue::to_value(&self.root_node_id)),
+        ])
+    }
+}
+impl dsl::FromValue for JackSnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        Ok(Self {
+            schema: match get("schema") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
+            name: match get("name") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
+            manifest_id: match get("manifestId") { Some(v) => dsl::FromValue::from_value(v)?, None => None },
+            manifest: match get("manifest") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
+            camera: match get("camera") { Some(v) => dsl::FromValue::from_value(v)?, None => Default::default() },
+            content: dsl::from_dsl_value(get("content").ok_or_else(|| dsl::ValueError::new("missing field `content`"))?).map_err(dsl::ValueError::new)?,
+            root_node_id: match get("rootNodeId") { Some(v) => dsl::FromValue::from_value(v)?, None => None },
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
 
 impl Default for JackSnapshot {
     fn default() -> Self {
@@ -58,18 +91,19 @@ impl Default for JackSnapshot {
 /// that handle's `childId` is a digest of the child — so it moves if and only if the working scene
 /// moved, which is what makes it a usable observability surface here.
 ///
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `pack::json` wrapper over [`JackSnapshot`]'s own `ToValue`, bridged through
+/// `pack::json_from_dsl_value` since `DslValue` and `pack::json::Value` are sibling trees (used
+/// behind this interface per CLAUDE.md's "external libraries behind an interface" rule).
 pub fn encode_jack_snapshot_json(snapshot: &JackSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("JackSnapshot serialization is infallible")
+    pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(snapshot)))
 }
 
 /// 📥️ The inverse of [`encode_jack_snapshot_json`] — decodes those committed specification vectors
 /// into real [`JackSnapshot`] values, so `mutate-jack-1`'s adapter reads the committed fixture
-/// rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that adapter
-/// is impossible: the generated test host links only this crate and `semio-repo-test-host`.
+/// rather than re-declaring it as a Rust literal beside it.
 pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    let parsed = pack::parse_json(text).map_err(|error| error.to_string())?;
+    <JackSnapshot as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.jack.dsl.semio` text into a [`JackSnapshot`], SEEDING the working-scene cache for the

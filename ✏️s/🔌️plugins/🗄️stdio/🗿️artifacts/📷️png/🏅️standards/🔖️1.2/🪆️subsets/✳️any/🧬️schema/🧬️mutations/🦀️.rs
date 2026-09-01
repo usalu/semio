@@ -1,7 +1,6 @@
 //! 🧬️ Transparent PngMutation aggregate.
 use crate::artifacts::png::schema::diff::PngDiff;
 use crate::artifacts::png::PngSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::png::schema::operations::{apply_png_mutation, inverse_png_mutation};
 
@@ -24,8 +23,8 @@ pub use super::replace_text_chunk::ReplaceTextChunkMutation;
 //#endregion Owners
 
 //#region Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = PngSnapshot, diff = PngDiff, schema = "s.stdio.png")]
 pub enum PngMutation {
     ChangeHeader(ChangeHeaderMutation),

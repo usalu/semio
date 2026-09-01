@@ -1,0 +1,71 @@
+{
+  "schema": "lowpoly.document",
+  "objects": [
+    {
+      "id": "obj-crate",
+      "name": "Crate",
+      "transform": {
+        "position": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "rotation": [
+          0.0,
+          45.0,
+          0.0
+        ],
+        "scale": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      },
+      "smoothShading": true,
+      "mesh": {
+        "childId": "mesh-crate-01",
+        "target": {
+          "artifactId": "obj-crate-mesh",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "mesh"
+          }
+        }
+      },
+      "paintLayers": [
+        {
+          "name": "Base",
+          "visible": true,
+          "opacity": 1.0,
+          "blendMode": "normal",
+          "pixels": "//////////8="
+        }
+      ]
+    },
+    {
+      "id": "obj-strut",
+      "name": "Strut",
+      "transform": {
+        "position": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "smoothShading": false,
+      "mesh": null,
+      "paintLayers": []
+    }
+  ]
+}

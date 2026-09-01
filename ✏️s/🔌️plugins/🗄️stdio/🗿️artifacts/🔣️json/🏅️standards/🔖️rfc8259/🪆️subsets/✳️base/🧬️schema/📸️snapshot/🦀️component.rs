@@ -6,13 +6,12 @@
 use crate::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
 use dsl::TextSpan;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use store::TextError;
 
 //#region 🔖️JsonModel
 /// 🍃️ One `object` member, in source order.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonMember {
     pub key: String,
     pub value: JsonValue,
@@ -22,8 +21,8 @@ pub struct JsonMember {
 /// permits arbitrary precision, so re-emitting a lossy `f64` round-trip would silently corrupt
 /// real documents carrying e.g. 19-digit ids or high-precision decimals). `Object` is a `Vec` of
 /// [`JsonMember`] (never a map) so decode->encode preserves member insertion order exactly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValue {
     Null,
     // NOTE: every non-unit variant MUST be a struct variant (named field), never a bare tuple
@@ -52,6 +51,51 @@ impl From<serde_json::Value> for JsonValue {
             serde_json::Value::String(s) => JsonValue::String { value: s },
             serde_json::Value::Array(arr) => JsonValue::Array { items: arr.into_iter().map(JsonValue::from).collect() },
             serde_json::Value::Object(map) => JsonValue::Object { members: map.into_iter().map(|(k, v)| JsonMember { key: k, value: JsonValue::from(v) }).collect() },
+        }
+    }
+}
+
+/// 🌉️ `pack::json::Value` → this module's own key-order/lexeme-preserving `JsonValue` — the
+/// cross-plugin bridge the fan-out playbook flagged as needed (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`, §`🔱️trinity` batch):
+/// callers converting off `ToValue`/`FromValue` (never `serde_json::Value`) still need to reach
+/// this artifact's own `JsonSnapshot::from_value`. `pack::json::Number` has no independent lexeme
+/// (unlike this crate's own arbitrary-precision `Number { lexeme }`), so it round-trips through
+/// `pack::json_to_string` on a lone `Number` value — the exact bytes `pack`'s own writer would
+/// have emitted for that number inline, not a re-implementation of its float/int formatting.
+impl From<pack::JsonValue> for JsonValue {
+    fn from(v: pack::JsonValue) -> Self {
+        JsonValue::from(&v)
+    }
+}
+
+impl From<&pack::JsonValue> for JsonValue {
+    fn from(v: &pack::JsonValue) -> Self {
+        match v {
+            pack::JsonValue::Null => JsonValue::Null,
+            pack::JsonValue::Bool(b) => JsonValue::Bool { value: *b },
+            pack::JsonValue::Number(n) => JsonValue::Number { lexeme: pack::json_to_string(&pack::JsonValue::Number(*n)) },
+            pack::JsonValue::String(s) => JsonValue::String { value: s.clone() },
+            pack::JsonValue::Array(items) => JsonValue::Array { items: items.iter().map(JsonValue::from).collect() },
+            pack::JsonValue::Object(members) => JsonValue::Object { members: members.iter().map(|(k, v)| JsonMember { key: k.to_string(), value: JsonValue::from(v) }).collect() },
+        }
+    }
+}
+
+/// 🌉️ The reverse of the impl above — `JsonSnapshot::to_pack_value`'s bridge back into
+/// `pack::json::Value` for a caller that needs the value tree, not the wire bytes. The original
+/// arbitrary-precision `lexeme` re-parses through `pack::parse_json` (a full round trip through
+/// the exact writer/reader pair `pack::json_to_string`/`pack::parse_json` already exercise
+/// elsewhere in this crate) rather than a second hand-rolled number lexer.
+impl From<&JsonValue> for pack::JsonValue {
+    fn from(v: &JsonValue) -> Self {
+        match v {
+            JsonValue::Null => pack::JsonValue::Null,
+            JsonValue::Bool { value } => pack::JsonValue::Bool(*value),
+            JsonValue::Number { lexeme } => pack::parse_json(lexeme).unwrap_or(pack::JsonValue::Null),
+            JsonValue::String { value } => pack::JsonValue::String(value.clone()),
+            JsonValue::Array { items } => pack::JsonValue::Array(items.iter().map(pack::JsonValue::from).collect()),
+            JsonValue::Object { members } => pack::json_object(members.iter().map(|member| (member.key.clone(), pack::JsonValue::from(&member.value)))),
         }
     }
 }
@@ -541,14 +585,14 @@ fn write_string_escaped(s: &str, out: &mut String) {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.json` snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json")]
 pub struct JsonSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub value: JsonValue,
 }
 
@@ -567,6 +611,13 @@ impl JsonSnapshot {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_serde_value(&self) -> serde_json::Value {
         serde_json::Value::from(&self.value)
+    }
+
+    /// 🌉️ `to_serde_value`'s first-party analog — for a caller that has stopped depending on
+    /// `serde_json` and only wants `pack::json::Value`.
+    // 🚫️async: E1 pure inherent-impl helper, same reason as `to_serde_value` above — see R9
+    pub fn to_pack_value(&self) -> pack::JsonValue {
+        pack::JsonValue::from(&self.value)
     }
 }
 //#endregion 🔖️Snapshot

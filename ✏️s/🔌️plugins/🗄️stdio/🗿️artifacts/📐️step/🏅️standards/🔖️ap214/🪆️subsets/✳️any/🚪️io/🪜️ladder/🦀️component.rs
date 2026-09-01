@@ -5,7 +5,6 @@
 //! ladder or the shared base scans independently — one classification, six consumers.
 
 use super::part21::{Part21Document, Part21Instance, Part21Value};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ladder
 /// 🔢️ Minimum ISO 10303-214 conformance class (2..=6) a `*_SHAPE_REPRESENTATION` subtype
@@ -71,7 +70,7 @@ pub fn file_schema_contains(doc: &Part21Document, schema_name: &str) -> bool {
         match value {
             Part21Value::Str(s) => s.eq_ignore_ascii_case(schema_name),
             Part21Value::List(items) => items.iter().any(|v| walk(v, schema_name)),
-            Part21Value::Typed(_, items) => items.iter().any(|v| walk(v, schema_name)),
+            Part21Value::Typed { items, .. } => items.iter().any(|v| walk(v, schema_name)),
             _ => false,
         }
     }
@@ -152,8 +151,8 @@ pub fn ceiling_type_of(max_rung: u8) -> Option<&'static str> {
 /// `representation` supertype gives it — `name`, `items` and `context_of_items`. Nothing more is
 /// modelled, because nothing more is what a CONFORMANCE CLASS is about: the class restricts which
 /// representation types may appear, not what geometry they carry.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ShapeRepresentationRow {
     pub type_name: String,
     pub name: String,
@@ -165,8 +164,8 @@ pub struct ShapeRepresentationRow {
 /// because [`has_product_definition_chain`] is a CONJUNCTION over all three: an edit to a single
 /// rung could never deterministically turn the `product-definition-chain` diagnostic on or off, so a
 /// vocabulary derived from that rule addresses the triple or it addresses nothing.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ProductIdentity {
     pub product: u64,
     pub product_name: String,
@@ -183,7 +182,7 @@ pub fn file_schema_names(doc: &Part21Document) -> Vec<String> {
     fn walk(value: &Part21Value, out: &mut Vec<String>) {
         match value {
             Part21Value::Str(text) => out.push(text.clone()),
-            Part21Value::List(items) | Part21Value::Typed(_, items) => items.iter().for_each(|item| walk(item, out)),
+            Part21Value::List(items) | Part21Value::Typed { items, .. } => items.iter().for_each(|item| walk(item, out)),
             _ => {}
         }
     }
@@ -303,7 +302,7 @@ pub fn set_product_identity(doc: &mut Part21Document, identity: Option<&ProductI
 /// then routes through here so the ONE implementation of each axis serves all six. This is the
 /// family-module rule applied to a vocabulary: what is genuinely shared is shared by construction,
 /// what differs per class stays in the class.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum ClassEdit {
     /// 🏷️ `CODE_FILE_SCHEMA` — the axis `file_schema_contains(doc, "AUTOMOTIVE_DESIGN")` reads.
     FileSchema { schemas: Vec<String> },

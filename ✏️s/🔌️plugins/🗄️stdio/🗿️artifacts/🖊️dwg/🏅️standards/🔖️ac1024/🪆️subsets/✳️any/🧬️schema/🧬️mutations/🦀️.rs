@@ -3,7 +3,6 @@
 use crate::artifacts::dwg::schema::diff::{self, DwgDiff};
 use crate::artifacts::dwg::DwgSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -16,9 +15,9 @@ pub mod set_version_info;
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no` is not an
 /// approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = DwgSnapshot, diff = DwgDiff, schema = "DwgMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DwgMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetVersionInfo(set_version_info::SetVersionInfo),

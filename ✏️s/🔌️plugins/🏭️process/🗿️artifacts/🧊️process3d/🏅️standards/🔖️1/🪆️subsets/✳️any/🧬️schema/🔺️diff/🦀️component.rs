@@ -12,12 +12,12 @@ use crate::artifacts::process3d::{Pose, ProcessStep, Stock, Workshop};
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the process3d artifact.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dDiff {
     #[state(artifact)]
@@ -91,8 +91,8 @@ pub struct Process3dDiff {
 /// 🧩️ Whole-list wrapper for the `tool_solids` composed CHILD COLLECTION diff field — same
 /// `RunList` shape `✳️text`/`✳️kit`/`📐️cad`'s `CadDrawingChildList` use for their own
 /// `Vec<ArtifactChild<S>>` diff fields.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Process3dToolSolidChildList {
     pub values: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
 }

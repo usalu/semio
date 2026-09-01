@@ -100,13 +100,13 @@ pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_i
     let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
     TopicContribution::new(
         "imperative.module",
-        serde_json::json!({
-            "appId": IMPERATIVE_PLAY_APP_ID,
-            "moduleId": module_id,
-            "label": label,
-            "iconId": icon_id,
-            "manifestJson": manifest_json,
-        }),
+        semio_framework_os_kernel::DslValue::object([
+            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(IMPERATIVE_PLAY_APP_ID.to_string())),
+            ("moduleId".to_string(), semio_framework_os_kernel::DslValue::String(module_id.to_string())),
+            ("label".to_string(), semio_framework_os_kernel::DslValue::String(label.to_string())),
+            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(icon_id.to_string())),
+            ("manifestJson".to_string(), semio_framework_os_kernel::DslValue::String(manifest_json)),
+        ]),
     )
 }
 // #endregion 🔖️TopicContribution

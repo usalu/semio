@@ -2,45 +2,44 @@
 
 use crate::artifacts::obj::ObjSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.obj` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.obj")]
 pub struct ObjArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub vertices: Vec<crate::artifacts::obj::schema::snapshot::ObjVertex>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub texcoords: Vec<crate::artifacts::obj::schema::snapshot::ObjTexCoord>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub normals: Vec<crate::artifacts::obj::schema::snapshot::ObjNormal>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<crate::artifacts::obj::schema::snapshot::ObjFace>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub groups: Vec<crate::artifacts::obj::schema::snapshot::ObjGroup>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub objects: Vec<crate::artifacts::obj::schema::snapshot::ObjObject>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub mtllib: Option<String>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub usemtl: Vec<crate::artifacts::obj::schema::snapshot::ObjUsemtlRange>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub smoothing_groups: Vec<crate::artifacts::obj::schema::snapshot::ObjSmoothingRange>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub unknown_statements: Vec<crate::artifacts::obj::schema::snapshot::ObjUnknownStatement>,
 }
 //#endregion 🔖️Artifact

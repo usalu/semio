@@ -1,6 +1,6 @@
 //! 🧪️ `reorder-steps` fixture — `accepts-a-target-index-and-changes-nothing`.
 //!
-//! `reorder-steps` would permute the timeline the kernel replays in order; its diff builder returns the empty no-op outcome, so unlike lowpoly's `reorder-objects` no `reordered` permutation is published anywhere.
+//! `reorder-steps` moves the id-keyed step to its clamped `to_index` in `step_payloads` and re-mints `steps`/`tool_solids` (`process3d_step_timeline_diff`), matching `📐️cad`/`🗄️stdio`'s own `reorder-columns` remove-then-clamped-insert shape — the kernel now replays the permuted order.
 //!
 //! Source of truth is the committed JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> Process3dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    semio_framework_os_kernel::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Process3dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    semio_framework_os_kernel::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Process3dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    semio_framework_os_kernel::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ The mutation carries `before` to exactly the committed `after`.
@@ -51,30 +51,30 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (side, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Process3dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "reorder-steps/accepts-a-target-index-and-changes-nothing: committed {side} JSON is not canonical");
+        let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&decoded));
+        let original = semio_framework_os_kernel::json::parse(text).expect("snapshot reparses");
+        assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "reorder-steps/accepts-a-target-index-and-changes-nothing: committed {side} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "reorder-steps/accepts-a-target-index-and-changes-nothing: committed mutation JSON is not canonical");
+    let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&mutation()));
+    let original = semio_framework_os_kernel::json::parse(MUTATION).expect("mutation reparses");
+    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "reorder-steps/accepts-a-target-index-and-changes-nothing: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome — status AND every diagnostic this mutation's own diff builder raises —
 /// matches what the mutation actually produces.
 #[semio_framework_async_macros::async_test]
 async fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    let outcome = semio_framework_os_kernel::json::parse(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(semio_framework_os_kernel::json::Value::as_str).expect("outcome carries a status");
     let declared: Vec<(String, String)> =
-        outcome.get("messages").and_then(serde_json::Value::as_array).map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default();
+        outcome.get("messages").and_then(semio_framework_os_kernel::json::Value::as_array).map(|rows| rows.iter().map(|row| (row.get("level").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string(), row.get("code").and_then(semio_framework_os_kernel::json::Value::as_str).unwrap_or_default().to_string())).collect()).unwrap_or_default();
     let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &before());
     let produced: Vec<(String, String)> = raised
         .messages()
         .iter()
         .map(|message| {
-            let level = serde_json::to_value(message.level).expect("severity encodes");
+            let level = semio_framework_os_kernel::ToValue::to_value(&message.level);
             (level.as_str().unwrap_or_default().to_string(), message.code.0.clone())
         })
         .collect();
@@ -105,25 +105,25 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let raised = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(raised.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "reorder-steps/accepts-a-target-index-and-changes-nothing: produced diff differs from the committed 🔺️diff/🔣️component.json");
+    let produced = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(raised.diff()));
+    let committed = semio_framework_os_kernel::json::parse(DIFF).expect("committed diff decodes");
+    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&produced, &committed), "reorder-steps/accepts-a-target-index-and-changes-nothing: produced diff differs from the committed 🔺️diff/🔣️component.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: Process3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "reorder-steps/accepts-a-target-index-and-changes-nothing: committed diff JSON is not canonical");
+    let decoded: Process3dDiff = semio_framework_os_kernel::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&decoded));
+    let original = semio_framework_os_kernel::json::parse(DIFF).expect("committed diff reparses");
+    assert!(semio_framework_os_kernel::json::value_eq_ignoring_object_order(&reencoded, &original), "reorder-steps/accepts-a-target-index-and-changes-nothing: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after` — the diff is a
 /// complete description of what `reorder-steps` changed, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: Process3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: Process3dDiff = semio_framework_os_kernel::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <Process3dDiff as protocol::MutationDiff<Process3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-steps/accepts-a-target-index-and-changes-nothing: committed diff did not carry before to after");
 }

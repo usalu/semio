@@ -22,6 +22,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
 // 🚚 Wave MATHEND (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS):
 // `graph_core` aliases `semio_framework_graph` so `✳️graph/🧬️schema/🚶️traversal-internals`/
 // `🔧️operators-internals`/`➕️normal-internals`/`🔌️ports-internals` — relocated verbatim from
@@ -34,26 +35,32 @@ extern crate semio_framework_graph as graph_core;
 
 //#region MutationWire
 /// 📡 Supplies the canonical JSON text/binary wire representation for schema-owned mutation
-/// vocabularies whose derived serde shape is already their language-neutral schema.
+/// vocabularies over `ToValue`/`FromValue` (`Mutation`'s own supertraits — see
+/// `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`) bridged through `pack::json` for the
+/// literal text/byte shape (`🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️component.rs`'s
+/// `json_from_dsl_value`/`json_to_dsl_value`, since `DslValue` and `pack::json::Value` are sibling
+/// trees with no shared type).
 macro_rules! impl_serde_op_codec {
     ($mutation:ty, $what:literal) => {
         impl protocol::OpText for $mutation {
             fn print_op(&self) -> String {
-                serde_json::to_string(self).expect("derived mutation serialization must be total")
+                pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self)))
             }
 
             fn parse_op(line: &str) -> Result<Self, store::TextError> {
-                serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
+                let parsed = pack::parse_json(line).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))?;
+                <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| store::TextError::new(error.to_string(), dsl::TextSpan::at(1, 1)))
             }
         }
 
         impl protocol::OpBinary for $mutation {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
+                Ok(pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(self))).into_bytes())
             }
 
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
+                let parsed = pack::parse_json_bytes(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })?;
+                <Self as dsl::FromValue>::from_value(pack::json_to_dsl_value(&parsed)).map_err(|error| protocol::ProtocolError::Malformed { what: $what, offset: 0, detail: error.to_string() })
             }
         }
     };
@@ -105,10 +112,10 @@ fn hash_hex_bytes(hash: &str) -> Vec<u8> {
     hash.as_bytes().chunks_exact(2).map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
 }
 
-/// 🪪️ Computes the stable BLAKE3 identity of a serializable semantic projection.
+/// 🪪️ Computes the stable BLAKE3 identity of a semantic projection.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u8>, String> {
-    let encoded = serde_json::to_vec(projection).map_err(|error| format!("semantic projection serialization failed: {error}"))?;
+pub fn semantic_fingerprint<T: dsl::ToValue>(projection: &T) -> Result<Vec<u8>, String> {
+    let encoded = pack::json_to_string(&pack::json_from_dsl_value(&dsl::ToValue::to_value(projection))).into_bytes();
     Ok(hash_hex_bytes(&semio_framework_hash::hash_bytes(&encoded)))
 }
 //#endregion SemanticFingerprint

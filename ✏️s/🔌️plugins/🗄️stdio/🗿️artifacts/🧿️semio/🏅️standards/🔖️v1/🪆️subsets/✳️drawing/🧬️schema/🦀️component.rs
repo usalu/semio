@@ -3,10 +3,9 @@
 
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawStyle, SemioDrawingSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingArtifact {
     #[state(artifact)]
@@ -14,10 +13,10 @@ pub struct SemioDrawingArtifact {
     #[state(artifact)]
     pub canvas: DrawCanvas,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub styles: Vec<DrawStyle>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub layers: Vec<DrawLayer>,
 }
 

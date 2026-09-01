@@ -180,14 +180,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
-        let json = serde_json::to_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
+        let json = pack::to_json_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN));
         assert!(json.contains("No studios yet"), "empty rows render the empty message, not a zero-row table: {json}");
         assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_local_row_renders_with_open_only_actions() {
-        let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
+        let json = pack::to_json_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN));
         assert!(json.contains("Fixture Studio"));
         assert!(json.contains("local"));
         assert!(!json.contains("rename"), "local-only rows offer open only, no rename/share/delete: {json}");
@@ -195,7 +195,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_hub_row_renders_with_the_full_action_set() {
-        let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN)).unwrap();
+        let json = pack::to_json_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN));
         assert!(json.contains("Fabrication"));
         assert!(json.contains("hub"));
         assert!(json.contains("rename") && json.contains("share") && json.contains("delete"), "hub rows offer the full lifecycle action set: {json}");
@@ -208,24 +208,24 @@ mod tests {
     async fn a_hub_row_stamps_the_space_row_id_and_carries_dispatchable_row_actions() {
         let UiNode::ComponentScene(node) = render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-        assert_eq!(rows[0]["id"], serde_json::json!("space:sp-hub"), "row id must carry the frozen space:<id> grammar: {rows:?}");
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+        assert_eq!(rows[0]["id"], pack::json!("space:sp-hub"), "row id must carry the frozen space:<id> grammar: {rows:?}");
         let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
         assert_eq!(buttons.len(), 4, "open + rename + share + delete: {buttons:?}");
         let delete_button = buttons.iter().find(|button| button["action"]["action"] == "deleteSpace").expect("delete button present");
-        assert_eq!(delete_button["action"]["controllerId"], serde_json::json!(S_HOME_CONTROLLER_ID));
-        assert_eq!(delete_button["action"]["args"]["spaceId"], serde_json::json!("sp-hub"), "the delete button's descriptor already carries the row's own space id: {delete_button:?}");
+        assert_eq!(delete_button["action"]["controllerId"], pack::json!(S_HOME_CONTROLLER_ID));
+        assert_eq!(delete_button["action"]["args"]["spaceId"], pack::json!("sp-hub"), "the delete button's descriptor already carries the row's own space id: {delete_button:?}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_local_row_only_carries_an_open_action_button() {
         let UiNode::ComponentScene(node) = render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_EN, &SHomeLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-        assert_eq!(rows[0]["id"], serde_json::json!("space:sp-local"));
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+        assert_eq!(rows[0]["id"], pack::json!("space:sp-local"));
         let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
         assert_eq!(buttons.len(), 1, "local-only rows offer open only: {buttons:?}");
-        assert_eq!(buttons[0]["action"]["action"], serde_json::json!("openSpace"));
+        assert_eq!(buttons[0]["action"]["action"], pack::json!("openSpace"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -237,13 +237,13 @@ mod tests {
         // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
         let _ = crate::list_all_space_catalog_entries();
         let node = render(&cfg);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn german_locale_labels_resolve_in_the_rendered_table() {
-        let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE)).unwrap();
+        let json = pack::to_json_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE));
         assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
         assert!(json.contains("Herkunft"), "German column header must resolve: {json}");
         assert!(json.contains("lokal"), "German origin label must resolve for a local-only row: {json}");
@@ -252,7 +252,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_resolves_labels_from_config_locale() {
         let cfg = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
-        let json = serde_json::to_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE)).unwrap();
+        let json = pack::to_json_string(&render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE));
         assert!(json.contains("Aktualisiert"));
         let _ = render(&cfg); // exercises the real locale-resolution path end to end, no panic
     }

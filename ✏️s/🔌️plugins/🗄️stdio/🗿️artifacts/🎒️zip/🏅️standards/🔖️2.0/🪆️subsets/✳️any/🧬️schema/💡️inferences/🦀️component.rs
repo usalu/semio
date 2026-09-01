@@ -9,15 +9,14 @@
 use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::entries::{compute_zip_entries, ZipEntries};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a zip snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip.inference")]
 pub struct ZipInference {
     #[derived]

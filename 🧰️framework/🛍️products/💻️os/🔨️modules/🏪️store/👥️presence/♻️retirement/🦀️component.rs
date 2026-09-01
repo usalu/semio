@@ -243,6 +243,19 @@ mod tests {
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     pub(crate) struct Value(pub(super) i32);
 
+    /// 🔀️ Hand-written, not derived: tuple struct, not one of `#[derive(ToValue, FromValue)]`'s
+    /// supported shapes.
+    impl ::semio_framework_os_kernel::ToValue for Value {
+        fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+            ::semio_framework_os_kernel::ToValue::to_value(&self.0)
+        }
+    }
+    impl ::semio_framework_os_kernel::FromValue for Value {
+        fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+            Ok(Self(::semio_framework_os_kernel::FromValue::from_value(value)?))
+        }
+    }
+
     impl MutationDiff<Value> for Value {
         fn apply(&self, _base: &Value) -> crate::os_spr::MutationApplyResult<Value> { Ok(self.clone()) }
         fn absorb(&mut self, other: Self) { *self = other; }

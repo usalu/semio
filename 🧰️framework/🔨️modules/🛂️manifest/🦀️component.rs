@@ -3,7 +3,8 @@
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
-use dsl::DslValue;
+use dsl::{DslValue, FromValue, ValueError};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use ui_wgpu::wgpu::{ActionDescriptor, Locale, LocalizedLabel, NamedLayout, SurfaceKind, Terminology, WindowLayout, WindowOptions};
@@ -3007,9 +3008,28 @@ impl std::str::FromStr for AppRole {
     }
 }
 
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]`'s enum path only supports
+/// internally-tagged representations, but `AppRole` is a plain unit-only "string enum" — serde's
+/// own default (untagged bare-string) representation. Delegates to the existing `as_str`/`FromStr`
+/// so the wire spelling never drifts from the serde/TS/JSON-schema one.
+impl dsl::ToValue for AppRole {
+    fn to_value(&self) -> DslValue {
+        DslValue::String(self.as_str().to_string())
+    }
+}
+impl FromValue for AppRole {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        match value {
+            DslValue::String(s) => s.parse::<AppRole>().map_err(ValueError::new),
+            other => Err(ValueError::new(format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+
 /// 🎯️ A surface addressed across plugin boundaries.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct AppRef {
     pub plugin_id: String,
     pub app_id: String,
@@ -3279,17 +3299,46 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
 #[serde(rename_all = "camelCase")]
 pub struct TopicContribution {
     pub topic: String,
-    pub payload: serde_json::Value,
+    pub payload: DslValue,
 }
 
 impl TopicContribution {
-    pub fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
+    pub fn new(topic: impl Into<String>, payload: DslValue) -> Self {
         Self { topic: topic.into(), payload }
     }
 
     /// 📕️ Decodes `payload` into a caller-chosen typed shape.
-    pub fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
-        serde_json::from_value(self.payload.clone())
+    pub fn decode<T: FromValue>(&self) -> Result<T, ValueError> {
+        T::from_value(self.payload.clone())
+    }
+}
+
+/// 🌉️ Hand-written, not derived (avoids a new `semio-framework-value-derive` dependency edge on
+/// this file's two host crates — this shape is a two-field plain record, trivial either way):
+/// `topic`/`payload` mirror the `#[serde(rename_all = "camelCase")]` wire shape exactly.
+impl dsl::ToValue for TopicContribution {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([("topic".to_string(), dsl::ToValue::to_value(&self.topic)), ("payload".to_string(), self.payload.clone())])
+    }
+}
+impl FromValue for TopicContribution {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(fields) = value else {
+            return Err(ValueError::new(format!("expected an object for TopicContribution, found {value:?}")));
+        };
+        let mut topic = None;
+        let mut payload = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "topic" => topic = Some(String::from_value(entry).map_err(|e| e.under("topic"))?),
+                "payload" => payload = Some(entry),
+                _ => {}
+            }
+        }
+        Ok(TopicContribution {
+            topic: topic.ok_or_else(|| ValueError::new("TopicContribution missing topic"))?,
+            payload: payload.ok_or_else(|| ValueError::new("TopicContribution missing payload"))?,
+        })
     }
 }
 //#endregion 🔖️TopicContribution

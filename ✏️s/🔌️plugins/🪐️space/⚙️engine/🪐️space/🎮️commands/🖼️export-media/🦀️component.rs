@@ -4,11 +4,9 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use crate::engine::space::engine::{workflow_parameter_bindings_to_os, workflow_parameters_to_os};
 use semio_framework_os::{materialize_os_app_instance_document_json, os_app_registration, WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault, FaultCode, FaultOrigin};
-use serde_json::{json, Value};
 
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "export-media")]
 pub struct ExportMedia {
     pub node_id: String,
@@ -22,7 +20,7 @@ pub async fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapsh
             crate::ensure_space_fixtures_registered();
             let schema = os_app_registration(&node.plugin_id, &node.app_id).map(|row| row.source_format).unwrap_or_default();
             let document_json = materialize_os_app_instance_document_json(&json!({ "schema": schema }).to_string(), &node.id, &workflow_parameter_bindings_to_os(&projection.parameter_bindings), &workflow_parameters_to_os(&projection.parameters));
-            let document_value: Value = serde_json::from_str(&document_json).unwrap_or_else(|_| json!({}));
+            let document_value: Value = pack::from_json_str(&document_json).unwrap_or_else(|_| json!({}));
             let format_kind = semio_framework::format_descriptor(&payload.format)
                 .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
                 .map(|descriptor| descriptor.short_id)

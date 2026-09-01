@@ -2,10 +2,11 @@
 
 use crate::model::FixedTable;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Fuel
 /// ⛽️ Fuel/resource type for meters.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum FuelType {
     Electricity,
     NaturalGas,
@@ -19,7 +20,7 @@ pub enum FuelType {
 }
 
 /// 📊️ End-use category.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum EndUse {
     Heating,
     Cooling,
@@ -41,7 +42,7 @@ pub enum EndUse {
 
 // #region 🔖️Meter
 /// ⚡️ Single meter reading accumulator.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Meter {
     pub name: String,
     pub fuel: FuelType,
@@ -66,7 +67,7 @@ impl Meter {
 }
 
 /// 📦️ All meters in a simulation run.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct MeterTable {
     pub(crate) meters: FixedTable<String, Meter>,
 }

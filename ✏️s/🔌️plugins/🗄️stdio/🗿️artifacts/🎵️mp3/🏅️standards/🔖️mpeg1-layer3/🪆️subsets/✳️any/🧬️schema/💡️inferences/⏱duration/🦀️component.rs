@@ -6,12 +6,11 @@
 
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::sample_rate_hz;
 use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ mp3's frame-header-derived playback duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Mp3Duration {
     pub duration_seconds: f64,
     pub frame_count: u32,

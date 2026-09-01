@@ -2,13 +2,12 @@
 use crate::artifacts::rewrite::diff::RewriteDiff;
 use crate::artifacts::rewrite::mutations::RewriteRuleMutation;
 use crate::artifacts::rewrite::RewriteSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔍️ `edit-lhs` payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "edit-lhs")]
 pub struct EditLhs {
     pub new_lhs_json: String,

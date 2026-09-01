@@ -28,18 +28,17 @@ pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Va
 }
 #[cfg(test)]
 mod canonical_vectors {
-    use serde::Deserialize;
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Value {
         min: [f64; 3],
         max: [f64; 3],
         dimensions: [f64; 3],
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         value: Option<Value>,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

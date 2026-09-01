@@ -3887,24 +3887,27 @@ impl canvas_content::CanvasContent for MapHost {
 // #endregion 🔖️MapContent
 
 // #region 🔖️WasmSession
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is
+// browser-only (attaches an `HtmlCanvasElement`), so it is narrowed to exclude the WASI
+// component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_framework_async::browser::future_to_promise;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use std::cell::RefCell;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use std::rc::Rc;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use web_sys::HtmlCanvasElement;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 struct MapSessionInner {
     host: MapHost,
     gpu: canvas::gpu_session::CanvasGpuSession,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl MapSessionInner {
     fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
@@ -3918,13 +3921,13 @@ impl MapSessionInner {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 pub struct MapSession {
     state: Rc<RefCell<MapSessionInner>>,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 impl MapSession {
     #[wasm_bindgen(constructor)]

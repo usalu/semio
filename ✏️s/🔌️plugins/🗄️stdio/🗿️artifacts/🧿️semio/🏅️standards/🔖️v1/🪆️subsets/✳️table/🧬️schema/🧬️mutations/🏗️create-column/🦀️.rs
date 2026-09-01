@@ -6,10 +6,9 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{SemioTableMutation, delete_column};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateColumn {
     pub name: String,

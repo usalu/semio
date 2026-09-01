@@ -2,7 +2,6 @@
 //! inverses, codecs, schemas, and tests live in direct semantic leaves.
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "🏷️set-mark-info/🦀️.rs"]
@@ -43,8 +42,8 @@ pub use remove_font_file::RemoveFontFile;
 
 //#region 🔖️Aggregate
 /// 📐️ Typed PDF/UA conformance vocabulary with one direct wrapped variant per semantic operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.7.ua")]
 pub enum PdfUaMutation {
     SetMarkInfo(SetMarkInfo),

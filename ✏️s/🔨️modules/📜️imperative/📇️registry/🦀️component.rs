@@ -13,8 +13,8 @@ const IMPERATIVE_MODULE_TOPIC: &str = "imperative.module";
 
 /// 🗂️ The two fields actually read here from `imperative_module_topic_contribution`'s `payload`
 /// shape, camelCase over the wire.
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct ImperativeModuleTopicPayload {
     app_id: String,
     manifest_json: String,

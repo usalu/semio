@@ -25,8 +25,14 @@ tui-terminal = ["tui", "dep:libc"]
 # 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
 tui-bindgen = ["tui", "dep:wasm-bindgen"]
 # 🧊️ wgpu target: declarative component types only, so wasm32-wasip2 program components stay light.
-# Names the target, not the `wgpu` crate — that one only arrives with `wgpu-engine` below.
-wgpu = ["dep:serde", "dep:serde_json", "dep:dsl"]
+# Names the target, not the `wgpu` crate — that one only arrives with `wgpu-engine` below. `bytemuck`
+# backs `draw_types::{UiInstance, VectorVertex}` (GPU vertex layout structs with zero `wgpu`-crate
+# reference — pure `#[repr(C)]` value types); its own dependency is `bytemuck_derive`, a proc-macro
+# that runs on the host at build time and links nothing into the target binary. `semio-framework-job`
+# backs `prepared.rs`'s job-driven CPU staging/admission state machine (first-party, itself already
+# wasip2-safe). Neither reintroduces the `wasm-bindgen` leak this ticket closes. Ticket
+# 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
+wgpu = ["dep:serde", "dep:serde_json", "dep:dsl", "dep:bytemuck", "dep:semio-framework-job"]
 # 🎨️ Full retained-mode engine for `wgpu`: arena/tree/layout/text/input/gpu rendering.
 wgpu-engine = [
     "wgpu",
@@ -70,6 +76,10 @@ serde_json = { version = "1.0.140", optional = true }
 parley = { version = "0.5.0", optional = true }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
+# ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): restored after an
+# attempt to move this behind a `not(target_env = "p2")` target table — reverted because
+# `♾️infinite`'s `🌍️world/🦀️component.rs` unconditionally names wgpu-engine symbols that need this
+# tier to exist even for `wasm32-wasip2`. See `🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring.
 wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "taffy_tree"], optional = true }
 
@@ -79,7 +89,13 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
 libc = { version = "0.2.186", optional = true }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only device/session bindings (`🎯️targets/🧊️wgpu`'s canvas/clipboard/fetch/cursor
+# bridges — cursor.rs, prepared.rs, host.rs, text.rs, gpu.rs — plus `tui-bindgen`'s xterm.js
+# export). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI
+# component target too. wasip2 plugin components have no direct DOM/canvas/clipboard access from
+# the guest (that is host-mediated through the UI contract), so these become undefined for that
+# target rather than getting a wasip2 arm — nothing in the shipped plugin path calls them.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"], optional = true }
 js-sys = { version = "0.3.83", optional = true }
 wasm-bindgen = { version = "0.2.106", optional = true }

@@ -3,21 +3,20 @@
 use crate::artifacts::stl::schema::snapshot::StlTriangle;
 use crate::artifacts::stl::{StlSnapshot, STDIO_STL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.stl` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]
 pub struct StlArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub solid_name: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub triangles: Vec<StlTriangle>,
 }
 //#endregion 🔖️Artifact

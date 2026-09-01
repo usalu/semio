@@ -3,7 +3,6 @@
 
 use crate::artifacts::bmp::STDIO_BMP_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️RowOrder
 /// 📐️ BITMAPINFOHEADER's `height` field is signed: negative encodes a top-down bitmap
@@ -13,8 +12,8 @@ use serde::{Deserialize, Serialize};
 /// Decoded `pixels` are always canonicalized to row 0 = image top regardless of this value.
 /// 🧪️ F6: `dsl::DslScalar` — plain unit-variant enum binds as `DslField` directly (no
 /// `DslVariants`/`Statements` needed, see `f6-recon-report.md` §3a/§9 STEP-2a).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum BmpRowOrder {
     #[default]
     BottomUp,
@@ -28,8 +27,8 @@ pub enum BmpRowOrder {
 /// 🧪️ F6: `dsl::DslRecord` — gives this nested value type `DslField` so it can be embedded by
 /// `BmpSnapshot`'s `#[derive(dsl::DslRecord)]` and `BmpPaletteModified`/`BmpPaletteAdded`'s
 /// `#[derive(dsl::DslRecord)]` in the diff module.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct BmpPaletteEntry {
     pub b: u8,
     pub g: u8,
@@ -47,8 +46,8 @@ pub struct BmpPaletteEntry {
 /// (`Option<Option<_>>`), so the whole snapshot binds cleanly (`f6-recon-report.md` §8 row 14
 /// confirmed). `#[dsl(block)]` on `palette`/`pixels` for readability (framework precedent);
 /// `#[dsl(base64)]` on the bare `Vec<u8>` `pixels` field for a compact grammar.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]
 pub struct BmpSnapshot {
     #[state(artifact)]
@@ -78,11 +77,11 @@ pub struct BmpSnapshot {
     #[state(artifact)]
     pub colors_important: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub palette: Vec<BmpPaletteEntry>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub pixels: Vec<u8>,
 }

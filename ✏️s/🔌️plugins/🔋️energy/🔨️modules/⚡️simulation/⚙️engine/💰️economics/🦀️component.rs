@@ -2,10 +2,11 @@
 
 use crate::meters::{FuelType, MeterTable};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Tariff
 /// 💰️ Time-of-use period.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TouPeriod {
     pub name: String,
     pub start_hour: u8,
@@ -16,7 +17,7 @@ pub struct TouPeriod {
 }
 
 /// 💰️ Utility tariff definition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct UtilityTariff {
     pub name: String,
     pub fuel: FuelType,
@@ -36,7 +37,7 @@ impl UtilityTariff {
 
 // #region 🔖️Lcca
 /// 💰️ Life-cycle cost parameters.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct LccaParameters {
     pub study_period_years: u32,
     pub discount_rate: f64,
@@ -48,7 +49,7 @@ pub struct LccaParameters {
 }
 
 /// 💰️ Life-cycle cost result.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct LccaResult {
     pub present_value_energy: f64,
     pub present_value_maintenance: f64,
@@ -79,7 +80,7 @@ pub(crate) fn compute_lcca(annual_energy_cost: f64, params: &LccaParameters) -> 
 
 // #region 🔖️Economics
 /// 💰️ Economics post-pass over meter results.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EconomicsResult {
     pub annual_energy_cost: f64,
     pub annual_demand_cost: f64,

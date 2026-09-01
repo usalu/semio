@@ -3,24 +3,23 @@ use crate::artifacts::xml::schema::diff::{diff_at_path, XmlAttrAdded, XmlAttrMod
 use crate::artifacts::xml::schema::mutation_support::XmlNodePath;
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-use serde::{Deserialize, Serialize};
 
 #[path = "📝️text/🦀️component.rs"]
 pub mod text;
 #[path = "💾️binary/🦀️component.rs"]
 pub mod binary;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct RemoveElementPayload {
     pub path: XmlNodePath,
     pub index: usize,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum RemoveElementMutation { Apply(RemoveElementPayload), Restore(XmlDiff) }
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMutation {

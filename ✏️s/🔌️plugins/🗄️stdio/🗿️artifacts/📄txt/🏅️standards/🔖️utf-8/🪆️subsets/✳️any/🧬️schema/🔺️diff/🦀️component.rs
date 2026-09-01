@@ -10,7 +10,6 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
 //#region 🔖️LinesDiff
@@ -20,8 +19,8 @@ use std::collections::HashSet;
 ///
 /// 🧪️ F6: `dsl::DslRecord` — gives this `DslField` so `Vec<TxtLineAdded>` can sit inside a
 /// `#[derive(dsl::DslDiff)]` struct's list field (`TxtLinesDiff::added` below).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct TxtLineAdded {
     pub index: usize,
     pub text: String,
@@ -30,8 +29,8 @@ pub struct TxtLineAdded {
 /// ✏️ Line at BASE index `index` whose text changed to `text`.
 ///
 /// 🧪️ F6: `dsl::DslRecord` — see [`TxtLineAdded`]'s doc comment, same reason.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct TxtLineModified {
     pub index: usize,
     pub text: String,
@@ -45,14 +44,14 @@ pub struct TxtLineModified {
 /// `TxtDiff` below (`Vec<usize>`/`Vec<TxtLineModified>`/`Vec<TxtLineAdded>` all bind via the
 /// `dsl` crate's blanket `Vec<T>` impl, `TxtLineModified`/`TxtLineAdded` via their own
 /// `DslRecord` derive just above).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct TxtLinesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<TxtLineModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<TxtLineAdded>,
 }
 
@@ -226,18 +225,18 @@ fn absorb_pair(d1: &TxtLinesDiff, d2: &TxtLinesDiff) -> TxtLinesDiff {
 /// nullable — `lines` composes VIA a triple, it does not itself carry removal-vs-absence), and
 /// the only enum in the walk (`LineEnding`) is unit-variant-only, so it binds via `DslScalar`
 /// (see the snapshot module) rather than blocking the derive like a data-carrying enum would.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslDiff)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt.diff")]
 pub struct TxtDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub trailing_newline: Option<bool>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub line_ending: Option<LineEnding>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub lines: Option<TxtLinesDiff>,
 }
 

@@ -11,15 +11,14 @@
 use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::window::{compute_deflate_window, DeflateWindow};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a deflate snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `window`, backed by the `🪟window/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate.inference")]
 pub struct DeflateInference {
     #[derived]

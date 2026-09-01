@@ -6,7 +6,7 @@ use super::*;
 
 //#region 🔖️Payload
 /// ➕️ Inserts a fully-specified triangle at `index` (final position, clamped to `len`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertTriangle {
     pub(crate) index: usize,

@@ -16,7 +16,6 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::diff::{
 };
 use crate::artifacts::step::engine::part21::Part21Document;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
@@ -28,8 +27,8 @@ pub const IFC2X3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc.2x3";
 
 //#region 🔖️Snapshot
 /// 🏭️ Logical fields carried by an EXPRESS Data Manager Part-21 production header.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Ifc2x3EdmPreamble {
     pub producer: String,
     pub module: String,
@@ -50,17 +49,17 @@ pub struct Ifc2x3EdmPreamble {
 }
 
 /// 📸️ Persisted `stdio.ifc.2x3` snapshot — the full, lossless generic Part-21 graph, own type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3")]
 pub struct Ifc2x3Snapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub document: Part21Document,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edm_preamble: Option<Ifc2x3EdmPreamble>,
 }
 

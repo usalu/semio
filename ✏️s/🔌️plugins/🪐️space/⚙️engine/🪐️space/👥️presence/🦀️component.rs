@@ -6,14 +6,13 @@
 
 use crate::engine::space::config::SpaceWindowCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of studio view state (node selection, hover, camera, active/focused node).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "space.presence")]
 #[dsl(layout = "lines")]
 pub struct SpacePresence {
@@ -86,8 +85,8 @@ impl ArtifactPack for SpacePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum SpacePresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

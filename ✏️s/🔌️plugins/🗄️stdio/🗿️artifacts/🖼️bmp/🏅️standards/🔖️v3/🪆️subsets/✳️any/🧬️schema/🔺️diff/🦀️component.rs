@@ -13,7 +13,6 @@ use std::collections::HashSet;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️PaletteDiff
@@ -22,8 +21,8 @@ use std::collections::{BTreeMap, HashMap};
 /// 🧪️ F6: `dsl::DslRecord` — nested value type needs `DslField` for `BmpPaletteDiff`'s own
 /// `#[derive(dsl::DslDiff)]`/`#[derive(dsl::DslRecord)]` field codegen (`f6-recon-report.md` §9
 /// STEP-2a's cascading-derive requirement).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct BmpPaletteModified {
     pub index: usize,
     #[dsl(block)]
@@ -31,8 +30,8 @@ pub struct BmpPaletteModified {
 }
 
 /// 🧩 One palette entry inserted at a FINAL index.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct BmpPaletteAdded {
     pub index: usize,
     #[dsl(block)]
@@ -43,14 +42,14 @@ pub struct BmpPaletteAdded {
 /// (`~/.claude/plans/the-current-schemas-are-scalable-journal.md` `## Diff`).
 /// 🧪️ F6: `dsl::DslRecord` — the collection-triple shape's own container binds directly (bare
 /// `Vec<T>` fields have a blanket `DslField` impl in the `dsl` crate, `f6-recon-report.md` §3b).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct BmpPaletteDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<BmpPaletteModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<BmpPaletteAdded>,
 }
 
@@ -224,52 +223,52 @@ fn absorb_palette(d1: BmpPaletteDiff, d2: BmpPaletteDiff) -> BmpPaletteDiff {
 /// `Option` layer before checking the attribute, so it silently falls back to a verbose bracketed
 /// byte list regardless (documented quirk, §3's "Known derive quirk found in passing" — not a
 /// compile error, just a token-inefficiency accepted here rather than hand-rolling for it alone).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslDiff)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp.diff")]
 pub struct BmpDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub header_size: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub row_order: Option<BmpRowOrder>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub planes: Option<u16>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bits_per_pixel: Option<u16>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub compression: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub image_size: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub x_pixels_per_meter: Option<i32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub y_pixels_per_meter: Option<i32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub colors_used: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub colors_important: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(block)]
     pub palette: Option<BmpPaletteDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pixels: Option<Vec<u8>>,
 }
 

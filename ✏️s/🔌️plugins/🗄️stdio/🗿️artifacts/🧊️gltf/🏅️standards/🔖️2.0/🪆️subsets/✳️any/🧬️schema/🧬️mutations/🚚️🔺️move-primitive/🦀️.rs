@@ -1,13 +1,12 @@
 //! 🧬️ Direct move-primitive mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 pub const ID: &str = "s.stdio.gltf.mutation.move-primitive.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfMovePrimitivePayload { pub mesh: usize, pub primitive: usize, pub position: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfMovePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?; checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?; checked_index(payload.position, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?; if payload.primitive == payload.position { return Err(reject("gltf.mutation.no-observable-change", "document/meshes/primitives", "destination equals source")); } Ok(()) }
@@ -15,9 +14,9 @@ pub fn validate(payload: &GltfMovePrimitivePayload, base: &GltfSnapshot) -> Resu
 pub fn apply(payload: &GltfMovePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); let primitive = next.document.meshes[payload.mesh].primitives.remove(payload.primitive); next.document.meshes[payload.mesh].primitives.insert(payload.position, primitive); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MovePrimitiveMutation {
     Apply(GltfMovePrimitivePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

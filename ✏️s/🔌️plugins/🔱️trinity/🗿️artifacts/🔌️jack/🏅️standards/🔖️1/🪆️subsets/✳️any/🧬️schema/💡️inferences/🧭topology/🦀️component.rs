@@ -5,13 +5,12 @@
 //! guidance) — no `InferredField`/incremental caching needed for a single BFS pass.
 
 use crate::artifacts::jack::{port_node_id, JackSnapshot};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭 Topological shape of the node/edge graph.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JackTopology {
     /// 🥇️ Node ids in Kahn topological order — only nodes reachable by repeatedly removing
     /// zero-indegree nodes; nodes stuck in a cycle are omitted (see `cycle_free`).

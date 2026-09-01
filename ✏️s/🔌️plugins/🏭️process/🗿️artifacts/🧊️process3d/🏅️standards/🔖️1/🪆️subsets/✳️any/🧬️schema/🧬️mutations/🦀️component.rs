@@ -28,7 +28,7 @@
 
 use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::Process3dSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️MutationLeaves
 // 🌱️ Every `🧬️mutations/<kind>/` triad leaf is `#[path]`-mounted as a sibling of this dispatch file
@@ -56,8 +56,8 @@ use super::replace_stock_solid;
 //#region 🔖️Mutations
 /// 🧬️ Closed semantic mutation vocabulary for the process3d document, derived per
 /// `📓️derivation-rules.md` from `Process3dSnapshot`'s shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Process3dSnapshot, diff = Process3dDiff, schema = "process.process3d")]
 pub enum Process3dMutation {
     CreateStep(create_step::CreateStep),
@@ -83,7 +83,7 @@ pub enum Process3dMutation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, WorkshopMachine};
+    use crate::artifacts::process3d::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, process_working_scene_to_snapshot, Pose, ProcessMeasure, ProcessStep, ProcessWorkingScene, StepOrigin, Stock, WorkingSolid, Workshop, WorkshopMachine};
     use change_cursor::ChangeCursor;
     use change_machine_icon::ChangeMachineIcon;
     use change_step_enabled::ChangeStepEnabled;
@@ -153,73 +153,74 @@ mod tests {
         assert_eq!(<Process3dMutation as protocol::SemanticMutation<Process3dSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
     }
 
-    //#region 🔖️StepMutationsAreDocumentedNoOps
-    /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` composes an
-    /// `s.stdio.semio.flow` CHILD HANDLE now — no inline `Vec<ProcessStep>` for these 7 mutations
-    /// to edit, and no `LinkResolver` to read the child's content back through (see
-    /// `🌱create-step/🔺️diff/🦀️component.rs`'s doc comment). Each is now a REAL, honest no-op:
-    /// `diff()` returns `Process3dDiff::default()`, `inverse()` returns `Vec::new()` — the
-    /// sanctioned `MutationKind::inverse` contract for "nothing changed, nothing to undo". These
-    /// tests assert exactly that, matching `📐️cad`'s own precedent
-    /// (`add_object_action_is_a_documented_no_op_pending_the_child_dispatch_seam`).
-    #[semio_framework_async_macros::async_test]
-    async fn create_step_diff_is_a_documented_no_op() {
-        let base = empty_process3d_snapshot();
-        let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+    //#region 🔖️StepMutations
+    /// 🌱 Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline
+    /// record (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — the composed `steps`/
+    /// `tool_solids` children carry composition identity only, re-minted from it via
+    /// `process3d_step_timeline_diff`. These seven verbs are real mutations against it, mirroring
+    /// the id-keyed `machine` tests below one-for-one.
+    fn base_with_steps(steps: Vec<ProcessStep>) -> Process3dSnapshot {
+        process_working_scene_to_snapshot(&ProcessWorkingScene { stock: Stock::default(), steps }, Workshop::default(), None)
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn delete_step_diff_is_a_documented_no_op() {
+    async fn create_step_round_trips() {
         let base = empty_process3d_snapshot();
-        let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+        let after = round_trip(&base, &Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-9") }));
+        assert!(after.step_payloads.iter().any(|step| step.id == "step-9"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn rename_step_diff_is_a_documented_no_op() {
-        let base = empty_process3d_snapshot();
-        let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Renamed".into() });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+    async fn delete_step_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let after = round_trip(&base, &Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }));
+        assert!(!after.step_payloads.iter().any(|step| step.id == "step-1"));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_step_enabled_diff_is_a_documented_no_op() {
+    async fn inverse_delete_step_when_missing_returns_empty() {
         let base = empty_process3d_snapshot();
-        let mutation = Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+        assert!(Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() }).inverse(&base).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn change_step_origin_diff_is_a_documented_no_op() {
-        let base = empty_process3d_snapshot();
+    async fn rename_step_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let after = round_trip(&base, &Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Big Cut".into() }));
+        assert_eq!(after.step_payloads.iter().find(|step| step.id == "step-1").expect("step-1 present").label, "Big Cut");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn change_step_enabled_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let after = round_trip(&base, &Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false }));
+        assert!(!after.step_payloads.iter().find(|step| step.id == "step-1").expect("step-1 present").enabled);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn change_step_origin_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
         let origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
-        let mutation = Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin) });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+        let after = round_trip(&base, &Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(origin.clone()) }));
+        assert_eq!(after.step_payloads.iter().find(|step| step.id == "step-1").expect("step-1 present").origin, Some(origin));
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn replace_step_measure_diff_is_a_documented_no_op() {
-        let base = empty_process3d_snapshot();
+    async fn replace_step_measure_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
         let new_measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.3, pose: Pose::default() };
-        let mutation = Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+        let after = round_trip(&base, &Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure: new_measure.clone() }));
+        assert_eq!(after.step_payloads.iter().find(|step| step.id == "step-1").expect("step-1 present").measure, new_measure);
+        assert!(after.tool_solids.is_empty(), "a Drill step mints no tool solid");
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn reorder_steps_diff_is_a_documented_no_op() {
-        let base = empty_process3d_snapshot();
-        let mutation = Process3dMutation::ReorderSteps(ReorderSteps { id: "b".into(), to_index: 0 });
-        assert_eq!(mutation.diff(&base).diff(), &Process3dDiff::default());
-        assert!(mutation.inverse(&base).is_empty());
+    async fn reorder_steps_round_trips() {
+        let base = base_with_steps(vec![cut_step("step-a"), cut_step("step-b")]);
+        let after = round_trip(&base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "step-b".into(), to_index: 0 }));
+        assert_eq!(after.step_payloads.first().expect("first step present").id, "step-b");
     }
-    //#endregion 🔖️StepMutationsAreDocumentedNoOps
+    //#endregion 🔖️StepMutations
 
     #[semio_framework_async_macros::async_test]
     async fn create_machine_round_trips() {
@@ -335,7 +336,7 @@ mod tests {
 
     //#region 🔖️OutcomeLaws
     /// ✅️ 26/08/16 MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS §C2 laws — one per
-    /// representative verb family across `machine`s (id-keyed) and `step`s (documented no-op):
+    /// representative verb family across `machine`s and `step`s, both id-keyed:
     /// `assert_missing_target_is_error`/`assert_fatal_never_applies` below,
     /// `assert_outcome_policy_matrix` cases further down (delete, rename, create).
     #[semio_framework_async_macros::async_test]
@@ -384,7 +385,119 @@ mod tests {
         let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
         protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_step_missing_target_is_an_error() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "does-not-exist".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_step_missing_target_is_an_error() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::RenameStep(RenameStep { id: "does-not-exist".into(), new_label: "X".into() });
+        protocol::testkit::assert_missing_target_is_error(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_step_duplicate_id_is_fatal_and_never_applies() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-1") });
+        let outcome = mutation.diff(&base);
+        assert_eq!(outcome.worst_level(), Some(protocol::os_dsl::Severity::Fatal));
+        protocol::testkit::assert_fatal_never_applies(&outcome);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn delete_step_outcome_obeys_the_policy_matrix() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let mutation = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn rename_step_outcome_obeys_the_policy_matrix() {
+        let base = base_with_steps(vec![cut_step("step-1")]);
+        let mutation = Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "X".into() });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn create_step_outcome_obeys_the_policy_matrix() {
+        let base = empty_process3d_snapshot();
+        let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
+        protocol::testkit::assert_outcome_policy_matrix(&base, &mutation);
+    }
     //#endregion 🔖️OutcomeLaws
+
+    //#region 🔖️FixtureRegeneration
+    /// 🌉️ Regenerates the seven step-scoped mutation vectors via the REAL mutation pipeline (never
+    /// hand-transcribed JSON), writing each `(before, mutation, after, diff, outcome)` quintet to
+    /// the ticket's `🗑️generated` folder for manual copy into the matching `🧬️mutations/<verb>/
+    /// 🧪️tests/…` fixture directory. `#[ignore]`d: a one-shot authoring tool, not part of the
+    /// regular test run — mirrors `📸️snapshot/📝️text/🦀️component.rs`'s own
+    /// `regenerate_example_fixtures`.
+    fn write_vector(dir: &std::path::Path, kind: &str, before: &Process3dSnapshot, mutation: &Process3dMutation) {
+        let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(mutation, before);
+        let mut after = before.clone();
+        let forward = outcome.apply_to(&mut after);
+        let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(mutation, before);
+        let mut undone = after.clone();
+        for step in &inverse {
+            <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        }
+        assert_eq!(&undone, before, "regenerate-{kind}: inverse must restore before");
+        let messages: Vec<semio_framework_os_kernel::json::Value> = forward
+            .messages()
+            .iter()
+            .map(|message| {
+                let level = semio_framework_os_kernel::ToValue::to_value(&message.level).as_str().expect("severity is a string").to_string();
+                semio_framework_os_kernel::json::object([("level".to_string(), semio_framework_os_kernel::json::Value::String(level)), ("code".to_string(), semio_framework_os_kernel::json::Value::String(message.code.0.clone()))])
+            })
+            .collect();
+        let outcome_json = semio_framework_os_kernel::json::object([("status".to_string(), semio_framework_os_kernel::json::Value::String("applied".to_string())), ("messages".to_string(), semio_framework_os_kernel::json::array(messages))]);
+        std::fs::write(dir.join(format!("{kind}.before.json")), semio_framework_os_kernel::json::to_json_string(before)).expect("write before");
+        std::fs::write(dir.join(format!("{kind}.mutation.json")), semio_framework_os_kernel::json::to_json_string(mutation)).expect("write mutation");
+        std::fs::write(dir.join(format!("{kind}.after.json")), semio_framework_os_kernel::json::to_json_string(&after)).expect("write after");
+        std::fs::write(dir.join(format!("{kind}.diff.json")), semio_framework_os_kernel::json::to_json_string(forward.diff())).expect("write diff");
+        std::fs::write(dir.join(format!("{kind}.outcome.json")), semio_framework_os_kernel::json::to_string(&outcome_json)).expect("write outcome");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn regenerate_step_mutation_vectors() {
+        let dir = std::path::Path::new("/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/PROCESS-END-TO-END/🗑️generated");
+        let workshop = Workshop { machines: vec![saw_machine("saw")] };
+        let rip_cut = ProcessStep { id: "step-1".into(), label: "Rip Cut".into(), enabled: true, origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() }), measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.5, depth: 0.006, height: 0.1 }, pose: Pose::default() } };
+        let rip_cut_no_origin = ProcessStep { origin: None, ..rip_cut.clone() };
+        let bore_hole = ProcessStep { id: "step-2".into(), label: "Bore Hole".into(), enabled: true, origin: Some(StepOrigin { machine_id: "saw".into(), capability_id: "drill".into() }), measure: ProcessMeasure::Drill { radius: 0.008, depth: 0.02, pose: Pose::default() } };
+        let scene = |steps: Vec<ProcessStep>| ProcessWorkingScene { stock: Stock::default(), steps };
+
+        let base = process_working_scene_to_snapshot(&scene(vec![]), workshop.clone(), None);
+        write_vector(dir, "create-step", &base, &Process3dMutation::CreateStep(CreateStep { index: 0, step: rip_cut.clone() }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+        write_vector(dir, "delete-step", &base, &Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+        write_vector(dir, "rename-step", &base, &Process3dMutation::RenameStep(RenameStep { id: "step-1".into(), new_label: "Final Rip Cut".into() }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+        write_vector(dir, "change-step-enabled", &base, &Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "step-1".into(), new_enabled: false }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut_no_origin]), workshop.clone(), None);
+        let new_origin = StepOrigin { machine_id: "saw".into(), capability_id: "cut".into() };
+        write_vector(dir, "change-step-origin", &base, &Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "step-1".into(), new_origin: Some(new_origin) }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut.clone()]), workshop.clone(), None);
+        let bore_measure = ProcessMeasure::Drill { radius: 0.008, depth: 0.02, pose: Pose::default() };
+        write_vector(dir, "replace-step-measure", &base, &Process3dMutation::ReplaceStepMeasure(ReplaceStepMeasure { id: "step-1".into(), new_measure: bore_measure }));
+
+        let base = process_working_scene_to_snapshot(&scene(vec![rip_cut, bore_hole]), workshop, None);
+        write_vector(dir, "reorder-steps", &base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "step-2".into(), to_index: 0 }));
+    }
+    //#endregion 🔖️FixtureRegeneration
 }
 //#endregion 🧪️Tests
 
@@ -432,12 +545,12 @@ pub const KINDS: &[&str] = &[
 /// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     let decode_snapshot = |text: &str| -> Result<Process3dSnapshot, String> {
-        let decoded: Process3dSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
+        let decoded: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(text).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: Process3dMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: Process3dMutation = semio_framework_os_kernel::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base);
@@ -447,17 +560,17 @@ pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, afte
         let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
-    });
-    Ok(report.to_string())
+    let report = semio_framework_os_kernel::json::object([
+        ("base".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&base))),
+        ("expectedSnapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&expected))),
+        ("snapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&applied))),
+        ("diff".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(forward.diff()))),
+        ("messages".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&forward.messages().to_vec()))),
+        ("inverseSteps".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&inverse))),
+        ("inverseSnapshot".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&undone))),
+        ("inverseMessages".to_string(), semio_framework_os_kernel::json::from_dsl_value(&semio_framework_os_kernel::ToValue::to_value(&inverse_messages))),
+    ]);
+    Ok(semio_framework_os_kernel::json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

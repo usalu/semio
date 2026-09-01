@@ -8,20 +8,19 @@
 
 use crate::artifacts::md::schema::snapshot::{MdBlock, MdInline};
 use crate::artifacts::md::MdSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened text.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdHeadingEntry {
     pub level: u8,
     pub text: String,
 }
 
 /// 🧾️ `Md` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct MdOutline {
     pub section_outline: Vec<MdHeadingEntry>,
     pub block_count: u32,

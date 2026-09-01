@@ -27,7 +27,7 @@ bun ./📜️script.ts clean --dry
 ## What it removes
 
 1. **Misplaced emoji mounts** under `.🧬semio/` (corrupted `*repo` / `*tickets` names such as `🧑‍🦑️repo`, `🧑️repo`, `🪷tickets`) and a root-level `🦑️repo/`.
-2. **Gitignored paths inside ticket trees** (`**/🎫️tickets/**`).
+2. **Gitignored paths inside ticket trees** (`**/🎫️tickets/**`), including generated `🧾️runs/` output at any nesting depth.
 3. **Oversized paths inside ticket folders only** (`…/🎆️YY/🌙️MM/☀️DD/TICKETSLUG/…`): files > 5MB, subfolders > 10MB. The ticket slug folder itself and year/month/day parents are never size-deleted.
 4. **Build artifacts** named `target`, `🎯️target*`, `dist`, `build`, `out` larger than **10GB**.
 

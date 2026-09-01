@@ -10,12 +10,11 @@
 
 use crate::artifacts::ifc::schema::snapshot::IfcValue;
 use crate::artifacts::ifc::IfcSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ IFC4's `IFCCARTESIANPOINT`-derived spatial bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

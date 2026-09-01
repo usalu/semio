@@ -14,7 +14,6 @@
 use crate::artifacts::jack::JackSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::flat_position::{compute_flat_position, JackFlatPosition};
 use super::topology::{compute_topology, JackTopology};
@@ -23,8 +22,8 @@ use super::topology::{compute_topology, JackTopology};
 /// 💡️ Everything inferable from a jack snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by `🧭topology/`; `flat_position`, backed by
 /// `🎛flat-position/`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.jack.inference")]
 pub struct JackInference {
     #[derived]

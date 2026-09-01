@@ -3,30 +3,29 @@
 use crate::artifacts::deflate::schema::snapshot::DeflateLevelHint;
 use crate::artifacts::deflate::{DeflateSnapshot, STDIO_DEFLATE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.deflate` artifact state — mirrors `DeflateSnapshot`'s typed RFC1950 fields.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.deflate")]
 pub struct DeflateArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub compression_method: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub window_bits: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub compression_level_hint: DeflateLevelHint,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub dict_id: Option<u32>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub payload: Vec<u8>,
 }
 //#endregion 🔖️Artifact

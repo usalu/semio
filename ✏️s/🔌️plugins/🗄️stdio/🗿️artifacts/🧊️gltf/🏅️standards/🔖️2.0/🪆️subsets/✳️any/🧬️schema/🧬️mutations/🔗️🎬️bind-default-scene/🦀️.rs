@@ -1,12 +1,11 @@
 //! 🧬️ Direct bind-default-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 pub const ID: &str = "s.stdio.gltf.mutation.bind-default-scene.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/scene"];
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfBindDefaultScenePayload { pub scene: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.scene >= base.document.scenes.len() { return Err(reject("gltf.mutation.index-out-of-range", "document/scenes", "scene must exist")); } if Some(payload.scene) == base.document.scene { return Err(reject("gltf.mutation.no-observable-change", "document/scene", "scene is already default")); } Ok(()) }
@@ -14,9 +13,9 @@ pub fn validate(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> R
 pub fn apply(payload: &GltfBindDefaultScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.scene = Some(payload.scene); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindDefaultSceneMutation {
     Apply(GltfBindDefaultScenePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

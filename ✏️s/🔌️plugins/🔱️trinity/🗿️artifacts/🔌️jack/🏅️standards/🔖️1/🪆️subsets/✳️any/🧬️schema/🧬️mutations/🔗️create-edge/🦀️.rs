@@ -2,11 +2,10 @@
 use crate::artifacts::jack::diff::JackDiff;
 use crate::artifacts::jack::mutations::TrinityGraphMutation;
 use crate::artifacts::jack::{Edge, JackSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🔗️ `create-edge` payload — full initial edge payload.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateEdge {
     pub edge: Edge,

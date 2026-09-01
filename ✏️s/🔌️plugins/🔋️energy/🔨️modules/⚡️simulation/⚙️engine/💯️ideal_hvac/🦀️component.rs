@@ -3,10 +3,11 @@
 use crate::props::moist_air_enthalpy_j_per_kg;
 use crate::units::{CP_DRY_AIR, H_FG_0C, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️IdealLoads
 /// 🎯️ Ideal loads physics configuration (distinct from [`crate::model::IdealLoadsSystem`] entity).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct IdealLoadsConfig {
     pub max_heating_supply_air_temp_c: f64,
     pub min_cooling_supply_air_temp_c: f64,
@@ -23,7 +24,7 @@ impl Default for IdealLoadsConfig {
 }
 
 /// 🌬️ Economizer control mode.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum EconomizerControl {
     #[default]
     None,
@@ -35,7 +36,7 @@ pub enum EconomizerControl {
 }
 
 /// 💧️ Humidity control mode.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum HumidityControl {
     #[default]
     None,
@@ -45,7 +46,7 @@ pub enum HumidityControl {
 }
 
 /// 📥️ Zone demand and boundary conditions for ideal loads.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct IdealLoadsInput {
     pub zone_temp_c: f64,
     pub zone_humidity_ratio: f64,
@@ -63,7 +64,7 @@ pub struct IdealLoadsInput {
 pub type IdealLoadsRequest = IdealLoadsInput;
 
 /// 📤️ Ideal loads delivery result per zone timestep.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct IdealLoadsOutput {
     pub sensible_heating_w: f64,
     pub sensible_cooling_w: f64,

@@ -5,7 +5,6 @@ use crate::core;
 use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{scene_surface, text_identifier_occurrences_json, BuiltNode, TextEditorScene, UiAssemblyResult};
 use semio_framework_ui_contract::SurfaceKind;
-use serde_json::json;
 
 pub(crate) fn render(surface_id: &str, _controller_id: &str, fixture: &JackSnapshot, cfg: &JackConfig) -> UiAssemblyResult<BuiltNode> {
     let query = &cfg.jack_query;
@@ -17,9 +16,9 @@ pub(crate) fn render(surface_id: &str, _controller_id: &str, fixture: &JackSnaps
         SurfaceKind::TextEditor,
         &TextEditorScene {
             selection_json,
-            tokens_json: serde_json::to_string(&core::semantic_tokens(query)).ok(),
-            diagnostics_json: serde_json::to_string(&core::lint(&graph, query)).ok(),
-            completions_json: serde_json::to_string(&core::complete(&graph, query, cursor)).ok(),
+            tokens_json: Some(pack::to_json_string(&core::semantic_tokens(query))),
+            diagnostics_json: Some(pack::to_json_string(&core::lint(&graph, query))),
+            completions_json: Some(pack::to_json_string(&core::complete(&graph, query, cursor))),
             occurrences_json: text_identifier_occurrences_json(query, cursor),
             ..TextEditorScene::base(query.clone(), Some("jack".into()), None)
         },

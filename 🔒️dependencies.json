@@ -2012,6 +2012,24 @@
     },
     {
       "ecosystem": "python",
+      "name": "pillow",
+      "version": "12.2.0",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️oracle/🔣️.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "lowpoly-io-png-pillow"
+      ],
+      "capabilities": [
+        "lowpoly-1-io"
+      ]
+    },
+    {
+      "ecosystem": "python",
       "name": "pypdf",
       "version": "6.14.2",
       "kinds": [

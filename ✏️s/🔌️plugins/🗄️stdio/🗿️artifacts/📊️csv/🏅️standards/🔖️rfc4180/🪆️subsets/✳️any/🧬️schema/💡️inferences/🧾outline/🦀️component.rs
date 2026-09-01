@@ -4,12 +4,11 @@
 //! rectangularity); `hasHeader` mirrors the snapshot's own `has_header` flag.
 
 use crate::artifacts::csv::CsvSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Csv` document outline.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CsvOutline {
     pub record_count: u32,
     pub column_count: u32,

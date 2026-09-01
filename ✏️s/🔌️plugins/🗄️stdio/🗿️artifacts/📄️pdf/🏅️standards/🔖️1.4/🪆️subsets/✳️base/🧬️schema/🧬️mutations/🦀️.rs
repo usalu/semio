@@ -1,7 +1,6 @@
 //! 🧬️ Transparent PDF 1.4/ANY mutation registry and delegation.
 
 use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 #[path = "📥️insert-page/🦀️.rs"]
@@ -22,8 +21,8 @@ pub use replace_page_text::ReplacePageText;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case", deny_unknown_fields)]
 #[mutations(snapshot = PdfSnapshot, diff = PdfDiff, schema = "s.stdio.pdf.1.4")]
 pub enum PdfMutation {
     InsertPage(InsertPage),

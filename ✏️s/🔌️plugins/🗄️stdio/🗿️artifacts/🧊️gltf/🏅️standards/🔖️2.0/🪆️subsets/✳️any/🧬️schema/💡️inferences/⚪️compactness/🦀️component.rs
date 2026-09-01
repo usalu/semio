@@ -13,10 +13,9 @@ pub mod surface_to_volume_ratio;
 
 use super::super::modules::measurement_contracts::*;
 use super::geometry_core::{convex_hull_metrics, hull_sample, GltfGeometryContext};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfCompactnessIndicators {
     pub compactness: GltfMeasure<f64>,
     pub surface_to_volume_ratio: GltfMeasure<f64>,

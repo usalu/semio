@@ -1,6 +1,7 @@
 //! 📐️ SI unit helpers and physical constants for BEM computations.
 
 // #region 🔖️Constants
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 /// 🌡️ Standard atmospheric pressure [Pa].
 pub const P_STD: f64 = 101_325.0;
 /// 💨️ Dry air gas constant [J/(kg·K)].
@@ -47,7 +48,7 @@ pub fn rad_to_deg(rad: f64) -> f64 {
 
 // #region 🔖️Quantity
 /// 📊️ Tagged SI scalar for results and limits.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
 pub enum Unit {
     Dimensionless,
     Meters,
@@ -66,7 +67,7 @@ pub enum Unit {
 }
 
 /// 📏️ Physical quantity with unit tag.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Quantity {
     pub unit: Unit,
     pub value: f64,

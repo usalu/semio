@@ -6,10 +6,9 @@ use crate::artifacts::step::StepSnapshot;
 use crate::artifacts::step::standards::v_ap214::engine::ladder::ClassEdit;
 use crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::{class_diff, class_inverse};
 use crate::artifacts::step::standards::v_ap214::subsets::cc6::schema::mutations::{StepCc6Mutation};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetFileSchema {
     pub schemas: Vec<String>,

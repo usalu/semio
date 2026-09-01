@@ -19,14 +19,14 @@ fn bundle() -> ExtensionBundle {
     let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
     semio_framework::io::resolve_ready(bundle.contributes_topic(
         "sourcing.module",
-        serde_json::json!({
-            "appId": HOST_APP_ID,
-            "moduleId": module.module_id(),
-            "label": module.label(),
-            "iconId": "beam",
-            "typologyJson": serde_json::to_string(&module.typology()).unwrap_or_default(),
-            "kindsJson": serde_json::to_string(&module.demo_kinds()).unwrap_or_default(),
-        }),
+        semio_framework_os_kernel::DslValue::object([
+            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), semio_framework_os_kernel::DslValue::String(module.module_id().to_string())),
+            ("label".to_string(), semio_framework_os_kernel::DslValue::String(module.label().to_string())),
+            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("beam".to_string())),
+            ("typologyJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.typology()))),
+            ("kindsJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&module.demo_kinds()))),
+        ]),
     ))
 }
 
@@ -47,12 +47,12 @@ mod tests {
         assert_eq!(manifest.topic_contributions.len(), 1);
         let topic = &manifest.topic_contributions[0];
         assert_eq!(topic.topic, "sourcing.module");
-        assert_eq!(topic.payload["appId"], HOST_APP_ID);
-        assert_eq!(topic.payload["moduleId"], "beams");
+        assert_eq!(topic.payload["appId"].as_str(), Some(HOST_APP_ID));
+        assert_eq!(topic.payload["moduleId"].as_str(), Some("beams"));
         let typology_json = topic.payload["typologyJson"].as_str().unwrap();
         let kinds_json = topic.payload["kindsJson"].as_str().unwrap();
-        assert!(serde_json::from_str::<sourcing_curate::artifacts::curate::schema::TypologyNode>(typology_json).is_ok());
-        assert!(serde_json::from_str::<Vec<sourcing_curate::artifacts::curate::ObjectKind>>(kinds_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<sourcing_curate::artifacts::curate::schema::TypologyNode>(typology_json).is_ok());
+        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<sourcing_curate::artifacts::curate::ObjectKind>>(kinds_json).is_ok());
     }
 }
 //#endregion 🔖️Tests

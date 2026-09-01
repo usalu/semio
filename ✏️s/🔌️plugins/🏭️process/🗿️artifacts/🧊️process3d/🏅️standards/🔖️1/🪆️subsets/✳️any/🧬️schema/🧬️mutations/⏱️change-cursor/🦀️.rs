@@ -7,13 +7,13 @@ use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::change_cursor::ChangeCursor;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ChangeCursor
 /// ⏱️ Document-level scalar setter for the "resolved up to" playback cursor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ChangeCursor {
     pub new_resolved_up_to: Option<usize>,
 }

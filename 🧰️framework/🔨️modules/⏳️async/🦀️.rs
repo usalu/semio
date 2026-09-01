@@ -51,7 +51,11 @@ mod browser_clock;
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use browser_clock::install_browser_monotonic_clock;
 
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this module is a browser JS
+// `Promise`/`JsValue` bridge with no meaning under WASI, so it is narrowed to exclude the
+// component target. wasip2 task execution runs through `WorkerPool` above instead (its
+// `wasm_pool` variant has no JS dependency and stays on the bare arch gate correctly).
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub mod browser {
     use js_sys::Promise;
     use std::future::Future;
@@ -91,7 +95,7 @@ pub mod browser {
         }
     }
 }
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use browser::{future_to_promise, spawn_local, JsFuture};
 //#endregion 🌐️BrowserFutureBridge
 

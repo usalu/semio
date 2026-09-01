@@ -1,12 +1,11 @@
 //! 🧬️ S Home artifact schema — every field of the artifact with its state class.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full S Home launcher artifact state across the artifact and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home")]
 pub struct SHomeArtifact {
     #[state(artifact)]

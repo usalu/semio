@@ -7,9 +7,9 @@ use crate::artifacts::process3d::mutations::rename_machine::mutation::RenameMach
 use crate::artifacts::process3d::mutations::replace_machine_capabilities::mutation::ReplaceMachineCapabilities;
 use crate::artifacts::process3d::{op::Process3dMutation, Pose, Process3dSnapshot, WorkshopMachine};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
+use semio_framework::DslValue;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InspectorPatch
 fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
@@ -29,9 +29,9 @@ fn apply_pose_patch(pose: &mut Pose, field: &str, value: f64) -> bool {
 /// resolvable content (no `LinkResolver` — see `ProcessWorkingScene`'s doc comment). This is a
 /// documented gap: only `label`/pose fields (real, inline persisted fields) remain patchable; a
 /// dimension-only patch returns `None` (no mutation) rather than guessing at unknown geometry.
-fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &str, value: Option<&Value>) -> bool {
+fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &str, value: Option<&DslValue>) -> bool {
     if field == "label" {
-        return match value.and_then(Value::as_str) {
+        return match value.and_then(DslValue::as_str) {
             Some(label) => {
                 *stock_label = label.into();
                 true
@@ -39,15 +39,15 @@ fn apply_stock_patch(stock_pose: &mut Pose, stock_label: &mut String, field: &st
             None => false,
         };
     }
-    let Some(number) = value.and_then(Value::as_f64) else { return false };
+    let Some(number) = value.and_then(DslValue::as_f64) else { return false };
     apply_pose_patch(stock_pose, field, number)
 }
 
 /// 🔎️ Generic inspector edit dispatcher for a workshop machine's own label or a capability parameter
 /// value, addressed as `"{capabilityId}.{parameterId}"` so field names never collide across capabilities.
-fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, value: Option<&Value>) -> bool {
+fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, value: Option<&DslValue>) -> bool {
     if field == "label" {
-        return match value.and_then(Value::as_str) {
+        return match value.and_then(DslValue::as_str) {
             Some(label) => {
                 machine.label = label.into();
                 true
@@ -56,7 +56,7 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
         };
     }
     let Some((capability_id, parameter_id)) = field.split_once('.') else { return false };
-    let Some(number) = value.and_then(Value::as_f64) else { return false };
+    let Some(number) = value.and_then(DslValue::as_f64) else { return false };
     let clamped = number.max(0.001);
     let Some(capability) = machine.capabilities.iter_mut().find(|capability| capability.id == capability_id) else { return false };
     let Some(parameter) = capability.parameters.iter_mut().find(|parameter| parameter.id == parameter_id) else { return false };
@@ -72,7 +72,7 @@ fn apply_workshop_machine_patch(machine: &mut WorkshopMachine, field: &str, valu
 /// patch are both a DOCUMENTED NO-OP (see `apply_stock_patch`'s doc comment and
 /// `RenameStep`/`ReplaceStepMeasure`'s own triads) — `fixture.steps`/`fixture.stock_solid` carry no
 /// resolvable content without a `LinkResolver` this ticket doesn't add.
-fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dMutation> {
+fn process3d_inspector_patch_operation(fixture: &Process3dSnapshot, target: &str, field: &str, value: Option<&DslValue>) -> Option<Process3dMutation> {
     if let Some(machine_id) = target.strip_prefix("machine:") {
         let machine = fixture.workshop.machines.iter().find(|machine| machine.id == machine_id)?;
         let mut updated = machine.clone();
@@ -106,7 +106,7 @@ pub mod patch_inspector {
 
     /// 🩹️ Mirrors the panel's `{ target, field, value }` args — `value` is either a number (most fields)
     /// or text (the `label` field); the two are mutually exclusive at any one call site.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "patch-inspector")]
     pub struct PatchInspector {
         pub target: String,
@@ -121,7 +121,7 @@ pub mod patch_inspector {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let value = payload.number.map(|n| json!(n)).or_else(|| payload.text.clone().map(Value::String));
+        let value = payload.number.map(DslValue::Number).or_else(|| payload.text.clone().map(DslValue::String));
         match process3d_inspector_patch_operation(doc.snapshot, &payload.target, &payload.field, value.as_ref()) {
             Some(operation) => Ok(Emit::mutations(vec![operation])),
             None => Ok(Emit::default()),

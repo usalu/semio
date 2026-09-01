@@ -14,13 +14,15 @@
 //! mutation vocabulary moved.
 
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 🧮️ Semantic playbook document mutation vocabulary: id-keyed step/block add/remove/move, a
 /// whole-block replace, a step-header update, and the playbook's own title scalar.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = PlaybookSnapshot, diff = PlaybookDiff, schema = "playbook.playbook")]
 pub enum PlaybookMutation {
     AddStep(AddStep),

@@ -12,11 +12,10 @@ pub mod sharp_feature_proportion;
 use super::super::modules::measurement_contracts::*;
 use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
 use super::geometry_core::{statistics, triangle_area, GltfGeometryContext};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfCurvatureIndicators {
     pub mean_curvature: GltfMeasure<GltfStatistics>,
     pub gaussian_curvature: GltfMeasure<GltfStatistics>,

@@ -29,9 +29,9 @@ use crate::editor::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView,
     Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure,
+    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, WindowEngagement, WindowMeasure,
     INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
@@ -1065,8 +1065,144 @@ fn dispatch_fill_session_action(action: &str, args: Option<&Value>, ctx: &mut se
 }
 
 //#region 🧵️RetainedCommands
-pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[];
+/// 🧵️ The 2D editor actions that carry an exact app-owned tool proof. Only these may declare
+/// [`InteractiveJobClassification::Migrated`] — UI dispatch resolves a controller/owner/factory/tool
+/// /schema proof for every migrated verb, and one without a registered factory is refused outright.
+pub(crate) const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "forceLayout", "addNode", "applyBoardEvents"];
 const PUZZLE2D_RETAINED_PAYLOAD_SCHEMA: &str = "puzzle.2d.fixture.tool-command.v1";
+
+struct Puzzle2dRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Puzzle2dRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: PUZZLE2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Puzzle2dRetainedCommandJobFactory {
+    type Payload = crate::retained_command::RetainedPuzzleCommandPayload<EditorApp<Puzzle2dPlayApp>>;
+    type Job = crate::retained_command::RetainedPuzzleCommandJob<EditorApp<Puzzle2dPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        PUZZLE2D_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        crate::retained_command::puzzle_command_contract()
+    }
+
+    fn create_job(&mut self, operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(crate::retained_command::RetainedPuzzleCommandJob::new(operation, payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > crate::retained_command::PUZZLE_COMMAND_RAW_BYTES {
+            return Err((ToolJobFactoryError::new("Puzzle 2d retained command rejects an oversized wire owner"), input, checkpoint));
+        }
+        match checkpoint {
+            Some(checkpoint) => {
+                if let Err(error) = crate::retained_command::RetainedPuzzleCommandJob::validate_wire_checkpoint(operation, &payload, &input, &checkpoint) {
+                    return Err((error, input, Some(checkpoint)));
+                }
+                Ok(crate::retained_command::RetainedPuzzleCommandJob::from_validated_wire_checkpoint(operation, payload, input, checkpoint))
+            }
+            None => Ok(crate::retained_command::RetainedPuzzleCommandJob::from_wire(operation, payload, input)),
+        }
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Puzzle2dRetainedCommandJobFactory {
+    type Owner = EditorApp<Puzzle2dPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = PUZZLE2D_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PUZZLE2D_FIXTURE_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "forceLayout", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "applyBoardEvents", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ];
+}
+
+/// 🖌️ Upper bound on the events one board flush may carry into a single retained step. The browser
+/// flushes a handful of events per interaction (`PUZZLE2D_FLUSH_NOW_EVENT_NAMES` in `Board2dHost`), so
+/// one bounded step covers a real interaction; an oversized batch is refused rather than silently
+/// truncated.
+const PUZZLE2D_BOARD_EVENT_BATCH_LIMIT: usize = 256;
+
+fn puzzle2d_board_events_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    if command.action_id() != "applyBoardEvents" {
+        return None;
+    }
+    let events = command.args().and_then(|args| args.get("eventsJson")).and_then(Value::as_str).unwrap_or("[]");
+    let parsed: Value = serde_json::from_str(events).ok()?;
+    let count = parsed.as_array().map_or(0, Vec::len);
+    (count <= PUZZLE2D_BOARD_EVENT_BATCH_LIMIT).then_some(count.max(1))
+}
+
+/// 🖌️ `applyBoardEvents` is the single verb the browser's board session commits through — `brushPlace`,
+/// `select`, `edgeCreate`/`edgeDelete`, `nodeDelete` and `camera` all arrive in its `eventsJson` batch
+/// (`Board2dHost/🟦️component.tsx`). It reruns the same pipeline `handle` does — scene, board host,
+/// runtime sync, the action, host-event drain, document delta — minus the `ArtifactView` that a
+/// retained work never sees, so the committed `AppOperationContext` is simply absent here.
+fn puzzle2d_board_events_reduce(
+    command: &Puzzle2dCommand,
+    snapshot: &Puzzle2dPlaySnapshot,
+    config: &Puzzle2dConfig,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation>, Fault> {
+    if command.action_id() != "applyBoardEvents" {
+        return Err(Fault::from("puzzle2d-board-events-command-mismatch"));
+    }
+    let before = snapshot.0.clone();
+    let window_id = command.window_id();
+    let active_utility = puzzle2d_active_utility(config, window_id);
+    let mut scene = Puzzle2dPlayApp::scene_for(before.clone(), config, window_id);
+    let selection = interaction.selection(PUZZLE2D_INTERACTION_DOMAIN);
+    let host = RefCell::new(BoardHost::default());
+    sync_host_runtime_state(&mut host.borrow_mut(), &scene, &selection.ids);
+    let mut effects: Vec<Effect> = Vec::new();
+    let mut artifact_mutations = Vec::new();
+    let mut ui_scope = UiDirtyScope::Full;
+    {
+        let ctx = &mut Puzzle2dActionCtx {
+            host: &host,
+            scene: &mut scene,
+            window_id,
+            active_utility,
+            selection: &selection,
+            effects: &mut effects,
+            artifact_mutations: &mut artifact_mutations,
+            ui_scope: &mut ui_scope,
+            operation: None,
+        };
+        apply_board_events::apply_board_events(ctx, command.args());
+    }
+    apply_host_events(&mut host.borrow_mut(), &mut scene);
+    let mut operations = puzzle2d_document_delta_operations(&before, &scene.fixture);
+    operations.append(&mut artifact_mutations);
+    if !operations.is_empty() && matches!(ui_scope, UiDirtyScope::None) {
+        ui_scope = UiDirtyScope::Full;
+    }
+    let config_mutations = if &scene.runtime != config { vec![Puzzle2dConfigMutation::Snapshot { config: scene.runtime }] } else { Vec::new() };
+    Ok(Emit { artifact_mutations: operations, config_mutations, coalesce_key: None, effects, ui_scope, ..Default::default() })
+}
 
 fn puzzle2d_retained_extent(command: &Puzzle2dCommand, _snapshot: &Puzzle2dPlaySnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     matches!(command.action_id(), "addNode").then_some(1)
@@ -1871,6 +2007,49 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
     /// 🔌️ Declares puzzle2d's typed media I/O surface — the implicit document ports plus `kit:in`
     /// (see `import_media` below for why it stays `NotImplemented`) and `design:out`.
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<Puzzle2dPlayApp>,
+        owner_file: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
+        controller: "s.puzzle.puzzle2d@1/*#editor",
+        document_schema: "puzzle.2d.fixture",
+        factory: "Puzzle2dRetainedCommandJobFactory",
+        factory_type: Puzzle2dRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::resumable(8_192, 512, 1, 262_144, 7_500, 1, 1),
+        tools: ["setActiveExample", "forceLayout", "addNode", "applyBoardEvents"]
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(Puzzle2dRetainedCommandJobFactory::new(&controller))
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::app::ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !PUZZLE2D_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.action_id() != request.tool_id {
+            return Err(Fault::from("puzzle2d-command-tool-mismatch"));
+        }
+        let work: Box<dyn crate::retained_command::PuzzleCommandWork<EditorApp<Self>>> = match request.command.action_id() {
+            "setActiveExample" => Box::new(Puzzle2dActiveExampleWork::default()),
+            "forceLayout" => Box::new(Puzzle2dForceLayoutWork::default()),
+            "addNode" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("addNode", puzzle2d_retained_reduce, puzzle2d_retained_extent)),
+            "applyBoardEvents" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new("applyBoardEvents", puzzle2d_board_events_reduce, puzzle2d_board_events_extent)),
+            _ => return Err(Fault::from("puzzle2d-command-tool-unmapped")),
+        };
+        let payload = crate::retained_command::RetainedPuzzleCommandPayload {
+            command: *request.command,
+            snapshot: request.snapshot,
+            config: request.config,
+            interaction_state: request.interaction_state,
+            interaction_hover: request.interaction_hover,
+            completion: request.completion,
+            command_id: Puzzle2dCommand::action_id,
+            work,
+        };
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
     fn io() -> Option<AppIo> {
         let io = semio_framework::io::resolve_ready(AppIo::from_document("puzzle.2d", MediaType { class: MediaClass::TwoD, form: MediaForm::Design }, ArtifactPresentation { id: "2d.puzzle".into(), name: "2D Puzzle".into(), dimension: "2d".into(), component_kind: "puzzle2d".into() }));
         Some(semio_framework::io::resolve_ready(io.with_ports(vec![
@@ -2087,40 +2266,40 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("forceLayout", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("applyBoardEvents", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushCancelSlot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushCommitSlot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushCycleCandidate", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionAdopt", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionBegin", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionCancel", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionClear", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionDiscard", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionRetry", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushFillSessionStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushOpenSlot", InteractiveJobClassification::Migrated)
-            .action_interactive_job("brushSetCandidateIndex", InteractiveJobClassification::Migrated)
-            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("duplicateSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementAbort", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
-            .action_interactive_job("focusSelection", InteractiveJobClassification::Migrated)
-            .action_interactive_job("lodScaleJson", InteractiveJobClassification::Migrated)
-            .action_interactive_job("patchInspectorNodes", InteractiveJobClassification::Migrated)
-            .action_interactive_job("redrawHandles", InteractiveJobClassification::Migrated)
-            .action_interactive_job("reorganize", InteractiveJobClassification::Migrated)
-            .action_interactive_job("selectSameKind", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveExampleStep", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushKindWeights", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setBrushNodeSize", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setFillCount", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridFactor", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setLodModeForPane", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSelectionFlag", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::Migrated)
+            .action_interactive_job("brushCancelSlot", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushCommitSlot", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushCycleCandidate", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionAdopt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionBegin", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionCancel", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionClear", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionDiscard", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionRetry", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushFillSessionStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushOpenSlot", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("brushSetCandidateIndex", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("duplicateSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementAbort", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementControlSelect", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementInput", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("focusSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("lodScaleJson", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("patchInspectorNodes", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("redrawHandles", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("reorganize", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("selectSameKind", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExampleStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushKindWeights", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setBrushNodeSize", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setCamera", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setFillCount", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridFactor", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setGridSnapEnabled", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setLodModeForPane", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSelectionFlag", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setSuggestionOffset", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document
             // operation); bound to the interactive overview pane by that window's own definition.
             .utility(select_utility::definition(puzzle2d_localized(|l| l.select)))

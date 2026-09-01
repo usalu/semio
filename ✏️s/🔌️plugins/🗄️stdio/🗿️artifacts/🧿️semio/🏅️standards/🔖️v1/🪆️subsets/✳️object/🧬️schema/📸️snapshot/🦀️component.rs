@@ -56,6 +56,39 @@ impl Default for SemioObjectSnapshot {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `brep`/`mesh`/`properties` are `store::ArtifactChild<S>`
+/// composed-artifact handles, bridged per-field through `to_dsl_value`/`from_dsl_value`
+/// (`🌱️value/🔀️serde`) rather than widening the derive macro — same pattern (and same reasoning)
+/// as this subset's own `🧬️schema/🦀️component.rs` (`SemioObjectArtifact`) and the fan-out
+/// playbook's `PlaybookArtifact` reference.
+impl dsl::ToValue for SemioObjectSnapshot {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("transform".to_string(), dsl::ToValue::to_value(&self.transform)),
+            ("brep".to_string(), dsl::to_dsl_value(&self.brep).expect("ArtifactChild serializes")),
+            ("mesh".to_string(), dsl::to_dsl_value(&self.mesh).expect("ArtifactChild serializes")),
+            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
+        ])
+    }
+}
+impl dsl::FromValue for SemioObjectSnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = dsl::DslValue::into_object(value)?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: dsl::FromValue::from_value(field("schema")?)?,
+            transform: dsl::FromValue::from_value(field("transform")?)?,
+            brep: dsl::from_dsl_value(field("brep")?).map_err(dsl::ValueError::new)?,
+            mesh: dsl::from_dsl_value(field("mesh")?).map_err(dsl::ValueError::new)?,
+            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
+
 //#region 🔖️ChildCodecPrimitives
 /// 🧪️ Real hex/bracket child-handle codec — a handle is exactly two strings (`child_id`, the
 /// target's `ArtifactRef` flattened via `to_uri()`), never the child's own content (composition
@@ -305,30 +338,26 @@ impl store::ArtifactPack for SemioObjectSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
-/// `s.stdio.semio.object` — the shape `mutate-semio-object` compares under `ordered-json-v1`, derived from the
-/// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
-/// away from the type it claims to project. This is the bridge that makes the CHILD slots reachable at all. `brep`/`mesh`/`properties` are
-/// `Option<store::ArtifactChild<S>>`, and `store` is this crate's PRIVATE `extern crate
-/// semio_framework_os_kernel as store;` (`📦️glue.rs`), so no external caller can name the type to
-/// construct one; going through `serde` here needs no nameable path, only the field data the
-/// committed fixture already carries.
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]`-shaped structural JSON projection of
+/// `s.stdio.semio.object` — the shape `mutate-semio-object` compares under `ordered-json-v1`,
+/// derived from the snapshot type's own hand-written `ToValue` impl above (§ValueCodec) rather
+/// than hand-written a second time in the adapter, where it could drift away from the type it
+/// claims to project. This is the bridge that makes the CHILD slots reachable at all — `ToValue`
+/// bridges each `brep`/`mesh`/`properties` field through `to_dsl_value` (real ArtifactChild data:
+/// `child_id` + `target` URI, never embedded content).
+/// A thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_object_snapshot_json(snapshot: &SemioObjectSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioObjectSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_object_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
-/// specification vectors into real [`SemioObjectSnapshot`] values, so `mutate-semio-object`'s adapter reads the
-/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
-/// from that adapter is impossible — the generated test host links only this crate — which is why
-/// the bridge belongs here rather than there.
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_object_snapshot_json`] — decodes the
+/// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// specification vectors into real [`SemioObjectSnapshot`] values, so `mutate-semio-object`'s
+/// adapter reads the committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

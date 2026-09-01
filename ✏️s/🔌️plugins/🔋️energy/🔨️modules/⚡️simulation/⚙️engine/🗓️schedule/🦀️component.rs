@@ -2,31 +2,32 @@
 
 use crate::model::ScheduleId;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ScheduleType
 /// 📆️ Schedule interpolation mode.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ScheduleInterpolation {
     Continuous,
     Discrete,
 }
 
 /// 📆️ Schedule value limit.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ScheduleLimits {
     pub min: f64,
     pub max: f64,
 }
 
 /// 📅️ Constant schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ConstantSchedule {
     pub id: ScheduleId,
     pub value: f64,
 }
 
 /// 📅️ Daily repeating schedule (24 hourly values).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DailySchedule {
     pub id: ScheduleId,
     pub hourly_values: [f64; 24],
@@ -35,14 +36,14 @@ pub struct DailySchedule {
 }
 
 /// 📅️ Weekly schedule (7 daily schedule ids).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WeeklySchedule {
     pub id: ScheduleId,
     pub daily_schedule_ids: [ScheduleId; 7],
 }
 
 /// 📅️ Compact rule-based annual schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct CompactScheduleRule {
     pub start_month: u8,
     pub start_day: u8,
@@ -52,7 +53,7 @@ pub struct CompactScheduleRule {
 }
 
 /// 📅️ Annual schedule with holiday overrides.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct AnnualSchedule {
     pub id: ScheduleId,
     pub rules: Vec<CompactScheduleRule>,
@@ -62,7 +63,7 @@ pub struct AnnualSchedule {
 }
 
 /// 📅️ External time-series schedule.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct TimeSeriesSchedule {
     pub id: ScheduleId,
     pub values: Vec<f64>,
@@ -72,7 +73,7 @@ pub struct TimeSeriesSchedule {
 
 // #region 🔖️ScheduleSet
 /// 📚️ All schedules in a model.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ScheduleSet {
     pub constants: Vec<ConstantSchedule>,
     pub daily: Vec<DailySchedule>,
@@ -146,7 +147,7 @@ impl ScheduleSet {
 
 // #region 🔖️Context
 /// 🕐️ Calendar context for schedule lookup.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ScheduleContext {
     pub year: u16,
     pub month: u8,

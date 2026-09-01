@@ -18,7 +18,6 @@ use protocol::Mutation;
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `s.stdio.semio.flow`. Addresses `nodes`/`edges` by `id` (both
@@ -53,15 +52,15 @@ pub mod set_edge_kind;
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none (the
 /// stdio mutation-leaf migration recipe's hard constraint #1 — `no` is also not an approved
-/// semantic verb). The `#[serde(tag = "mutation", rename_all = "camelCase")]` container attribute
+/// semantic verb). The `#[value(tag = "mutation", rename_all = "camelCase")]` container attribute
 /// is KEPT here, unlike the `tiff` reference this migration was derived from (which carries none):
 /// serde's internally tagged representation flattens a newtype variant's struct payload into the
 /// same JSON object the tag lives in, so `decode_semio_flow_mutation_json`'s committed
 /// specification vectors and the `mutate-semio-flow` test adapter's `{"mutation":"insertNode",...}`
 /// payloads keep decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioFlowSnapshot, diff = SemioFlowDiff, schema = "SemioFlowMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioFlowMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `node` (whole payload, already carries its own `id`).

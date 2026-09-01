@@ -10,15 +10,14 @@
 use crate::artifacts::rewrite::RewriteSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::bounds::{compute_bounds, RewriteBounds};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a rewrite-rule snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.trinity.rewrite.inference")]
 pub struct RewriteInference {
     #[derived]

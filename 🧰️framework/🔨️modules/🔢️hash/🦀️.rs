@@ -518,28 +518,6 @@ mod tests {
         (0..len).map(|index| (index % 251) as u8).collect()
     }
 
-    #[derive(serde::Deserialize)]
-    struct Blake3VectorFile {
-        cases: Vec<Blake3VectorCase>,
-    }
-
-    #[derive(serde::Deserialize)]
-    struct Blake3VectorCase {
-        input_len: usize,
-        hash_hex: String,
-    }
-
-    #[test]
-    fn hash_bytes_matches_recorded_official_blake3_vectors() {
-        let raw = include_str!("🧪️tests/🔣️blake3-official-vectors.json");
-        let file: Blake3VectorFile = serde_json::from_str(raw).expect("valid blake3 vector fixture");
-        assert!(file.cases.len() >= 18, "expected the full official-vector length sweep");
-        for case in &file.cases {
-            let input = blake3_test_input(case.input_len);
-            assert_eq!(hash_bytes(&input), case.hash_hex, "mismatch at input_len={}", case.input_len);
-        }
-    }
-
     #[test]
     fn hash_bytes_agrees_with_the_blake3_oracle_across_lengths() {
         for len in [0, 1, 2, 3, 63, 64, 65, 1023, 1024, 1025, 2048, 2049, 3072, 3073, 4096, 4097, 5120, 102400] {
@@ -576,18 +554,4 @@ mod tests {
         assert_eq!(ours.finalize().as_bytes(), oracle.finalize().as_bytes());
     }
     //#endregion 🧪️Blake3Oracle
-
-    #[test]
-    #[ignore]
-    fn generate_official_blake3_vectors_scratch() {
-        let lengths = [0usize, 1, 2, 3, 63, 64, 65, 1023, 1024, 1025, 2048, 2049, 3072, 3073, 4096, 4097, 5120, 102400];
-        print!("{{\n  \"schema\": \"semio.blake3-official-vectors.v1\",\n  \"source\": \"https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json (input_len bytes repeat i % 251, unkeyed hash, first 32 output bytes)\",\n  \"cases\": [\n");
-        for (index, len) in lengths.iter().enumerate() {
-            let input = blake3_test_input(*len);
-            let hex = blake3::hash(&input).to_hex().to_string();
-            let comma = if index + 1 == lengths.len() { "" } else { "," };
-            print!("    {{ \"input_len\": {len}, \"hash_hex\": \"{hex}\" }}{comma}\n");
-        }
-        print!("  ]\n}}\n");
-    }
 }

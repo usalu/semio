@@ -43,6 +43,15 @@ semio-framework-number = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
+# 🚧️ INTERIM, not final: conversion to `ToValue`/`FromValue` is IN PROGRESS across this crate (see
+# `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+# 🔍️research/📓️serde-fanout-stdio-trinity-space.md`) — most `#[derive(Serialize, Deserialize)]` +
+# `#[serde(...)]` call sites are converted, but real `serde_json::` call sites and a handful of
+# `#[serde(flatten/transparent/bound/alias/serialize_with/deserialize_with)]` structs still need
+# these. Matches the sanctioned pilot pattern (`📖️playbook`'s manifest keeps them mid-conversion
+# too) — do NOT remove until the research doc's remaining-file list is empty.
 serde = { workspace = true }
 serde_json = { workspace = true }
 

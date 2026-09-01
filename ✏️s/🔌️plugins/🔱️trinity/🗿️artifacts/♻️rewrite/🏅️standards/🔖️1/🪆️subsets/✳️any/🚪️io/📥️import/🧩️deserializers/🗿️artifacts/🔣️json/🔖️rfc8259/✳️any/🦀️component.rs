@@ -7,7 +7,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<RewriteSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let out: RewriteSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("rewrite<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let out: RewriteSnapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&from.to_pack_value())).map_err(|e: dsl::ValueError| store::TextError::new(format!("rewrite<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 

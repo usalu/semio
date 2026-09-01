@@ -6,12 +6,11 @@ use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
     snapshot::PdfSnapshot,
 };
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ResizePage {
     pub index: usize,
     pub width: f64,

@@ -11,12 +11,11 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Semio cad's entity-derived planar bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioCadBounds {
     pub min: SemioPoint2,
     pub max: SemioPoint2,

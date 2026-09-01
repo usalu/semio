@@ -9,7 +9,6 @@ use semio_framework_plugin::{
     build_node_graph_scene, resolve_labels_for_locale, InteractionRef, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphNodeRecord, NodeGraphOperatorRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowEngagement,
     WindowEngagementInput, WindowEngagementSlot, WindowEngagementStatus, WindowKindDefinition, WindowOptions,
 };
-use serde::Serialize;
 
 //#region 🔖️Constants
 pub const S_PLAY_WINDOW_WORKFLOW: &str = "s-workflow";
@@ -77,19 +76,19 @@ pub async fn definition() -> WindowKindDefinition {
 // site compiles without doing the real space producer cutover. Delete once the space producer is
 // flipped to build the typed records directly.
 async fn json_array_to_node_graph_nodes(json: &str) -> Vec<NodeGraphNodeRecord> {
-    serde_json::from_str(json).unwrap_or_default()
+    pack::from_json_str(json).unwrap_or_default()
 }
 
 async fn json_array_to_node_graph_edges(json: &str) -> Vec<NodeGraphEdgeRecord> {
-    serde_json::from_str(json).unwrap_or_default()
+    pack::from_json_str(json).unwrap_or_default()
 }
 
 async fn json_array_to_node_graph_find_items(json: &str) -> Vec<NodeGraphFindItem> {
-    serde_json::from_str(json).unwrap_or_default()
+    pack::from_json_str(json).unwrap_or_default()
 }
 
-async fn json_array_to_node_graph_operators<T: Serialize>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
-    serde_json::to_string(operators).ok().and_then(|json| serde_json::from_str(&json).ok()).unwrap_or_default()
+async fn json_array_to_node_graph_operators<T: dsl::ToValue + Clone>(operators: &[T]) -> Vec<NodeGraphOperatorRecord> {
+    Some(pack::to_json_string(&operators.to_vec())).and_then(|json| pack::from_json_str(&json).ok()).unwrap_or_default()
 }
 // TEMP(Wave 3) end
 
@@ -142,7 +141,7 @@ mod tests {
         use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
+        assert!(pack::to_json_string(&node).contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -150,7 +149,7 @@ mod tests {
         use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains(r#"\"engine\":\"flow\""#));
         assert!(json.contains("fixtureJson"));
         assert!(json.contains(r#"\"schema\":\"flow.fixture\""#));

@@ -202,9 +202,9 @@ fn rel_contained_instance(id: u64, owner_id: u64, spatial_id: u64, elements: &[u
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
     match v {
-        PsetValue::Text { value } => Part21Value::Typed("IFCTEXT".into(), vec![Part21Value::Str(value.clone())]),
-        PsetValue::Number { value } => Part21Value::Typed("IFCREAL".into(), vec![Part21Value::Real((*value).into())]),
-        PsetValue::Boolean { value } => Part21Value::Typed("IFCBOOLEAN".into(), vec![Part21Value::Enum(if *value { "T" } else { "F" }.into())]),
+        PsetValue::Text { value } => Part21Value::Typed { name: "IFCTEXT".into(), items: vec![Part21Value::Str(value.clone())] },
+        PsetValue::Number { value } => Part21Value::Typed { name: "IFCREAL".into(), items: vec![Part21Value::Real((*value).into())] },
+        PsetValue::Boolean { value } => Part21Value::Typed { name: "IFCBOOLEAN".into(), items: vec![Part21Value::Enum(if *value { "T" } else { "F" }.into())] },
     }
 }
 

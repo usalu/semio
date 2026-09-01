@@ -17,7 +17,6 @@ use crate::artifacts::las::schema::diff::{self, LasDiff};
 use crate::artifacts::las::schema::snapshot::{LasHeader, LasPoint, LasVlr};
 use crate::artifacts::las::LasSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.las`.
@@ -52,8 +51,8 @@ pub mod remove_point;
 pub mod set_point;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = LasSnapshot, diff = LasDiff, schema = "s.stdio.las")]
 pub enum LasMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

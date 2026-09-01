@@ -15,7 +15,6 @@ use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snaps
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
 use protocol::{Mutation, OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.semio.presentation`. Addresses slides by INDEX (`index`,
@@ -56,15 +55,15 @@ pub mod set_layout_master;
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none (the
 /// stdio mutation-leaf migration recipe's hard constraint #1 — `no` is also not an approved
-/// semantic verb). The `#[serde(tag = "mutation", rename_all = "camelCase")]` container attribute
+/// semantic verb). The `#[value(tag = "mutation", rename_all = "camelCase")]` container attribute
 /// is KEPT here, unlike the `tiff` reference this migration was derived from (which carries none):
 /// serde's internally tagged representation flattens a newtype variant's struct payload into the
 /// same JSON object the tag lives in, so every committed fixture under `📄set-snapshot/🧪️tests/`
 /// and the `mutate-semio-presentation` test adapter's `{"mutation":"insertSlide",...}` vectors keep
 /// decoding byte-for-byte unchanged after this migration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioPresentationSnapshot, diff = SemioPresentationDiff, schema = "SemioPresentationMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioPresentationMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `slide` at `index` (FINAL-state index).

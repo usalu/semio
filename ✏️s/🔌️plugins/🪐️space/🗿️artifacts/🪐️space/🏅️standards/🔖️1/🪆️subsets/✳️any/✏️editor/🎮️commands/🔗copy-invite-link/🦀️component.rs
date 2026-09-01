@@ -9,10 +9,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "copy-invite-link")]
 pub struct CopyInviteLink {
     pub role: String,
@@ -20,7 +18,7 @@ pub struct CopyInviteLink {
 }
 
 pub async fn handle(payload: &CopyInviteLink, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "spaceId": doc.snapshot.space_id, "role": payload.role, "ttlSecs": payload.ttl_secs }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.share-link".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": doc.snapshot.space_id, "role": payload.role, "ttlSecs": payload.ttl_secs }))) }))
 }
 
 //#region 🧪️Tests
@@ -37,7 +35,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.directory.share-link");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
+                let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("spectator"));
                 // 🔢️ `DslValue`'s numeric lane round-trips through f64 (confirmed empirically: a JSON
                 // `u64` comes back as `3600.0`, not `3600`) — `serde_json::Number::as_u64()` only

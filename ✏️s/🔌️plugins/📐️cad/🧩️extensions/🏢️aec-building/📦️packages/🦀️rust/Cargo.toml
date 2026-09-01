@@ -38,8 +38,13 @@ semio-s-plugin-cad = { path = "../../../../../📐️cad/📦️packages/🦀️
 # `ArtifactPack`) every plugin/extension crate aliases locally in its own glue — see cad's own
 # `📦️glue.rs` `extern crate semio_framework_os_kernel as protocol/store` lines.
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-serde = { workspace = true }
-serde_json = { workspace = true }
+# 🌱️ `#[derive(ToValue, FromValue)]` — `CreateBuildingStorey`/`BuildingStructureSummary` satisfy
+# `CompositeMutationKind`'s supertrait bound this way, not `serde::Serialize`/`DeserializeOwned`.
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+# 🌱️ `pack::json::Value` — first-party `serde_json::Value` replacement for the `computersJson`
+# payload; `contributes_topic` now also speaks `DslValue` end to end, so `serde`/`serde_json` are
+# fully gone from this crate.
+pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

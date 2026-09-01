@@ -77,8 +77,8 @@ pub(crate) fn jack_action(action: &str, args: Option<semio_framework_plugin::UiV
 }
 
 /// 🪟️ Binds window chrome through its retained renderer action descriptor.
-pub(crate) fn jack_window_action(action: &str, args: Option<serde_json::Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: TRINITY_JACK_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub(crate) fn jack_window_action(action: &str, args: Option<pack::JsonValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: TRINITY_JACK_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| pack::json_to_dsl_value(&value)) }
 }
 
 /// 🏷️ Admits resolved Jack text into the semantic UI contract.
@@ -204,7 +204,7 @@ pub(crate) fn jack_io() -> semio_framework_plugin::AppIo {
 /// (TEMPLATE §5.1's fallback) — it already has a byte-identical, working wire format, so a macro
 /// rebuild would only add risk for zero benefit; only the `handle()` match BODY is decomposed across
 /// `🎮️commands/<group>/component.rs`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityJackCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "set-fixture-json")]
@@ -413,18 +413,12 @@ struct JackConfigPreparation {
     closing: bool,
 }
 
-fn jack_bounded_serialized_bytes<T: serde::Serialize>(value: &T) -> Result<usize, String> {
-    struct Counter(usize);
-    impl std::io::Write for Counter {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-            self.0 = self.0.checked_add(bytes.len()).filter(|total| *total <= JACK_STORE_MAXIMUM_BYTES).ok_or_else(|| std::io::Error::other("Jack retained Config value exceeds its fixed envelope"))?;
-            Ok(bytes.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> { Ok(()) }
+fn jack_bounded_serialized_bytes<T: dsl::ToValue>(value: &T) -> Result<usize, String> {
+    let bytes = pack::to_json_string(&dsl::ToValue::to_value(value)).len();
+    if bytes > JACK_STORE_MAXIMUM_BYTES {
+        return Err("Jack retained Config value exceeds its fixed envelope".to_string());
     }
-    let mut counter = Counter(0);
-    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
-    Ok(counter.0)
+    Ok(bytes)
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<JackConfig, JackConfigMutation> for JackConfigPreparationFactory {
@@ -875,7 +869,7 @@ mod tests {
         let snapshot = empty_trinity_graph_fixture();
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        let wire = serde_json::to_vec(&serde_json::json!({
+        let wire = pack::json_to_string(&pack::json!({
             "schema": TRINITY_GRAPH_SCHEMA,
             "id": "jack-live-load",
             "vcs": {
@@ -888,7 +882,7 @@ mod tests {
             "editMessages": [],
             "conflicts": []
         }))
-        .expect("schema-first Jack fixture envelope");
+        .into_bytes();
         let envelope = store::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
         let mut retirement = crate::artifacts::jack::spr::jack_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..100_000 {
@@ -969,8 +963,8 @@ mod tests {
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "ast" — the
     /// replacement for the deleted `TrinityJackCommand::SetSelection`.
     fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, ids: &[&str]) {
-        let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
-        let args = serde_json::json!({ "domainId": "ast", "targets": serde_json::to_string(&targets).unwrap() });
+        let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
+        let args = pack::json!({ "domainId": "ast", "targets": pack::to_json_string(&targets) });
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
@@ -978,14 +972,14 @@ mod tests {
     async fn renders_node_graph_scene() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
+        assert!(pack::to_json_string(&node).contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_jack_editor() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("text-editor"));
         assert!(json.contains(TRINITY_JACK_DEFAULT_QUERY));
     }
@@ -997,7 +991,7 @@ mod tests {
         let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
         assert!(!result.mutations.is_empty(), "a SET query emits operations");
         let projection = app.snapshot().expect("projection");
-        // 🔬 `content` is now an opaque composed-child handle — `serde_json::to_string(&projection)`
+        // 🔬 `content` is now an opaque composed-child handle — `pack::to_json_string(&projection)`
         // no longer surfaces node property data directly (ticket
         // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`); inspect through the working-scene
         // accessor instead of the raw derived JSON serialization.
@@ -1010,7 +1004,7 @@ mod tests {
         let node_id = node_id_at(&app, 0);
         select_ast(&mut app, &[&node_id]);
         let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&tree).unwrap();
+        let json = pack::to_json_string(&tree);
         assert!(json.contains(&node_id));
         assert!(json.contains("\"selected\":true"));
     }
@@ -1024,7 +1018,7 @@ mod tests {
     async fn editor_scene_has_tokens_and_diagnostics() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("tokensJson"));
         assert!(json.contains("diagnosticsJson"));
         assert!(json.contains("completionsJson"));
@@ -1036,14 +1030,14 @@ mod tests {
         let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
         assert!(result.mutations.is_empty());
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("MATCH (a:Piece) RETURN a.name"));
+        assert!(pack::to_json_string(&node).contains("MATCH (a:Piece) RETURN a.name"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_scene_has_lod_json() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("lodJson"));
         assert!(json.contains("automatic"));
     }
@@ -1060,7 +1054,7 @@ mod tests {
     async fn catalogue_tree_renders() {
         let mut app = new_app();
         let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("trinity-jack-catalogue"));
+        assert!(pack::to_json_string(&node).contains("trinity-jack-catalogue"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1071,7 +1065,7 @@ mod tests {
         let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).expect("render");
         // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
         // build per-selection fields, so it always renders the static prompt.
-        assert!(serde_json::to_string(&node).unwrap().contains("trinity-inspector.empty"));
+        assert!(pack::to_json_string(&node).contains("trinity-inspector.empty"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1079,7 +1073,7 @@ mod tests {
         let mut app = new_app();
         app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
         let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("Stücke"));
+        assert!(pack::to_json_string(&node).contains("Stücke"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1094,7 +1088,7 @@ mod tests {
         // the field that actually carries the swap.
         assert!(!result.requested_effects.is_empty());
         let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("RETURN a, r, b"));
+        assert!(pack::to_json_string(&node).contains("RETURN a, r, b"));
     }
 
     #[semio_framework_async_macros::async_test]

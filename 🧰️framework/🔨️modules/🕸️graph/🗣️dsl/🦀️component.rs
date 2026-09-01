@@ -1143,12 +1143,14 @@ pub fn tokenize(input: &str) -> Vec<TokenSpan> {
 // #endregion 🔖️Lexer
 
 // #region 🔖️Language
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Completion {
     pub label: String,
     pub kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub detail: Option<String>,
     pub insert: String,
 }

@@ -27,14 +27,13 @@
 
 use crate::artifacts::dxf::STDIO_DXF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️RawTag
 /// 🏷️ One raw DXF group-code/value pair — used only as the tokenizer's intermediate unit and as
 /// the raw-retention payload for whole unmodeled tables (`DxfOtherTable`). The typed model above
 /// it (`DxfSnapshot`'s real fields) is the source of truth everywhere else.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfTag {
     pub code: i32,
     pub value: String,
@@ -46,8 +45,8 @@ pub struct DxfTag {
 /// integer (60-79/90-99/160-179/…), double (40-59/110-149/…), and point-component (a combined
 /// 10/20/30-style triplet — see module docs). `classify_group_code_value` never produces `Point`
 /// for a single raw tag; only header-var parsing manually combines an adjacent triplet into one.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DxfValue {
     Str { value: String },
     Int { value: i64 },
@@ -106,101 +105,101 @@ fn format_f64(v: f64) -> String {
 //#region 🔖️Header
 /// 🏷️ One `$VAR` header entry: `9/$NAME` followed by its primary value group code, plus (rare)
 /// any additional group codes beyond a plain scalar/point that this codec still retains losslessly.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfHeaderVar {
     pub name: String,
     pub group_code: i32,
     pub value: DxfValue,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra_group_codes: Vec<(i32, DxfValue)>,
 }
 //#endregion 🔖️Header
 
 //#region 🔖️Tables
 /// 🗂️ `LAYER` table entry — group codes 2 (name), 70 (flags), 62 (color), 6 (linetype).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfLayer {
     pub name: String,
     pub color: i32,
     pub linetype: String,
     pub flags: i32,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
 /// 🗂️ `STYLE` table entry — group codes 2 (name), 70 (flags), 3 (primary font file).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfStyle {
     pub name: String,
     pub flags: i32,
     pub font_name: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
 /// 🗂️ `LTYPE` table entry — group codes 2 (name), 70 (flags), 3 (description).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfLinetype {
     pub name: String,
     pub flags: i32,
     pub description: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
 /// 🗂️ The three name-keyed table kinds this codec typed-models.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfTables {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub layers: Vec<DxfLayer>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub styles: Vec<DxfStyle>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub linetypes: Vec<DxfLinetype>,
 }
 
 /// 🕳️ Raw retention for any R12 `TABLE` kind other than LAYER/STYLE/LTYPE (VPORT, VIEW, UCS,
 /// APPID, DIMSTYLE, BLOCK_RECORD, …) — this codec has no typed view for these, but every tag is
 /// preserved verbatim, per the recipe's raw-retention rule.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfOtherTable {
     pub name: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<DxfTag>,
 }
 //#endregion 🔖️Tables
 
 //#region 🔖️Entities
 /// 📍 One `POLYLINE` vertex record — group codes 10/20/30 (point), 42 (bulge).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfVertex {
     pub x: f64,
     pub y: f64,
     pub z: f64,
     pub bulge: f64,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 
 /// 📐️ The R12 entity set this codec types directly. `Other` retains any entity kind this codec
 /// has no typed view for (`3DFACE`, `POINT`, `DIMENSION`, `SHAPE`, `ATTRIB`, …) — its whole
 /// group-code body verbatim, never silently dropped.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum DxfEntity {
     /// `LINE` — 10/20/30 (start), 11/21/31 (end), 8 (layer).
     Line {
         start: [f64; 3],
         end: [f64; 3],
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `CIRCLE` — 10/20/30 (center), 40 (radius), 8 (layer).
@@ -208,7 +207,7 @@ pub enum DxfEntity {
         center: [f64; 3],
         radius: f64,
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `ARC` — 10/20/30 (center), 40 (radius), 50/51 (start/end angle), 8 (layer).
@@ -218,7 +217,7 @@ pub enum DxfEntity {
         start_angle: f64,
         end_angle: f64,
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `POLYLINE`/`VERTEX`.../`SEQEND` (the real R12 polyline record group — NOT the R14+
@@ -228,7 +227,7 @@ pub enum DxfEntity {
         vertices: Vec<DxfVertex>,
         closed: bool,
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `TEXT` — 10/20/30 (position), 40 (height), 1 (value), 8 (layer).
@@ -237,14 +236,14 @@ pub enum DxfEntity {
         height: f64,
         value: String,
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `SOLID` — 10/20/30, 11/21/31, 12/22/32, 13/23/33 (4 corner points), 8 (layer).
     Solid {
         points: [[f64; 3]; 4],
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// `INSERT` — 2 (block name), 10/20/30 (position), 41/42/43 (scale, default 1/1/1), 50
@@ -255,13 +254,13 @@ pub enum DxfEntity {
         scale: [f64; 3],
         rotation: f64,
         layer: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         unknown_group_codes: Vec<(i32, DxfValue)>,
     },
     /// 🕳️ Any other entity kind — raw-retained verbatim.
     Other {
         kind: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         group_codes: Vec<(i32, DxfValue)>,
     },
 }
@@ -270,43 +269,43 @@ pub enum DxfEntity {
 //#region 🔖️Blocks
 /// 🧱 One `BLOCK` — 2 (name), 10/20/30 (base point), followed by its own nested entity list up
 /// to `ENDBLK`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfBlock {
     pub name: String,
     pub base_point: [f64; 3],
     pub entities: Vec<DxfEntity>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub unknown_group_codes: Vec<(i32, DxfValue)>,
 }
 //#endregion 🔖️Blocks
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfSnapshot {
     #[state(artifact)]
     pub schema: String,
     /// 🏷️ `HEADER` section — every `$VAR`, name-keyed.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header_vars: Vec<DxfHeaderVar>,
     /// 🗂️ `TABLES` section — the three typed table kinds.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tables: DxfTables,
     /// 🕳️ `TABLES` section — every other table kind, raw-retained.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub other_tables: Vec<DxfOtherTable>,
     /// 🧱 `BLOCKS` section.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DxfBlock>,
     /// 📐️ `ENTITIES` section.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<DxfEntity>,
 }
 

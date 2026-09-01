@@ -8,7 +8,6 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
 
 use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_document_to_text, XmlAttr, XmlDocument, XmlNode};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;
@@ -157,12 +156,12 @@ pub fn xml_document_to_opc_text(doc: &XmlDocument) -> String {
 
 //#region 🔖️Part
 /// 📦️ One package part: its name (no leading `/`), resolved content type, and verbatim bytes.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct OpcPart {
     pub path: String,
     pub content_type: String,
-    #[serde(default)]
+    #[value(default)]
     pub bytes: Vec<u8>,
 }
 //#endregion 🔖️Part
@@ -170,12 +169,12 @@ pub struct OpcPart {
 //#region 🔖️ContentTypes
 /// 🏷️ Typed `[Content_Types].xml`: `Default` entries key by lowercase extension (no dot),
 /// `Override` entries key by absolute part name (`/word/document.xml`). Overrides win.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct OpcContentTypes {
-    #[serde(default)]
+    #[value(default)]
     pub defaults: Vec<(String, String)>,
-    #[serde(default)]
+    #[value(default)]
     pub overrides: Vec<(String, String)>,
 }
 
@@ -270,16 +269,16 @@ fn find_attr<'a>(attrs: &'a [XmlAttr], name: &str) -> Option<&'a str> {
 
 //#region 🔖️Relationships
 /// 🎯️ Whether a relationship's `Target` is a package-internal part path or an external URI.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum OpcTargetMode {
     Internal,
     External,
 }
 
 /// 🔗️ One `<Relationship>` entry from some owner part's `*.rels` file.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct OpcRelationship {
     pub id: String,
     pub rel_type: String,
@@ -396,17 +395,17 @@ fn relationships_from_xml(doc: &XmlDocument, part: &str) -> Result<Vec<OpcRelati
 /// metadata channels (content types, relationships-by-owner) that `docx`/`xlsx`/`pptx` interpret
 /// semantically on top of. Lossless by construction — `parts ∪ content_types ∪ relationships`
 /// covers every zip entry a real package can contain.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct OpcPackage {
-    #[serde(default)]
+    #[value(default)]
     pub parts: Vec<OpcPart>,
-    #[serde(default)]
+    #[value(default)]
     pub content_types: OpcContentTypes,
     /// 🗺️ Owner part path (`""` = package root) -> that owner's relationships.
-    #[serde(default)]
+    #[value(default)]
     pub relationships: HashMap<String, Vec<OpcRelationship>>,
-    #[serde(default)]
+    #[value(default)]
     pub comment: String,
 }
 

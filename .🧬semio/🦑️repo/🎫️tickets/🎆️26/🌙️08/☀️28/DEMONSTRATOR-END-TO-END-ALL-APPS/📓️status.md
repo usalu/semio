@@ -802,3 +802,81 @@ Both are baked into `.claude/launch.json` as `mit-bestand-demonstrator-fast`.
    skipping` — i.e. all engines done, about to start Vite — and was then killed by cleanup aimed at a
    *different* duplicate tree. Its log ended with no error and no exit code, which is the signature of
    an external kill rather than a failure.
+
+---
+
+## Final state of this session
+
+### Verified and landed
+
+| change | evidence |
+|---|---|
+| Reactor close-key migration (`⚛️reactor/🦀️component.rs`, +241/-45) — completed a half-landed refactor that broke **every** plugin build | `cargo check -p semio-framework-plugin --target wasm32-wasip2 --features component-guest` → **0 errors**; also clean with `component-extension-guest` and natively. Committed. |
+| Document round-trip — retired the dead JSON-text `readAppDocument`/`loadAppDocument` pair, wired `readAppDocumentPack` + existing `loadAppDocumentPack` through every `ShellHost` consumer | lint passes; `PluginRuntime/🟦️component.tsx` **0** typecheck errors |
+| `TiledMapHost` selection/hover migrated to framework-owned `interactionSelect`/`interactionHover` (+`clearSelection` on a true miss, since `next_selection` treats empty targets as a no-op) | lint passes; no other `TiledMap` consumer affected (gis2d viewer registers no selection actions) |
+| JSON import attribute on `🧾️typed/🟦️component.ts:2` | Unblocked the **entire** repo Playwright infrastructure — the Storybook suite went from failing at config load to listing **165 tests in 10 files** |
+| Demonstrator acceptance suite (spec + config + per-shell readiness beacon + script/launch wiring) | `--list` → **7 tests**; executed live once: drift guard ✓, six panes ✘ (correctly reporting the real defect) |
+
+### Observed at runtime (once, on prebuilt artifacts)
+
+Demonstrator served **HTTP 200**; landing page correct (3×2 grid, German intro overlay, funding
+footer). All six panes fail identically on one framework panic —
+`interactive-job.catalog-authority`, tool `setLocale`, at `🔌️plugin/🦀️component.rs:19794`.
+A rejection-site diagnostic (`catalog-authority-detail: migrated={:?} generated_ids={:?}`) is
+committed and compiles clean; puzzle has been rebuilt against it. **It has not yet been read** — the
+`authoritative` predicate fails on set membership, and printing both sets identifies the cause in one
+observation instead of another hypothesis.
+
+### Written, NOT verified
+
+Koordinator blank-window fix (3 files in `📐️cad`) — design confirmed sound (`ArtifactChild::local_owner`
+is a real seam used by flow/trinity/raster/norm), but never compiled, because `cad` itself is broken by
+the peer's `SemanticMutation` migration (83-403 × `E0277`). Explicitly checked: reverting these edits
+would **not** fix that build. Left in place, marked unverified.
+
+### Goal status: NOT MET
+
+No window renders its fixture; nothing is interactive or version-controlled yet. The blocking chain is
+external — `cad`/`gis`/`process`/`sourcing`/`stdio` are mid-refactor by another session, and machine
+contention (peaking at 44 GB swap, and 104 concurrent cargo/rustc processes) makes each build attempt
+take 30-70 minutes.
+
+### Next step is one observation, not a search
+
+```bash
+SKIP_PLUGIN_BUILD=1 CARGO_TARGET_DIR=…/target-engines RUSTFLAGS=-Awarnings CARGO_TERM_QUIET=true \
+SEMIO_BUILD_BUDGET_MS=5400000 bun nx run @semio-tech/mit-bestand-demonstrator:dev
+# open /#aggregator, read console for `catalog-authority-detail:`
+# whichever set lacks `setLocale` names the fix
+bunx playwright test --config "🧪️playwright.config.ts"   # then re-measure all six panes
+```
+
+### Why the last five boot attempts died — OOM during the `framework/surface` engine build
+
+Captured to a file (the preview tool discards a server's log on exit, which hid this for hours):
+
+```
+[framework/surface/rs] wasm-pack build --dev --target web --out-dir pkg --out-name framework_surface
+[INFO]: 🎯  Checking for the Wasm target...
+[INFO]: 🌀  Compiling to Wasm...
+Warning: command "bun ./📜️script.ts dev" exited with non-zero status code
+```
+
+No compile error, no `[budget]` line, no exit code — the process simply stops mid-compile. Concurrent
+state: `vm.swapusage` at 13.2 GB used / **1.15 GB free**, with peer sessions running **104**
+cargo/rustc/wasm-pack processes at the peak. `framework_surface_bg.wasm` is 28 MB; its compile needs
+more headroom than that.
+
+Distinguishing it from the earlier failures, which were genuinely different:
+- **not** the `wasm-pack` stderr `EAGAIN` crash (fixed; that one produced a `report-*.toml`)
+- **not** `SEMIO_BUILD_BUDGET_MS` (no `[budget]` line ever appeared in a captured log)
+- **not** a compile error (no diagnostic, and the same crate builds in 36.9 s when memory is free)
+
+A related trap, self-inflicted: at one point **four** dev builds ran concurrently, each started because
+a `pgrep` liveness check wrongly reported the previous one dead. They cleared each other's engine
+`pkg/` dirs and took each other's cargo locks — `flow/core` sat at zero progress for 30 minutes as a
+result. Never judge liveness with `pgrep` here (see the traps section above).
+
+**Practical consequence:** an engine build needs the peer cargo load to drain first. With a warm
+`target-engines` cache and a quiet machine, `framework/surface` takes ~37 s; under this contention it
+cannot finish at all.

@@ -22,7 +22,7 @@ use crate::editor::process3d::panels::{catalogue, document as document_panel, in
 use crate::editor::process3d::presence::{Process3dPresence, Process3dPresenceMutation};
 use crate::editor::process3d::terminology::process3d_labels;
 use semio_framework::kernel::Effect;
-use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
@@ -31,7 +31,6 @@ use semio_framework_plugin::{
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
     UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
-use serde_json::Value;
 use std::collections::HashMap;
 use store::ArtifactPack;
 use store::EngineHandles;
@@ -1012,8 +1011,8 @@ impl ArtifactEditor for Process3dPlayApp {
             {
                 Some(export) => {
                     let text = match export.data {
-                        Value::String(text) => text,
-                        other => serde_json::to_string(&other).unwrap_or_default(),
+                        DslValue::String(text) => text,
+                        other => semio_framework_os_kernel::json::to_json_string(&other),
                     };
                     Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, payload: MediaPayload::Structured { schema: "3d.process".into(), json: text } })
                 }
@@ -1069,12 +1068,12 @@ impl ArtifactEditor for Process3dPlayApp {
 
     /// 🎯️ Exhaustive host-action bridge into the closed `Process3dCommand` enum. React and wgpu still
     /// emit manifest action ids plus JSON arguments; only this boundary interprets that transport shape.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
         let field = |key: &str| args.and_then(|value| value.get(key));
-        let string_field = |key: &str| field(key).and_then(Value::as_str).map(str::to_string);
-        let number_field = |key: &str| field(key).and_then(Value::as_f64);
-        let unsigned_field = |key: &str| field(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as u64)));
-        let signed_field = |key: &str| field(key).and_then(|value| value.as_i64().or_else(|| value.as_f64().filter(|number| number.is_finite()).map(|number| number as i64)));
+        let string_field = |key: &str| field(key).and_then(DslValue::as_str).map(str::to_string);
+        let number_field = |key: &str| field(key).and_then(DslValue::as_f64);
+        let unsigned_field = |key: &str| field(key).and_then(|value| value.as_f64()).filter(|number| number.is_finite() && *number >= 0.0).map(|number| number as u64);
+        let signed_field = |key: &str| field(key).and_then(|value| value.as_f64()).filter(|number| number.is_finite()).map(|number| number as i64);
         let vec3_field = |key: &str| -> Option<[f64; 3]> {
             let values = field(key)?.as_array()?;
             if values.len() != 3 {
@@ -1091,7 +1090,7 @@ impl ArtifactEditor for Process3dPlayApp {
         };
         match action {
             "setSnapshot" => {
-                let json = string_field("json").or_else(|| field("document").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
+                let json = string_field("json").or_else(|| field("document").map(semio_framework_os_kernel::json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::SetDocument(set_snapshot::SetDocument { json }))
             }
             "setActiveExample" => Ok(Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: string_field("exampleId").or_else(|| string_field("id")).unwrap_or_else(|| PROCESS3D_EXAMPLE_TIMBER.into()) })),
@@ -1110,7 +1109,7 @@ impl ArtifactEditor for Process3dPlayApp {
                 machine: args
                     .and_then(|value| value.get("machine"))
                     .cloned()
-                    .map(serde_json::from_value)
+                    .map(|value| <crate::artifacts::process3d::WorkshopMachine as semio_framework_os_kernel::FromValue>::from_value(value))
                     .transpose()
                     .map_err(|error| process3d_action_fault(action, format!("invalid 'machine': {error}")))?
                     .unwrap_or(crate::artifacts::process3d::WorkshopMachine { id: String::new(), label: String::new(), icon_id: String::new(), catalog_id: None, capabilities: Vec::new() }),
@@ -1119,10 +1118,10 @@ impl ArtifactEditor for Process3dPlayApp {
             "removeSelectedStep" => Ok(Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {})),
             "moveStep" => Ok(Process3dCommand::MoveStep(move_step::MoveStep { id: string_field("id").unwrap_or_default(), index: unsigned_field("index").unwrap_or_default() as usize })),
             "updateStep" => {
-                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").and_then(|value| serde_json::to_string(value).ok())).unwrap_or_default();
+                let step_json = string_field("stepJson").or_else(|| string_field("step_json")).or_else(|| field("step").map(semio_framework_os_kernel::json::to_json_string)).unwrap_or_default();
                 Ok(Process3dCommand::UpdateStep(update_step::UpdateStep { step_json }))
             }
-            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: string_field("id").unwrap_or_default(), enabled: field("enabled").and_then(Value::as_bool).unwrap_or(true) })),
+            "setStepEnabled" => Ok(Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: string_field("id").unwrap_or_default(), enabled: field("enabled").and_then(DslValue::as_bool).unwrap_or(true) })),
             "setStock" => Ok(Process3dCommand::SetStock(set_stock::SetStock { kind: string_field("kind").or_else(|| string_field("value")).unwrap_or_else(|| "box".into()) })),
             "patchInspector" => Ok(Process3dCommand::PatchInspector(patch_inspector::PatchInspector {
                 target: string_field("target").unwrap_or_default(),
@@ -1161,8 +1160,8 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(Value::as_str).unwrap_or("[]").to_string() }))
+    fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions { json: args.and_then(|value| value.get("json")).and_then(DslValue::as_str).unwrap_or("[]").to_string() }))
     }
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): reads the framework-owned
@@ -1482,13 +1481,13 @@ impl crate::artifacts::process3d::MachineCatalog for ContributedMachineCatalog {
 /// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
 /// `contributed_machine_catalogs` decodes. See `TopicContribution` in
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct ProcessMachinesTopicPayload {
     app_id: String,
     module_id: String,
     label: String,
-    icon_id: semio_framework::IconName,
+    icon_id: String,
     machines_json: String,
 }
 //#endregion 🔖️ProcessMachinesTopicPayload
@@ -1587,13 +1586,13 @@ fn contributed_machine_catalogs(contributions_json: &str) -> Vec<ContributedMach
         if !process_json_envelope_is_bounded(&machines_json) {
             continue;
         }
-        let Ok(machines) = serde_json::from_str::<Vec<crate::artifacts::process3d::WorkshopMachine>>(&machines_json) else {
+        let Ok(machines) = semio_framework_os_kernel::json::from_json_str::<Vec<crate::artifacts::process3d::WorkshopMachine>>(&machines_json) else {
             continue;
         };
         if machines.len() > PROCESS_CONTRIBUTION_MAX_ITEMS {
             continue;
         }
-        catalogs.push(ContributedMachineCatalog { catalog_id: module_id, label, icon_id: icon_id.to_string(), machines });
+        catalogs.push(ContributedMachineCatalog { catalog_id: module_id, label, icon_id, machines });
     }
     catalogs
 }
@@ -1709,26 +1708,26 @@ pub(crate) mod testkit {
                 plugin_id: "process-wood".into(),
                 topic_contribution: Some(TopicContribution::new(
                     "process.machines",
-                    serde_json::json!({
-                        "appId": "process3d-play",
-                        "moduleId": "wood",
-                        "label": "Wood",
-                        "iconId": "beam",
-                        "machinesJson": serde_json::to_string(&wood_machines).unwrap(),
-                    }),
+                    semio_framework::DslValue::object([
+                        ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
+                        ("moduleId".to_string(), semio_framework::DslValue::String("wood".to_string())),
+                        ("label".to_string(), semio_framework::DslValue::String("Wood".to_string())),
+                        ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
+                        ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&wood_machines))),
+                    ]),
                 )),
             },
             ProgramContributionEntry {
                 plugin_id: "process-metal".into(),
                 topic_contribution: Some(TopicContribution::new(
                     "process.machines",
-                    serde_json::json!({
-                        "appId": "process3d-play",
-                        "moduleId": "metal",
-                        "label": "Metal",
-                        "iconId": "wrench",
-                        "machinesJson": serde_json::to_string(&metal_machines).unwrap(),
-                    }),
+                    semio_framework::DslValue::object([
+                        ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
+                        ("moduleId".to_string(), semio_framework::DslValue::String("metal".to_string())),
+                        ("label".to_string(), semio_framework::DslValue::String("Metal".to_string())),
+                        ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
+                        ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&metal_machines))),
+                    ]),
                 )),
             },
         ];
@@ -1753,7 +1752,7 @@ pub(crate) mod testkit {
         app.dispatch_typed(command, &meta("local")).expect("dispatch")
     }
 
-    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&Value>) -> InvocationResult {
+    pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> InvocationResult {
         app.handle_action(action, args, &meta("local")).expect("action dispatch")
     }
 
@@ -2162,7 +2161,7 @@ mod tests {
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
     pub(super) fn every_command() -> Vec<Process3dCommand> {
         vec![
-            Process3dCommand::SetDocument(set_snapshot::SetDocument { json: serde_json::to_string(&crate::artifacts::process3d::empty_process3d_snapshot()).expect("json") }),
+            Process3dCommand::SetDocument(set_snapshot::SetDocument { json: semio_framework_os_kernel::json::to_json_string(&crate::artifacts::process3d::empty_process3d_snapshot()) }),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() }),
             Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: Some([1.0, 2.0, 3.0]) }),
             Process3dCommand::AddWorkshopMachine(add_workshop_machine::AddWorkshopMachine { catalog_id: "wood".into(), machine_id: "circularSaw".into() }),
@@ -2174,14 +2173,13 @@ mod tests {
             Process3dCommand::RemoveSelectedStep(remove_selected_step::RemoveSelectedStep {}),
             Process3dCommand::MoveStep(move_step::MoveStep { id: "cut-1".into(), index: 2 }),
             Process3dCommand::UpdateStep(update_step::UpdateStep {
-                step_json: serde_json::to_string(&crate::artifacts::process3d::ProcessStep {
+                step_json: semio_framework_os_kernel::json::to_json_string(&crate::artifacts::process3d::ProcessStep {
                     id: "cut-1".into(),
                     label: "Cut".into(),
                     enabled: true,
                     origin: None,
                     measure: crate::artifacts::process3d::ProcessMeasure::Cut { tool: crate::artifacts::process3d::WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: crate::artifacts::process3d::Pose::default() },
-                })
-                .expect("json"),
+                }),
             }),
             Process3dCommand::SetStepEnabled(set_step_enabled::SetStepEnabled { id: "cut-1".into(), enabled: false }),
             Process3dCommand::SetStock(set_stock::SetStock { kind: "cylinder".into() }),
@@ -2219,7 +2217,7 @@ mod tests {
 
     #[test]
     fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-        let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&serde_json::json!({ "json": "[{\"id\":\"process\"}]" }))).expect("host configuration").expect("process contribution mutation");
+        let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"process\"}]" })))).expect("host configuration").expect("process contribution mutation");
         assert_eq!(mutation, Process3dConfigMutation::SetContributions { json: "[{\"id\":\"process\"}]".into() });
         assert_eq!(<Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setCursor", None).expect("non-host action"), None);
     }
@@ -2233,7 +2231,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn interaction_actions_decode_into_typed_commands() {
         assert_eq!(
-            Process3dPlayApp::command_from_action("setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))).expect("example bridge"),
+            Process3dPlayApp::command_from_action("setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })))).expect("example bridge"),
             Process3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: PROCESS3D_EXAMPLE_PLATE.into() })
         );
     }
@@ -2243,7 +2241,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn registry_backed_example_action_emits_the_requested_document() {
         let mut app = app_with_registry();
-        let result = action(&mut app, "setActiveExample", Some(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE })));
+        let result = action(&mut app, "setActiveExample", Some(&DslValue::from(&serde_json::json!({ "exampleId": PROCESS3D_EXAMPLE_PLATE }))));
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("example action must load a document") else {
             panic!("expected a LoadDocument effect");
         };
@@ -2348,13 +2346,11 @@ mod tests {
         assert_eq!(process3d_labels(&config).stock.as_str(), "Rohteil");
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `AddStep` dispatches a
-    /// `CreateStep` mutation, a documented no-op now (`steps` composes an `s.stdio.semio.flow`
-    /// CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment), so the step count
-    /// never changes; `undo`/`redo` of a no-op are themselves no-ops, so the handle stays identical
-    /// throughout.
+    /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `AddStep` dispatches a real `CreateStep` mutation
+    /// against the durable `step_payloads` timeline — the minted `steps` flow child gains a node,
+    /// so its content-addressed handle changes. Undo restores the pre-add handle; redo re-applies it.
     #[semio_framework_async_macros::async_test]
-    async fn undo_after_add_step_leaves_the_steps_handle_unchanged() {
+    async fn undo_after_add_step_restores_the_steps_handle() {
         let mut app = app();
         let before = app.snapshot().expect("snapshot").steps.clone();
         testkit::assert_undo_redo_round_trip(
@@ -2362,7 +2358,7 @@ mod tests {
             Process3dCommand::AddStep(add_step::AddStep { measure: Some("cut".into()), machine_id: None, capability_id: None, position: None }),
             |app| app.snapshot().expect("snapshot").steps == before,
             true,
-            true,
+            false,
         );
     }
 
@@ -2401,12 +2397,9 @@ mod tests {
         dispatch(app, Process3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }));
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `WorldPointerDown` dispatches
-    /// `insert_step_mutations` → `CreateStep`, a documented no-op now (`steps` composes an
-    /// `s.stdio.semio.flow` CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment),
-    /// so the placed step's real pose is no longer readable back off the persisted document. This
-    /// asserts what remains real: the command still dispatches a mutation for a real world-space
-    /// click.
+    /// 🌉️ `WorldPointerDown` dispatches `insert_step_mutations` → a real `CreateStep` mutation
+    /// against `step_payloads`, appended at the resolved-up-to cursor (or the timeline end). This
+    /// asserts the command dispatches a mutation for a real world-space click.
     #[semio_framework_async_macros::async_test]
     async fn world_pointer_down_dispatches_a_mutation_for_a_real_click() {
         let mut app = app();
@@ -2426,9 +2419,7 @@ mod tests {
         );
     }
 
-    /// 🌉️ Same documented gap as `world_pointer_down_dispatches_a_mutation_for_a_real_click` — the
-    /// per-click pose is no longer readable back off the persisted document, so this asserts that
-    /// two distinct real clicks each still dispatch their own mutation.
+    /// 🌉️ Two distinct real clicks each dispatch their own `CreateStep`, appended in order.
     #[semio_framework_async_macros::async_test]
     async fn repeated_world_pointer_down_each_dispatch_a_mutation() {
         let mut app = app();
@@ -2439,16 +2430,11 @@ mod tests {
         assert!(!first.mutations.is_empty() && !second.mutations.is_empty(), "each real click must dispatch its own mutation");
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `WorldFaceDragEnd` dispatches
-    /// `insert_step_mutations` → `CreateStep`, a documented no-op now (`steps` composes an
-    /// `s.stdio.semio.flow` CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment),
-    /// so the resulting document can no longer be read back to verify the replayed volume through
-    /// the app-command pipeline (`PatchInspector`'s dimension patch is a documented no-op for the
-    /// same reason — see `🎮️commands/🔎️inspector`'s own doc comment). The real, unaffected
-    /// kernel-replay math (cut/attach volume deltas) is covered directly against a literal
+    /// 🌉️ `WorldFaceDragEnd` dispatches `insert_step_mutations` → a real `CreateStep` mutation.
+    /// The kernel-replay math (cut/attach volume deltas) is covered directly against a literal
     /// `ProcessWorkingScene` by `🧬️schema/💡️inferences`'s own
     /// `drill_reduces_volume_below_stock`/`attach_increases_volume_above_stock` tests; these two
-    /// now assert only that the command still dispatches a mutation for a real face-drag gesture.
+    /// assert only that the command dispatches a mutation for a real face-drag gesture.
     #[semio_framework_async_macros::async_test]
     async fn world_face_drag_end_cut_dispatches_a_mutation() {
         let mut app = app();
@@ -2585,13 +2571,13 @@ mod tests {
             plugin_id: "process-module-test".into(),
             topic_contribution: Some(TopicContribution::new(
                 "process.machines",
-                serde_json::json!({
-                    "appId": "process3d-play",
-                    "moduleId": "hot-catalog",
-                    "label": "Hot Catalog",
-                    "iconId": "wrench",
-                    "machinesJson": serde_json::to_string(&vec![machine]).unwrap(),
-                }),
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String("process3d-play".to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String("hot-catalog".to_string())),
+                    ("label".to_string(), semio_framework::DslValue::String("Hot Catalog".to_string())),
+                    ("iconId".to_string(), semio_framework::DslValue::String("wrench".to_string())),
+                    ("machinesJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&vec![machine]))),
+                ]),
             )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();

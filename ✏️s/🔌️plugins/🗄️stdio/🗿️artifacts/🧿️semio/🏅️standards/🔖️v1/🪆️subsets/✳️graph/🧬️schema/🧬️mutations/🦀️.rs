@@ -21,7 +21,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
 use crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::add_node_port;
@@ -44,7 +43,7 @@ use super::remove_node_property;
 /// (`change-node-kind`/`change-node-label`/`move-node`), node nested collections
 /// (`add-node-port`/`remove-node-port`/`add-node-property`/`remove-node-property`), then edge
 /// lifecycle (`create-edge`/`delete-edge`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioGraphSnapshot, diff = SemioGraphDiff, schema = "s.stdio.semio.graph")]
 pub enum SemioGraphMutation {
     CreateNode(create_node::CreateNode),
@@ -90,7 +89,7 @@ pub fn inverse_semio_graph_mutation(mutation: &SemioGraphMutation, base: &SemioG
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioGraphMutation`]. Payload fields are snake_case (`new_position`, `new_label`) while the snapshot side is
 /// camelCase — two different conventions in one specification vector, which is precisely the kind of

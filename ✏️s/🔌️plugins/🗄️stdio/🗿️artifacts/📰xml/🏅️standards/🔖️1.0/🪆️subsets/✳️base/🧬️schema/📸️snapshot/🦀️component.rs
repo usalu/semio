@@ -2,12 +2,11 @@
 
 use crate::artifacts::xml::STDIO_XML_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️XmlModel
 /// 🏷️ XML attribute pair.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct XmlAttr {
     pub name: String,
     pub value: String,
@@ -18,14 +17,14 @@ pub struct XmlAttr {
 /// so decode->encode preserves the ORIGINAL form -- a `<![CDATA[...]]>` section (common inside
 /// real SVG `<style>`/`<script>` elements) re-emits as CDATA, not as entity-escaped text, and a
 /// `<!--comment-->` between siblings survives instead of being silently dropped.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlNode {
     Element {
         name: String,
-        #[serde(default)]
+        #[value(default)]
         attrs: Vec<XmlAttr>,
-        #[serde(default)]
+        #[value(default)]
         children: Vec<XmlNode>,
     },
     /// 🔤️ Character data. Entities (`&amp;` `&lt;` `&gt;` `&quot;` `&apos;` `&#NNN;` `&#xHHHH;`)
@@ -43,34 +42,34 @@ pub enum XmlNode {
 }
 
 /// 📰 Well-formed XML document root.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct XmlDocument {
-    #[serde(default)]
+    #[value(default)]
     pub root: Option<XmlNode>,
     /// 📜️ Parsed document type declaration.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<XmlDoctype>,
     /// 🏳️ The typed `<?xml version="1.0" encoding="..." standalone="..."?>` XML declaration, if
     /// the source document had one -- unlike `doctype` this IS structurally decoded (three named
     /// fields) since `version`/`encoding`/`standalone` are each independently meaningful and each
     /// independently diffable/mutable (`XmlMutation::SetDeclaration`), where a raw-string DOCTYPE
     /// has no such sub-structure worth decoding.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub declaration: Option<XmlDeclaration>,
     /// 🧭 Logical comments and processing instructions preceding the root element.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub prolog: Vec<XmlNode>,
 }
 
 /// 📜️ Logical XML document type declaration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct XmlDoctype {
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub external_id: Option<XmlExternalId>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub declarations: Vec<XmlDtdDeclaration>,
 }
 
@@ -81,16 +80,16 @@ impl From<&str> for XmlDoctype {
 }
 
 /// 🔗️ Standard SYSTEM or PUBLIC external identifier.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlExternalId {
     System { system_id: String },
     Public { public_id: String, system_id: String },
 }
 
 /// 🏷️ Parsed internal general or parameter entity declaration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum XmlDtdDeclaration {
     Entity { parameter: bool, name: String, value: String },
 }
@@ -98,13 +97,13 @@ pub enum XmlDtdDeclaration {
 /// 🏳️ Typed XML declaration (`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`).
 /// `version` is mandatory per the XML 1.0 spec whenever a declaration is present at all;
 /// `encoding`/`standalone` are each independently optional.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct XmlDeclaration {
     pub version: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub encoding: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub standalone: Option<bool>,
 }
 
@@ -112,14 +111,14 @@ pub struct XmlDeclaration {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.xml` snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.xml")]
 pub struct XmlSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub doc: XmlDocument,
 }
 

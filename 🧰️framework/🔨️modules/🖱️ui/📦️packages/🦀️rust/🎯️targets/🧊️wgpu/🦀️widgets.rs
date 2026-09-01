@@ -604,116 +604,15 @@ plugin's world-3d window can reuse it, not only `♾️infinite`'s own. `World3d
 plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`) stays in `♾️infinite/🌍️world`
 — app-specific config plumbing, not paint logic — and now calls through to `orbit_view_gizmo_placement`/
 `orbit_view_gizmo_tips`/`orbit_view_gizmo_hit_test` here. */
+/// 🧭️ Retained-mode orbit-view gizmo paint call (ticket
+/// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS): only the actual GPU
+/// draw-call issuing stays here, gated with the rest of `widgets.rs` behind `wgpu-engine` — it
+/// needs `WidgetContext`, which bundles the font/icon atlases. The placement/tip-geometry/
+/// hit-test math it calls into lives target-neutral in `draw_types::gizmo`.
 pub mod gizmo {
+    use crate::wgpu::draw_types::gizmo::{orbit_view_gizmo_placement, orbit_view_gizmo_tips};
     use crate::wgpu::widgets::WidgetContext;
-    use crate::wgpu::{Camera3d, Rect, Rgba, Vec3, Vec3Math};
-
-    /// 🧭️ Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome.
-    pub fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
-        match axis {
-            0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
-            1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
-            _ => Rgba::new(0.980, 0.584, 0.0, alpha),   // tertiary #fa9500
-        }
-    }
-
-    /// 🧭️ Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome.
-    pub fn orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
-        let chrome_inset = 4.0_f32;
-        let gizmo_half_extent = 28.0_f32;
-        let preferred = chrome_inset + gizmo_half_extent;
-        let max_fit = (viewport.w.min(viewport.h) / 3.0).floor().max(22.0);
-        let margin = preferred.min(max_fit);
-        (margin, margin)
-    }
-
-    /// 🧭️ Screen-space tip used for orbit-view gizmo hover hit-testing and paint.
-    pub struct OrbitViewGizmoTip {
-        pub screen_x: f32,
-        pub screen_y: f32,
-        pub depth: f32,
-        pub pick_radius: f32,
-        pub color: Rgba,
-        pub is_corner: bool,
-        pub prominent: bool,
-    }
-
-    pub fn orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<OrbitViewGizmoTip> {
-        let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
-        let origin_x = viewport.x + viewport.w - margin_x;
-        let origin_y = viewport.y + viewport.h - margin_y;
-        let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
-        let forward = camera.position.sub_m(camera.target);
-        let forward_len = forward.length_m();
-        if forward_len < 1e-5 {
-            return Vec::new();
-        }
-        let forward = forward.scale_m(1.0 / forward_len);
-        let right = forward.cross_m(camera.up);
-        let right_len = right.length_m();
-        if right_len < 1e-5 {
-            return Vec::new();
-        }
-        let right = right.scale_m(1.0 / right_len);
-        let up = right.cross_m(forward).normalize_m();
-        let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
-        let axes = [
-            (Vec3 { x: 1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 1.0), true),
-            (Vec3 { x: -1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 0.75), false),
-            (Vec3 { x: 0.0, y: 1.0, z: 0.0 }, spatial_axis_rgba(1, 1.0), true),
-            (Vec3 { x: 0.0, y: -1.0, z: 0.0 }, spatial_axis_rgba(1, 0.75), false),
-            (Vec3 { x: 0.0, y: 0.0, z: 1.0 }, spatial_axis_rgba(2, 1.0), true),
-            (Vec3 { x: 0.0, y: 0.0, z: -1.0 }, spatial_axis_rgba(2, 0.75), false),
-        ];
-        let corners = [
-            (Vec3 { x: 0.72, y: 0.72, z: 0.72 }, true),
-            (Vec3 { x: -0.72, y: 0.72, z: 0.72 }, true),
-            (Vec3 { x: 0.72, y: -0.72, z: 0.72 }, true),
-            (Vec3 { x: -0.72, y: -0.72, z: 0.72 }, true),
-            (Vec3 { x: 0.72, y: 0.72, z: -0.72 }, false),
-            (Vec3 { x: -0.72, y: 0.72, z: -0.72 }, false),
-            (Vec3 { x: 0.72, y: -0.72, z: -0.72 }, false),
-            (Vec3 { x: -0.72, y: -0.72, z: -0.72 }, false),
-        ];
-        let mut tips: Vec<OrbitViewGizmoTip> = axes
-            .into_iter()
-            .map(|(axis, color, prominent)| {
-                let sx = axis.dot_m(right);
-                let sy = -axis.dot_m(up);
-                let depth = axis.dot_m(forward);
-                let tip_x = origin_x + sx * axis_len;
-                let tip_y = origin_y + sy * axis_len;
-                let pick_radius = if prominent { 10.0 } else { 7.0 };
-                OrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color, is_corner: false, prominent }
-            })
-            .chain(corners.into_iter().map(|(axis, prominent)| {
-                let sx = axis.dot_m(right);
-                let sy = -axis.dot_m(up);
-                let depth = axis.dot_m(forward);
-                let tip_x = origin_x + sx * axis_len;
-                let tip_y = origin_y + sy * axis_len;
-                let pick_radius = if prominent { 10.0 } else { 7.0 };
-                OrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color: neutral, is_corner: true, prominent }
-            }))
-            .collect();
-        tips.push(OrbitViewGizmoTip { screen_x: origin_x, screen_y: origin_y, depth: 0.0, pick_radius: 9.0, color: neutral, is_corner: false, prominent: true });
-        tips
-    }
-
-    pub fn orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[OrbitViewGizmoTip]) -> Option<usize> {
-        tips.iter()
-            .enumerate()
-            .filter_map(|(index, tip)| {
-                let distance = ((x - tip.screen_x).powi(2) + (y - tip.screen_y).powi(2)).sqrt();
-                if distance <= tip.pick_radius + 3.0 {
-                    Some((index, distance))
-                } else {
-                    None
-                }
-            })
-            .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
-            .map(|(index, _)| index)
-    }
+    use crate::wgpu::{Camera3d, Rect, Rgba};
 
     /// 🧭️ Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`).
     pub fn paint_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {

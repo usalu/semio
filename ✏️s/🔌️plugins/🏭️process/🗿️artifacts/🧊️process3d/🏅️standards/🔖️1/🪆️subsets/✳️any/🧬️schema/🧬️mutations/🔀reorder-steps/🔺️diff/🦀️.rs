@@ -1,14 +1,24 @@
-//! 🔺️ `reorder-steps` sparse diff construction.
-//!
-//! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: DOCUMENTED NO-OP — see
-//! `🌱create-step/🔺️diff/🦀️component.rs`'s doc comment for the full rationale.
+//! 🔺️ `reorder-steps` sparse diff construction — repositions an id-keyed [`ProcessStep`] within
+//! the durable `step_payloads` timeline and re-mints `steps`/`tool_solids` via
+//! [`process3d_step_timeline_diff`](crate::artifacts::process3d::process3d_step_timeline_diff),
+//! matching `📥️insert-array-element`/`🔀reorder-columns`'s own remove-then-clamped-insert shape.
+//! Error `target-missing` when the step is absent, Warning `no-op` when already at that position.
 
 use crate::artifacts::process3d::diff::Process3dDiff;
-use crate::artifacts::process3d::Process3dSnapshot;
+use crate::artifacts::process3d::{process3d_step_timeline_diff, Process3dSnapshot};
 
 //#region 🔖️Diff
-/// 🚧️ Documented no-op — see file doc comment. Surfaced as Warning `mutation.no-op`.
-pub fn diff(_payload: &super::ReorderSteps, _base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
-    protocol::MutationOutcome::empty().warn("mutation.no-op", "Step reorder is a documented no-op pending a link resolver for the composed steps child.".to_string())
+pub fn diff(payload: &super::ReorderSteps, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
+    let Some(from) = base.step_payloads.iter().position(|step| step.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Step \"{}\" does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if from == payload.to_index {
+        return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Step \"{}\" is already at position #{}.", payload.id, payload.to_index));
+    }
+    let mut steps = base.step_payloads.clone();
+    let step = steps.remove(from);
+    let to = payload.to_index.min(steps.len());
+    steps.insert(to, step);
+    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, steps))
 }
 //#endregion 🔖️Diff

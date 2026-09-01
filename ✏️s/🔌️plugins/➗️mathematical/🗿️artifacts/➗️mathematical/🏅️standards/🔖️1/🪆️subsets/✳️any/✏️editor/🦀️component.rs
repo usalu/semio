@@ -35,7 +35,7 @@ use semio_framework_plugin::{
     ui_text, ActionArgDef, ActionArgOption, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media,
     MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence,
 };
-use serde_json::{json, Value};
+use pack::json::{self, Value};
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use store::ArtifactPack;
@@ -183,20 +183,36 @@ pub async fn geometry_layers_json(geometry: &MathematicalGeometry) -> String {
 
     let mut layers: Vec<Value> = Vec::new();
     for (i, p) in points.iter().enumerate() {
-        layers.push(json!({ "kind": "circle", "id": format!("point-{i}"), "x": p.x() - 5.0, "y": p.y() - 5.0, "width": 10.0, "height": 10.0, "color": "#38bdf8" }));
+        layers.push(json::object([
+            ("kind".to_string(), Value::from("circle")),
+            ("id".to_string(), Value::from(format!("point-{i}"))),
+            ("x".to_string(), Value::from(p.x() - 5.0)),
+            ("y".to_string(), Value::from(p.y() - 5.0)),
+            ("width".to_string(), Value::from(10.0)),
+            ("height".to_string(), Value::from(10.0)),
+            ("color".to_string(), Value::from("#38bdf8")),
+        ]));
     }
     if hull.len() >= 2 {
-        let mut hull_points: Vec<[f64; 2]> = Vec::new();
+        let mut hull_points: Vec<Value> = Vec::new();
         for i in 0..hull.len() {
             let a = hull[i];
             let b = hull[(i + 1) % hull.len()];
-            hull_points.push([a.x(), a.y()]);
-            hull_points.push([b.x(), b.y()]);
+            hull_points.push(json::array([Value::from(a.x()), Value::from(a.y())]));
+            hull_points.push(json::array([Value::from(b.x()), Value::from(b.y())]));
         }
-        layers.push(json!({ "kind": "polyline", "id": "hull", "points": hull_points, "color": "#facc15" }));
+        layers.push(json::object([("kind".to_string(), Value::from("polyline")), ("id".to_string(), Value::from("hull")), ("points".to_string(), json::array(hull_points)), ("color".to_string(), Value::from("#facc15"))]));
     }
-    layers.push(json!({ "kind": "circle", "id": "centroid", "x": centroid.x() - 4.0, "y": centroid.y() - 4.0, "width": 8.0, "height": 8.0, "color": "#f472b6" }));
-    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+    layers.push(json::object([
+        ("kind".to_string(), Value::from("circle")),
+        ("id".to_string(), Value::from("centroid")),
+        ("x".to_string(), Value::from(centroid.x() - 4.0)),
+        ("y".to_string(), Value::from(centroid.y() - 4.0)),
+        ("width".to_string(), Value::from(8.0)),
+        ("height".to_string(), Value::from(8.0)),
+        ("color".to_string(), Value::from("#f472b6")),
+    ]));
+    json::to_string(&json::array(layers))
 }
 //#endregion 🔖️Geometry
 
@@ -273,7 +289,7 @@ fn mathematical_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Opti
     if payload.operations_json.len() > MATHEMATICAL_MAX_EDIT_JSON_BYTES {
         return None;
     }
-    let values = serde_json::from_str::<Vec<Value>>(&payload.operations_json).ok()?;
+    let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[Value]>::to_vec))?;
     if values.len() > MATHEMATICAL_MAX_EDIT_OPERATIONS {
         return None;
     }
@@ -699,7 +715,7 @@ impl ArtifactCommandWork<EditorApp<MathematicalPlayApp>> for MathematicalRetaine
             }
             MathematicalWorkPhase::JsonDecode => {
                 let MathematicalCommand::NodeGraphEdit(payload) = command else { return Err(Fault::from("mathematical-command-json-decode")) };
-                let values = serde_json::from_str::<Vec<Value>>(&payload.operations_json).unwrap_or_default();
+                let values = json::parse(&payload.operations_json).ok().and_then(|value| value.as_array().map(<[Value]>::to_vec)).unwrap_or_default();
                 if values.len() > MATHEMATICAL_MAX_EDIT_OPERATIONS {
                     return Err(Fault::from("mathematical-command-operation-capacity"));
                 }
@@ -1300,7 +1316,8 @@ impl ArtifactEditor for MathematicalPlayApp {
             "result:out" => {
                 let graph = crate::artifacts::mathematical::mathematical_graph(doc.snapshot);
                 let overlay = algorithm_overlay(&graph);
-                let json = serde_json::to_string(&serde_json::json!({ "algorithm": graph.algorithm, "overlay": overlay })).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let overlay_json = json::object(overlay.iter().map(|(id, suffix)| (id.clone(), Value::from(suffix.as_str()))));
+                let json = json::to_string(&json::object([("algorithm".to_string(), Value::from(graph.algorithm.as_str())), ("overlay".to_string(), overlay_json)]));
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.mathematical".into(), json } })
             }
             "document:out" => {
@@ -1417,7 +1434,9 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut MathApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
+        // `Debug` gives every test caller here the same "does the render mention X" substring check.
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -1439,7 +1458,7 @@ mod tests {
         MathematicalGraph { directed: true, nodes, edges, algorithm: "bfs".into(), algorithm_seed: Some("n0".into()) }
     }
 
-    fn drive_retained(work: &mut MathematicalRetainedCommandWork, command: &MathematicalCommand, snapshot: &MathematicalSnapshot, operation: &AppOperationContext) -> serde_json::Value {
+    fn drive_retained(work: &mut MathematicalRetainedCommandWork, command: &MathematicalCommand, snapshot: &MathematicalSnapshot, operation: &AppOperationContext) -> protocol::DslValue {
         let config = MathematicalConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let interaction = protocol::InteractionState::default();
@@ -1447,7 +1466,10 @@ mod tests {
         loop {
             match work.step(command, snapshot, &config, &history, &interaction, &hover, None, operation).expect("retained Mathematical turn") {
                 ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::Progress { .. } => {}
-                ArtifactCommandWorkStep::Complete(emit) => return serde_json::to_value(emit.artifact_mutations).expect("third-party serde mutation oracle"),
+                // 🌱️ `ToValue`/`DslValue` in place of the old `serde_json::to_value` oracle: `DslValue`
+                // already implements `PartialEq`, so the two runs compare directly with no JSON text
+                // round trip needed.
+                ArtifactCommandWorkStep::Complete(emit) => return protocol::ToValue::to_value(&emit.artifact_mutations),
                 ArtifactCommandWorkStep::CompleteWithEphemeral { .. } => panic!("Mathematical commands do not publish ephemeral state"),
             }
         }
@@ -1455,11 +1477,11 @@ mod tests {
 
     #[test]
     fn retained_schema_contract_and_factory_identity_are_exact() {
-        let fixture: Value = serde_json::from_str(include_str!("../../../../../🧪️fixtures/mathematical-retained-command-law.json")).expect("language-neutral retained fixture");
+        let fixture: Value = json::parse(include_str!("../../../../../🧪️fixtures/mathematical-retained-command-law.json")).expect("language-neutral retained fixture");
         assert_eq!(fixture["contract"]["workItems"], 65_536);
         assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
-        assert_eq!(fixture["actions"], serde_json::json!(MATHEMATICAL_TOOL_IDS));
-        assert_eq!(fixture["hostileCases"].as_array().map(Vec::len), Some(14));
+        assert_eq!(fixture["actions"], json::array(MATHEMATICAL_TOOL_IDS.iter().map(|id| Value::from(*id))));
+        assert_eq!(fixture["hostileCases"].as_array().map(<[Value]>::len), Some(14));
         let factory = MathematicalCommandJobFactory::new("s.mathematical.mathematical@1/*#editor");
         let keys = <MathematicalCommandJobFactory as semio_framework::ToolJobFactory>::keys(&factory);
         assert_eq!(keys.len(), MATHEMATICAL_TOOL_IDS.len());
@@ -1495,10 +1517,15 @@ mod tests {
         assert!(mathematical_command_extent(&MathematicalCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(MATHEMATICAL_MAX_LOCALE_BYTES) }), &snapshot).is_some());
         assert!(mathematical_command_extent(&MathematicalCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(MATHEMATICAL_MAX_LOCALE_BYTES + 1) }), &snapshot).is_none());
 
-        let operations = |count: usize| serde_json::to_string(&vec![serde_json::json!({}); count]).expect("third-party JSON oracle");
+        let operations = |count: usize| json::to_string(&json::array(std::iter::repeat(json::object([])).take(count)));
         assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(MATHEMATICAL_MAX_EDIT_OPERATIONS) }), &snapshot).is_some());
         assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(MATHEMATICAL_MAX_EDIT_OPERATIONS + 1) }), &snapshot).is_none());
-        let delete = |count: usize| serde_json::to_string(&vec![serde_json::json!({ "operation": "deleteSelection", "nodeIds": (0..count).map(|index| format!("n{index}")).collect::<Vec<_>>() })]).expect("third-party delete JSON oracle");
+        let delete = |count: usize| {
+            json::to_string(&json::array([json::object([
+                ("operation".to_string(), Value::from("deleteSelection")),
+                ("nodeIds".to_string(), json::array((0..count).map(|index| Value::from(format!("n{index}"))))),
+            ])]))
+        };
         assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(MATHEMATICAL_MAX_DELETE_IDS) }), &snapshot).is_some());
         assert!(mathematical_command_extent(&MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: delete(MATHEMATICAL_MAX_DELETE_IDS + 1) }), &snapshot).is_none());
         let exact_json = format!("[{}]", " ".repeat(MATHEMATICAL_MAX_EDIT_JSON_BYTES - 2));
@@ -1514,12 +1541,11 @@ mod tests {
         let graph = graph_with_shape(8, 12);
         let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry::default()).await;
         let command = MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-            operations_json: serde_json::to_string(&serde_json::json!([
-                { "operation": "move", "nodeId": "n7", "x": 41.0, "y": 42.0 },
-                { "operation": "deleteSelection", "nodeIds": ["n1", "n3"] },
-                { "operation": "addNode", "x": 5.0, "y": 6.0 }
-            ]))
-            .expect("third-party JSON oracle"),
+            operations_json: json::to_string(&json::array([
+                json::object([("operation".to_string(), Value::from("move")), ("nodeId".to_string(), Value::from("n7")), ("x".to_string(), Value::from(41.0)), ("y".to_string(), Value::from(42.0))]),
+                json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array([Value::from("n1"), Value::from("n3")]))]),
+                json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(5.0)), ("y".to_string(), Value::from(6.0))]),
+            ])),
         });
         let operation = retained_operation(13);
         let extent = mathematical_command_extent(&command, &snapshot).expect("retained extent");
@@ -1544,7 +1570,7 @@ mod tests {
         replayed.restore(&checkpoint).expect("interrupted restore");
         let uninterrupted_output = drive_retained(&mut uninterrupted, &command, &snapshot, &operation);
         let replayed_output = drive_retained(&mut replayed, &command, &snapshot, &operation);
-        assert_eq!(uninterrupted_output, replayed_output, "serde_json oracle must observe exact replay output");
+        assert_eq!(uninterrupted_output, replayed_output, "the DslValue-encoded mutation output must observe exact replay output");
 
         let mut cancelled_before = MathematicalRetainedCommandWork::new("nodeGraphEdit", identity, extent);
         assert_eq!(cancelled_before.close_step(1, usize::MAX), InteractiveJobCloseStep::Blocked);
@@ -1567,10 +1593,10 @@ mod tests {
         let graph = graph_with_shape(MATHEMATICAL_MAX_NODES, MATHEMATICAL_MAX_EDGES);
         let snapshot = crate::artifacts::mathematical::mathematical_snapshot_with_state(graph, MathematicalGeometry::default()).await;
         let ids = (0..MATHEMATICAL_MAX_DELETE_IDS).map(|index| format!("n{index}")).collect::<Vec<_>>();
-        let mut operations = vec![serde_json::json!({ "operation": "deleteSelection", "nodeIds": ids })];
-        operations.resize(MATHEMATICAL_MAX_EDIT_OPERATIONS, serde_json::json!({}));
+        let mut operations = vec![json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array(ids.iter().map(|id| Value::from(id.as_str()))))])];
+        operations.resize(MATHEMATICAL_MAX_EDIT_OPERATIONS, json::object([]));
         let command = MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
-            operations_json: serde_json::to_string(&operations).expect("maximum JSON oracle"),
+            operations_json: json::to_string(&json::array(operations)),
         });
         let operation = retained_operation(23);
         let extent = mathematical_command_extent(&command, &snapshot).expect("maximum retained extent");
@@ -1678,12 +1704,15 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_mathematical_app()).expect("app definition json");
+        // 🌱️ `AppDefinition` (`semio-framework-plugin`, framework-owned) has not itself gained
+        // `ToValue` — `Debug` gives the same "does the manifest mention X" substring check without
+        // needing `serde_json` for a framework type this batch does not own.
+        let debug = format!("{:?}", create_mathematical_app());
         for id in [graph_window::MATH_PLAY_WINDOW_GRAPH, geometry_window::MATH_PLAY_WINDOW_GEOMETRY] {
-            assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
+            assert!(debug.contains(id), "window kind {id} missing from the manifest: {debug}");
         }
-        assert!(json.contains(edit::MATH_PLAY_MODE_EDIT), "mode missing from the manifest");
-        assert!(json.contains("computation.mathematical"), "artifact kind missing from the manifest");
+        assert!(debug.contains(edit::MATH_PLAY_MODE_EDIT), "mode missing from the manifest");
+        assert!(debug.contains("computation.mathematical"), "artifact kind missing from the manifest");
     }
 
     #[semio_framework_async_macros::async_test]

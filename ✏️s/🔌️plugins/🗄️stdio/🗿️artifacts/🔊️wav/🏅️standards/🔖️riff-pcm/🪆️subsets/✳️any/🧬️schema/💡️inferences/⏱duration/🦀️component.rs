@@ -6,12 +6,11 @@
 //! terms of). A pure whole-snapshot scalar — no `InferredField` needed.
 
 use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ wav's `fmt`/`data`-derived playback duration.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct WavDuration {
     pub duration_seconds: f64,
     pub frame_count: u64,

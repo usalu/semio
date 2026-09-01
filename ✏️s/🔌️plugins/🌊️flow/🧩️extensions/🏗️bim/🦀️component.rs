@@ -584,10 +584,16 @@ pub fn module_registry() -> Registry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_extension_sdk::{build_manifest_json, evaluate_json};
+    use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, evaluate_json, flow_extension_topic_contribution};
 
     fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
         out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
+    }
+
+    /// 🌱️ Wire-shape twin of [`super::number_dictionary`], built with the first-party
+    /// `pack::json::Value` instead of `Dictionary`'s own `serde` codec — for JSON-text tests only.
+    fn json_number(value: f64) -> pack::json::Value {
+        pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))])
     }
 
     #[semio_framework_async_macros::async_test]
@@ -698,10 +704,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn evaluate_json_wall() {
         let reg = module_registry();
-        let input = Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2)));
-        let out_json = evaluate_json(&reg, "bim.element.wall", &serde_json::to_string(&input).unwrap());
-        let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
+        let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
+        let out_json = evaluate_json(&reg, "bim.element.wall", &input_json);
+        let out = pack::json::parse(&out_json).unwrap();
+        assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -720,38 +726,13 @@ mod tests {
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+        let flow_topic = flow_extension_topic_contribution("flow-play", "bim", "Bim", "bim", &manifest_json);
+        let procedural3d_topic = flow_extension_topic_contribution("procedural3d-play", "bim", "Bim", "bim", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-bim", "Bim", "0.1.0")
             .extends("flow")
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "flow-play",
-                    "extensionId": "bim",
-                    "label": "Bim",
-                    "iconId": "bim",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "procedural3d-play",
-                    "extensionId": "bim",
-                    "label": "Bim",
-                    "iconId": "bim",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .handler("evaluate", |req| {
-                #[derive(serde::Deserialize)]
-                #[serde(rename_all = "camelCase")]
-                struct EvaluateRequest {
-                    operator_id: String,
-                    input_json: String,
-                }
-                let request: EvaluateRequest = serde_json::from_slice(req).unwrap();
-                Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-            });
+            .contributes_topic(flow_topic.topic, flow_topic.payload)
+            .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
+            .handler("evaluate", |req| Ok(evaluate_invoke_json(&module_registry(), req).unwrap()));
         install_extension_bundle(bundle);
         extension_activate().unwrap();
         let installed = extension_manifest();
@@ -759,15 +740,11 @@ mod tests {
         assert_eq!(installed.extends, "flow");
         assert_eq!(installed.topic_contributions.len(), 2);
         assert_eq!(installed.topic_contributions[0].topic, "flow.extension");
-        let input = Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2)));
-        let req = serde_json::json!({
-            "operatorId": "bim.element.wall",
-            "inputJson": serde_json::to_string(&input).unwrap(),
-            "nodeHash": 1,
-        });
-        let out_bytes = extension_invoke("evaluate", req.to_string().as_bytes()).unwrap();
-        let out: Dictionary = serde_json::from_slice(&out_bytes).unwrap();
-        assert_eq!(channel_payload(&out, "wall").schema(), Some("wall"));
+        let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
+        let req = pack::json::to_string(&pack::json::object([("operatorId".to_string(), pack::json::Value::from("bim.element.wall")), ("inputJson".to_string(), pack::json::Value::from(input_json)), ("nodeHash".to_string(), pack::json::Value::from(1_i64))]));
+        let out_bytes = extension_invoke("evaluate", req.as_bytes()).unwrap();
+        let out = pack::json::parse_bytes(&out_bytes).unwrap();
+        assert_eq!(out.get("wall").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("wall"));
     }
 }
 // #endregion 🔖️Tests
@@ -776,34 +753,14 @@ mod tests {
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
-    use flow_extension_sdk::{build_manifest_json, evaluate_json};
+    use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-    use serde::Deserialize;
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct EvaluateRequest {
-        operator_id: String,
-        input_json: String,
-    }
-
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
-        let extension_id = "bim";
-        let label = "Bim";
-        let icon_id = "bim";
-        let topic_payload = serde_json::json!({
-            "appId": app_id,
-            "extensionId": extension_id,
-            "label": label,
-            "iconId": icon_id,
-            "manifestJson": &manifest_json,
-        });
-        topic_payload
-    }
+    const EXTENSION_ID: &str = "bim";
+    const EXTENSION_LABEL: &str = "Bim";
 
     // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
     // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
@@ -812,28 +769,23 @@ mod extension_guest {
     // See R9.
     fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
-        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
-        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
+        let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "bim", &manifest_json);
+        let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "bim", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-bim", "Bim", "0.1.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
-        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&module_registry(), &request.operator_id, &request.input_json).into_bytes())
-        }))
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
+        semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| evaluate_invoke_json(&module_registry(), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))))
     }
 
     #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let fixture = pack::json::parse(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
         let bundle = bundle();
-        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
-        assert_eq!(manifest["extensionId"], fixture["bim"]["pluginId"]);
+        assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("bim").and_then(|entry| entry.get("pluginId")).and_then(pack::json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);
         for contribution in &bundle.manifest.topic_contributions {
-            let payload: serde_json::Value = contribution.decode().unwrap();
-            assert_eq!(payload["extensionId"], fixture["bim"]["flowId"]);
+            assert_eq!(contribution.payload.get("extensionId").and_then(|value| value.as_str()), fixture.get("bim").and_then(|entry| entry.get("flowId")).and_then(pack::json::Value::as_str));
         }
     }
 

@@ -19992,7 +19992,7 @@ const CLEAN_CANONICAL_REPO_DIR = REPO_META_DIR_NAME;
 const CLEAN_CANONICAL_TICKETS_DIR = "🎫️tickets";
 const CLEAN_BUILD_DIR_NAMES = new Set(["target", "dist", "build", "out"]);
 const CLEAN_CACHE_DIR_NAME = "⚡️cache";
-const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️taxonomy-transaction"]);
+const CLEAN_TICKET_GENERATED_OUTPUT_DIRS = new Set(["🗑️generated", TICKET_GENERATED_OUTPUT_DIRECTORY, "🧾️runs", "🧾️taxonomy-transaction"]);
 const CLEAN_TICKET_GENERATED_PROBE_PREFIX = "🧪️purity-";
 
 type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact" | "ticket-generated";
@@ -21458,7 +21458,7 @@ export function cleanProjectRemovals(root: string, removals: readonly CleanRemov
     const absolute = resolve(root, row.path);
     const allowedOpenTicket = row.kind === "ticket-generated" ? cleanTicketGeneratedOutputTicketRoot(root, absolute) : undefined;
     const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
-    const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
+    const protectedPaths = cleanIntersectsProtected(absolute, applicablePrefixes) ? [absolute] : allowedOpenTicket ? [] : cleanRemovalProtection(root, row.path, view, allowedOpenTicket);
     for (const path of protectedPaths) onProtected?.(path);
     return protectedPaths.length === 0;
   }));
@@ -21481,7 +21481,7 @@ function cleanPathBytes(abs: string): number {
 function cleanRemovePath(root: string, abs: string, dry: boolean, protectedPrefixes: readonly string[], allowTicketGeneratedOutput = false): boolean {
   const allowedOpenTicket = allowTicketGeneratedOutput ? cleanTicketGeneratedOutputTicketRoot(root, abs) : undefined;
   const applicablePrefixes = allowedOpenTicket ? protectedPrefixes.filter((prefix) => resolve(prefix) !== allowedOpenTicket) : protectedPrefixes;
-  if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0) return false;
+  if (cleanIntersectsProtected(abs, applicablePrefixes) || (!allowedOpenTicket && cleanRemovalProtection(root, abs, CLEAN_PROTECTION_VIEW, allowedOpenTicket).length !== 0)) return false;
   if (dry) return true;
   rmSync(abs, { recursive: true, force: true });
   return true;
@@ -21653,27 +21653,14 @@ function cleanTicketSizeRemovals(root: string, ticketFolder: string, protectedPr
 }
 
 function cleanTicketGeneratedOutputRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
-  let children: string[];
-  try {
-    children = readdirSync(ticketFolder);
-  } catch {
-    return [];
-  }
-
   const out: CleanRemoval[] = [];
-  for (const name of children) {
-    if (!cleanIsTicketGeneratedOutputDir(name)) continue;
-    const abs = join(ticketFolder, name);
-    try {
-      const state = lstatSync(abs);
-      if (state.isSymbolicLink() || !state.isDirectory()) continue;
-    } catch {
-      continue;
-    }
+  cleanWalkDirs(ticketFolder, (abs, name) => {
+    if (!cleanIsTicketGeneratedOutputDir(name)) return "enter";
     const applicablePrefixes = protectedPrefixes.filter((prefix) => resolve(prefix) !== resolve(ticketFolder));
-    if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) continue;
+    if (cleanIntersectsProtected(abs, applicablePrefixes) || cleanIsProtected(abs, applicablePrefixes)) return "skip";
     out.push({ kind: "ticket-generated", path: relative(root, abs), bytes: cleanPathBytes(abs) });
-  }
+    return "skip";
+  });
   return out;
 }
 
@@ -21682,9 +21669,17 @@ function cleanIsTicketGeneratedOutputDir(name: string): boolean {
 }
 
 function cleanTicketGeneratedOutputTicketRoot(root: string, abs: string): string | undefined {
-  const ticketFolder = dirname(abs);
-  const name = relative(ticketFolder, abs);
-  return !name.includes(sep) && cleanIsTicketFolderBoundary(root, ticketFolder) && cleanIsTicketGeneratedOutputDir(name) ? resolve(ticketFolder) : undefined;
+  const name = relative(dirname(abs), abs);
+  if (name.includes(sep) || !cleanIsTicketGeneratedOutputDir(name)) return undefined;
+  let ancestor = dirname(abs);
+  while (true) {
+    const local = relative(root, ancestor);
+    if (local === "" || local === ".." || local.startsWith(".." + sep) || isAbsolute(local)) return undefined;
+    if (cleanIsTicketFolderBoundary(root, ancestor)) return resolve(ancestor);
+    const parent = dirname(ancestor);
+    if (parent === ancestor) return undefined;
+    ancestor = parent;
+  }
 }
 
 function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {

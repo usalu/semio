@@ -25,6 +25,9 @@ pub use restore_active_space_alternative::RestoreActiveSpaceAlternative;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
+// 🔀️ ToValue/FromValue for SpaceHistoryMutation are hand-written in `../../🦀️component.rs`
+// (routed through the existing serde bridge, byte-identical to `OpBinary::encode_op`) — not
+// derived here, see that impl's docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = SpaceHistorySnapshot, diff = SpaceHistoryDiff, schema = "os.space.history")]

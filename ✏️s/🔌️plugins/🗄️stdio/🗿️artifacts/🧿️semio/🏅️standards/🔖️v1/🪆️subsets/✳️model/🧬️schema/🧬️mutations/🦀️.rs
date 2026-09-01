@@ -16,22 +16,18 @@ use protocol::Mutation;
 /// production code too, not merely under `#[cfg(test)]` (same fix `stdio.semio.flow`'s own
 /// mutations facet needed).
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️DoubleOption
-/// 🕳️ Standard double-`Option` serde workaround: with plain `#[serde(default)]`, a field typed
+/// 🕳️ Standard double-`Option` workaround: with plain `#[value(default)]`, a field typed
 /// `Option<Option<T>>` can't distinguish "untouched" (key absent) from "cleared" (`Some(None)`,
-/// key present with JSON `null`) — both collapse to the outer `None` on decode, because serde's
-/// blanket `Deserialize for Option<T>` treats `null` as absence at ANY nesting depth. Combined with
+/// key present with `DslValue::Null`) — both would collapse to the outer `None` on decode, because
+/// the derive's blanket `impl<T: FromValue> FromValue for Option<T>` treats `Null` as absence at
+/// ANY nesting depth (same subtlety `serde`'s own blanket impl has). Combined with
 /// `skip_serializing_if = "Option::is_none"` (so "untouched" omits the key entirely), this makes
-/// key-PRESENT-with-`null` unambiguously mean `Some(None)`.
+/// key-PRESENT-with-`Null` unambiguously mean `Some(None)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn deserialize_double_option<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-    T: Deserialize<'de>,
-{
-    Option::<T>::deserialize(deserializer).map(Some)
+fn deserialize_double_option<T: dsl::FromValue>(value: dsl::DslValue) -> Result<Option<Option<T>>, dsl::ValueError> {
+    Option::<T>::from_value(value).map(Some)
 }
 //#endregion 🔖️DoubleOption
 
@@ -63,9 +59,9 @@ pub mod set_relation;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none (same consequence
 /// tiff's baseline migration reached — see
 /// `🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/🧬️schema/🧬️mutations/🦀️.rs`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioModelSnapshot, diff = SemioModelDiff, schema = "SemioModelMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioModelMutation {
     /// 🧩 Sparse full-state replace -- `diff()` is `SemioModelDiff::between`, never a
     /// `snapshot: Option<Snapshot>` full-replace slot (schema-design.md).
@@ -412,8 +408,8 @@ mod tests {
         let uncovered: Vec<&&str> = KINDS.iter().zip(&covered).filter(|(_, hit)| !**hit).map(|(kind, _)| kind).collect();
         assert!(uncovered.is_empty(), "semio-model: demo_mutation_cases carries no instance of {uncovered:?}, so those kinds are declared but never exercised");
 
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
-        let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"] == "semio-v1-model").expect("the manifest declares the semio-v1-model catalog");
+        let manifest: pack::JsonValue = pack::parse_json(include_str!("../../🧪️oracle/🔣️.json")).expect("the subset's own oracle manifest decodes");
+        let catalog = manifest["mutationCatalogs"].as_array().expect("the manifest declares mutationCatalogs").iter().find(|entry| entry["id"].as_str() == Some("semio-v1-model")).expect("the manifest declares the semio-v1-model catalog");
         let declared: Vec<&str> = catalog["kinds"].as_array().expect("the catalog declares kinds").iter().map(|kind| kind.as_str().expect("every declared kind is a string")).collect();
         assert!(KINDS.iter().all(|kind| declared.contains(kind)), "semio-model: every KINDS entry must also appear in the committed oracle manifest's catalog");
     }

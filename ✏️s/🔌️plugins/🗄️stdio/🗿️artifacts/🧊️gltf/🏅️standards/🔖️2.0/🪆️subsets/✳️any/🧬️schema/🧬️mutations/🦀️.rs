@@ -2,7 +2,6 @@
 
 use crate::artifacts::gltf::schema::diff::GltfDiff;
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use super::bind_default_scene::BindDefaultSceneMutation;
 pub use super::bind_morph_target_attribute::BindMorphTargetAttributeMutation;
@@ -126,8 +125,8 @@ pub use super::remove_required_extension::RemoveRequiredExtensionMutation;
 pub use super::remove_used_extension::RemoveUsedExtensionMutation;
 
 /// 🧬️ The complete glTF 2.0 semantic mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = GltfSnapshot, diff = GltfDiff, schema = "s.stdio.gltf")]
 pub enum GltfMutation {
     BindDefaultScene(BindDefaultSceneMutation),

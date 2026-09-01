@@ -1,10 +1,12 @@
 //! 🎛️ Zone controls: thermostats, humidistats, load prediction, equipment priority.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ZoneLoad
 /// 📊️ Predicted zone heating/cooling/humidification loads [W].
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneLoad {
     pub heating_w: f64,
     pub cooling_w: f64,
@@ -31,7 +33,7 @@ impl ZoneLoad {
 
 // #region 🔖️ControlAction
 /// 🎛️ HVAC control action requested by zone controller.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ControlAction {
     NoAction,
     Heat { power_w: f64 },
@@ -44,7 +46,7 @@ pub enum ControlAction {
 
 // #region 🔖️ThermostatOutput
 /// 🌡️ Thermostat and humidistat combined output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ThermostatOutput {
     pub heating_fraction: f64,
     pub cooling_fraction: f64,
@@ -59,7 +61,7 @@ pub struct ThermostatOutput {
 
 // #region 🔖️ThermostatSpec
 /// 🌡️ Proportional thermostat with throttle ranges [K].
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ThermostatSpec {
     pub heating_setpoint_c: f64,
     pub cooling_setpoint_c: f64,
@@ -72,7 +74,7 @@ pub struct ThermostatSpec {
 
 // #region 🔖️HumidistatSpec
 /// 💧️ Humidistat with RH setpoints and throttle ranges.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HumidistatSpec {
     pub humidifying_setpoint_rh: f64,
     pub dehumidifying_setpoint_rh: f64,
@@ -85,6 +87,19 @@ pub struct HumidistatSpec {
 /// 🏆️ Equipment serving priority for load allocation.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct ZoneEquipmentPriority(pub u8);
+
+// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports named-field
+// structs, not a tuple struct like this one.
+impl ToValue for ZoneEquipmentPriority {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for ZoneEquipmentPriority {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u8::from_value(value).map(ZoneEquipmentPriority)
+    }
+}
 // #endregion 🔖️ZoneEquipmentPriority
 
 // #region 🔖️Thermostat

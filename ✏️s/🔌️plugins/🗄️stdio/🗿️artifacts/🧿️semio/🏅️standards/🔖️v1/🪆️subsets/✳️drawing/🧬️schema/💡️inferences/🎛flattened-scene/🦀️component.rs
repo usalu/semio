@@ -22,16 +22,15 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::{node_at, NodePath};
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 🖼️ One entity's resolved presentation — world transform + (for `Path`/`Text`) the fully
 /// resolved style value (not merely its name).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlattenedNode {
     pub world_transform: SemioTransform,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub resolved_style: Option<DrawStyle>,
 }
 //#endregion 🔖️Value

@@ -11,10 +11,9 @@ pub mod thickness_variability;
 
 use super::super::modules::measurement_contracts::*;
 use super::geometry_core::{statistics, thickness_samples, GltfGeometryContext};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfThicknessIndicators {
     pub mean_thickness: GltfMeasure<f64>,
     pub minimum_thickness: GltfMeasure<f64>,

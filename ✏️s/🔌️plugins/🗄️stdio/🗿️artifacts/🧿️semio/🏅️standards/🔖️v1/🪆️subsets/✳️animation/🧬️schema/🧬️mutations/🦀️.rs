@@ -20,7 +20,6 @@ use protocol::Mutation;
 #[cfg(test)]
 use protocol::MutationDiff;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🏷️ Variant ordinals for the real binary `OpBinary` frame below (`tag u8`) — declaration order,
@@ -54,9 +53,9 @@ pub mod set_keyframe_value;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioAnimationSnapshot, diff = SemioAnimationDiff, schema = "SemioAnimationMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioAnimationMutation {
     /// 📦️ Full-snapshot replace, still sparse under the hood (`diff_set_snapshot` = `between`).
     SetSnapshot(set_snapshot::SetSnapshot),

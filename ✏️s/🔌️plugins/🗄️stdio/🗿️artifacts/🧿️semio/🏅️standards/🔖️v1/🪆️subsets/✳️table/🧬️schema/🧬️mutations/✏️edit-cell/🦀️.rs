@@ -5,10 +5,9 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct EditCell {
     pub row_index: usize,

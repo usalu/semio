@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution. `process.process3d` declares 16 mutation kinds over an ordered step timeline, an unordered machine set, a three-way-split stock facet and one document scalar. Semio-NATIVE, no oracle; the decision below also records that the seven step-scoped verbs are implemented today as documented no-ops, so their vectors carry no forward evidence.",
+  "_comment": "🧩️ This subset's own contribution. `process.process3d` declares 16 mutation kinds over an ordered step timeline, an unordered machine set, a three-way-split stock facet and one document scalar. Semio-NATIVE, no oracle; all sixteen kinds — the seven step-scoped verbs included, since ticket `26/09/01/PROCESS-END-TO-END` gave them a real diff against `step_payloads` — carry forward evidence in their committed vectors.",
   "oracles": [],
   "noOracleDecisions": [
     {

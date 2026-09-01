@@ -4999,6 +4999,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "semio-framework-ui-contract",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -5007,6 +5008,7 @@ dependencies = [
 name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-os-kernel",
  "serde",
 ]
@@ -5067,6 +5069,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-deflate"
+version = "0.1.0"
+dependencies = [
+ "miniz_oxide",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-dispatch-macros"
 version = "0.1.0"
 dependencies = [
@@ -5107,6 +5118,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-ui-contract",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -5116,8 +5128,6 @@ name = "semio-framework-hash"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5165,7 +5175,6 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -5197,6 +5206,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -5226,6 +5236,7 @@ dependencies = [
  "semio-framework-ui",
  "semio-framework-ui-backend-webgpu",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "semio-s-plugin-flow-extension-bim",
  "semio-s-plugin-flow-extension-brep",
  "semio-s-plugin-flow-extension-dictionary",
@@ -5260,11 +5271,10 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-ui",
  "semio-framework-ui-styling",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
- "typst",
  "typst-assets",
- "typst-svg",
  "vello",
  "vello_svg",
  "wasm-bindgen",
@@ -5275,14 +5285,13 @@ dependencies = [
 name = "semio-framework-os-kernel"
 version = "0.1.0"
 dependencies = [
- "base64",
  "futures",
  "js-sys",
- "miniz_oxide",
  "semio-framework-actor",
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os",
  "semio-framework-os-flow",
@@ -5290,6 +5299,7 @@ dependencies = [
  "semio-framework-os-services",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-value-derive",
  "semio-s-plugin-animate",
  "semio-s-plugin-block",
  "semio-s-plugin-cad",
@@ -5509,6 +5519,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
  "semio-framework-ui-scene",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "wasmtime",
@@ -5544,6 +5555,7 @@ dependencies = [
  "semio-framework-os-services",
  "semio-framework-trace",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
  "tokio",
@@ -5565,8 +5577,8 @@ dependencies = [
 name = "semio-framework-replication"
 version = "0.1.0"
 dependencies = [
- "miniz_oxide",
  "semio-framework-async-macros",
+ "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "serde",
@@ -5777,6 +5789,7 @@ name = "semio-framework-ui-scene"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-replication",
  "semio-framework-ui-contract",
  "serde",
  "serde_json",
@@ -5830,6 +5843,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-value-derive",
  "semio-s-imperative-extension-sdk",
  "serde",
  "serde_json",
@@ -5868,7 +5882,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
  "winit",
 ]
 
@@ -5894,6 +5907,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -5919,10 +5933,10 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -5932,10 +5946,10 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-value-derive",
  "semio-s-plugin-cad",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5944,9 +5958,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5955,9 +5968,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -5966,9 +5978,8 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6034,21 +6045,17 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
 name = "semio-s-plugin-draw-fsm"
 version = "0.1.0"
 dependencies = [
- "js-sys",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-os-kernel",
+ "semio-framework-value-derive",
  "semio-s-plugin-draw-fsm-macros",
- "serde",
- "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6070,8 +6077,10 @@ dependencies = [
  "semio-framework-geometry",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6091,10 +6100,8 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
- "serde",
- "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6113,6 +6120,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6126,9 +6134,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6140,10 +6147,9 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-plugin-stdio",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6154,9 +6160,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6168,9 +6173,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6181,9 +6185,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6194,9 +6197,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6207,9 +6209,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6220,9 +6221,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6233,9 +6233,8 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-os-flow",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6249,6 +6248,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6258,7 +6258,6 @@ dependencies = [
 name = "semio-s-plugin-gis"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6271,7 +6270,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6290,7 +6288,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6300,9 +6297,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
- "serde_json",
 ]
 
 [[package]]
@@ -6312,9 +6309,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
- "serde_json",
 ]
 
 [[package]]
@@ -6324,9 +6321,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
- "serde_json",
 ]
 
 [[package]]
@@ -6336,9 +6333,9 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
- "serde_json",
 ]
 
 [[package]]
@@ -6348,18 +6345,16 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-s-imperative-extension-sdk",
- "serde_json",
 ]
 
 [[package]]
 name = "semio-s-plugin-layout"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
@@ -6373,8 +6368,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -6409,9 +6402,11 @@ dependencies = [
  "semio-framework-graph",
  "semio-framework-number",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6463,6 +6458,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6478,6 +6474,7 @@ dependencies = [
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -6487,7 +6484,6 @@ name = "semio-s-plugin-procedural"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
@@ -6505,7 +6501,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6523,10 +6518,9 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
- "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6535,9 +6529,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-process",
- "serde_json",
 ]
 
 [[package]]
@@ -6546,9 +6540,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-process",
- "serde_json",
 ]
 
 [[package]]
@@ -6557,9 +6551,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-process",
- "serde_json",
 ]
 
 [[package]]
@@ -6568,9 +6562,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-process",
- "serde_json",
 ]
 
 [[package]]
@@ -6578,8 +6572,8 @@ name = "semio-s-plugin-puzzle"
 version = "0.1.0"
 dependencies = [
  "js-sys",
- "parry3d",
  "semio-framework",
+ "semio-framework-3d",
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6618,7 +6612,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6696,7 +6689,6 @@ dependencies = [
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -6711,6 +6703,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-scene",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6722,9 +6715,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
- "serde_json",
 ]
 
 [[package]]
@@ -6733,9 +6726,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
- "serde_json",
 ]
 
 [[package]]
@@ -6744,9 +6737,9 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
+ "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-s-plugin-sourcing",
- "serde_json",
 ]
 
 [[package]]
@@ -6761,8 +6754,10 @@ dependencies = [
  "semio-framework-os",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
@@ -6784,10 +6779,12 @@ dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-number",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
+ "semio-framework-value-derive",
  "serde",
  "serde_json",
 ]
@@ -6796,9 +6793,7 @@ dependencies = [
 name = "semio-s-plugin-trinity"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
- "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
@@ -6807,13 +6802,13 @@ dependencies = [
  "semio-framework-math",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
  "serde_json",
- "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -6852,7 +6847,6 @@ dependencies = [
 name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
@@ -6865,7 +6859,6 @@ dependencies = [
  "semio-s-plugin-trinity",
  "serde",
  "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]

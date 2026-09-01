@@ -26,7 +26,6 @@ use crate::artifacts::svg::schema::snapshot::{element_attr, node_at, parse_trans
 use crate::artifacts::svg::SvgSnapshot;
 use crate::artifacts::xml::schema::snapshot::{XmlAttr, XmlNode};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.svg` 1.1/✳️basic. Nodes are addressed by `NodePath`; clip
@@ -57,7 +56,7 @@ pub mod set_transform;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgBasicMutation")]
 pub enum SvgBasicMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

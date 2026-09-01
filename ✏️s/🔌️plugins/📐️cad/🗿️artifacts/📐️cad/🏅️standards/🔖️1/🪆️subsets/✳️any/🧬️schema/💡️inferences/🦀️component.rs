@@ -1185,8 +1185,8 @@ mod scene_compute {
     const CAD_COMPUTER_TOPIC: &str = "cad.computer";
 
     /// 🗂️ `cad.computer` topic payload shape (`TopicContribution` counterpart, ex `Contribution::CadComputer`).
-    #[derive(serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(semio_framework_value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct CadComputerTopicPayload {
         app_id: String,
         module_id: String,

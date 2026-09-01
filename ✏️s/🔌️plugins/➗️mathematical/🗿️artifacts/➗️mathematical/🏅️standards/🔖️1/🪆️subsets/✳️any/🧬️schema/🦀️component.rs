@@ -4,6 +4,9 @@ use crate::artifacts::mathematical::standards::v1::subsets::any::schema::snapsho
 use crate::artifacts::mathematical::{MathematicalComputedChild, MathematicalGeometry, MathematicalGraph, MathematicalNotationChild, MathematicalResultsChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Artifact
 /// 🧬️ Full mathematical artifact across the artifact and config lanes. `notation`/`results`/
@@ -34,6 +37,41 @@ pub struct MathematicalArtifact {
     pub camera_zoom: f64,
     #[state(config)]
     pub locale: String,
+}
+
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`
+// (fan-out playbook trap #3, same shape as `📸️snapshot/🦀️component.rs`'s `MathematicalSnapshot`
+// impl). Bridged per composed field through the PRE-EXISTING `to_dsl_value`/`from_dsl_value` serde
+// bridge (framework-internal, exempt); every other field goes through `ToValue`/`FromValue` directly.
+impl ToValue for MathematicalArtifact {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("notation".to_string(), to_dsl_value(&self.notation).unwrap_or(DslValue::Null)),
+            ("results".to_string(), to_dsl_value(&self.results).unwrap_or(DslValue::Null)),
+            ("computed".to_string(), to_dsl_value(&self.computed).unwrap_or(DslValue::Null)),
+            ("equation".to_string(), self.equation.to_value()),
+            ("cameraX".to_string(), self.camera_x.to_value()),
+            ("cameraY".to_string(), self.camera_y.to_value()),
+            ("cameraZoom".to_string(), self.camera_zoom.to_value()),
+            ("locale".to_string(), self.locale.to_value()),
+        ])
+    }
+}
+impl FromValue for MathematicalArtifact {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        Ok(Self {
+            notation: from_dsl_value(field("notation")).map_err(ValueError::new)?,
+            results: from_dsl_value(field("results")).map_err(ValueError::new)?,
+            computed: from_dsl_value(field("computed")).map_err(ValueError::new)?,
+            equation: EquationSnapshot::from_value(field("equation"))?,
+            camera_x: f64::from_value(field("cameraX"))?,
+            camera_y: f64::from_value(field("cameraY"))?,
+            camera_zoom: f64::from_value(field("cameraZoom"))?,
+            locale: String::from_value(field("locale"))?,
+        })
+    }
 }
 //#endregion 🔖️Artifact
 

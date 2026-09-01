@@ -6,7 +6,6 @@ use crate::artifacts::pptx::schema::snapshot::{PptxParagraph, PptxShape, PptxSli
 use crate::artifacts::pptx::PptxSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.pptx`. Addresses `presentation.slides` by index
@@ -44,9 +43,9 @@ pub mod set_shape_position;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum PptxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `slide` at `index` (FINAL state).

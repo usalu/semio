@@ -64,6 +64,47 @@ impl PlaybookArtifact {
 }
 //#endregion 🔖️Conversions
 
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `document`/`flow` are `store::ArtifactChild<S>` composed-artifact
+/// handles, which speak `serde` (framework-internal, unaffected by this ticket) rather than
+/// `ToValue`/`FromValue` directly — bridged per-field through the pre-existing
+/// `to_dsl_value`/`from_dsl_value` seam (`🌱️value/🔀️serde`) instead of widening the derive macro to
+/// understand child-slot handles. See the fan-out playbook's "composed artifact fields" trap.
+impl ::semio_framework_os_kernel::ToValue for PlaybookArtifact {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        ::semio_framework_os_kernel::DslValue::object([
+            ("schema".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.schema)),
+            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
+            ("version".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.version)),
+            ("title".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.title)),
+            ("document".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.document).expect("ArtifactChild serializes")),
+            ("flow".to_string(), ::semio_framework_os_kernel::to_dsl_value(&self.flow).expect("ArtifactChild serializes")),
+            ("selectedIds".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.selected_ids)),
+            ("locale".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.locale)),
+            ("contributionsJson".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.contributions_json)),
+        ])
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for PlaybookArtifact {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        let entries = value.into_object()?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| ::semio_framework_os_kernel::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: ::semio_framework_os_kernel::FromValue::from_value(field("schema")?)?,
+            id: ::semio_framework_os_kernel::FromValue::from_value(field("id")?)?,
+            version: ::semio_framework_os_kernel::FromValue::from_value(field("version")?)?,
+            title: ::semio_framework_os_kernel::FromValue::from_value(field("title")?)?,
+            document: ::semio_framework_os_kernel::from_dsl_value(field("document")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+            flow: ::semio_framework_os_kernel::from_dsl_value(field("flow")?).map_err(::semio_framework_os_kernel::ValueError::new)?,
+            selected_ids: ::semio_framework_os_kernel::FromValue::from_value(field("selectedIds")?)?,
+            locale: ::semio_framework_os_kernel::FromValue::from_value(field("locale")?)?,
+            contributions_json: ::semio_framework_os_kernel::FromValue::from_value(field("contributionsJson")?)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
+
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.playbook.playbook` — twenty handcrafted schema leaves.
 pub fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {

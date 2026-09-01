@@ -9,11 +9,9 @@ use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "share-space")]
 pub struct ShareSpace {
     pub space_id: String,
@@ -25,11 +23,11 @@ pub struct ShareSpace {
 //#region 🔖️Handle
 pub async fn handle(payload: &ShareSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, _cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.email.trim().is_empty() {
-        let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id })).ok();
+        let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id })));
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(126), dialog_id: "shareSpace".into(), args }));
     }
     let role = if payload.role.trim().is_empty() { "spectator".to_string() } else { payload.role.clone() };
-    let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "email": payload.email, "role": role })).ok();
+    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id, "email": payload.email, "role": role })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.upsert-member".into(), args }))
 }
 //#endregion 🔖️Handle
@@ -71,7 +69,7 @@ mod tests {
             })
             .expect("a ReplayShellCommand effect");
         assert_eq!(action_id, "os.directory.upsert-member");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args")).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
         assert_eq!(args_value["email"], "ada@semio.dev");
         assert_eq!(args_value["role"], "author");
     }
@@ -92,7 +90,7 @@ mod tests {
                 _ => None,
             })
             .expect("args");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args);
         assert_eq!(args_value["role"], "spectator");
     }
 }

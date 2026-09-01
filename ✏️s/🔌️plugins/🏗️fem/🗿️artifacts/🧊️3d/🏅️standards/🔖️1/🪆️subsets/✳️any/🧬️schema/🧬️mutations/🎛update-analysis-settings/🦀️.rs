@@ -4,15 +4,15 @@ use crate::artifacts::fem3d::{Fem3dSnapshot, FemAnalysisSettings};
 use crate::artifacts::fem3d::diff::Fem3dDiff;
 use crate::artifacts::fem3d::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🎛️ Atomically updates the document's inseparable analysis-settings facet (`modal_count`,
 /// `buckling_count`, `deformation_scale`) — never meaningfully set one field at a time (the command
 /// layer always merges partial input onto the current settings before emitting this).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "update-analysis-settings")]
 pub struct UpdateAnalysisSettings {
     #[dsl(block)]

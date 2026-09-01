@@ -11,7 +11,6 @@ use semio_framework_ui_scene::{
     canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
     canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
 };
-use serde_json::json;
 use std::collections::HashMap;
 use std::fmt::Write;
 
@@ -908,8 +907,8 @@ impl Fem2dVisualJob {
 }
 //#endregion 🧵️MountedVisualJob
 
-fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -> serde_json::Value {
-    json!({
+fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::DslValue {
+    dsl::json!({
         "kind": "polyline",
         "id": id,
         "points": [[origin.0, origin.1], [origin.0 + vector[0], origin.1 - vector[1]]],
@@ -918,7 +917,7 @@ fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -
 }
 
 /// 👁️ Deterministic live overlays for mesh, assembly and iterative solve progress.
-pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<serde_json::Value> {
+pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<dsl::DslValue> {
     let mut layers = Vec::new();
     let mut regions: Vec<_> = doc.regions.iter().collect();
     regions.sort_by(|a, b| a.id.cmp(&b.id));
@@ -935,7 +934,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         if let Some(first) = points.first().copied() {
             points.push(first);
         }
-        layers.push(json!({ "kind": "polyline", "id": format!("region-quality-{}-{}", quality.id(), region.id), "points": points, "color": quality.color() }));
+        layers.push(dsl::json!({ "kind": "polyline", "id": format!("region-quality-{}-{}", quality.id(), region.id), "points": points, "color": quality.color() }));
     }
     let mut assembling = visual.assembling_element_ids.clone();
     assembling.sort();
@@ -945,7 +944,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
         let (Some(a), Some(b)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
         let (x0, y0) = screen_2d(a.x, a.y);
         let (x1, y1) = screen_2d(b.x, b.y);
-        layers.push(json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
+        layers.push(dsl::json!({ "kind": "line", "id": format!("assembling-{id}"), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": "#a855f7" }));
     }
     let mut fields = visual.fields.clone();
     fields.sort_by(|a, b| a.node_id.cmp(&b.node_id));
@@ -962,7 +961,7 @@ pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -
     } else {
         "unconverged"
     };
-    layers.push(json!({ "id": format!("solve-status-{status}"), "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 18.0], "text": { "content": status, "size": 11.0 } }));
+    layers.push(dsl::json!({ "id": format!("solve-status-{status}"), "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 18.0], "text": { "content": status, "size": 11.0 } }));
     layers
 }
 //#endregion 👁️LiveVisualLanguage
@@ -1011,24 +1010,24 @@ pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
+pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::DslValue> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
-        layers.push(json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
+        layers.push(dsl::json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
         if let (Some(n1), Some(n2)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) {
             let (x0, y0) = screen_2d(n1.x, n1.y);
             let (x1, y1) = screen_2d(n2.x, n2.y);
-            layers.push(json!({ "kind": "line", "id": format!("el-{}", element_id(element)), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": line_color }));
+            layers.push(dsl::json!({ "kind": "line", "id": format!("el-{}", element_id(element)), "x0": x0, "y0": y0, "x1": x1, "y1": y1, "color": line_color }));
         }
     }
     for support in &doc.supports {
         if let Some(node) = find_node_2d(&doc.nodes, &support.node_id) {
             let (sx, sy) = screen_2d(node.x, node.y);
-            layers.push(json!({ "kind": "circle", "id": format!("support-{}", support.id), "x": sx - 5.0, "y": sy - 5.0, "width": 10.0, "height": 10.0, "color": support_color }));
+            layers.push(dsl::json!({ "kind": "circle", "id": format!("support-{}", support.id), "x": sx - 5.0, "y": sy - 5.0, "width": 10.0, "height": 10.0, "color": support_color }));
         }
     }
     for case in &doc.load_cases {
@@ -1104,7 +1103,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<serde_json::Value> {
+pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<dsl::DslValue> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -1117,7 +1116,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
         let dy0 = -d1[Dof::Ty.index()] * deform_scale * SCALE_2D;
         let dx1 = d2[Dof::Tx.index()] * deform_scale * SCALE_2D;
         let dy1 = -d2[Dof::Ty.index()] * deform_scale * SCALE_2D;
-        layers.push(json!({
+        layers.push(dsl::json!({
             "kind": "polyline",
             "id": format!("deformed-{}", element_id(element)),
             "points": [[x0 + dx0, y0 + dy0], [x1 + dx1, y1 + dy1]],
@@ -1133,14 +1132,14 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
-        layers.push(json!({
+        layers.push(dsl::json!({
             "kind": "polyline",
             "id": format!("mesh-edge-{tri_index}"),
             "points": [[x0, y0], [x1, y1], [x1, y1], [x2, y2], [x2, y2], [x0, y0]],
             "color": MESH_EDGE_COLOR,
         }));
     }
-    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
@@ -1224,7 +1223,7 @@ mod tests {
                 converged: quality == RegionVisualQuality::Final,
                 validated_final: quality == RegionVisualQuality::Final,
             };
-            let encoded = serde_json::to_string(&fem2d_live_visual_layers(&doc, &visual)).expect("visual serializes");
+            let encoded = dsl::json::to_string(&dsl::json::Value::Array(fem2d_live_visual_layers(&doc, &visual)));
             assert!(encoded.contains(&format!("region-quality-{}", quality.id())));
             assert!(encoded.contains("assembling-"));
             assert!(encoded.contains("displacement-field-"));
@@ -1237,7 +1236,7 @@ mod tests {
     async fn model_visual_language_includes_load_and_support_glyphs() {
         use store::ArtifactDsl;
         let doc = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse example");
-        let encoded = serde_json::to_string(&fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")).expect("visual serializes");
+        let encoded = dsl::json::to_string(&dsl::json::Value::Array(fem2d_structure_layers(&doc, "#38bdf8", "#94a3b8", "#f97316")));
         assert!(encoded.contains("support-"));
         assert!(encoded.contains("load-"));
     }

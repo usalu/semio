@@ -127,12 +127,12 @@ impl protocol::OpBinary for Process3dMutationDsl {
 
 fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationDsl {
     match mutation {
-        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: serde_json::to_string(&payload.step).expect("ProcessStep is always JSON-serializable") },
+        Process3dMutation::CreateStep(payload) => Process3dMutationDsl::CreateStep { index: payload.index, step_json: semio_framework_os_kernel::json::to_json_string(&payload.step) },
         Process3dMutation::DeleteStep(payload) => Process3dMutationDsl::DeleteStep { id: payload.id.clone() },
         Process3dMutation::RenameStep(payload) => Process3dMutationDsl::RenameStep { id: payload.id.clone(), new_label: payload.new_label.clone() },
         Process3dMutation::ChangeStepEnabled(payload) => Process3dMutationDsl::ChangeStepEnabled { id: payload.id.clone(), new_enabled: payload.new_enabled },
         Process3dMutation::ChangeStepOrigin(payload) => Process3dMutationDsl::ChangeStepOrigin { id: payload.id.clone(), new_origin: payload.new_origin.clone() },
-        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure_json: serde_json::to_string(&payload.new_measure).expect("ProcessMeasure is always JSON-serializable") },
+        Process3dMutation::ReplaceStepMeasure(payload) => Process3dMutationDsl::ReplaceStepMeasure { id: payload.id.clone(), new_measure_json: semio_framework_os_kernel::json::to_json_string(&payload.new_measure) },
         Process3dMutation::ReorderSteps(payload) => Process3dMutationDsl::ReorderSteps { id: payload.id.clone(), to_index: payload.to_index },
         Process3dMutation::CreateMachine(payload) => Process3dMutationDsl::CreateMachine { index: payload.index, machine: payload.machine.clone() },
         Process3dMutation::DeleteMachine(payload) => Process3dMutationDsl::DeleteMachine { id: payload.id.clone() },
@@ -141,20 +141,20 @@ fn process3d_mutation_to_dsl(mutation: &Process3dMutation) -> Process3dMutationD
         Process3dMutation::ReplaceMachineCapabilities(payload) => Process3dMutationDsl::ReplaceMachineCapabilities { id: payload.id.clone(), new_capabilities: payload.new_capabilities.clone() },
         Process3dMutation::MoveStock(payload) => Process3dMutationDsl::MoveStock { new_pose: payload.new_pose.clone() },
         Process3dMutation::ChangeStockLabel(payload) => Process3dMutationDsl::ChangeStockLabel { new_label: payload.new_label.clone() },
-        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: serde_json::to_string(&payload.new_solid).expect("ArtifactChild is always JSON-serializable") },
+        Process3dMutation::ReplaceStockSolid(payload) => Process3dMutationDsl::ReplaceStockSolid { new_solid_json: semio_framework_os_kernel::json::to_json_string(&payload.new_solid) },
         Process3dMutation::ChangeCursor(payload) => Process3dMutationDsl::ChangeCursor { new_resolved_up_to: payload.new_resolved_up_to },
     }
 }
 
 fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutation {
     match mutation {
-        Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step: serde_json::from_str(&step_json).expect("valid ProcessStep json") }),
+        Process3dMutationDsl::CreateStep { index, step_json } => Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step: semio_framework_os_kernel::json::from_json_str(&step_json).expect("valid ProcessStep json") }),
         Process3dMutationDsl::DeleteStep { id } => Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id }),
         Process3dMutationDsl::RenameStep { id, new_label } => Process3dMutation::RenameStep(rename_step::mutation::RenameStep { id, new_label }),
         Process3dMutationDsl::ChangeStepEnabled { id, new_enabled } => Process3dMutation::ChangeStepEnabled(change_step_enabled::mutation::ChangeStepEnabled { id, new_enabled }),
         Process3dMutationDsl::ChangeStepOrigin { id, new_origin } => Process3dMutation::ChangeStepOrigin(change_step_origin::mutation::ChangeStepOrigin { id, new_origin }),
         Process3dMutationDsl::ReplaceStepMeasure { id, new_measure_json } => {
-            Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure: serde_json::from_str(&new_measure_json).expect("valid ProcessMeasure json") })
+            Process3dMutation::ReplaceStepMeasure(replace_step_measure::mutation::ReplaceStepMeasure { id, new_measure: semio_framework_os_kernel::json::from_json_str(&new_measure_json).expect("valid ProcessMeasure json") })
         }
         Process3dMutationDsl::ReorderSteps { id, to_index } => Process3dMutation::ReorderSteps(reorder_steps::mutation::ReorderSteps { id, to_index }),
         Process3dMutationDsl::CreateMachine { index, machine } => Process3dMutation::CreateMachine(create_machine::mutation::CreateMachine { index, machine }),
@@ -164,7 +164,7 @@ fn process3d_mutation_from_dsl(mutation: Process3dMutationDsl) -> Process3dMutat
         Process3dMutationDsl::ReplaceMachineCapabilities { id, new_capabilities } => Process3dMutation::ReplaceMachineCapabilities(replace_machine_capabilities::mutation::ReplaceMachineCapabilities { id, new_capabilities }),
         Process3dMutationDsl::MoveStock { new_pose } => Process3dMutation::MoveStock(move_stock::mutation::MoveStock { new_pose }),
         Process3dMutationDsl::ChangeStockLabel { new_label } => Process3dMutation::ChangeStockLabel(change_stock_label::mutation::ChangeStockLabel { new_label }),
-        Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid: serde_json::from_str(&new_solid_json).expect("valid ArtifactChild json") }),
+        Process3dMutationDsl::ReplaceStockSolid { new_solid_json } => Process3dMutation::ReplaceStockSolid(replace_stock_solid::mutation::ReplaceStockSolid { new_solid: semio_framework_os_kernel::json::from_json_str(&new_solid_json).expect("valid ArtifactChild json") }),
         Process3dMutationDsl::ChangeCursor { new_resolved_up_to } => Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to }),
     }
 }
@@ -323,15 +323,19 @@ mod tests {
         store::os_store::test_support::assert_op_line_round_trip(&Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: None }));
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `CreateStep` is a documented
-    /// no-op now (`steps` composes an `s.stdio.semio.flow` CHILD HANDLE — no resolver, see
-    /// `ProcessWorkingScene`'s doc comment), so per the sanctioned `MutationKind::inverse` contract
-    /// ("a mutation with nothing to undo returns `Vec::new()`"), there is nothing to invert.
+    /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `CreateStep` is a real mutation against the durable
+    /// `step_payloads` timeline now, so undo of a create is a `DeleteStep` by the created id —
+    /// mirrors `inverse_of_create_machine_is_delete_machine` below.
     #[semio_framework_async_macros::async_test]
-    async fn inverse_of_create_step_is_empty_since_it_is_a_documented_no_op() {
+    async fn inverse_of_create_step_is_delete_step() {
         let snapshot = empty_process3d_snapshot();
         let mutation = Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step: cut_step("a") });
-        assert!(mutation.inverse(&snapshot).is_empty());
+        let inverse = mutation.inverse(&snapshot);
+        assert_eq!(inverse.len(), 1);
+        match &inverse[0] {
+            Process3dMutation::DeleteStep(payload) => assert_eq!(payload.id, "a"),
+            _ => panic!("expected DeleteStep"),
+        }
     }
 
     #[semio_framework_async_macros::async_test]

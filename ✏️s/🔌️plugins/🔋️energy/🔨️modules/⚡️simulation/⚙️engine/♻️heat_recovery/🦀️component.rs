@@ -3,10 +3,11 @@
 use crate::props::moist_air_enthalpy_j_per_kg;
 use crate::units::{CP_DRY_AIR, H_FG_0C};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️HeatRecovery
 /// ♻️ Heat recovery ventilator configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HeatRecoveryUnit {
     pub hx_type: HeatExchangerType,
     pub sensible_effectiveness: f64,
@@ -16,7 +17,7 @@ pub struct HeatRecoveryUnit {
 }
 
 /// 🔀️ Heat exchanger flow arrangement.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum HeatExchangerType {
     CounterFlow,
     CrossFlow,
@@ -24,7 +25,7 @@ pub enum HeatExchangerType {
 }
 
 /// 📥️ Supply and exhaust airstreams at HX inlet.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HxAirstream {
     pub temperature_c: f64,
     pub humidity_ratio: f64,
@@ -33,7 +34,7 @@ pub struct HxAirstream {
 }
 
 /// 📤️ Heat recovery exchange result.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HeatRecoveryOutput {
     pub supply_out: HxAirstream,
     pub exhaust_out: HxAirstream,

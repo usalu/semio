@@ -9,6 +9,9 @@ use crate::artifacts::mathematical::MathematicalSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 use super::roots::{compute_mathematical_roots, MathematicalRoot};
 use super::topology::{compute_mathematical_topology, MathematicalTopology};
@@ -16,8 +19,9 @@ use super::topology::{compute_mathematical_topology, MathematicalTopology};
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a mathematical snapshot. One field per named inference under
 /// `💡️inferences/` (`topology`, backed by `🧭topology/`; `roots`, backed by `🌱roots/`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.mathematical.mathematical.inference")]
 pub struct MathematicalInference {
     #[derived]

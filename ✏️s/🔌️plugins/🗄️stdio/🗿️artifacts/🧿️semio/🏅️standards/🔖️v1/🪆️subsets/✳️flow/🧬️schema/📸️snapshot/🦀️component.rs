@@ -9,8 +9,8 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{spli
 
 //#region 🔖️PortRef
 /// 🔌️ Addresses one named port on one node — the endpoint shape `FlowEdge` connects through.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PortRef {
     pub node: String,
     pub port: String,
@@ -21,8 +21,8 @@ pub struct PortRef {
 /// 🎛️ One ordered key-value node parameter. String-valued is the honest boundary for a flow
 /// DAG's per-node config — a richer typed value graph is `value` subset's job (`SemioValue`), not
 /// flow's; see w1b-type-ownership.md's per-subset owned-types table.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowParam {
     pub key: String,
     pub value: String,
@@ -34,13 +34,13 @@ pub struct FlowParam {
 /// `semio_framework::WorkflowNode` (a different crate, `semio-framework`, not
 /// `semio-s-plugin-stdio`) — same name, zero collision risk, do not conflate the two (see
 /// w1b-type-ownership.md).
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowNode {
     pub id: String,
     pub kind: String,
     pub label: String,
-    #[serde(default)]
+    #[value(default)]
     pub params: Vec<FlowParam>,
     pub position: SemioPoint2,
 }
@@ -50,8 +50,8 @@ pub struct FlowNode {
 /// ➡️ Owned by the `flow` subset. `id`-keyed (like `nodes`) so the sparse diff can address one
 /// edge by identity rather than by its `(from,to,kind)` value, which is not guaranteed unique in a
 /// real multigraph DAG.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct FlowEdge {
     pub id: String,
     pub from: PortRef,
@@ -61,26 +61,25 @@ pub struct FlowEdge {
 //#endregion 🔖️Edge
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOFLOW_DOCUMENT_SCHEMA: &str = "stdio.semio.flow";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow")]
 pub struct SemioFlowSnapshot {
     #[state(artifact)]
     pub schema: String,
     /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub nodes: Vec<FlowNode>,
     /// 🆔️ Id-keyed strong collection — sparse-diffed via `🧰️triples::NamedTripleDiff`.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<FlowEdge>,
 }
 
@@ -390,7 +389,7 @@ pub fn encode_semio_flow_pack(snapshot: &SemioFlowSnapshot) -> Vec<u8> {
     <SemioFlowSnapshot as store::ArtifactPack>::encode_pack(snapshot)
 }
 
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.flow` — the shape the `mutate-semio-flow` case compares under `ordered-json-v1`. A thin
 /// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
 /// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is

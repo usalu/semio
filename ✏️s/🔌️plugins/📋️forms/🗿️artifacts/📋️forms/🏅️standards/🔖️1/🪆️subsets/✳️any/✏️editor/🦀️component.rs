@@ -30,7 +30,6 @@ use semio_framework_plugin::{
     HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability,
     SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
 };
-use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use store::EngineHandles;
 
@@ -178,13 +177,13 @@ pub async fn forms_parse_contributions(config: &FormsConfig) -> Vec<ProgramContr
 pub use forms_parse_contributions as parse_contributions;
 
 /// 🗂️ `forms.questionKind` topic payload shape, decoded from the open `TopicContribution`.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct FormsQuestionKindTopicPayload {
     app_id: String,
     question_kind: String,
     label: String,
-    icon_id: IconName,
+    icon_id: String,
     params_body_key: String,
     preview_body_key: String,
 }
@@ -278,7 +277,7 @@ pub async fn catalogue_kinds(contributions: &[ProgramContributionEntry], labels:
             .as_ref()
             .filter(|topic_contribution| topic_contribution.topic == FORMS_QUESTION_KIND_TOPIC)
             .and_then(|topic_contribution| topic_contribution.decode::<FormsQuestionKindTopicPayload>().ok())
-            .map(|payload| (payload.question_kind, payload.label, payload.icon_id));
+            .map(|payload| (payload.question_kind, payload.label, IconName::from(payload.icon_id.as_str())));
         if let Some(kind) = topic_kind {
             kinds.push(kind);
         }
@@ -644,14 +643,14 @@ pub(crate) mod testkit {
             plugin_id: "forms-module-procedural".into(),
             topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
                 "forms.questionKind",
-                json!({
-                    "appId": "forms-module-procedural",
-                    "questionKind": "buildingComponent",
-                    "label": "Building Component",
-                    "iconId": "building",
-                    "paramsBodyKey": "params",
-                    "previewBodyKey": "preview",
-                }),
+                semio_framework_os_kernel::DslValue::object([
+                    ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
+                    ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+                    ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
+                ]),
             )),
         }]
     }
@@ -868,14 +867,14 @@ mod tests {
             plugin_id: "forms-module-procedural".into(),
             topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
                 "forms.questionKind",
-                json!({
-                    "appId": "forms-module-procedural",
-                    "questionKind": "buildingComponent",
-                    "label": "Building Component",
-                    "iconId": "building",
-                    "paramsBodyKey": "params",
-                    "previewBodyKey": "preview",
-                }),
+                semio_framework_os_kernel::DslValue::object([
+                    ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
+                    ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+                    ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
+                ]),
             )),
         }];
         let node = render_extension_question(&building_component_question(), &Map::new(), &topic_only, "try", true);
@@ -891,14 +890,14 @@ mod tests {
             plugin_id: "forms-module-procedural".into(),
             topic_contribution: Some(semio_framework_plugin::TopicContribution::new(
                 "forms.questionKind",
-                json!({
-                    "appId": "forms-module-procedural",
-                    "questionKind": "buildingComponent",
-                    "label": "Building Component",
-                    "iconId": "building",
-                    "paramsBodyKey": "params",
-                    "previewBodyKey": "preview",
-                }),
+                semio_framework_os_kernel::DslValue::object([
+                    ("appId".to_string(), semio_framework_os_kernel::DslValue::String("forms-module-procedural".to_string())),
+                    ("questionKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+                    ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String("preview".to_string())),
+                ]),
             )),
         }];
         let labels = forms_play_labels(&FormsConfig::default());

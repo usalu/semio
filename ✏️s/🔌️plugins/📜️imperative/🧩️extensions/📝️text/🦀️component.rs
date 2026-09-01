@@ -1,6 +1,7 @@
 //! 📝️ Imperative text module: string action operators.
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
+use pack::json::{array, object, to_string, Value as JsonValue};
 
 // #region 🔖️TextConcat
 pub struct TextConcat;
@@ -68,33 +69,18 @@ pub fn register(registry: &mut Registry) {
 }
 
 pub fn catalogue_json(registry: &Registry) -> String {
-    let items: Vec<serde_json::Value> = ["text.concat", "text.uppercase", "text.length"]
-        .iter()
-        .filter_map(|kind| registry.operator_info(kind))
-        .map(|info| {
-            serde_json::json!({
-                "kind": info.id,
-                "name": info.name,
-                "abbreviation": info.abbreviation,
-                "icon": info.icon,
-                "summary": info.summary,
-                "module": info.extension,
-                "inputs": info.inputs.iter().map(|channel| serde_json::json!({
-                    "name": channel.name,
-                    "code": channel.code,
-                })).collect::<Vec<_>>(),
-            })
-        })
-        .collect();
-    serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue",
-        "sections": [{
-            "id": "text",
-            "title": "Text",
-            "items": items,
-        }],
-    }))
-    .unwrap_or_else(|_| "{}".into())
+    let items = array(["text.concat", "text.uppercase", "text.length"].iter().filter_map(|kind| registry.operator_info(kind)).map(|info| {
+        object([
+            ("kind".to_string(), JsonValue::from(info.id.as_str())),
+            ("name".to_string(), JsonValue::from(info.name.as_str())),
+            ("abbreviation".to_string(), JsonValue::from(info.abbreviation.as_str())),
+            ("icon".to_string(), JsonValue::from(info.icon.as_str())),
+            ("summary".to_string(), JsonValue::from(info.summary.as_str())),
+            ("module".to_string(), JsonValue::from(info.extension.as_str())),
+            ("inputs".to_string(), array(info.inputs.iter().map(|channel| object([("name".to_string(), JsonValue::from(channel.name.as_str())), ("code".to_string(), JsonValue::from(channel.code.as_str()))])))),
+        ])
+    }));
+    to_string(&object([("schema".to_string(), JsonValue::from("imperative.catalogue")), ("sections".to_string(), array([object([("id".to_string(), JsonValue::from("text")), ("title".to_string(), JsonValue::from("Text")), ("items".to_string(), items)])]))]))
 }
 
 pub fn module_registry() -> Registry {

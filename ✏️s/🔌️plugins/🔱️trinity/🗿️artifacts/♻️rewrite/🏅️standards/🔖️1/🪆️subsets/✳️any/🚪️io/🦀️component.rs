@@ -128,7 +128,7 @@ pub mod io_registry {
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == REWRITE_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
-            // deserialized `serde_json::Value`, not this artifact's own wire text/binary -- json
+            // deserialized `pack::JsonValue`, not this artifact's own wire text/binary -- json
             // is the universal bridge dialect every domain artifact already imports from.
             let bytes: Vec<u8> = match &source.payload {
                 IoPayload::Text(t) => t.as_bytes().to_vec(),

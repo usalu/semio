@@ -19,16 +19,21 @@ path = "🦀️.rs"
 [features]
 default = []
 # 🗜️ Deflate segment compression (`CodecId(1)`); off by default so the pure contract stays dependency-light.
-deflate = ["dep:miniz_oxide"]
+deflate = ["dep:semio-framework-deflate"]
 
 [dependencies]
 semio-framework-hash = { path = "../../../🔢️hash/📦️packages/🦀️rust" }
-miniz_oxide = { version = "0.8", optional = true }
+semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀️rust", optional = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ `⚠️diagnostic`'s `fault_to_js`/`result_fault_to_js` hand a `Fault` across the JS boundary as a
+# `JsValue`; `🧩️puzzle`'s `🌉️wasm` bridge calls them on ~20 lines, so the dep is retired together
+# with those two functions and their callers, not ahead of them. Gated `not(target_env = "p2")`
+# because `target_arch = "wasm32"` is TRUE for the WASI component target too — the same exclusion
+# `💻️os`'s own browser-bridge block uses, and the reason those two functions carry the same cfg.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen = "0.2.106"
 
 [dev-dependencies]

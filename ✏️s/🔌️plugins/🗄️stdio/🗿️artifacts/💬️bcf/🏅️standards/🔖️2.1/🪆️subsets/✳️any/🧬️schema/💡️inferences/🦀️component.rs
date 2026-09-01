@@ -8,15 +8,14 @@
 
 use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::topicstats::{compute_bcf_topic_stats, BcfTopicStats};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a bcf snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topicStats`, backed by the `🗒topicstats/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf.inference")]
 pub struct BcfInference {
     #[derived]

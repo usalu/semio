@@ -46,12 +46,12 @@ async fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::Arti
 }
 
 async fn write_equation(out: &mut Vec<u8>, e: &EquationSnapshot) {
-    write_bytes_lp(out, serde_json::to_string(e).expect("EquationSnapshot serializes").as_bytes());
+    write_bytes_lp(out, pack::json::to_json_string(e).as_bytes());
 }
 async fn read_equation(reader: &mut store::ByteReader<'_>) -> Result<EquationSnapshot, String> {
     let bytes = read_bytes_lp(reader)?;
     let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    serde_json::from_str(&text).map_err(|e| e.to_string())
+    pack::json::from_json_str(&text).map_err(|e| e.to_string())
 }
 
 async fn encode_mathematical_snapshot_binary(s: &MathematicalSnapshot) -> Vec<u8> {

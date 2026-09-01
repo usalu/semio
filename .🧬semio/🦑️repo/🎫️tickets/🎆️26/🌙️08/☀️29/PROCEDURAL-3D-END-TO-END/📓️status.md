@@ -567,3 +567,28 @@ code, not a target artifact), clustered as: assembly schema 50, procedural3d edi
 schema 27, procedural2d editor 19, procedural3d schema 10. The crate's single test binary needs all
 of them fixed before ANY test in it runs — including this ticket's own eight, which therefore remain
 authored but unrun.
+
+## 🧨️ Near-miss: port 6018 belongs to a DIFFERENT worktree
+The first runtime attempt looked like it worked — `http://localhost:6018` returned 200, the OS shell
+loaded, and the console showed real errors (`unknown catalog icon name: bim`, `packValueFromBase64:
+expected pk: prefix`). **None of it was this tree.**
+
+The giveaway was the panic's own path, which uses a taxonomy this repo no longer has —
+`🔨️module` / `🖼️asset` / `⚡️implementation` (singular) instead of `🔨️modules` / `🖼️assets` /
+`📦️packages`. Chasing that:
+```
+lsof -nP -iTCP:6018 -sTCP:LISTEN -t → 37859
+cwd → /Users/ueli/Documents/semio.worktrees/2/…
+     node …/semio.worktrees/2/node_modules/.bin/vite --port 6018 --strictPort
+```
+Another session holds 6018 with `--strictPort`, so this tree's server could never bind it and the
+harness simply attached to whatever was already answering. Had the icon panic been taken at face
+value it would have been filed as a bug in this ticket's `bim` mounting — it is not; it is a stale
+build in an unrelated worktree.
+
+**Fix:** `.claude/launch.json`'s `procedural3d-react` now uses port **6019** with
+`PROCEDURAL_3D_PLAY_PORT=6019`, and every runtime observation must be confirmed against the
+listening pid's `cwd` before being believed:
+```
+lsof -a -p $(lsof -nP -iTCP:<port> -sTCP:LISTEN -t) -d cwd -Fn
+```

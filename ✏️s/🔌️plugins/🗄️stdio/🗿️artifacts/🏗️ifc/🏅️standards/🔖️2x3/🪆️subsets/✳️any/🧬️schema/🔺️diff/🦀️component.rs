@@ -13,34 +13,33 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // instead, same as `txt`'s own `🔺️diff/🦀️component.rs`.
 use protocol::os_spr::command::DiffAlgebra;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeSet, HashSet};
 use std::fmt::Write as _;
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.ifc.2x3`. `header` is a whole-record replace (it's a 3-field header, not
 /// worth a sub-algebra); `removed_instances`/`upserted_instances` are the id-keyed instance delta.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3.diff")]
 pub struct Ifc2x3Diff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub schema: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub header: Option<Part21Header>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed_instances: Vec<u64>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub upserted_instances: Vec<Part21Instance>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub edm_preamble: Option<Option<Ifc2x3EdmPreamble>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub instance_order: Option<Vec<u64>>,
 }
 
@@ -463,7 +462,7 @@ fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
             enc_part21_values_into(items, out);
             out.push(']');
         }
-        Part21Value::Typed(name, items) => {
+        Part21Value::Typed { name, items } => {
             out.push_str("T[");
             hex_encode_into(name.as_bytes(), out);
             out.push_str(",[");
@@ -508,7 +507,7 @@ pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
             let parts = split_top_level(inner, ',');
             let [name, items_s] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
             let items = split_top_level(strip_brackets(items_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_part21_value).collect::<Result<Vec<_>, String>>()?;
-            Ok(Part21Value::Typed(dec_str(name)?, items))
+            Ok(Part21Value::Typed { name: dec_str(name)?, items })
         }
         other => Err(format!("part21 value: unknown tag {other:?}")),
     }
@@ -576,7 +575,7 @@ pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
             out.push(7);
             enc_part21_value_list_bin(items, out);
         }
-        Part21Value::Typed(name, items) => {
+        Part21Value::Typed { name, items } => {
             out.push(8);
             write_str_bin(out, name);
             enc_part21_value_list_bin(items, out);
@@ -608,7 +607,7 @@ pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result
         8 => {
             let name = read_str_bin(reader)?;
             let items = dec_part21_value_list_bin(reader)?;
-            Ok(Part21Value::Typed(name, items))
+            Ok(Part21Value::Typed { name, items })
         }
         other => Err(format!("part21 value binary: unknown tag {other}")),
     }
@@ -961,7 +960,7 @@ pub(crate) fn demo_diff_cases() -> Vec<Ifc2x3Diff> {
     }
     b.document
         .instances
-        .push(Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())])])] });
+        .push(Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::List(vec![Part21Value::Int(1), Part21Value::Int(2)]), Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] }])] });
     vec![Ifc2x3Diff::default(), Ifc2x3Diff::between(&a, &b), Ifc2x3Diff::between(&b, &a)]
 }
 //#endregion 🔖️DemoCases
@@ -1079,7 +1078,7 @@ mod tests {
                     file_schema: vec![Part21Value::List(vec![Part21Value::Str("IFC2X3".into())])],
                 }),
                 removed_instances: vec![1, 2],
-                upserted_instances: vec![complex_inst.clone(), Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::Typed("IFCLENGTHMEASURE".into(), vec![Part21Value::Real(3000.0.into())])])] }],
+                upserted_instances: vec![complex_inst.clone(), Part21Instance { id: 300, entities: vec![("IFCBUILDINGSTOREY".into(), vec![Part21Value::Typed { name: "IFCLENGTHMEASURE".into(), items: vec![Part21Value::Real(3000.0.into())] }])] }],
                 edm_preamble: None,
                 instance_order: None,
             },

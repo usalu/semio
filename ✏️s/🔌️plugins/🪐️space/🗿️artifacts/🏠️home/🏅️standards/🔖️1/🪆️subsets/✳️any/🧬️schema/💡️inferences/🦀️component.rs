@@ -14,15 +14,14 @@ use crate::artifacts::home::SHomeSnapshot;
 use protocol::Inference;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::digest::compute_content_digest;
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an S Home snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `contentDigest`, backed by the `🆔digest/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home.inference")]
 pub struct SHomeInference {
     #[derived]

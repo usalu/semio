@@ -78,7 +78,7 @@ pub fn render(document: &JackSnapshot) -> semio_framework_plugin::UiAssemblyResu
         .collect();
     let viewport = NodeGraphViewport { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
-    scene.controls_json = Some(serde_json::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
+    scene.controls_json = Some(pack::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
     let props = semio_framework_ui_scene::encode(SurfaceKind::NodeGraph, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Trinity node-graph scene admission failed"))?;
     semio_framework_ui_contract::surface(props)
         .try_id(SURFACE_ID)
@@ -104,7 +104,7 @@ mod tests {
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::jack::empty_trinity_graph_fixture();
         let node = render(&document);
-        assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
+        assert!(pack::to_json_string(&node).contains("node-graph"));
     }
 }
 //#endregion 🧪️Tests

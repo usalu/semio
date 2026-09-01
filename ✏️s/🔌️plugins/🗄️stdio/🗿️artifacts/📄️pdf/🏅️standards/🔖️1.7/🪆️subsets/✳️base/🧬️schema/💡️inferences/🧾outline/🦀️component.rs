@@ -4,16 +4,15 @@
 //! `title` field (real, honestly optional — a source PDF may carry no `/Title`).
 
 use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Pdf` (1.7) document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Pdf17Outline {
     pub page_count: u32,
     pub word_count: u32,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
 }
 

@@ -12,7 +12,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::add_design;
@@ -33,7 +32,7 @@ use super::unbind_representation;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioKitSnapshot, diff = SemioKitDiff, schema = "s.stdio.semio.kit")]
 pub enum SemioKitMutation {
     CreateObject(create_object::CreateObject),
@@ -99,7 +98,7 @@ pub fn inverse_semio_kit_mutation(mutation: &SemioKitMutation, base: &SemioKitSn
 
 /// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
 /// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` specification-vector fixtures carry
-/// (externally tagged by variant name, snake_case payload fields — no `#[serde(rename_all)]` on
+/// (externally tagged by variant name, snake_case payload fields — no `#[value(rename_all)]` on
 /// this enum or its payload structs) — into a real `SemioKitMutation`. Same rationale as
 /// `../📸️snapshot/🦀️component.rs`'s `decode_kit_snapshot_json`.
 pub fn decode_kit_mutation_json(text: &str) -> Result<SemioKitMutation, String> {

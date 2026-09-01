@@ -10,7 +10,6 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation";
@@ -20,8 +19,8 @@ pub const STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA: &str = "s.stdio.semio.animation"
 /// 🎯️ Which property of a node a channel drives — gltf `channel.target.path`, widened with a
 /// `Custom` escape hatch for engine/extension-defined paths gltf's own spec leaves open
 /// (`KHR_*` animation-pointer style extensions target arbitrary properties by name).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum AnimTargetProperty {
     Translation,
     Rotation,
@@ -37,19 +36,19 @@ impl Default for AnimTargetProperty {
 }
 
 /// 🎯️ A channel's animated node + which of its properties is driven.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimTarget {
     pub node: String,
-    #[serde(default)]
+    #[value(default)]
     pub property: AnimTargetProperty,
 }
 //#endregion 🔖️Target
 
 //#region 🔖️Interpolation
 /// 📈️ gltf `sampler.interpolation` — how `keyframes` are resampled between `t` values.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum AnimInterpolation {
     Linear,
     Step,
@@ -69,8 +68,8 @@ impl Default for AnimInterpolation {
 /// translation/scale, `Quat` for rotation (reuses the shared named quaternion, never a bare
 /// `[f64;4]`), `Weights` for morph-target weight vectors (arity = mesh's own primitive count, not
 /// fixed — hence `Vec<f64>`, not a fixed array).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum AnimValue {
     Scalar { value: f64 },
     Vec3 { value: SemioPoint3 },
@@ -89,11 +88,11 @@ impl Default for AnimValue {
 /// ⏱️ One sample point on a channel's timeline. Real GIFs/glTF exporters expect `t` non-decreasing
 /// across a channel's own `keyframes` (a `SubsetValidator` referential invariant, see the
 /// `🎹️composer` module) but this type itself stores whatever was decoded, honestly.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimKeyframe {
     pub t: f64,
-    #[serde(default)]
+    #[value(default)]
     pub value: AnimValue,
 }
 //#endregion 🔖️Keyframe
@@ -102,13 +101,13 @@ pub struct AnimKeyframe {
 /// 🎚️ One animated property track: gltf `channel` + its `sampler`, flattened into a single owned
 /// keyframe list (this snapshot does not separately model gltf's accessor-indirection — the
 /// keyframes ARE the resolved sample data).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimChannel {
     pub target: AnimTarget,
-    #[serde(default)]
+    #[value(default)]
     pub interpolation: AnimInterpolation,
-    #[serde(default)]
+    #[value(default)]
     pub keyframes: Vec<AnimKeyframe>,
 }
 //#endregion 🔖️Channel
@@ -117,25 +116,25 @@ pub struct AnimChannel {
 /// 🎬️ One gltf `animation` entry — an optional display `name` (gltf's own `animation.name` is
 /// optional and not spec-required to be unique, hence `Option<String>` rather than a name key) plus
 /// its ordered `channels`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimTimeline {
-    #[serde(default)]
+    #[value(default)]
     pub name: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub channels: Vec<AnimChannel>,
 }
 //#endregion 🔖️Timeline
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation")]
 pub struct SemioAnimationSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub timelines: Vec<AnimTimeline>,
 }
 

@@ -4,12 +4,11 @@
 //! summed over every page's shown text.
 
 use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Pdf` (1.4) document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfOutline {
     pub page_count: u32,
     pub word_count: u32,

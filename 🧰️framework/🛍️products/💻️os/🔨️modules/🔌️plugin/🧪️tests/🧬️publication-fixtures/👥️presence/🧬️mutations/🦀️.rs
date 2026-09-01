@@ -4,8 +4,9 @@
 pub mod change_publication_presence;
 pub use change_publication_presence::ChangePublicationPresence;
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = super::PublicationPresence, diff = super::PublicationPresenceDiff, schema = "plugin.test.publication-presence")]
 pub enum PublicationPresenceMutation {
     ChangePublicationPresence(ChangePublicationPresence),

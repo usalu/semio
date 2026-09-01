@@ -30,7 +30,6 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::MutationApplyError;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ `NoChange` and the 13 same-kind wrappers are the common case (a mutation stayed within its
@@ -39,8 +38,8 @@ use serde::{Deserialize, Serialize};
 /// `a`/`b` carry DIFFERENT subset kinds (there is no such thing as a "sparse diff" between, say,
 /// a brep and a video — the kind itself changed). `Box` keeps this enum's own stack size small
 /// despite embedding 13 heterogeneous, Vec-heavy nested diff types.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioDiff {
     #[default]
     NoChange,

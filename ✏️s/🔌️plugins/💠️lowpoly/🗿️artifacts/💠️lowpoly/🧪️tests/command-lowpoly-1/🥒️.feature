@@ -1,7 +1,7 @@
 @capability-lowpoly-1-commands
 @no-oracle-lowpoly-command-catalog-shape
 @comparison-ordered-json-v1
-Feature: One representative command per group constructs and reports its manifest id correctly
+Feature: One representative command per group constructs and reports its manifest id, and patchObject dispatches
   This case exercises the lowpoly editor's declared command CATALOG — 47 commands across 13 groups
   (`✏️patch-object`, `➕️add-primitive`, `🌞️sun`, `🎥️camera`, `👁️chrome`, `💬️engagement`, `📄️fixture`,
   `🔷️mesh-edit`, `🖌️paint`, `🗂️selection`, `🧰️utility`, `🧲️transform`, `🧵️uv`; this ticket's own
@@ -10,35 +10,12 @@ Feature: One representative command per group constructs and reports its manifes
   command per group, constructed with the same example payload the crate's own `every_command()` test
   helper uses (`🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`'s `#[cfg(test)] mod tests`).
 
-  ⚠️ REDUCED SCOPE, STATED HONESTLY — READ BEFORE EXTENDING THIS CASE. The original intent (this
-  ticket's own brief) was: dispatch each representative command against a known starting snapshot and
-  assert the MUTATION it produces. That is NOT achievable from an externally generated Rust test host
-  today, for EVERY plugin in this repository, not only lowpoly — confirmed by
-  `grep -rl "ArtifactView\|ConfigView" --include="🦀️.rs" ✏️s | grep 🧪️tests/` returning NOTHING.
-  `semio_framework_plugin::app_commands!` generates `LowpolyCommand::dispatch(&self, doc: &ArtifactView<..>,
-  cfg: &ConfigView<..>, ctx: &mut LowpolyScratch) -> Result<Emit<..>, Fault>`, and every per-command
-  `handle()` carries the identical `ArtifactView`/`ConfigView` parameter pair — both types live in
-  `semio_framework_plugin`, which no generated Rust test host links: `materializeRustHost`
-  (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts`) wires exactly THREE crates —
-  `semio-repo-test-host` (dependency-free by design), this case owner's OWN `sut` crate found by
-  walking UP from the case's owner directory, and `contributedOraclePackages` resolved from an
-  `oracleHostPackages` array declared in an ANCESTOR-scoped `🧪️oracle/🔣️.json` — and lowpoly declares
-  none. `Mutation::diff`/`apply` (needed to verify a mutation's EFFECT) are similarly gated behind the
-  `protocol` crate's `Mutation` trait, also unlinked. Registering `semio-framework-plugin` (and
-  `protocol`) as an `oracleHostPackages` entry would fix this for every future lowpoly test case, but
-  needs a NEW file at an ancestor path of `🗿️artifacts/💠️lowpoly` (this artifact's own root, or the
-  plugin root) — outside the file ownership this pass was granted (`✳️any/🧪️oracle/🔣️.json` is a
-  DESCENDANT of this case's owner, the wrong direction for `oracleHostPackagesFor`'s prefix match) —
-  recorded as a handoff item rather than added unilaterally.
-
-  What IS reachable without any additional crate: `app_commands!` also emits `LowpolyCommand`'s
-  `TOOL_JOB_IDS` constant and `command_id()` as plain INHERENT items (no trait import needed), and
-  every payload struct is a public, directly constructible type. This case therefore asserts the
-  narrower, still-real claim that survives: the representative payload for each group constructs with
-  the documented example shape, and the command it produces reports the exact manifest id
-  `📝️editor-commands.md` (this ticket's own inventory) and the crate's own `every_command()` test both
-  name — a real trip-wire against a payload field rename, a dropped variant, or the row moving to a
-  different `$id`, even though it does not exercise `handle()` itself.
+  The generated Rust subject host links only `semio-repo-test-host` and the lowpoly SUT crate. Lowpoly
+  therefore re-exports `ArtifactView`, `ConfigView`, `Emit`, `Fault`, and `HistoryView` from
+  `semio_s_plugin_lowpoly::editor::lowpoly`, letting generated hosts construct command inputs and
+  inspect command emissions without a direct `semio_framework_plugin` dependency. This case retains
+  catalog-shape coverage for every group and additionally dispatches `patchObject` through that public
+  shim, asserting its one `RenameObject` document mutation and zero config mutations.
 
   @id-command
   @level-long
@@ -69,6 +46,16 @@ Feature: One representative command per group constructs and reports its manifes
       | utility       | utility       | setUtilityParam  |
       | transform     | transform     | transformEnd     |
       | uv            | uv            | unwrapActive     |
+
+  @id-patch-object-dispatch
+  @level-long
+  @mode-conformance
+  Scenario: The patchObject handler emits its rename mutation through the public lowpoly editor shim
+    Given a lowpoly snapshot containing object "obj-1" named "Original"
+    When patchObject receives a request to rename it to "Renamed"
+    Then the generated Rust subject host constructs ArtifactView and ConfigView from the lowpoly crate
+    And patchObject emits exactly one RenameObject mutation for "obj-1" to "Renamed"
+    And patchObject emits zero config mutations
 
   @id-catalog-size
   @level-long

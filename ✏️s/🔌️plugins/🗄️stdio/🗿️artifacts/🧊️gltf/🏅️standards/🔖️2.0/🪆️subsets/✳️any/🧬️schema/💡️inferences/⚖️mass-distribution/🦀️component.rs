@@ -13,10 +13,9 @@ pub mod principal_frame;
 
 use super::super::modules::measurement_contracts::*;
 use super::geometry_core::GltfGeometryContext;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfMassIndicators {
     pub centroid: GltfMeasure<GltfVec3>,
     pub principal_frame: GltfMeasure<GltfPrincipalFrame>,

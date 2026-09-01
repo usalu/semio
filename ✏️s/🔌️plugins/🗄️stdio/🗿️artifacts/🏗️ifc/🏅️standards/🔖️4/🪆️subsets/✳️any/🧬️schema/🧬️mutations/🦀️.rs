@@ -14,7 +14,6 @@ use crate::artifacts::ifc::schema::snapshot::{IfcEntity, IfcHeader, IfcValue};
 use crate::artifacts::ifc::IfcSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.ifc`.
@@ -61,9 +60,9 @@ pub mod remove_entity_arg;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = IfcSnapshot, diff = IfcDiff, schema = "IfcMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum IfcMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// 📇️ Sets the `FILE_DESCRIPTION` header record's raw value tuple.
@@ -362,7 +361,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
                     IfcValue::Enum("EDGE".into()),
                     IfcValue::Reference(42),
                     IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                    IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
+                    IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] },
                 ],
             ),
         }),
@@ -747,7 +746,7 @@ mod tests {
                         IfcValue::Enum("EDGE".into()),
                         IfcValue::Reference(42),
                         IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
-                        IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)]),
+                        IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] },
                     ],
                 ),
             }),

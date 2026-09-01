@@ -6,7 +6,7 @@ use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
 use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
-use serde_json::{json, Value};
+use dsl::json::Value;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -20,7 +20,7 @@ pub const BODY_KEY: &str = "fem2d.play.results";
 /// for the exact JSON shape this mirrors.
 fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
-    json!({
+    dsl::json!({
         "id": id,
         "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         "segments": [
@@ -40,10 +40,10 @@ fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f
     let (r, g, b) = hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (i, &(x, y)) in points.iter().enumerate() {
-        segments.push(if i == 0 { json!({ "kind": "move", "to": [x, y] }) } else { json!({ "kind": "line", "to": [x, y] }) });
+        segments.push(if i == 0 { dsl::json!({ "kind": "move", "to": [x, y] }) } else { dsl::json!({ "kind": "line", "to": [x, y] }) });
     }
-    segments.push(json!({ "kind": "close" }));
-    json!({
+    segments.push(dsl::json!({ "kind": "close" }));
+    dsl::json!({
         "id": id,
         "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         "segments": segments,
@@ -97,12 +97,12 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
         layers.push(filled_triangle_layer(format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
         layers.push(filled_triangle_layer(format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
     }
-    layers.push(json!({
+    layers.push(dsl::json!({
         "id": "legend-label-min",
         "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0],
         "text": { "content": format!("{min:.1} Pa"), "size": 11.0 },
     }));
-    layers.push(json!({
+    layers.push(dsl::json!({
         "id": "legend-label-max",
         "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 28.0],
         "text": { "content": format!("{max:.1} Pa"), "size": 11.0 },
@@ -154,7 +154,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
     for reaction in &result.reactions {
         let Some(node) = find_node_2d(&doc.nodes, &reaction.node_id) else { continue };
         let (sx, sy) = screen_2d(node.x, node.y);
-        layers.push(json!({
+        layers.push(dsl::json!({
             "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
             "transform": [1.0, 0.0, 0.0, 1.0, sx + 8.0, sy + 14.0],
             "text": { "content": format!("{:?}: {:.0} N", reaction.dof, reaction.value), "size": 10.0 },
@@ -182,7 +182,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
                     [bx + px * s.m * MOMENT_SCALE_2D, by + py * s.m * MOMENT_SCALE_2D]
                 })
                 .collect();
-            layers.push(json!({
+            layers.push(dsl::json!({
                 "kind": "polyline",
                 "id": format!("moment-{}", element_id(element)),
                 "points": points,
@@ -226,7 +226,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
     }
     //#endregion 🔖️StressContour
 
-    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
@@ -241,12 +241,12 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> s
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO));
-    layers.push(json!({
+    layers.push(dsl::json!({
         "id": "modal-caption",
         "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
         "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
     }));
-    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 
@@ -265,12 +265,12 @@ fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usi
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, fem2d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO));
-    layers.push(json!({
+    layers.push(dsl::json!({
         "id": "buckling-caption",
         "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
         "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
     }));
-    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    let layers_json = dsl::json::to_string(&dsl::json::Value::Array(layers));
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None })
 }
 //#endregion 🔖️Render
@@ -304,7 +304,7 @@ mod tests {
         let doc = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
         let camera = FemCamera::default();
-        let json = serde_json::to_string(&render(&doc, &display, &camera)).unwrap();
+        let json = dsl::json::to_string(&dsl::json::Value::Array(render(&doc, &display, &camera)));
         assert!(json.contains("No load case defined"), "{json}");
     }
 

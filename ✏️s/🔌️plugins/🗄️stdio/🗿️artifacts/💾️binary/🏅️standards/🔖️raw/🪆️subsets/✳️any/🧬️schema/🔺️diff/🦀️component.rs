@@ -11,7 +11,6 @@ use protocol::MutationDiff;
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Splice
 /// ✂️ One byte-range edit against the BASE array: replace `[offset, offset+remove_len)` with
@@ -20,8 +19,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// 🧪️ F6-PILOT: `dsl::DslRecord` — gives this `DslField` so `Vec<ByteSplice>` can sit inside a
 /// `#[derive(dsl::DslDiff)]` struct's list field (`BinaryDiff::splices` below).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct ByteSplice {
     pub offset: usize,
     pub remove_len: usize,
@@ -44,12 +43,12 @@ pub struct ByteSplice {
 /// encode_diff/decode_diff) from the same `RecordSpec` machinery `DslRecord` uses. `BinaryDiff`
 /// is a plain struct with one `Vec<ByteSplice>` field (`ByteSplice` itself `DslRecord`-derived
 /// above) — the derive's struct-only restriction is satisfied trivially here.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslDiff)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslDiff)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.binary.diff")]
 pub struct BinaryDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub splices: Vec<ByteSplice>,
 }
 

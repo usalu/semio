@@ -4,12 +4,14 @@
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
 // below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
 // import keeps that ergonomics without re-exposing `crate::os_spr::Mutation` on `vcs`'s own public API
 // (dependents import `crate::os_spr::Mutation` directly). `MutationDiff` is imported for its `apply`
 // method, called on `Mutation::Diff` inside `apply_mutation`.
+use crate::os_dsl::{FromValue, ToValue};
 use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 
 //#region 🆔️Ids
@@ -71,8 +73,9 @@ pub async fn create_document_vcs_id(prefix: &str) -> String {
 //#endregion 🆔️Ids
 
 //#region 🔖️Schemas
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct Author {
     pub id: String,
     pub name: String,

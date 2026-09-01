@@ -8,12 +8,16 @@
 //! `structure`/`zones` are composed `s.stdio.semio.value`/`table` children, so the whole-snapshot
 //! derivation now reads the real typed `crate::model::Model` behind them (via
 //! `crate::artifacts::model::energy_model`, the working-scene accessor) and census over ITS OWN
-//! `serde_json` serialization — always a full JSON object, never a possibly-malformed opaque body.
+//! first-party `pack::json` serialization (`Model` derives `ToValue`) — always a full JSON object,
+//! never a possibly-malformed opaque body.
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 use super::entries::compute_energy_model_entries;
 
@@ -22,8 +26,9 @@ pub use super::entries::EnergyModelEntries;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an energy-model snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `entries`, backed by the `🗃entries/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.energy.model.inference")]
 pub struct EnergyModelInference {
     #[derived]
@@ -108,7 +113,7 @@ mod tests {
     async fn entries_counts_top_level_model_fields_and_bytes() {
         let snapshot = populated_snapshot();
         let inferred = EnergyModelInference::infer(&snapshot);
-        let expected_json = serde_json::to_string(&crate::artifacts::model::energy_model(&snapshot)).expect("Model serializes");
+        let expected_json = pack::json::to_json_string(&crate::artifacts::model::energy_model(&snapshot));
         assert_eq!(inferred.entries.byte_size, expected_json.len() as u32);
         assert!(inferred.entries.entry_count > 0);
     }

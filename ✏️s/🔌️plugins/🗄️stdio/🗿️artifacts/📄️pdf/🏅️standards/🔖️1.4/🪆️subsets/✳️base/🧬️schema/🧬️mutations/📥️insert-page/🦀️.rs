@@ -6,28 +6,27 @@ use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::{
     snapshot::{PageDoc, PdfSnapshot},
 };
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertPage {
     pub index: usize,
-    #[serde(deserialize_with = "deserialize_page")]
+    #[value(deserialize_with = "deserialize_page")]
     pub page: PageDoc,
 }
 
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
+#[derive(value_derive::FromValue)]
+#[value(deny_unknown_fields)]
 struct PagePayload {
     width: f64,
     height: f64,
     text: String,
 }
 
-fn deserialize_page<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<PageDoc, D::Error> {
-    let PagePayload { width, height, text } = PagePayload::deserialize(deserializer)?;
+fn deserialize_page(value: dsl::DslValue) -> Result<PageDoc, dsl::ValueError> {
+    let PagePayload { width, height, text } = dsl::FromValue::from_value(value)?;
     Ok(PageDoc { width, height, text })
 }
 //#endregion 🔖️Payload
@@ -88,7 +87,7 @@ mod tests {
     /// `insert-page` must raise, leave the document untouched, and offer no undo.
     #[test]
     fn missing_page_refuses_without_inverse_or_state_change() {
-        let mutation: PdfMutation = serde_json::from_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🦠️mutation/🔣️component.json")).expect("committed insert-page payload decodes");
+        let mutation: PdfMutation = pack::from_json_str(include_str!("🧪️tests/round-trips-the-concrete-inverse/🦠️mutation/🔣️component.json")).expect("committed insert-page payload decodes");
         let base = PdfSnapshot { pages: Vec::new(), ..Default::default() };
         let mut state = base.clone();
         assert!(!mutation.diff(&state).apply_to(&mut state).messages().is_empty(), "insert-page: an unaddressable page must be refused");

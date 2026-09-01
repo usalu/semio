@@ -20,7 +20,6 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{spli
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str, read_str_lp, write_str_lp};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
@@ -33,8 +32,8 @@ pub const STDIO_SEMIOTABLE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.table";
 /// 🏷️ The declared column-type tag — mirrors `SemioValue`'s SCALAR variant names only (`Null`/
 /// `Bool`/`Int`/`Float`/`Str`/`Bytes`; no `List`/`Map`/`Ref` — a column's cells are meant to be
 /// scalar). Text tags: `n`/`b`/`i`/`f`/`s`/`y`. Binary tags: `0`-`5` in declaration order.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum SemioTableCellKind {
     #[default]
     Null,
@@ -49,8 +48,8 @@ pub enum SemioTableCellKind {
 //#region 🔖️Column
 /// 🏛️ One declared column: `name` is the NATIVE KEY (name-keyed collection — like cad layers/xlsx
 /// sheets, `📓️taxonomy.md`'s addressing rule #2) plus its declared `kind` tag.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTableColumn {
     pub name: String,
     pub kind: SemioTableCellKind,
@@ -63,26 +62,26 @@ pub struct SemioTableColumn {
 /// ordered, anonymous collection, `📓️taxonomy.md` addressing rule #3), the same shape
 /// `insert-row`/`remove-row`/`reorder-rows` operate on. `SemioValue` (from `✳️value`) is reused
 /// verbatim for cell data — real reuse, not reinvention.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTableRow {
-    #[serde(default)]
+    #[value(default)]
     pub cells: Vec<SemioValue>,
 }
 //#endregion 🔖️Row
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table")]
 pub struct SemioTableSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub columns: Vec<SemioTableColumn>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub rows: Vec<SemioTableRow>,
 }
 
@@ -317,7 +316,7 @@ impl store::ArtifactPack for SemioTableSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.table` — the shape `mutate-semio-table` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. Cells are a discriminated value union rather than plain scalars, and rows are positional, so

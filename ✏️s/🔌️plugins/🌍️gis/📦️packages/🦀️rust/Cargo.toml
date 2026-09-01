@@ -83,9 +83,5 @@ semio-framework-job = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-js-sys = "0.3.83"
-wasm-bindgen = "0.2.106"
-
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

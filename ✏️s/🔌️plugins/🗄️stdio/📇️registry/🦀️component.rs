@@ -4,12 +4,11 @@ use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{
     ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactDefinitionError, ArtifactExecutableIdentity, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, PluginAssemblyError,
 };
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region SourceSchema
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Source {
     definition_version: u8,
     id: String,
@@ -30,8 +29,8 @@ struct Source {
     support_ledger: Ledger,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Standard {
     id: String,
     revision: String,
@@ -43,8 +42,8 @@ struct Standard {
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Profile {
     id: String,
     standard: String,
@@ -52,8 +51,8 @@ struct Profile {
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Dialect {
     id: String,
     standard: String,
@@ -62,8 +61,8 @@ struct Dialect {
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Representation {
     id: String,
     standard: String,
@@ -76,8 +75,8 @@ struct Representation {
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Codec {
     id: String,
     status: String,
@@ -86,24 +85,24 @@ struct Codec {
     executable_registration: bool,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct ExecutableLeaf {
     id: String,
     status: String,
     executable_registration: bool,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Resource {
     id: String,
     external_reference_policy: String,
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Localized {
     id: String,
     locale: String,
@@ -112,16 +111,16 @@ struct Localized {
     status: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Conformance {
     id: String,
     status: String,
     fixtures: Vec<String>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct RuntimeCapability {
     id: String,
     category: String,
@@ -129,15 +128,15 @@ struct RuntimeCapability {
     claims: Vec<RuntimeClaim>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct RuntimeClaim {
     namespace: String,
     value: String,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
-#[serde(deny_unknown_fields)]
+#[derive(Clone, value_derive::FromValue, value_derive::ToValue)]
+#[value(deny_unknown_fields)]
 struct Ledger {
     normative_source: Option<String>,
     publication_date: Option<String>,

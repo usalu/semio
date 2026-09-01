@@ -26,7 +26,7 @@ use semio_framework_plugin::{
     ArtifactToolPublicationLane, ArtifactView, ConfigSpec, ConfigView,
     DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
-use serde_json::{json, Value};
+use dsl::json::Value;
 use std::collections::HashMap;
 use store::EngineHandles;
 
@@ -322,41 +322,41 @@ fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
 
 /// 🎨️ Manual `crate::model::StaticResult` -> JSON bridge for `"results:out"` (see `export_media` below)
 /// — `crate::model::StaticResult`/`ElementResult`/`Dof` don't derive `Serialize` (out of this ticket's
-/// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `serde_json::to_string` would
+/// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `dsl::json::to_json_string` would
 /// have produced, using `Dof`'s existing `{:?}` formatting (already used for the reaction-label layers
 /// in the results window's render).
 fn dof_json(dof: Dof) -> Value {
-    json!(format!("{dof:?}"))
+    dsl::json!(format!("{dof:?}"))
 }
 
 fn element_result_json(result: &ElementResult) -> Value {
     match result {
-        ElementResult::Bar { n } => json!({ "kind": "bar", "n": n }),
+        ElementResult::Bar { n } => dsl::json!({ "kind": "bar", "n": n }),
         ElementResult::Beam { stations } => {
-            json!({ "kind": "beam", "stations": stations.iter().map(|s| json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "beam", "stations": stations.iter().map(|s| dsl::json!({ "x": s.x, "n": s.n, "v": s.v, "m": s.m })).collect::<Vec<_>>() })
         }
         ElementResult::Plane { gauss } => {
-            json!({ "kind": "plane", "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "plane", "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "sxy": g.sxy, "vonMises": g.von_mises })).collect::<Vec<_>>() })
         }
         ElementResult::Plate { gauss } => {
-            json!({ "kind": "plate", "gauss": gauss.iter().map(|g| json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
+            dsl::json!({ "kind": "plate", "gauss": gauss.iter().map(|g| dsl::json!({ "mx": g.mx, "my": g.my, "mxy": g.mxy })).collect::<Vec<_>>() })
         }
-        ElementResult::Solid { gauss } => json!({
+        ElementResult::Solid { gauss } => dsl::json!({
             "kind": "solid",
-            "gauss": gauss.iter().map(|g| json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| dsl::json!({ "sxx": g.sxx, "syy": g.syy, "szz": g.szz, "sxy": g.sxy, "syz": g.syz, "sxz": g.sxz, "vonMises": g.von_mises })).collect::<Vec<_>>(),
         }),
-        ElementResult::Shell { gauss } => json!({
+        ElementResult::Shell { gauss } => dsl::json!({
             "kind": "shell",
-            "gauss": gauss.iter().map(|g| json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
+            "gauss": gauss.iter().map(|g| dsl::json!({ "nxx": g.nxx, "nyy": g.nyy, "nxy": g.nxy, "mxx": g.mxx, "myy": g.myy, "mxy": g.mxy, "vonMisesTop": g.von_mises_top, "vonMisesBottom": g.von_mises_bottom })).collect::<Vec<_>>(),
         }),
     }
 }
 
 fn static_result_json(result: &crate::model::StaticResult) -> Value {
-    json!({
-        "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
-        "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
-        "elements": result.elements.iter().map(|(id, element_result)| json!({ "id": id, "result": element_result_json(element_result) })).collect::<Vec<_>>(),
+    dsl::json!({
+        "displacements": result.displacements.iter().map(|d| dsl::json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
+        "reactions": result.reactions.iter().map(|r| dsl::json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
+        "elements": result.elements.iter().map(|(id, element_result)| dsl::json!({ "id": id, "result": element_result_json(element_result) })).collect::<Vec<_>>(),
         "checks": { "residualNorm": result.checks.residual_norm, "reactionSum": result.checks.reaction_sum },
     })
 }
@@ -570,10 +570,10 @@ impl ArtifactEditor for Fem2dPlayApp {
                 let MediaPayload::Structured { json, .. } = &media.payload else {
                     return Err(MediaError::Payload(port.to_string(), "geometry:in only accepts a Structured JSON payload".into()));
                 };
-                let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let outline: Vec<[f64; 2]> = serde_json::from_value(value.get("outline").cloned().unwrap_or(Value::Null)).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
+                let value = dsl::json::parse(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let outline: Vec<[f64; 2]> = dsl::FromValue::from_value(dsl::json::to_dsl_value(&value.get("outline").cloned().unwrap_or(Value::Null))).map_err(|error| MediaError::Payload(port.to_string(), format!("outline: {error}")))?;
                 let holes: Vec<Vec<[f64; 2]>> = match value.get("holes").cloned() {
-                    Some(holes_value) => serde_json::from_value(holes_value).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
+                    Some(holes_value) => dsl::FromValue::from_value(dsl::json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
                 };
                 let material_id = doc.snapshot.materials.first().map(|material| material.id.clone()).unwrap_or_else(|| "unassigned".into());
@@ -797,7 +797,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
-        serde_json::to_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render")).expect("render json")
+        dsl::json::to_json_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -918,7 +918,7 @@ mod tests {
     //#region 🔖️ManifestSanity
     #[semio_framework_async_macros::async_test]
     async fn the_manifest_stitches_every_taxonomy_node() {
-        let json = serde_json::to_string(&create_fem2d_app()).expect("app definition json");
+        let json = dsl::json::to_json_string(&create_fem2d_app());
         for id in [model_window::WINDOW_KIND_ID, results_window::WINDOW_KIND_ID] {
             assert!(json.contains(id), "window kind {id} missing from the manifest: {json}");
         }
@@ -1075,7 +1075,7 @@ mod tests {
         match media.payload {
             MediaPayload::Structured { schema, json } => {
                 assert_eq!(schema, "computation.fem2d");
-                let value: Value = serde_json::from_str(&json).expect("results:out payload is valid JSON");
+                let value = dsl::json::parse(&json).expect("results:out payload is valid JSON");
                 for case_id in ["dead", "live", "uls"] {
                     let result = value.get(case_id).unwrap_or_else(|| panic!("missing {case_id} in results:out payload: {value}"));
                     assert!(result.get("displacements").is_some());
@@ -1116,7 +1116,7 @@ mod tests {
         snapshot.materials.push(crate::artifacts::fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
         let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
         let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
+        let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
@@ -1136,7 +1136,7 @@ mod tests {
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
         let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
-        let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
+        let payload = dsl::json::to_string(&dsl::json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
         let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
         match &emit.artifact_mutations[0] {

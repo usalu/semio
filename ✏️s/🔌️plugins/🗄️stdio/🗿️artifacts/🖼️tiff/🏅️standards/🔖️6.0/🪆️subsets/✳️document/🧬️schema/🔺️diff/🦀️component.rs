@@ -12,22 +12,21 @@ use crate::artifacts::tiff::TiffSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 //#region 🔖️TagsTriple
 /// 🏷️ One `entries.modified[]`/`.added[]` entity — `TiffTag` is a weak value, so both carry
 /// the entry's NEW `kind`/`values` directly (never a nested per-field diff).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffTagModified {
     pub tag: u16,
     pub kind: TiffFieldType,
     pub values: TiffValues,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffTagAdded {
     pub tag: u16,
     pub kind: TiffFieldType,
@@ -35,14 +34,14 @@ pub struct TiffTagAdded {
 }
 
 /// 🔺️ Tag-id-keyed `entries` triple for one IFD.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffTagsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u16>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<TiffTagModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<TiffTagAdded>,
 }
 
@@ -146,12 +145,12 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 /// 🗂️ The per-IFD delta: the recursive tag-triple plus a whole-value slot for that directory's own
 /// raw strip payload (`TiffIfd::pixels` — a weak value, replaced wholesale, never sub-diffed, the
 /// same treatment `TiffDiff::pixels` gives the primary raster).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffIfdDiff {
-    #[serde(default, skip_serializing_if = "TiffTagsDiff::is_empty")]
+    #[value(default, skip_serializing_if = "TiffTagsDiff::is_empty")]
     pub entries: TiffTagsDiff,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pixels: Option<Vec<u8>>,
 }
 
@@ -163,29 +162,29 @@ impl TiffIfdDiff {
 }
 
 /// 🗂️ One `ifds.modified[]` entity — the recursive per-IFD delta.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffIfdModified {
     pub index: usize,
     pub diff: TiffIfdDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffIfdAdded {
     pub index: usize,
     pub ifd: TiffIfd,
 }
 
 /// 🔺️ Index-keyed `ifds` triple (TIFF's IFD chain is positional).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TiffIfdsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<TiffIfdModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<TiffIfdAdded>,
 }
 
@@ -388,18 +387,18 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 /// the trait bound v6_0::…::TiffValues: DslField is not satisfied`. Same root cause independently
 /// requires a direct typed codec for `ReplaceTagMutation.values`, which reaches the same
 /// `TiffValues`. `DiffCodec` is hand-rolled below (see `HandcraftedDiffCodec`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
 pub struct TiffDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub byte_order: Option<TiffByteOrder>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub ifds: Option<TiffIfdsDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pixels: Option<Vec<u8>>,
 }
 

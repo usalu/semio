@@ -8,10 +8,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "request-delete-artifact")]
 pub struct RequestDeleteArtifact {
     pub id: String,
@@ -19,7 +17,7 @@ pub struct RequestDeleteArtifact {
 
 pub async fn handle(payload: &RequestDeleteArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
-    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "deleteArtifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "id": row.id, "name": row.name }))) }))
+    Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(128), dialog_id: "deleteArtifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "id": row.id, "name": row.name }))) }))
 }
 
 //#region 🧪️Tests
@@ -42,7 +40,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::OpenDialog { dialog_id, args, .. } => {
                 assert_eq!(dialog_id, "deleteArtifact");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
+                let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("id").and_then(|v| v.as_str()), Some(id.as_str()));
             }
             other => panic!("expected OpenDialog, got {other:?}"),

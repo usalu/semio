@@ -11,7 +11,6 @@ use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {

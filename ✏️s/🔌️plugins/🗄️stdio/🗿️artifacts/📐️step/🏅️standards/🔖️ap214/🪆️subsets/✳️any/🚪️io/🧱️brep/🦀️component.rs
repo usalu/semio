@@ -7,13 +7,12 @@
 //! is flagged in `BrepMeshView::issues` rather than silently producing a wrong mesh.
 
 use super::part21::{Part21Builder, Part21Document, Part21Header, Part21Value};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔖️Model
 /// 📍️ B-rep vertex.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct BrepVertex {
     pub x: f64,
     pub y: f64,
@@ -21,33 +20,33 @@ pub struct BrepVertex {
 }
 
 /// 🔺️ B-rep face as ordered polygon vertex indices (planar; not triangulated).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct BrepFace {
-    #[serde(default)]
+    #[value(default)]
     pub indices: Vec<usize>,
 }
 
 /// 📐️ Neutral B-rep mesh — the derived analyzer output, never the persisted snapshot itself.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct BrepMesh {
-    #[serde(default)]
+    #[value(default)]
     pub vertices: Vec<BrepVertex>,
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<BrepFace>,
 }
 
 /// 🚩️ One entity this analyzer could not (fully) resolve into the mesh — typed, surfaced,
 /// never silently dropped.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct BrepIssue {
     pub entity_id: u64,
     pub reason: String,
 }
 
 /// 🧐️ Result of analyzing a `Part21Document` for its faceted b-rep content.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
 pub struct BrepMeshView {
     pub mesh: BrepMesh,
     pub issues: Vec<BrepIssue>,

@@ -11,7 +11,6 @@ use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::wi
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.pptx@ecma-376/strict`. Duplicated (not imported) in the
@@ -24,7 +23,7 @@ pub const PPTX_STRICT_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdi
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-page`, contract §2.6) can trigger. `index` addresses `presentation.slides` directly
 /// (one page per slide, see the window's own `render` doc comment).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum PptxStrictEditorCommand {
     SetPage { index: u32, text: String },
 }

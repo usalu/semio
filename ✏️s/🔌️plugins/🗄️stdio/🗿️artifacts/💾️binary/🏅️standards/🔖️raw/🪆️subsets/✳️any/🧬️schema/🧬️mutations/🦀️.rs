@@ -5,7 +5,6 @@ use crate::artifacts::binary::schema::diff::{diff_set_snapshot, BinaryDiff, Byte
 use crate::artifacts::binary::BinarySnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.binary`.
@@ -23,8 +22,16 @@ pub mod truncate_at;
 /// 🧭️ `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires every variant to wrap exactly
 /// one leaf payload (a unit variant wraps none) and asserts `is_approved_verb(SEMANTICS.verb)`,
 /// and `no` is not an approved verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+///
+/// 🧪️ `#[derive(dsl::DslOps)]` is kept ALONGSIDE `#[derive(dsl::Mutations)]`: every variant below
+/// is a single-field newtype wrapping its own mutation leaf, and `dsl_variants_codegen`'s
+/// "single-field tuple variant" branch (`✨️derive/🦀️component.rs`) delegates `DslVariants`
+/// straight through to that leaf's own `#[derive(dsl::DslRecord)]`-provided `DslField` impl — the
+/// SAME `record_codegen` output the fields produced when they lived inline in the enum, so the
+/// committed `mutations::text::COMPONENT_GRAMMAR_SEMIO`/`mutations::binary::COMPONENT_PROTOCOL_SEMIO`
+/// facets and this `OpText`/`OpBinary` pair are unaffected by the leaf split.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = BinarySnapshot, diff = BinaryDiff, schema = "BinaryMutation")]
 pub enum BinaryMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
@@ -32,7 +39,7 @@ pub enum BinaryMutation {
     /// approved verb (`replace`) because `#[derive(dsl::Mutations)]` asserts the leaf descriptor's
     /// `semanticKind` equals `to_kebab(VariantIdent)` and rejects a single-word kind; the wire tag
     /// stays `splice`, which is what the catalog, the feature file and the committed fixtures speak.
-    #[serde(rename = "splice")]
+    #[value(rename = "splice")]
     ReplaceByteRange(replace_byte_range::ReplaceByteRange),
     /// ➕️ Appends `data` at the end of the buffer.
     AppendBytes(append_bytes::AppendBytes),
@@ -112,28 +119,39 @@ pub(crate) fn agg_inverse(this: &BinaryMutation, base: &BinarySnapshot) -> Vec<B
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-/// 🎙️ Handcrafted `OpText`/`OpBinary` via plain `serde_json` (one line of compact JSON per op) —
-/// mirrors the `stdio.mp3` pilot's own hand-rolled bridge
-/// (`../../../../../🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`).
-/// P6's `#[derive(dsl::DslOps)]` cannot apply post-migration: its `DslVariants` codegen only
-/// delegates a single-field tuple variant to the inner type's OWN `dsl::DslField` impl, and a
-/// `#[derive(dsl::MutationLeaf)]` payload does not carry one — so the prior `DslOps`-derived
-/// grammar bridge is replaced by this JSON one, not preserved byte-for-byte.
+/// 🎙️ Handcrafted `OpText` (P6: `dsl::DslOps` emits `DslVariants` only) — one-line grammar via
+/// the derived `RecordSpec`/`DslVariants`. Body is the same ~15-line shape every `DslOps`-derived
+/// enum's `OpText` impl uses (see `SpaceMutation`, `FlowMutationDsl` for the framework-side
+/// precedent this copies verbatim).
 impl OpText for BinaryMutation {
     fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+        let variants = <Self as dsl::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
+                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
     fn print_op(&self) -> String {
-        serde_json::to_string(self).unwrap_or_default()
+        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
+        let variants = <Self as dsl::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
     }
 }
 
+/// ⚡️ Handcrafted `OpBinary` (P6) — pure forward to `dsl::variants_binary`, the generic
+/// `format u8 (=1) | variant ordinal varint | record body` layout shared by every `DslVariants`
+/// type. Zero per-artifact logic.
 impl OpBinary for BinaryMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        serde_json::to_vec(self).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        dsl::variants_binary::encode_op(self)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        serde_json::from_slice(bytes).map_err(|e| protocol::ProtocolError::Io(e.to_string()))
+        dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion OpCodecs
@@ -213,8 +231,8 @@ mod tests {
         }
     }
 
-    /// 🧪️ `OpText`/`OpBinary` round-trip laws, hand-rolled over `serde_json` (see the `OpCodecs`
-    /// region's doc comment for why this replaced the prior `dsl::DslOps`-derived bridge).
+    /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
+    /// `dsl::DslOps`-derived `DslVariants`).
     #[semio_framework_async_macros::async_test]
     async fn op_text_binary_roundtrip_law() {
         for m in demo_mutation_cases() {

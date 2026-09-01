@@ -11,21 +11,20 @@
 //! caching is needed here either.
 
 use crate::artifacts::jack::{port_node_id, Edge, JackSnapshot, Node, PropertyValue};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️FlatPosition
 /// 🎛 One node's flattened position.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JackFlatPositionUv {
     pub u: f64,
     pub v: f64,
 }
 
 /// 🎛 Flattened `(u, v)` position per node id — covers every connected component, keyed by node id.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JackFlatPosition {
     pub positions: BTreeMap<String, JackFlatPositionUv>,
 }

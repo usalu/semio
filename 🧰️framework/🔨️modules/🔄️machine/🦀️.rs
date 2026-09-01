@@ -2185,14 +2185,17 @@ pub use testing::{check_invariants, explore, run_conformance, ConformanceStep, C
 #[cfg(feature = "macros")]
 pub use machine_derive::{statechart, StatechartEvent, StatechartSchema};
 
-#[cfg(all(feature = "macros", target_arch = "wasm32"))]
+#[cfg(all(feature = "macros", target_arch = "wasm32", not(target_env = "p2")))]
 pub use machine_derive::export_wasm_machine;
 
 //#endregion 🔖️Reexports
 
 //#region 🔖️WasmBridge
 
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this bridge is browser-only
+// (JS effect callback + JS Date clock) — wasip2 already has `NativeHost` (std::time::Instant,
+// which WASI's clock backs) so it needs no bridge of its own here.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_bridge {
     use crate::{ActorId, Host, InvokeId, Machine, TimerId};
 
@@ -2279,13 +2282,13 @@ mod wasm_bridge {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use wasm_bridge::WasmHost;
 
 /// 🎫️ A minimal always-compiled `export_wasm_machine!` consumer — proves the wasm
 /// target and the whole DSL → kernel → `WasmHost` → JSON-boundary path continuously,
 /// independent of any downstream consumer crate.
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_smoke {
     #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
     pub struct ToggleContext;

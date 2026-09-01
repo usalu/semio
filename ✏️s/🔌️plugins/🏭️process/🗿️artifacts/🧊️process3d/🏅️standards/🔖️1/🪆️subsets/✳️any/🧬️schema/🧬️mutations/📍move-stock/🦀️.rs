@@ -7,15 +7,15 @@ use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::move_stock::MoveStock;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Pose, Process3dSnapshot};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️MoveStock
 /// 🧱 Absolute spatial reposition of the document's single [`crate::artifacts::process3d::Stock`]
 /// workpiece — the `stock` field's `pose` sub-value, addressed implicitly (the document has exactly
 /// one stock, so `target()` is empty per `MutationKind::target`'s whole-artifact-scope default).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct MoveStock {
     pub new_pose: Pose,
 }

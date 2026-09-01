@@ -11,13 +11,13 @@ use crate::artifacts::process3d::mutations::change_cursor::mutation::ChangeCurso
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetCursor
 pub mod set_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "cursor")]
     pub struct SetCursor {
         pub value: Option<u64>,
@@ -40,7 +40,7 @@ pub mod set_cursor {
 pub mod step_cursor {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "step-cursor")]
     pub struct StepCursor {
         pub delta: i64,
@@ -63,7 +63,7 @@ pub mod step_cursor {
 pub mod step_cursor_back {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "step-cursor-back")]
     pub struct StepCursorBack {}
 
@@ -84,7 +84,7 @@ pub mod step_cursor_back {
 pub mod step_cursor_forward {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "step-cursor-forward")]
     pub struct StepCursorForward {}
 

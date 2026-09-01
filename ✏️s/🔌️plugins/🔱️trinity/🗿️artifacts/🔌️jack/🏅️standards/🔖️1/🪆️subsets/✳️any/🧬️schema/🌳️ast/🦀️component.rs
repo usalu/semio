@@ -1,7 +1,6 @@
 //! 🌳️ Trinity jack query AST.
 
 use crate::artifacts::jack::{JackSnapshot, PropertyValue};
-use serde::{Deserialize, Serialize};
 
 /// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]
@@ -61,22 +60,22 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum QueryResultKind {
     #[default]
     Table,
     Graph,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct QueryResult {
-    #[serde(default)]
+    #[value(default)]
     pub kind: QueryResultKind,
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub graph_fixture: Option<JackSnapshot>,
 }
 

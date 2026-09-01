@@ -3,10 +3,9 @@
 
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Ftyp, Mp4Movie, Mp4Snapshot, Mp4Track};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Artifact {
     #[state(artifact)]
@@ -16,7 +15,7 @@ pub struct Mp4Artifact {
     #[state(artifact)]
     pub movie: Mp4Movie,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tracks: Vec<Mp4Track>,
 }
 

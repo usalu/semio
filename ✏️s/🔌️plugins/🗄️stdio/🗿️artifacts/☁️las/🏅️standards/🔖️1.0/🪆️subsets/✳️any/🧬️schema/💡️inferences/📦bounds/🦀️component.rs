@@ -6,12 +6,11 @@
 //! extent). A pure whole-snapshot scalar read — no `InferredField` needed.
 
 use crate::artifacts::las::LasSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Las header-declared bounding box and point count.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct LasBounds {
     pub min_x: f64,
     pub min_y: f64,

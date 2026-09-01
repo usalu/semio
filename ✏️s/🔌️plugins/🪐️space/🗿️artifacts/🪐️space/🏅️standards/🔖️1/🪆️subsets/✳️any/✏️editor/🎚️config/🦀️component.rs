@@ -5,14 +5,13 @@
 //! view state only, mirrors `DrawConfig`'s handcrafted DSL/pack codec shape.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Member
 /// 🧑️ One space member, projected from `semio_framework_os::os_directory::MemberView` into the
 /// space app's own local view-state vocabulary (`role` kept as the wire string `"author"`/
 /// `"spectator"` rather than re-importing the directory crate's enum into render code).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexMember {
     pub user_id: String,
     pub email: String,
@@ -25,8 +24,8 @@ pub struct SpaceIndexMember {
 /// 👥️ Live peers on one artifact's documents (all surfaces/documents of that artifact, folded to a
 /// flat actor-id list) — `actors_csv` avoids nesting `Vec<String>` inside a `#[dsl(table)]` row
 /// (unproven by any existing facet in this tree); split on `,` for display.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 pub struct SpaceIndexArtifactPresence {
     pub artifact_id: String,
     pub actors_csv: String,
@@ -47,8 +46,8 @@ impl SpaceIndexArtifactPresence {
 //#region 🔖️Config
 /// 🎚️ `SpaceIndexEditor`'s real `ArtifactApp::Config` — whole-record, DSL/pack codec handcrafted
 /// (mirrors `SSpaceSnapshot`'s own handcrafted pair, `🧬️schema/📸️snapshot/🦀️component.rs`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sspacecfg")]
 #[dsl(layout = "lines")]
 pub struct SpaceIndexConfig {
@@ -119,7 +118,7 @@ store::impl_whole_record_config!(SpaceIndexConfig);
 //#region 🔖️ConfigMutation
 /// 🧮️ Whole-record replace — the config is always folded/derived host-side (directory events,
 /// presence heartbeats) and pushed down as one snapshot, mirrors `DrawConfigMutation::Snapshot`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum SpaceIndexConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

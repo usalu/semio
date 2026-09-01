@@ -11,7 +11,6 @@ use crate::artifacts::step::schema::snapshot::{StepEntity, StepFileDescription, 
 use crate::artifacts::step::StepSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.step`.
@@ -40,9 +39,9 @@ pub mod remove_entity_arg;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "StepMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StepMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetFileDescription(set_file_description::SetFileDescription),

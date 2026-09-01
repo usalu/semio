@@ -26,7 +26,6 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
 
 #[path = "📦️mesh-io/🦀️component.rs"]
 mod mesh_io;
@@ -67,8 +66,8 @@ use step::{read_step, write_step};
 // #region 🔖️ContractTypes
 
 /// 🧭️ Geometry entity kind carried by a handle.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum GeometryKind {
     Vertex,
     Edge,
@@ -82,7 +81,8 @@ pub enum GeometryKind {
 }
 
 /// 🧭️ Opaque content-addressed geometry handle (hex-encoded OS engine key).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[value(transparent)]
 pub struct GeometryHandle(pub String);
 
 impl GeometryHandle {
@@ -101,7 +101,7 @@ pub struct BrepTopology {
 }
 
 /// 📏️ Closest-point / distance query result.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct ClosestPoint {
     pub distance: f64,
     pub point: Vec3,

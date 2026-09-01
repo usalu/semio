@@ -14,7 +14,6 @@ use crate::editor::zip::iso21320::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -30,7 +29,7 @@ pub const ZIP_ISO21320_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.std
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — exactly the one edit the `🪟️main` window's
 /// `editable_window_kind()` action (`set-node`, contract §2.6) can trigger.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum ZipEditorCommand {
     #[dsl(key = "set-zip-node")]
     SetNode { node_id: String, value: String },

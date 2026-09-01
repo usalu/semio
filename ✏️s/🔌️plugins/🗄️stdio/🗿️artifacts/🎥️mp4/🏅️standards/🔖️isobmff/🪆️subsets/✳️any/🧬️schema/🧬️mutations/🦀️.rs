@@ -8,7 +8,6 @@ use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{
 use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Movie, Mp4TrackMetadata};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -35,8 +34,8 @@ pub mod set_sample_sync;
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none — and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations, dsl::DslOps)]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, dsl::DslOps)]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Mp4Snapshot, diff = Mp4Diff, schema = "Mp4Mutation")]
 pub enum Mp4Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),

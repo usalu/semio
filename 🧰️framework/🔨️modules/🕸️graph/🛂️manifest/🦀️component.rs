@@ -152,6 +152,27 @@ impl dsl_core::DslField for PropertyValue {
 }
 //#endregion 🔖️DslField
 
+//#region 🔖️ToFromValue
+/// 🌱️ `ToValue`/`FromValue` (the `DslValue`-tree pair `Mutation`/`MutationDiff` payloads need —
+/// distinct from `DslField`/`FieldValue` above, the text/binary DSL grammar's own trait, see that
+/// region's header note) for the identical reason `DslField` binds as `Shape::Value`: reuse the
+/// same recursive `property_value_to_dsl_value`/`dsl_value_to_property_value` walk rather than a
+/// second one. `#[serde(untagged)]` (kept, additive, on the derive above) has no `#[derive(ToValue,
+/// FromValue)]` equivalent — an untagged enum needs exactly this kind of hand-written structural
+/// match, per the fan-out playbook's "Not supported by the derive" list.
+impl dsl_core::ToValue for PropertyValue {
+    fn to_value(&self) -> dsl_core::DslValue {
+        property_value_to_dsl_value(self)
+    }
+}
+
+impl dsl_core::FromValue for PropertyValue {
+    fn from_value(value: dsl_core::DslValue) -> Result<Self, dsl_core::ValueError> {
+        Ok(dsl_value_to_property_value(&value))
+    }
+}
+//#endregion 🔖️ToFromValue
+
 /// 🏷️ Compile-time property kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

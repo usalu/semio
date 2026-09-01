@@ -1,6 +1,7 @@
 //! 🔢️ Imperative math module: numeric scope operators.
 
 use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
+use pack::json::{array, object, to_string, Value as JsonValue};
 
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
     input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
@@ -87,34 +88,18 @@ pub fn register(registry: &mut Registry) {
 }
 
 pub fn catalogue_json(registry: &Registry) -> String {
-    let items: Vec<serde_json::Value> = registry
-        .operator_catalogue()
-        .into_iter()
-        .filter(|info| info.id.starts_with("math."))
-        .map(|info| {
-            serde_json::json!({
-                "kind": info.id,
-                "name": info.name,
-                "abbreviation": info.abbreviation,
-                "icon": info.icon,
-                "summary": info.summary,
-                "module": "math",
-                "inputs": info.inputs.iter().map(|channel| serde_json::json!({
-                    "name": channel.name,
-                    "code": channel.code,
-                })).collect::<Vec<_>>(),
-            })
-        })
-        .collect();
-    serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue",
-        "sections": [{
-            "id": "math",
-            "title": "Math",
-            "items": items,
-        }],
-    }))
-    .unwrap_or_else(|_| "{}".into())
+    let items = array(registry.operator_catalogue().into_iter().filter(|info| info.id.starts_with("math.")).map(|info| {
+        object([
+            ("kind".to_string(), JsonValue::from(info.id.as_str())),
+            ("name".to_string(), JsonValue::from(info.name.as_str())),
+            ("abbreviation".to_string(), JsonValue::from(info.abbreviation.as_str())),
+            ("icon".to_string(), JsonValue::from(info.icon.as_str())),
+            ("summary".to_string(), JsonValue::from(info.summary.as_str())),
+            ("module".to_string(), JsonValue::from("math")),
+            ("inputs".to_string(), array(info.inputs.iter().map(|channel| object([("name".to_string(), JsonValue::from(channel.name.as_str())), ("code".to_string(), JsonValue::from(channel.code.as_str()))])))),
+        ])
+    }));
+    to_string(&object([("schema".to_string(), JsonValue::from("imperative.catalogue")), ("sections".to_string(), array([object([("id".to_string(), JsonValue::from("math")), ("title".to_string(), JsonValue::from("Math")), ("items".to_string(), items)])]))]))
 }
 
 pub fn module_registry() -> Registry {

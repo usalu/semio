@@ -266,6 +266,10 @@ pub mod compiler {
             let _ = fs::remove_dir_all(&output);
         }
 
+        /// 🧪️ Native/host-only: `compile_scene_to_assets` renders real frames through
+        /// `renderer::VelloRenderer`, which always reports "no adapter" on `wasm32-wasip2` by
+        /// design — see `⚙️engine/🎥️video/🦀️component.rs`'s `renderer` module.
+        #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
         #[semio_framework_async_macros::async_test]
         async fn compile_scene_to_assets_writes_mp4() {
             let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));

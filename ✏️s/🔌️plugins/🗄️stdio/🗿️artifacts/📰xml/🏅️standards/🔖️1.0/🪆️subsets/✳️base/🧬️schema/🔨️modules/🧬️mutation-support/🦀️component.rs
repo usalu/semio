@@ -1,9 +1,9 @@
 //! 🧰 Shared node addressing for direct XML mutations.
 use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
 use crate::artifacts::xml::XmlSnapshot;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(transparent)]
 pub struct XmlNodePath(pub Vec<usize>);
 impl XmlNodePath {
     pub fn root() -> Self { Self(Vec::new()) }

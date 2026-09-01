@@ -1573,12 +1573,12 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let handle = box_handle(&mut reg);
-        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "step", 0.1)).unwrap();
+        let exported = pack::json::parse(&export_solid_json(&[handle], "step", 0.1)).unwrap();
         assert!(exported.get("error").is_none(), "{exported:?}");
         assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(false));
         let data = exported.get("data").and_then(|value| value.as_str()).expect("step text").to_string();
         assert!(!data.is_empty());
-        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("step", &data, 0.1)).unwrap();
+        let imported = pack::json::parse(&import_solid_json("step", &data, 0.1)).unwrap();
         assert!(imported.get("error").is_none(), "{imported:?}");
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
@@ -1590,11 +1590,11 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let handle = box_handle(&mut reg);
-        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "obj", 0.1)).unwrap();
+        let exported = pack::json::parse(&export_solid_json(&[handle], "obj", 0.1)).unwrap();
         assert!(exported.get("error").is_none(), "{exported:?}");
         let data = exported.get("data").and_then(|value| value.as_str()).expect("obj text").to_string();
         assert!(data.contains('v'));
-        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("obj", &data, 0.1)).unwrap();
+        let imported = pack::json::parse(&import_solid_json("obj", &data, 0.1)).unwrap();
         assert!(imported.get("error").is_none(), "{imported:?}");
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
@@ -1606,12 +1606,12 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let handle = box_handle(&mut reg);
-        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "stl", 0.1)).unwrap();
+        let exported = pack::json::parse(&export_solid_json(&[handle], "stl", 0.1)).unwrap();
         assert!(exported.get("error").is_none(), "{exported:?}");
         assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
         let data = exported.get("data").and_then(|value| value.as_str()).expect("stl base64").to_string();
         assert!(!data.is_empty());
-        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("stl", &data, 0.1)).unwrap();
+        let imported = pack::json::parse(&import_solid_json("stl", &data, 0.1)).unwrap();
         assert!(imported.get("error").is_none(), "{imported:?}");
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
@@ -1623,12 +1623,12 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let handle = box_handle(&mut reg);
-        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "glb", 0.1)).unwrap();
+        let exported = pack::json::parse(&export_solid_json(&[handle], "glb", 0.1)).unwrap();
         assert!(exported.get("error").is_none(), "{exported:?}");
         assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
         let data = exported.get("data").and_then(|value| value.as_str()).expect("glb base64").to_string();
         assert!(!data.is_empty());
-        let imported: serde_json::Value = serde_json::from_str(&import_solid_json("glb", &data, 0.1)).unwrap();
+        let imported = pack::json::parse(&import_solid_json("glb", &data, 0.1)).unwrap();
         assert!(imported.get("error").is_none(), "{imported:?}");
         assert_eq!(imported.get("handles").and_then(|value| value.as_array()).map(|handles| handles.len()), Some(1));
     }
@@ -1640,7 +1640,7 @@ mod tests {
         let mut reg = Registry::new();
         register(&mut reg);
         let handle = box_handle(&mut reg);
-        let exported: serde_json::Value = serde_json::from_str(&export_solid_json(&[handle], "fbx", 0.1)).unwrap();
+        let exported = pack::json::parse(&export_solid_json(&[handle], "fbx", 0.1)).unwrap();
         assert!(exported.get("error").is_some());
     }
 
@@ -1712,10 +1712,11 @@ mod tests {
         let _serial = test_serial();
         reset_test_kernel();
         let reg = module_registry();
-        let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)));
-        let out_json = evaluate_json(&reg, "brep.prim3d.box", &serde_json::to_string(&input).unwrap());
-        let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        assert_eq!(channel_payload(&out, "solid").schema(), Some("geometry"));
+        let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
+        let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
+        let out_json = evaluate_json(&reg, "brep.prim3d.box", &input_json);
+        let out = pack::json::parse(&out_json).unwrap();
+        assert_eq!(out.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1792,55 +1793,26 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn extension_bundle_extends_flow_and_evaluates_box() {
-        use flow_extension_sdk::evaluate_json;
         use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
         let _serial = test_serial();
         reset_test_kernel();
         let manifest_json = extension_manifest_json();
+        let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "brep", "Brep", "brep", &manifest_json);
+        let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "brep", "Brep", "brep", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0")
             .extends("flow")
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "flow-play",
-                    "extensionId": "brep",
-                    "label": "Brep",
-                    "iconId": "brep",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .contributes_topic(
-                "flow.extension",
-                serde_json::json!({
-                    "appId": "procedural3d-play",
-                    "extensionId": "brep",
-                    "label": "Brep",
-                    "iconId": "brep",
-                    "manifestJson": &manifest_json,
-                }),
-            )
-            .handler("evaluate", |req| {
-                #[derive(serde::Deserialize)]
-                #[serde(rename_all = "camelCase")]
-                struct EvaluateRequest {
-                    operator_id: String,
-                    input_json: String,
-                }
-                let request: EvaluateRequest = serde_json::from_slice(req).unwrap();
-                Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
-            });
+            .contributes_topic(flow_topic.topic, flow_topic.payload)
+            .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
+            .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
         install_extension_bundle(bundle);
         extension_activate().unwrap();
         assert_eq!(extension_manifest().extension_id, "flow-extension-brep");
-        let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)));
-        let req = serde_json::json!({
-            "operatorId": "brep.prim3d.box",
-            "inputJson": serde_json::to_string(&input).unwrap(),
-            "nodeHash": 1,
-        });
-        let out: Dictionary = serde_json::from_slice(&extension_invoke("evaluate", req.to_string().as_bytes()).unwrap()).unwrap();
-        assert_eq!(channel_payload(&out, "solid").schema(), Some("geometry"));
+        let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
+        let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
+        let req = pack::json::to_string(&pack::json::object([("operatorId".to_string(), pack::json::Value::from("brep.prim3d.box")), ("inputJson".to_string(), pack::json::Value::from(input_json)), ("nodeHash".to_string(), pack::json::Value::from(1_i64))]));
+        let out = pack::json::parse_bytes(&extension_invoke("evaluate", req.as_bytes()).unwrap()).unwrap();
+        assert_eq!(out.get("solid").and_then(|value| value.get("$schema")).and_then(pack::json::Value::as_str), Some("geometry"));
     }
 }
 
@@ -1850,78 +1822,42 @@ mod tests {
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::module_registry;
-    use flow_extension_sdk::evaluate_json;
+    use flow_extension_sdk::{evaluate_invoke_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-    use serde::Deserialize;
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct EvaluateRequest {
-        operator_id: String,
-        input_json: String,
-    }
-
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
-        let extension_id = "brep";
-        let label = "Brep";
-        let icon_id = "brep";
-        let topic_payload = serde_json::json!({
-            "appId": app_id,
-            "extensionId": extension_id,
-            "label": label,
-            "iconId": icon_id,
-            "manifestJson": &manifest_json,
-        });
-        topic_payload
-    }
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct TessellateRequest {
-        handle: String,
-        #[serde(default = "default_tessellate_tolerance")]
-        tolerance: f64,
-    }
-
-    fn default_tessellate_tolerance() -> f64 {
-        0.05
-    }
+    const EXTENSION_ID: &str = "brep";
+    const EXTENSION_LABEL: &str = "Brep";
 
     fn bundle() -> ExtensionBundle {
         let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
-        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
-        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
+        let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
+        let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
         let bundle = semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-                let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-                Ok(evaluate_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), &request.operator_id, &request.input_json).into_bytes())
+                evaluate_invoke_json(&neural_engine::ColdOwner::new(semio_framework::io::resolve_ready(module_registry())), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
             }));
         semio_framework::io::resolve_ready(bundle.handler("tessellate", |req| {
-                let request: TessellateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
-                match flow_extension_sdk::brep_geometry::tessellate_geometry(&request.handle, request.tolerance) {
-                    Ok(mesh) => Ok(serde_json::to_vec(&mesh).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.encode"), err.to_string()))?),
-                    Err(err) => Ok(serde_json::json!({ "error": err }).to_string().into_bytes()),
-                }
+                let request = pack::json::parse_bytes(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), err.to_string()))?;
+                let handle = request.get("handle").and_then(pack::json::Value::as_str).ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.tessellate.bad-request"), "missing field `handle`".to_string()))?;
+                let tolerance = request.get("tolerance").and_then(pack::json::Value::as_f64).unwrap_or(0.05);
+                Ok(flow_extension_sdk::brep_geometry::tessellate_geometry_json_for_wasm(handle, tolerance).into_bytes())
             }))
     }
 
     #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let fixture = pack::json::parse(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
         let bundle = bundle();
-        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
-        assert_eq!(manifest["extensionId"], fixture["brep"]["pluginId"]);
+        assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("brep").and_then(|entry| entry.get("pluginId")).and_then(pack::json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);
         for contribution in &bundle.manifest.topic_contributions {
-            let payload: serde_json::Value = contribution.decode().unwrap();
-            assert_eq!(payload["extensionId"], fixture["brep"]["flowId"]);
+            assert_eq!(contribution.payload.get("extensionId").and_then(|value| value.as_str()), fixture.get("brep").and_then(|entry| entry.get("flowId")).and_then(pack::json::Value::as_str));
         }
     }
 

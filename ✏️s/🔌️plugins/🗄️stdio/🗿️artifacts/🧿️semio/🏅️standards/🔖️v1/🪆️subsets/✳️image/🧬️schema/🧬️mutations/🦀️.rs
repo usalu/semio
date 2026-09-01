@@ -19,7 +19,6 @@ use protocol::Mutation;
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code (was missing entirely, even test-gated) (W2b closer fix).
 use protocol::OpText;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 //#region 🔖️Leaves
@@ -49,9 +48,9 @@ pub mod set_metadata_entry;
 pub mod remove_metadata_entry;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioImageSnapshot, diff = SemioImageDiff, schema = "SemioImageMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioImageMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetDimensions(set_dimensions::SetDimensions),

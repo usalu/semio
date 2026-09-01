@@ -2,10 +2,9 @@
 
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::{EpwDataPeriods, EpwLocation, EpwRecord, EpwSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwArtifact {
     #[state(artifact)]
@@ -13,27 +12,27 @@ pub struct EpwArtifact {
     #[state(artifact)]
     pub location: EpwLocation,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub design_conditions: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub typical_extreme_periods: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub ground_temperatures: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub holidays_dst: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments_1: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments_2: String,
     #[state(artifact)]
     pub data_periods: EpwDataPeriods,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<EpwRecord>,
 }
 

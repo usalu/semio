@@ -1,10 +1,9 @@
 //! 🧰 Shared path addressing for direct JSON mutations.
 use crate::artifacts::json::schema::diff::{JsonArrayDiff, JsonArrayModified, JsonDiff, JsonObjectDiff, JsonObjectModified, JsonValueDiff};
 use crate::artifacts::json::schema::snapshot::JsonValue;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonPathSegment { Key(String), Index(usize) }
 pub type JsonPath = Vec<JsonPathSegment>;
 

@@ -5,10 +5,11 @@ use crate::meters::MeterTable;
 use crate::metrics::{EnvironmentalMetrics, ResilienceMetrics};
 use crate::output::TimeSeriesTable;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Summary
 /// 📋️ Annual/monthly summary table row.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SummaryRow {
     pub key: String,
     pub value: f64,
@@ -16,7 +17,7 @@ pub struct SummaryRow {
 }
 
 /// 📋️ Summary tables (energy use, loads, comfort).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SummaryTables {
     pub annual_energy: Vec<SummaryRow>,
     pub monthly_energy: Vec<(u8, Vec<SummaryRow>)>,
@@ -33,7 +34,7 @@ impl SummaryTables {
 
 // #region 🔖️Sizing
 /// 📐️ Component sizing result.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SizingResult {
     pub component: String,
     pub design_load_w: f64,
@@ -42,7 +43,7 @@ pub struct SizingResult {
 }
 
 /// 📐️ Sizing tables from design-day calculations.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SizingTables {
     pub zone_loads: Vec<SizingResult>,
     pub equipment: Vec<SizingResult>,
@@ -51,7 +52,7 @@ pub struct SizingTables {
 
 // #region 🔖️Results
 /// 📋️ Complete simulation results (canonical structured format).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Results {
     pub time_series: TimeSeriesTable,
     pub meters: MeterTable,
@@ -64,7 +65,7 @@ pub struct Results {
 }
 
 /// 🏷️ Run metadata.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RunMetadata {
     pub model_name: String,
     pub model_version: String,

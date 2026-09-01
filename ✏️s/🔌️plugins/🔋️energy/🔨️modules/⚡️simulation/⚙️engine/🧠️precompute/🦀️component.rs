@@ -7,10 +7,11 @@ use crate::model::{EntityId, FixedTable, Model, SurfaceClass};
 use crate::site::solar_position;
 use crate::solar::beam_incidence_cosine;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ZoneGeometry
 /// 📐️ Precomputed zone geometry.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneGeometry {
     pub floor_area_m2: f64,
     pub exterior_area_m2: f64,
@@ -18,7 +19,7 @@ pub struct ZoneGeometry {
 }
 
 /// 📐️ Precomputed surface geometry and thermal properties.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SurfacePrecompute {
     pub area_m2: f64,
     pub u_value_w_m2k: f64,
@@ -36,7 +37,7 @@ pub struct SurfacePrecompute {
 
 // #region 🔖️FenestrationPrecompute
 /// 🪟️ Precomputed fenestration properties.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct FenestrationPrecompute {
     pub surface_id: EntityId,
     pub area_m2: f64,
@@ -51,7 +52,7 @@ pub struct FenestrationPrecompute {
 
 // #region 🔖️ThermostatLookup
 /// 🌡️ Resolved thermostat setpoints for a zone.
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ResolvedSetpoints {
     pub heating_c: f64,
     pub cooling_c: f64,
@@ -62,7 +63,7 @@ pub struct ResolvedSetpoints {
 
 // #region 🔖️PrecomputedModel
 /// 🧮️ All precomputed data for a simulation run.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PrecomputedModel {
     pub(crate) zone_geometry: FixedTable<EntityId, ZoneGeometry>,
     pub(crate) surfaces: FixedTable<EntityId, SurfacePrecompute>,
@@ -130,7 +131,7 @@ impl PrecomputedModel {
 // #region 🔖️PrecomputeBuilder
 /// 🧮️ Persistent one-record-at-a-time precomputation used by interactive energy jobs and
 /// by [`PrecomputedModel::build`]'s batch adapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum PrecomputeStage {
     ReserveBacking,
     IndexMaterials,
@@ -164,7 +165,7 @@ pub(crate) const P7C1_PRECOMPUTE_STAGES: [PrecomputeStage; 11] = [
 pub(crate) const P7C1_SURFACE_PRECOMPUTE_STAGES: [SurfacePrecomputeStage; 4] = [SurfacePrecomputeStage::Area, SurfacePrecomputeStage::Normal, SurfacePrecomputeStage::Materials, SurfacePrecomputeStage::Publish];
 
 /// 🧮️ Cursor state for deterministic, resumable model precomputation.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) struct PrecomputeBuilder {
     output: PrecomputedModel,
     stage: PrecomputeStage,
@@ -175,7 +176,7 @@ pub(crate) struct PrecomputeBuilder {
 }
 
 /// 🧱️ One-vertex or one-material cursor for a surface precompute record.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct SurfacePrecomputeWork {
     surface_index: usize,
     stage: SurfacePrecomputeStage,
@@ -188,7 +189,7 @@ struct SurfacePrecomputeWork {
     emissivity: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum SurfacePrecomputeStage {
     Area,
     Normal,

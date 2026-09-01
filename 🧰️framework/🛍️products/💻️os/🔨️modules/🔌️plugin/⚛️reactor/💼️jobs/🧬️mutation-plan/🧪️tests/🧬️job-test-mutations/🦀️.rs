@@ -1,5 +1,6 @@
 //#region 🧬️JobTestMutations
 use store::ArtifactPack;
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -11,8 +12,9 @@ impl ArtifactPack for JobTestSnapshot {
 }
 
 /// 🧮️ Ordered checked additions preserve intermediate rejection during structural composition.
-#[derive(Clone,Debug,Default,PartialEq,serde::Serialize,serde::Deserialize)]
+#[derive(Clone,Debug,Default,PartialEq,serde::Serialize,serde::Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct JobTestDiff { pub(crate) deltas:Vec<i32> }
 
 impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {

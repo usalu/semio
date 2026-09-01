@@ -3,10 +3,9 @@
 
 use crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.image")]
 pub struct SemioImageArtifact {
     #[state(artifact)]
@@ -16,19 +15,19 @@ pub struct SemioImageArtifact {
     #[state(artifact)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub colorspace: SemioColorspace,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub bit_depth: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<SemioImageFrame>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub icc: Option<Vec<u8>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub metadata: Vec<SemioImageMetadataEntry>,
 }
 

@@ -7,16 +7,16 @@ use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::create_step::CreateStep;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, ProcessStep};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CreateStep
-/// 📋 Full initial payload for a new [`ProcessStep`] appended to the document's ordered timeline.
-/// `index` is carried for label/provenance purposes only — the underlying `Process3dStepsDelta`
-/// engine (`apply_steps_delta`) always appends `added` entries, matching this facet's
-/// pre-migration generic-add behavior.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+/// 📋 Full initial payload for a new [`ProcessStep`] inserted into the document's ordered
+/// `step_payloads` timeline. `index` is FINAL-state, clamped to the timeline length (same
+/// insert-at-index convention `📥️insert-array-element`/`🔀reorder-steps` already use) — steps are
+/// order-meaningful, unlike the unordered `workshop.machines` set.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CreateStep {
     pub index: usize,
     pub step: ProcessStep,

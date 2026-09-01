@@ -10,7 +10,6 @@
 //! position/ports/properties, edges with source/target) and stays an ordinary inline field, unchanged.
 
 use graph::manifest::{manifest_by_id, GraphManifest, ManifestValidationError, TrinityManifest};
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub use graph::manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
@@ -23,7 +22,7 @@ pub type Manifest = TrinityManifest;
 #[derive(Debug)]
 pub enum TrinityRamError {
     /// 🧬️ JSON (de)serialization failure.
-    Json(serde_json::Error),
+    Json(String),
     /// 🧭️ VCS store/dispatch failure.
     Vcs(vcs::VcsError),
     /// 🧬️ Persisted mutation diff rejection.
@@ -116,7 +115,6 @@ impl std::fmt::Display for TrinityRamError {
 impl std::error::Error for TrinityRamError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::Json(error) => std::error::Error::source(error),
             Self::Vcs(error) => std::error::Error::source(error),
             Self::MutationApply(error) => std::error::Error::source(error),
             _ => None,
@@ -124,9 +122,15 @@ impl std::error::Error for TrinityRamError {
     }
 }
 
-impl From<serde_json::Error> for TrinityRamError {
-    fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
+impl From<pack::JsonError> for TrinityRamError {
+    fn from(error: pack::JsonError) -> Self {
+        Self::Json(error.to_string())
+    }
+}
+
+impl From<dsl::ValueError> for TrinityRamError {
+    fn from(error: dsl::ValueError) -> Self {
+        Self::Json(error.to_string())
     }
 }
 
@@ -194,7 +198,7 @@ fn semio_node_from_jack_node(node: &Node) -> SemioGraphNode {
         label: node.name.clone(),
         position: SemioPoint2 { x: node.x, y: node.y },
         ports,
-        properties: vec![SemioValueEntry { key: JACK_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: serde_json::to_string(node).unwrap_or_default() } }],
+        properties: vec![SemioValueEntry { key: JACK_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: pack::to_json_string(node).unwrap_or_default() } }],
     }
 }
 
@@ -206,7 +210,7 @@ fn jack_node_from_semio_node(node: &SemioGraphNode) -> Node {
     for property in &node.properties {
         if property.key == JACK_NODE_JSON_PROPERTY {
             if let SemioValue::Str { value } = &property.value {
-                if let Ok(parsed) = serde_json::from_str::<Node>(value) {
+                if let Ok(parsed) = pack::from_json_str::<Node>(value) {
                     return parsed;
                 }
             }
@@ -239,14 +243,14 @@ fn semio_edge_from_jack_edge(edge: &Edge) -> SemioGraphEdge {
         source: SemioGraphNodeId::new(source_node.to_string()),
         target: SemioGraphNodeId::new(target_node.to_string()),
         kind: edge.kind.clone(),
-        label: serde_json::to_string(edge).unwrap_or_default(),
+        label: pack::to_json_string(edge).unwrap_or_default(),
     }
 }
 
 /// 🌉 Inverse of [`semio_edge_from_jack_edge`] — falls back to a bare node-id (no port qualifier)
 /// edge if `label` isn't valid `Edge` JSON (content authored outside this plugin) — never panics.
 fn jack_edge_from_semio_edge(edge: &SemioGraphEdge) -> Edge {
-    serde_json::from_str::<Edge>(&edge.label).unwrap_or_else(|_| Edge { id: edge.id.value.clone(), kind: edge.kind.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), properties: PropertyBag::new() })
+    pack::from_json_str::<Edge>(&edge.label).unwrap_or_else(|_| Edge { id: edge.id.value.clone(), kind: edge.kind.clone(), source: edge.source.value.clone(), target: edge.target.value.clone(), properties: PropertyBag::new() })
 }
 
 /// 🌉 REAL bidirectional converter between jack's own live `Node`/`Edge` editing state and the
@@ -267,7 +271,7 @@ pub fn working_from_jack_content_snapshot(content: &SemioGraphSnapshot) -> (Vec<
 pub fn jack_content_child_handle(nodes: &[Node], edges: &[Edge]) -> JackContentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = jack_content_snapshot_from_working(nodes, edges);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = pack::to_json_string(&snapshot).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
@@ -314,50 +318,50 @@ pub fn jack_content_child_with_owner(nodes: Vec<Node>, edges: Vec<Edge>) -> Jack
 
 // #region 🔖️Runtime
 /// 🔌️ Runtime port on a node.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Port {
     pub id: String,
     pub kind: String,
     pub direction: PortDirection,
-    #[serde(default)]
+    #[value(default)]
     pub properties: PropertyBag,
 }
 
 /// 🧩️ Runtime node (piece).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Node {
     pub id: String,
     pub kind: String,
     pub name: String,
     pub x: f64,
     pub y: f64,
-    #[serde(default)]
+    #[value(default)]
     pub width: f64,
-    #[serde(default)]
+    #[value(default)]
     pub height: f64,
-    #[serde(default)]
+    #[value(default)]
     pub properties: PropertyBag,
-    #[serde(default)]
+    #[value(default)]
     pub ports: Vec<Port>,
 }
 
 /// 🔗️ Runtime edge (connection).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Edge {
     pub id: String,
     pub kind: String,
     pub source: String,
     pub target: String,
-    #[serde(default)]
+    #[value(default)]
     pub properties: PropertyBag,
 }
 
 /// 📷️ Camera for fixture documents.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Camera {
     pub x: f64,
     pub y: f64,
@@ -392,7 +396,7 @@ impl JackSnapshot {
     /// comment for the full rationale).
     pub fn to_json(&self) -> Result<String, TrinityRamError> {
         let scene = jack_working_scene(self);
-        let value = serde_json::json!({
+        let value = pack::json!({
             "schema": self.schema,
             "name": self.name,
             "manifestId": self.manifest_id,
@@ -401,7 +405,7 @@ impl JackSnapshot {
             "edges": scene.edges,
             "rootNodeId": self.root_node_id,
         });
-        Ok(serde_json::to_string_pretty(&value)?)
+        Ok(pack::json_to_string_pretty(&value))
     }
 
     pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
@@ -419,13 +423,13 @@ impl JackSnapshot {
     /// a fresh content-addressed handle from them (deterministic: identical `(nodes, edges)` always
     /// re-derives the same handle, so peers replaying the same JSON text converge).
     pub fn from_json(json: &str) -> Result<Self, TrinityRamError> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
+        let value: pack::JsonValue = pack::parse_json(json)?;
         let schema = value.get("schema").and_then(|v| v.as_str()).unwrap_or_default().to_string();
         let name = value.get("name").and_then(|v| v.as_str()).unwrap_or_default().to_string();
         let manifest_id: Option<String> = value.get("manifestId").and_then(|v| v.as_str()).map(str::to_string);
-        let camera: Camera = value.get("camera").map(|v| serde_json::from_value(v.clone())).transpose()?.unwrap_or_default();
-        let nodes: Vec<Node> = value.get("nodes").map(|v| serde_json::from_value(v.clone())).transpose()?.unwrap_or_default();
-        let edges: Vec<Edge> = value.get("edges").map(|v| serde_json::from_value(v.clone())).transpose()?.unwrap_or_default();
+        let camera: Camera = value.get("camera").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
+        let nodes: Vec<Node> = value.get("nodes").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
+        let edges: Vec<Edge> = value.get("edges").map(|v| dsl::FromValue::from_value(pack::json_to_dsl_value(v))).transpose()?.unwrap_or_default();
         let root_node_id: Option<String> = value.get("rootNodeId").and_then(|v| v.as_str()).map(str::to_string);
         let mut fixture = Self::with_content(schema, name, manifest_id, Manifest::default(), camera, nodes, edges, root_node_id);
         fixture.validate_schema()?;
@@ -591,8 +595,8 @@ fn validate_trinity_fixture(gm: &GraphManifest, fixture: &JackSnapshot) -> Resul
 }
 
 /// 🎯️ Entity reference for mutations.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "entity", content = "id")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", tag = "entity", content = "id")]
 pub enum EntityRef {
     Node(String),
     Edge(String),
@@ -792,23 +796,23 @@ mod tests {
     use super::*;
 
     trait JackChildOwnerOracle {
-        fn expected() -> serde_json::Value;
+        fn expected() -> pack::JsonValue;
     }
 
     struct SerdeJsonJackChildOwnerOracle;
 
     impl JackChildOwnerOracle for SerdeJsonJackChildOwnerOracle {
-        fn expected() -> serde_json::Value {
-            serde_json::from_str(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Jack child-owner fixture")
+        fn expected() -> pack::JsonValue {
+            pack::parse_json(include_str!("🧪️fixtures/🎯️child-owner-isolation.json")).expect("language-neutral Jack child-owner fixture")
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn working_scene_belongs_to_the_exact_content_child() {
         let owned = jack_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = serde_json::to_vec(&owned).expect("Jack child wire identity");
-        let reconstructed: JackContentChild = serde_json::from_slice(&wire).expect("Jack child wire roundtrip");
-        let observed = serde_json::json!({
+        let wire = pack::json_to_string(&pack::json_from_dsl_value(&dsl::to_dsl_value(&owned).expect("Jack child wire identity"))).into_bytes();
+        let reconstructed: JackContentChild = dsl::from_dsl_value(pack::json_to_dsl_value(&pack::parse_json_bytes(&wire).expect("Jack child wire roundtrip"))).expect("Jack child wire roundtrip");
+        let observed = pack::json!({
             "ownedHasScene": owned.local_owner::<JackWorkingScene>().is_some(),
             "wireIdentityMatches": owned == reconstructed,
             "wireHasScene": reconstructed.local_owner::<JackWorkingScene>().is_some(),

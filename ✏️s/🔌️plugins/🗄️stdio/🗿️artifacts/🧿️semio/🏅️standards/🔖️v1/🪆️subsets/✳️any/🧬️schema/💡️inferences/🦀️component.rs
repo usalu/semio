@@ -13,15 +13,14 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::snapshot::SemioSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::kind::{compute_semio_kind, SemioKind};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from the semio envelope snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `kind`, backed by the `🏷️kind/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.inference")]
 pub struct SemioInference {
     #[derived]

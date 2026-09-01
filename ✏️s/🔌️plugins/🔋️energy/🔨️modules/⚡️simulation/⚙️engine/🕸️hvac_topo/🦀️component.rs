@@ -2,10 +2,11 @@
 
 use crate::error::{Diagnostics, Error};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️FluidNode
 /// 💧️ Fluid stream state at a topology node (air or water).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct FluidNode {
     pub id: usize,
     pub temperature_c: f64,
@@ -23,7 +24,7 @@ impl FluidNode {
 
 // #region 🔖️Branch
 /// 🔀️ Directed fluid branch between two nodes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Branch {
     pub id: usize,
     pub inlet: usize,
@@ -32,7 +33,7 @@ pub struct Branch {
 }
 
 /// ⚙️ Branch-resident component type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum BranchComponent {
     Duct { hydraulic_diameter_m: f64, length_m: f64 },
     Pipe { diameter_m: f64, length_m: f64 },
@@ -78,7 +79,7 @@ impl Branch {
 
 // #region 🔖️SplitterMixer
 /// 🔱️ Flow splitter: one inlet, multiple outlets with prescribed fractions.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Splitter {
     pub id: usize,
     pub inlet: usize,
@@ -92,7 +93,7 @@ impl Splitter {
 }
 
 /// 🔀️ Flow mixer: multiple inlets blended by mass flow.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Mixer {
     pub id: usize,
     pub inlets: Vec<usize>,
@@ -116,7 +117,7 @@ impl Mixer {
 
 // #region 🔖️Loops
 /// 🌬️ Air loop topology: supply/return paths with zone connections.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct AirLoop {
     pub id: usize,
     pub name: String,
@@ -133,7 +134,7 @@ pub struct AirLoop {
 }
 
 /// 🏭️ Plant loop topology: hot/cold water or steam distribution.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PlantLoop {
     pub id: usize,
     pub name: String,
@@ -149,7 +150,7 @@ pub struct PlantLoop {
 }
 
 /// 💧️ Plant loop working fluid.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum PlantFluid {
     Water,
     Steam,
@@ -158,7 +159,7 @@ pub enum PlantFluid {
 }
 
 /// ❄️ Condenser loop for heat rejection (cooling tower / dry cooler).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct CondenserLoop {
     pub id: usize,
     pub plant_loop: PlantLoop,

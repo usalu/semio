@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> Fem3dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem3dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Fem3dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `delete-combination` drops `sls` and carries `before` to exactly the committed `after`.
@@ -55,22 +55,22 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem3dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        let decoded: Fem3dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = dsl::ToValue::to_value(&decoded);
+        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
-    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
+    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
     let mut snapshot = before();
     let applied = apply_fem3d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
@@ -90,24 +90,24 @@ fn produces_committed_diff() {
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().combinations.as_ref().expect("combinations delta").removed, vec!["sls".to_string()], "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: exactly sls may be removed");
     assert!(outcome.diff().load_cases.is_none(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: no load-case delta may be opened");
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = dsl::ToValue::to_value(outcome.diff());
+    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: produced diff differs from the committed 🔺️diff/🔣️component.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = dsl::ToValue::to_value(&decoded);
+    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `combinations.removed` id on `before` must leave the two cases untouched.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-combination/removes-the-serviceability-combination-and-keeps-both-cases: committed diff did not carry before to after");
 }

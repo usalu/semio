@@ -3,6 +3,9 @@
 use crate::artifacts::model::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_ARTIFACT_SCHEMA_ID, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Relocated from `⚙️engine/🦀️component.rs` (ticket
@@ -53,6 +56,35 @@ pub struct EnergyModelArtifact {
     /// 📋️ Opaque JSON of `crate::Results` — recomputed by the BEM engine; never persisted.
     #[state(artifact)]
     pub results_json: String,
+}
+
+// 🌱️ Hand-written, not derived — same composed-child/link shape as
+// `📸️snapshot/🦀️component.rs`'s `EnergyModelSnapshot` impl.
+impl ToValue for EnergyModelArtifact {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("schema".to_string(), self.schema.to_value()),
+            ("model".to_string(), self.model.to_value()),
+            ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
+            ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
+            ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
+            ("resultsJson".to_string(), self.results_json.to_value()),
+        ])
+    }
+}
+impl FromValue for EnergyModelArtifact {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        Ok(Self {
+            schema: String::from_value(field("schema"))?,
+            model: crate::model::Model::from_value(field("model"))?,
+            structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
+            zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
+            referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
+            results_json: String::from_value(field("resultsJson"))?,
+        })
+    }
 }
 //#endregion 🔖️Artifact
 

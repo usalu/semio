@@ -264,7 +264,7 @@ mod subject {
             // 🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`), which speaks a single nested `v` value for
             // `typed` (matching `ruststep::ast::Parameter::Typed`'s own `Box<Parameter>` shape) —
             // wrapped into `IfcValue::TypedValue`'s `Vec<IfcValue>` field, its production shape.
-            "typed" => Ok(IfcValue::TypedValue(str_field(value, "name")?, vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?])),
+            "typed" => Ok(IfcValue::TypedValue { name: str_field(value, "name")?, items: vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?] }),
             other => Err(format!("unknown value type {other:?}")),
         }
     }

@@ -1,14 +1,13 @@
 //! 🧬️ Direct move-scene-root-node mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{GltfTopLevelMutationRejection, reject};
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 pub const ID: &str = "s.stdio.gltf.mutation.move-scene-root-node.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfMoveSceneRootNodePayload { pub scene: usize, pub node: usize, pub position: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.scene, base.document.scenes.len(), "document/scenes")?; let roots = &base.document.scenes[payload.scene].nodes; let index = roots.iter().position(|node| *node == payload.node).ok_or_else(|| reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", payload.scene), "node is not a root of this scene"))?; checked_index(payload.position, roots.len(), "document/scenes/nodes")?; if index == payload.position { return Err(reject("gltf.mutation.no-observable-change", "document/scenes/nodes", "destination equals source")); } Ok(()) }
@@ -16,9 +15,9 @@ pub fn validate(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> 
 pub fn apply(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); let roots = &mut next.document.scenes[payload.scene].nodes; let index = roots.iter().position(|node| *node == payload.node).expect("validated root"); let node = roots.remove(index); roots.insert(payload.position, node); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveSceneRootNodeMutation {
     Apply(GltfMoveSceneRootNodePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

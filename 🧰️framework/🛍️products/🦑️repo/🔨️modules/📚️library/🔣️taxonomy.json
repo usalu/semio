@@ -11121,6 +11121,17 @@
     }
   },
   "fixedDirectoryContracts": {
+    "cargo-integration-tests": {
+      "pathPattern": "**/📦️packages/🦀️rust/tests",
+      "authority": "cargo",
+      "reason": "Cargo integration-test directory discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "cargo test",
+      "expires": null
+    },
     "cargo-target-triple-wasm32-unknown-unknown": {
       "pathPattern": "**/.🧬semio/🦑️repo/🎫️tickets/🎆️[0-9][0-9]/🌙️[0-9][0-9]/☀️[0-9][0-9]/*/**/wasm32-unknown-unknown",
       "authority": "Cargo",

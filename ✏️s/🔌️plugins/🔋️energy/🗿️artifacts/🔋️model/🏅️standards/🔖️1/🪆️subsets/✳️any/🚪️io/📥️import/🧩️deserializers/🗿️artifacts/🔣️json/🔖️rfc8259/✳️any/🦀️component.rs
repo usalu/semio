@@ -5,6 +5,9 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 
 /// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's
 /// own key-order/lexeme-preserving model, not `serde_json::Value` — see json's snapshot module).
+///
+/// 🌱️ NOT converted to `pack::json`/`ToValue` — see the sibling `export/json` leaf's own docstring
+/// note; `JsonSnapshot::to_serde_value()` is a foreign plugin API hard-typed to `serde_json::Value`.
 pub async fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<EnergyModelSnapshot, store::TextError> {

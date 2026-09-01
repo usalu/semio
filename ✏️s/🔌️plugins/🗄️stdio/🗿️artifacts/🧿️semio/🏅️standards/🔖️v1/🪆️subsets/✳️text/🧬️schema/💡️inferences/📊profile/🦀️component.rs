@@ -6,12 +6,11 @@
 //! `SemioTextRun`'s own doc comment) — an empty tag names no language.
 
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Profile
 /// 📊️ Semio text word/mark census.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTextProfile {
     pub word_count: u32,
     pub char_count: u32,

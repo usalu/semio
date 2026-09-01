@@ -3,6 +3,9 @@
 use crate::artifacts::model::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue, ValueError};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted energy-model document snapshot (persistent fields of the artifact). Ticket
@@ -39,6 +42,36 @@ pub struct EnergyModelSnapshot {
 impl Default for EnergyModelSnapshot {
     fn default() -> Self {
         energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model::default(), None)
+    }
+}
+
+// 🌱️ Hand-written, not derived — `structure`/`zones` are `store::ArtifactChild<S>` and
+// `referenced_model` is `Option<store::ArtifactLink>`, neither of which has a
+// `#[derive(ToValue, FromValue)]`-reachable impl (fan-out playbook trap #3; `ArtifactLink` mirrors
+// the same framework-exempt shape). `model: crate::model::Model` goes through `ToValue`/`FromValue`
+// directly — `Model` now derives both.
+impl ToValue for EnergyModelSnapshot {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            ("schema".to_string(), self.schema.to_value()),
+            ("model".to_string(), self.model.to_value()),
+            ("structure".to_string(), to_dsl_value(&self.structure).unwrap_or(DslValue::Null)),
+            ("zones".to_string(), to_dsl_value(&self.zones).unwrap_or(DslValue::Null)),
+            ("referencedModel".to_string(), to_dsl_value(&self.referenced_model).unwrap_or(DslValue::Null)),
+        ])
+    }
+}
+impl FromValue for EnergyModelSnapshot {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        Ok(Self {
+            schema: String::from_value(field("schema"))?,
+            model: crate::model::Model::from_value(field("model"))?,
+            structure: from_dsl_value(field("structure")).map_err(ValueError::new)?,
+            zones: from_dsl_value(field("zones")).map_err(ValueError::new)?,
+            referenced_model: from_dsl_value(field("referencedModel")).map_err(ValueError::new)?,
+        })
     }
 }
 //#endregion 🔖️Snapshot
@@ -83,18 +116,35 @@ fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#region 🔖️JsonFieldPrimitives
 /// 🧾️ `referenced_model` (an `Option<store::ArtifactLink>`) is JSON-serialized then hex-encoded,
 /// same convention `layout`'s own `enc_json`/`dec_json` uses — `ArtifactLink`/`LinkPin`/`BlobRef`
-/// are themselves plain `Serialize`/`Deserialize`, so no bespoke hex/bracket encoder is needed.
+/// (framework-owned, `🏪️store/🦀️component.rs`) are themselves plain `Serialize`/`Deserialize` only
+/// (not yet `ToValue`/`FromValue` — out of this batch's scope, framework-exempt), so this ONE field
+/// keeps the `serde_json` round trip; `enc_dsl_json`/`dec_dsl_json` below are the `ToValue`/
+/// `FromValue` analog for every other structured field on this snapshot.
 fn enc_json<T: Serialize>(value: &T) -> String {
     enc_str(&serde_json::to_string(value).expect("EnergyModelSnapshot structured fields are always JSON-serializable"))
 }
 fn dec_json<T: serde::de::DeserializeOwned>(s: &str) -> Result<T, String> {
     serde_json::from_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
+
+/// 🧾️ `model` (`crate::model::Model`, first-party `ToValue`/`FromValue`) hex-encoded the same way —
+/// no `serde_json` needed for this field, since round-tripping back into the SAME typed `Model`
+/// through `DslValue` (always-`f64` numbers) is exact: `FromValue` for every integer primitive
+/// recovers `n as $int_ty`, so no precision is lost across THIS specific round trip (contrast with
+/// the artifact root's `energy_structure_from_model`, which targets a foreign, generically-typed
+/// `SemioValue` tree that must distinguish `Int` from `Float` on the wire — a real reason to keep
+/// `serde_json` THERE, not here).
+fn enc_dsl_json<T: ToValue>(value: &T) -> String {
+    enc_str(&pack::json::to_json_string(value))
+}
+fn dec_dsl_json<T: FromValue>(s: &str) -> Result<T, String> {
+    pack::json::from_json_str(&dec_str(s)?).map_err(|error| error.to_string())
+}
 //#endregion 🔖️JsonFieldPrimitives
 
 //#region 🔖️TextPrimitives
 fn print_energy_model_snapshot_body(s: &EnergyModelSnapshot) -> String {
-    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
+    format!("schema={}\nmodel={}\nstructure={}\nzones={}\nreferencedModel={}", enc_str(&s.schema), enc_dsl_json(&s.model), enc_child(&s.structure), enc_child(&s.zones), enc_json(&s.referenced_model),)
 }
 fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, String> {
     let mut schema = None;
@@ -110,7 +160,7 @@ fn parse_energy_model_snapshot_body(body: &str) -> Result<EnergyModelSnapshot, S
         if let Some(rest) = line.strip_prefix("schema=") {
             schema = Some(dec_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("model=") {
-            model = Some(dec_json(rest)?);
+            model = Some(dec_dsl_json(rest)?);
         } else if let Some(rest) = line.strip_prefix("structure=") {
             structure = Some(dec_child(rest)?);
         } else if let Some(rest) = line.strip_prefix("zones=") {
@@ -167,12 +217,18 @@ fn write_json<T: Serialize>(out: &mut Vec<u8>, value: &T) {
 fn read_json<T: serde::de::DeserializeOwned>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
     serde_json::from_str(&read_str_lp(reader)?).map_err(|e| e.to_string())
 }
+fn write_dsl_json<T: ToValue>(out: &mut Vec<u8>, value: &T) {
+    write_str_lp(out, &pack::json::to_json_string(value));
+}
+fn read_dsl_json<T: FromValue>(reader: &mut store::ByteReader<'_>) -> Result<T, String> {
+    pack::json::from_json_str(&read_str_lp(reader)?).map_err(|error| error.to_string())
+}
 
 fn encode_energy_model_snapshot_binary(s: &EnergyModelSnapshot) -> Vec<u8> {
     const PACK_BINARY_FORMAT: u8 = 2;
     let mut out = vec![PACK_BINARY_FORMAT];
     write_str_lp(&mut out, &s.schema);
-    write_json(&mut out, &s.model);
+    write_dsl_json(&mut out, &s.model);
     write_child(&mut out, &s.structure);
     write_child(&mut out, &s.zones);
     write_json(&mut out, &s.referenced_model);
@@ -185,7 +241,7 @@ fn decode_energy_model_snapshot_binary(bytes: &[u8]) -> Result<EnergyModelSnapsh
     if format != PACK_BINARY_FORMAT {
         return Err(format!("unsupported pack format {format}"));
     }
-    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
+    Ok(EnergyModelSnapshot { schema: read_str_lp(&mut reader)?, model: read_dsl_json(&mut reader)?, structure: read_child(&mut reader)?, zones: read_child(&mut reader)?, referenced_model: read_json(&mut reader)? })
 }
 //#endregion 🔖️BinaryPrimitives
 
@@ -301,13 +357,13 @@ pub fn energy_model_identity_report_json(dsl_text: &str) -> Result<String, Strin
     let canonical_again = <EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = pack::json::object([
+        ("parsed".to_string(), pack::json::from_dsl_value(&parsed.to_value())),
+        ("reparsed".to_string(), pack::json::from_dsl_value(&reparsed.to_value())),
+        ("packDecoded".to_string(), pack::json::from_dsl_value(&unpacked.to_value())),
+        ("canonicalText".to_string(), pack::json::Value::String(canonical.clone())),
+        ("canonicalTextAgain".to_string(), pack::json::Value::String(canonical_again.clone())),
+    ]);
+    Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️IdentityBridge

@@ -6,7 +6,7 @@
 //! `26/08/29/S-END-TO-END`): `NoMutation` was dropped (`#[derive(dsl::Mutations)]` requires every
 //! variant to wrap exactly one leaf payload and a unit variant wraps none; `no` is not an approved
 //! semantic verb either), and every remaining variant now wraps its own `dsl::MutationLeaf` struct
-//! instead of carrying its fields as a struct-literal directly. `#[serde(tag = "mutation", ...)]`
+//! instead of carrying its fields as a struct-literal directly. `#[value(tag = "mutation", ...)]`
 //! is kept (unlike tiff, which has none) so the wire shape this artifact's committed fixtures and
 //! `OpText`/`OpBinary` already depend on stays byte-for-byte identical — serde's internally-tagged
 //! representation supports a newtype variant wrapping a plain struct.
@@ -16,7 +16,6 @@ use crate::artifacts::html::standards::v5::subsets::any::schema::diff::{diff_at_
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.html`. Beyond the baseline `SetSnapshot`, this addresses
@@ -45,9 +44,9 @@ pub mod set_comment;
 pub mod set_raw_text;
 //#endregion 🔖️Leaves
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = HtmlSnapshot, diff = HtmlDiff, schema = "HtmlMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum HtmlMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// 📜️ Sets (or, if `None`, clears) the document's raw `<!DOCTYPE ...>` declaration content.

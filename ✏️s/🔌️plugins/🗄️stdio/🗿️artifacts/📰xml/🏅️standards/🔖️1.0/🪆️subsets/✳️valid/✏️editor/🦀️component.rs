@@ -17,7 +17,6 @@ use crate::editor::xml_valid::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — verified against the artifact's own `🚪️io`/`🧬️schema` `DIALECT`
@@ -29,7 +28,7 @@ pub const XML_VALID_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-node`, contract §2.6) can trigger. `node_id` is the window's own `/`-joined
 /// child-index path encoding.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum XmlValidEditorCommand {
     SetNode { node_id: String, value: String },
 }

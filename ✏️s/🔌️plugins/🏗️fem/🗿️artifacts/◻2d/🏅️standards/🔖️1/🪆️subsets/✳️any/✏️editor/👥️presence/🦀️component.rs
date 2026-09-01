@@ -1,14 +1,14 @@
 //! 👥️ Fem2dPresence — empty shareable live state (selection is command-transient; camera/results live in config).
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Fem2dPresence has no shareable live fields beyond config: selection is transient command payload,
 /// and camera / result display already live on `Fem2dConfig` as `local-ui`.
-#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Default, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem2dPresence {}
 
 impl protocol::MutationDiff<Fem2dPresence> for Fem2dPresence {
@@ -42,8 +42,8 @@ impl ArtifactPack for Fem2dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum Fem2dPresenceMutation {
     Noop,
 }

@@ -4,21 +4,20 @@ use crate::artifacts::docx::schema::snapshot::DocxDocument;
 use crate::artifacts::docx::DocxSnapshot;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Artifact
 /// 🧬️ Full `stdio.docx` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx")]
 pub struct DocxArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub opc: OpcPackage,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub document: DocxDocument,
 }
 //#endregion Artifact

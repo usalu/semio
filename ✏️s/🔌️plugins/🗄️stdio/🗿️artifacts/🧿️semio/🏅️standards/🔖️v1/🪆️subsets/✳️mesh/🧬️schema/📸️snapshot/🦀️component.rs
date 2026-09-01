@@ -10,8 +10,8 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{spli
 
 //#region 🔖️Topology
 /// 🔺️ Primitive draw mode — the gltf 2.0 `mode` enumeration, named (never a bare integer tag).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum SemioTopology {
     Points,
     Lines,
@@ -33,34 +33,34 @@ impl Default for SemioTopology {
 /// `mesh.primitives` array lacks; every W2 subset id-keys its repeating structures per the
 /// schema-design.md recipe). `positions`/`normals`/`uvs`/`colors`/`indices` are weak, parallel
 /// buffer-shaped data — whole-value replaced in diffs, never sub-diffed per vertex.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioPrimitive {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub topology: SemioTopology,
-    #[serde(default)]
+    #[value(default)]
     pub positions: Vec<SemioPoint3>,
-    #[serde(default)]
+    #[value(default)]
     pub normals: Vec<SemioPoint3>,
-    #[serde(default)]
+    #[value(default)]
     pub uvs: Vec<SemioUv>,
-    #[serde(default)]
+    #[value(default)]
     pub colors: Vec<SemioRgba>,
-    #[serde(default)]
+    #[value(default)]
     pub indices: Vec<u32>,
-    #[serde(default)]
+    #[value(default)]
     pub material_id: Option<String>,
 }
 //#endregion 🔖️Primitive
 
 //#region 🔖️Mesh
 /// 🕸️ A mesh is an id-keyed collection of `SemioPrimitive`s (gltf's `mesh.primitives`).
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioMesh {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub primitives: Vec<SemioPrimitive>,
 }
 //#endregion 🔖️Mesh
@@ -68,15 +68,15 @@ pub struct SemioMesh {
 //#region 🔖️Material
 /// 🎨️ PBR metallic-roughness material (gltf's `material.pbrMetallicRoughness`, the spec-mandated
 /// field set per the master plan's row: "materials (PBR base_color/metallic/roughness)").
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioMaterial {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub base_color: SemioRgba,
-    #[serde(default)]
+    #[value(default)]
     pub metallic: f32,
-    #[serde(default)]
+    #[value(default)]
     pub roughness: f32,
 }
 //#endregion 🔖️Material
@@ -84,39 +84,38 @@ pub struct SemioMaterial {
 //#region 🔖️Texture
 /// 🖼️ Raw texture payload (gltf's `image` + embedded `bufferView`/data-uri collapsed into one
 /// typed-raw-retention entity — mime + bytes, per the master plan's row: "textures{mime, bytes}").
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioTexture {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub mime: String,
-    #[serde(default)]
+    #[value(default)]
     pub bytes: Vec<u8>,
 }
 //#endregion 🔖️Texture
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOMESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh")]
 pub struct SemioMeshSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub meshes: Vec<SemioMesh>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub materials: Vec<SemioMaterial>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub textures: Vec<SemioTexture>,
 }
 
@@ -621,7 +620,7 @@ impl store::ArtifactPack for SemioMeshSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.mesh` — the shape `mutate-semio-mesh` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. A mesh snapshot is dominated by bulk arrays — per-primitive `positions`/`normals`/`uvs`/

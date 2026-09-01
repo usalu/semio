@@ -4,30 +4,29 @@
 use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar, DxfOtherTable, DxfTables};
 use crate::artifacts::dxf::DxfSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.dxf` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dxf")]
 pub struct DxfArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header_vars: Vec<DxfHeaderVar>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tables: DxfTables,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub other_tables: Vec<DxfOtherTable>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DxfBlock>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<DxfEntity>,
 }
 //#endregion 🔖️Artifact

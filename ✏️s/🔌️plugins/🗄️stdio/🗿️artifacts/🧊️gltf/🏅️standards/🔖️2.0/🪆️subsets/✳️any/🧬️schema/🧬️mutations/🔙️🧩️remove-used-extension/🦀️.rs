@@ -1,12 +1,11 @@
 //! 🧬️ Direct remove-used-extension mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 pub const ID: &str = "s.stdio.gltf.mutation.remove-used-extension.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/extensionsUsed"];
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfWithdrawUsedExtensionPayload { pub extension: String }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if !base.document.extensions_used.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-absent", "document/extensionsUsed", "extension is not declared")); } if base.document.extensions_required.contains(&payload.extension) { return Err(reject("gltf.mutation.extension-required", "document/extensionsRequired", "remove the requirement first")); } Ok(()) }
@@ -14,9 +13,9 @@ pub fn validate(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot)
 pub fn apply(payload: &GltfWithdrawUsedExtensionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.extensions_used.retain(|value| value != &payload.extension); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum RemoveUsedExtensionMutation {
     Apply(GltfWithdrawUsedExtensionPayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

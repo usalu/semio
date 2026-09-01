@@ -1494,15 +1494,15 @@ pub mod host {
             let mut host = PluginHost::new();
             let topic_contribution = TopicContribution::new(
                 "playbook.blockKind",
-                serde_json::json!({
-                    "appId": "playbook-module-procedural",
-                    "blockKind": "buildingComponent",
-                    "label": "Building Component",
-                    "iconId": "building",
-                    "defaultValueJson": "{}",
-                    "paramsBodyKey": "params",
-                    "previewBodyKey": "preview",
-                }),
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String("playbook-module-procedural".to_string())),
+                    ("blockKind".to_string(), semio_framework::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework::DslValue::String("building".to_string())),
+                    ("defaultValueJson".to_string(), semio_framework::DslValue::String("{}".to_string())),
+                    ("paramsBodyKey".to_string(), semio_framework::DslValue::String("params".to_string())),
+                    ("previewBodyKey".to_string(), semio_framework::DslValue::String("preview".to_string())),
+                ]),
             );
             host.load_plugin(LoadedProgram {
                 plugin_id: "playbook-module-procedural".into(),
@@ -1969,14 +1969,14 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_sync_node_ports() {
-            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts));
+            store::test_support::assert_op_line_round_trip(&workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {}));
         }
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
             let envelope = create_document_envelope(workflow::S_WORKFLOW_SCHEMA, "workflow-text-test", workflow::empty_workflow_snapshot(), None);
             let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
-            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts)], description: None }).expect("apply");
+            store.dispatch(ArtifactCommand::Apply { mutations: vec![workflow::WorkflowMutation::UpdateNodePorts(workflow::UpdateNodePorts {})], description: None }).expect("apply");
             store::test_support::assert_document_text_round_trip(&store);
             store::test_support::assert_document_pack_round_trip(&store);
         }
@@ -3692,8 +3692,9 @@ pub mod workflow {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct OsWorkflowChannelSpec {
         pub name: String,
         pub code: String,
@@ -3702,8 +3703,13 @@ pub mod workflow {
         pub operators: Vec<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    /// 🌱️ `ToValue` only (additive, alongside `serde` — this crate is framework, exempt from the
+    /// serde ban) — `space`'s `json_array_to_node_graph_operators` shim only ENCODES this type
+    /// (never decodes it back), see `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/
+    /// RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct OsWorkflowOperatorInfo {
         pub id: String,
         pub module: String,

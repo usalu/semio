@@ -40,12 +40,12 @@ fn builtin_palette_tuples() -> Vec<(&'static str, &'static str, &'static str)> {
 }
 
 /// 🗂️ `playbook.blockKind` topic payload shape (see `TopicContribution` in `semio-framework-manifest`).
-#[derive(Clone, Debug, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct PlaybookBlockKindTopicPayload {
     block_kind: String,
     label: String,
-    icon_id: semio_framework::IconName,
+    icon_id: String,
 }
 
 const PLAYBOOK_BLOCK_KIND_TOPIC: &str = "playbook.blockKind";
@@ -57,7 +57,7 @@ fn extension_palette_entries(config: &PlaybookConfig) -> Vec<(String, String, St
         .filter_map(|entry| {
             let topic_contribution = entry.topic_contribution.as_ref().filter(|topic_contribution| topic_contribution.topic == PLAYBOOK_BLOCK_KIND_TOPIC)?;
             let payload = topic_contribution.decode::<PlaybookBlockKindTopicPayload>().ok()?;
-            Some((payload.block_kind, payload.label, payload.icon_id.to_string()))
+            Some((payload.block_kind, payload.label, payload.icon_id))
         })
         .collect()
 }
@@ -103,7 +103,14 @@ mod tests {
         let mut config = PlaybookConfig::default();
         let entry = ProgramContributionEntry {
             plugin_id: "playbook-module-procedural".into(),
-            topic_contribution: Some(TopicContribution::new("playbook.blockKind", serde_json::json!({ "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building" }))),
+            topic_contribution: Some(TopicContribution::new(
+                "playbook.blockKind",
+                semio_framework_os_kernel::DslValue::object([
+                    ("blockKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+                    ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+                    ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+                ]),
+            )),
         };
         config.contributions_json = serde_json::to_string(&vec![entry]).unwrap();
         let palette = build_palette(&config);

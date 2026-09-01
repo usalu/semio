@@ -30,7 +30,6 @@
 
 use crate::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Page
 /// 📄️ One resolved page of a PDF 1.4 document — this standard's own page vocabulary.
@@ -46,12 +45,12 @@ use serde::{Deserialize, Serialize};
 /// It is deliberately NOT font-decoded through a `/ToUnicode` CMap: this standard's writer shows
 /// the field back through a simple single-byte font, so what is read is exactly what any reader
 /// recovers, and decode→encode→decode is stable on it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct PageDoc {
     pub width: f64,
     pub height: f64,
-    #[serde(default)]
+    #[value(default)]
     pub text: String,
 }
 
@@ -79,8 +78,8 @@ impl Default for PageDoc {
 ///
 /// A PDF document always has at least one page (ISO 32000-1 §7.7.3.2: `/Count` is at least 1 for a
 /// readable document), so `Default` is one blank US-Letter page rather than an empty list.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf")]
 pub struct PdfSnapshot {
     #[state(artifact)]
@@ -88,7 +87,7 @@ pub struct PdfSnapshot {
     /// 📚️ The document's pages in reading order — the page tree walked flat. Index-keyed for
     /// diffing (`../🔺️diff/🦀️component.rs`'s `PdfPagesDiff`).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub pages: Vec<PageDoc>,
 }

@@ -23,7 +23,7 @@ pub trait ArenaId: Copy + Eq + std::hash::Hash + std::fmt::Debug {
 #[macro_export]
 macro_rules! define_id {
     ($name:ident, $tag:literal) => {
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, serde::Serialize, serde::Deserialize)]
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
         pub struct $name {
             index: u32,
             generation: u32,
@@ -62,7 +62,7 @@ define_id!(SurfaceId, "surface");
 
 // #region 🔖️Store
 
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 struct Slot<T> {
     generation: u32,
     value: Option<T>,
@@ -73,8 +73,7 @@ struct Slot<T> {
 /// for byte-identical serialized output), and index-ordered iteration. Serde bounds are pinned to
 /// `T` only — `Id` never needs to be (de)serializable itself, it only appears inside a zero-sized
 /// `PhantomData` marker.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(bound(serialize = "T: serde::Serialize", deserialize = "T: serde::de::DeserializeOwned"))]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct Store<T, Id> {
     slots: Vec<Slot<T>>,
     free: Vec<u32>,
@@ -235,8 +234,8 @@ mod tests {
     async fn serde_round_trips_an_id() {
         let mut store: Store<i32, TestId> = Store::new();
         let id = store.insert(1);
-        let json = serde_json::to_string(&id).unwrap();
-        let back: TestId = serde_json::from_str(&json).unwrap();
+        let json = pack::to_json_string(&id);
+        let back: TestId = pack::from_json_str(&json).unwrap();
         assert_eq!(back, id);
     }
 

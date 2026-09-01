@@ -27,7 +27,6 @@ use crate::artifacts::bcf::schema::diff::{diff_set_snapshot, wrap_comment_diff, 
 use crate::artifacts::bcf::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::artifacts::bcf::BcfSnapshot;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.bcf`.
@@ -74,7 +73,7 @@ pub mod set_viewpoint_snapshot;
 
 /// 📐️ Typed mutation for `stdio.bcf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = BcfSnapshot, diff = BcfDiff, schema = "BcfMutation")]
 pub enum BcfMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

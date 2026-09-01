@@ -14,7 +14,6 @@ use crate::artifacts::step::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs (`between`/`absorb`/
@@ -161,14 +160,14 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
 //#region 🔖️ArgsDiff
 /// 🔺️ One `entities.modified[].diff.args.modified[]` entry — `StepValue` is weak (no further
 /// sub-structure worth diffing), so the "diff" IS the whole new value.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepArgModified {
     pub index: usize,
     pub value: StepValue,
 }
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepArgAdded {
     pub index: usize,
     pub value: StepValue,
@@ -176,14 +175,14 @@ pub struct StepArgAdded {
 
 /// 🔺️ Index-keyed collection triple for `StepEntity::args` — Part-21 entity argument lists are
 /// positional, never named.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepArgsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<StepArgModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<StepArgAdded>,
 }
 
@@ -261,14 +260,14 @@ impl StepArgsDiff {
 //#region 🔖️EntityDiff
 /// 🔺️ Sparse per-field diff for one [`StepEntity`] — a strong entity, per the recipe. `complex`
 /// (the rare multi-type-instance extension) is a weak value list, whole-vec replaced.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepEntityDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub args: Option<StepArgsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub complex: Option<Vec<StepComplexType>>,
 }
 
@@ -324,30 +323,30 @@ impl StepEntityDiff {
 //#region 🔖️EntitiesTriple
 /// 📦️ One `entities.modified[]` entity — `id` is stable Part-21 instance-number identity (never
 /// renumbered by a mutation in this recipe; unlike zip's names, no rename tracking is needed).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepEntityModified {
     pub id: u64,
     pub diff: StepEntityDiff,
 }
 
 /// 📦️ One `entities.added[]` entity — `index` is the entity's position in the FINAL sequence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepEntityAdded {
     pub index: usize,
     pub entity: StepEntity,
 }
 
 /// 📦️ Sparse id-keyed `entities` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepEntitiesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u64>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<StepEntityModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<StepEntityAdded>,
 }
 
@@ -478,21 +477,21 @@ fn absorb_entities(d1: Option<StepEntitiesDiff>, d2: Option<StepEntitiesDiff>) -
 /// 🔺️ Diff for `stdio.step`. No `snapshot: Option<StepSnapshot>` full-replace slot anywhere.
 /// `schema` is an identity field and never appears here. The three HEADER records are scalar
 /// weak-value slots (never sub-diffed) per the recipe.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step.diff")]
 pub struct StepDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_description: Option<StepFileDescription>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<StepFileName>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_schema: Option<StepFileSchema>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<StepEntitiesDiff>,
 }
 

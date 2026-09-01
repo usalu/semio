@@ -2,7 +2,6 @@
 use crate::artifacts::gltf::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
 use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub const ID: &str = "s.stdio.gltf.mutation.change-material-alpha-mode.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/alphaMode"];
@@ -10,9 +9,9 @@ pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/alphaMode"];
 pub fn touched_paths(payload: &GltfChangeMaterialAlphaModePayload) -> Vec<String> {
     vec![format!("document/materials/{}/alphaMode", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialAlphaModeRejection {
     pub code: String,
     pub path: String,
@@ -22,8 +21,8 @@ pub struct GltfChangeMaterialAlphaModeRejection {
 fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialAlphaModeRejection {
     GltfChangeMaterialAlphaModeRejection { code: value.code.into(), path: value.path, detail: value.detail.into() }
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialAlphaModePayload {
     pub material: usize,
     pub alpha_mode: GltfAlphaMode,
@@ -58,9 +57,9 @@ mod tests {
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialAlphaModeMutation {
     Apply(GltfChangeMaterialAlphaModePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

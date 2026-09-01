@@ -587,7 +587,7 @@ pub fn extension_manifest_json() -> String {
         vec!["onStartup".into()],
         vec![],
         vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-        vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
+        vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: flow_extension_sdk::integer_setting_default(1), description: "Decimal places for number preview".into() }],
     )
 }
 
@@ -657,7 +657,7 @@ mod tests {
             vec!["onStartup".into()],
             vec![],
             vec![FlowExtensionCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
+            vec![FlowExtensionSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: flow_extension_sdk::integer_setting_default(1), description: "Decimal places for number preview".into() }],
         );
         assert!(json.contains("flow.extension"));
         assert!(json.contains("math.vector"));
@@ -667,12 +667,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn evaluate_json_adds_numbers() {
         let reg = module_registry();
-        let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(2.0))).insert("b", Value::Dictionary(number_dictionary(1.0)));
-        let out_json = evaluate_json(&reg, "math.add", &serde_json::to_string(&input).unwrap());
-        let out: Dictionary = serde_json::from_str(&out_json).unwrap();
-        let sum = out.get("sum").and_then(|v| v.as_dictionary()).expect("sum channel");
-        assert_eq!(sum.schema(), Some("number"));
-        assert_eq!(sum.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
+        let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
+        let input_json = pack::json::to_string(&pack::json::object([("a".to_string(), json_number(2.0)), ("b".to_string(), json_number(1.0))]));
+        let out_json = evaluate_json(&reg, "math.add", &input_json);
+        let out = pack::json::parse(&out_json).unwrap();
+        let sum = out.get("sum").expect("sum channel");
+        assert_eq!(sum.get("$schema").and_then(pack::json::Value::as_str), Some("number"));
+        assert_eq!(sum.get("value").and_then(pack::json::Value::as_f64), Some(3.0));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -702,34 +703,14 @@ mod tests {
 #[cfg(feature = "component-guest")]
 mod extension_guest {
     use super::{extension_manifest_json, module_registry};
-    use flow_extension_sdk::evaluate_json;
+    use flow_extension_sdk::{evaluate_invoke_json, flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-    use serde::Deserialize;
 
     const FLOW_APP_ID: &str = "flow-play";
     const PROCEDURAL3D_APP_ID: &str = "procedural3d-play";
     const EXTENSION_ID: &str = "math";
     const EXTENSION_LABEL: &str = "Math";
-
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct EvaluateRequest {
-        operator_id: String,
-        input_json: String,
-    }
-
-    fn flow_extension_contribution(app_id: &str, manifest_json: String) -> serde_json::Value {
-        let icon_id = "math";
-        let topic_payload = serde_json::json!({
-            "appId": app_id,
-            "extensionId": EXTENSION_ID,
-            "label": EXTENSION_LABEL,
-            "iconId": icon_id,
-            "manifestJson": &manifest_json,
-        });
-        topic_payload
-    }
 
     // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
     // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
@@ -738,28 +719,25 @@ mod extension_guest {
     // See R9.
     fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
-        let flow_topic_payload = flow_extension_contribution(FLOW_APP_ID, manifest_json.clone());
-        let procedural3d_topic_payload = flow_extension_contribution(PROCEDURAL3D_APP_ID, manifest_json);
+        let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "math", &manifest_json);
+        let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "math", &manifest_json);
         let bundle = ExtensionBundle::new("flow-extension-math", EXTENSION_LABEL, "0.2.0").extends("flow");
         let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Linked));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", flow_topic_payload));
-        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic("flow.extension", procedural3d_topic_payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(flow_topic.topic, flow_topic.payload));
+        let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload));
         semio_framework::io::resolve_ready(bundle.handler("evaluate", |req| {
-            let request: EvaluateRequest = serde_json::from_slice(req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err.to_string()))?;
-            Ok(evaluate_json(&neural_engine::ColdOwner::new(module_registry()), &request.operator_id, &request.input_json).into_bytes())
+            evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).map_err(|err| Fault::new(FaultOrigin::Plugin, FaultCode::new("extension.evaluate.bad-request"), err))
         }))
     }
 
     #[test]
     fn bundle_identity_matches_catalogue_fixture() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
+        let fixture = pack::json::parse(include_str!("../🧪️fixtures/🔣️package-identities.json")).unwrap();
         let bundle = bundle();
-        let manifest = serde_json::to_value(&bundle.manifest).unwrap();
-        assert_eq!(manifest["extensionId"], fixture["math"]["pluginId"]);
+        assert_eq!(Some(bundle.manifest.extension_id.as_str()), fixture.get("math").and_then(|entry| entry.get("pluginId")).and_then(pack::json::Value::as_str));
         assert_eq!(bundle.manifest.topic_contributions.len(), 2);
         for contribution in &bundle.manifest.topic_contributions {
-            let payload: serde_json::Value = contribution.decode().unwrap();
-            assert_eq!(payload["extensionId"], fixture["math"]["flowId"]);
+            assert_eq!(contribution.payload.get("extensionId").and_then(|value| value.as_str()), fixture.get("math").and_then(|entry| entry.get("flowId")).and_then(pack::json::Value::as_str));
         }
     }
 

@@ -7,14 +7,13 @@
 //! read/fold — no `InferredField` needed.
 
 use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Window
 /// 🪟️ deflate's real RFC1950 zlib-header-derived facet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DeflateWindow {
     pub window_size: u32,
     pub compression_level_hint: String,

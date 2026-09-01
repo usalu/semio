@@ -10,12 +10,11 @@
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
 use crate::artifacts::step::engine::part21::Part21Value;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ IFC2X3's `IFCCARTESIANPOINT`-derived spatial bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Ifc2x3Bounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

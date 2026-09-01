@@ -12,7 +12,7 @@ use super::{Pnt3, Vec3};
 // #region 🔖️Mat
 
 /// 🧭️ A 3×3 matrix in row-major order, used for rotations and normal-transform cofactors.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Mat3 {
     pub rows: [[f64; 3]; 3],
 }
@@ -70,7 +70,7 @@ impl Mat3 {
 // #region 🔖️Quat
 
 /// 🧭️ A unit quaternion `(w, x, y, z)` representing a pure rotation.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Quat {
     pub w: f64,
     pub x: f64,
@@ -161,7 +161,7 @@ impl Quat {
 /// 🧭️ A rigid transform with optional uniform scale: `p ↦ rotation·(scale·p) + translation`.
 /// Deliberately excludes shear/non-uniform scale so analytic surfaces stay analytic after any
 /// transform the kernel applies.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Trsf {
     pub rotation: Quat,
     pub translation: Vec3,
@@ -217,7 +217,7 @@ impl Trsf {
 // #region 🔖️Frame
 
 /// 🧭️ A right-handed orthonormal frame: origin plus three unit axes with `z = x × y`.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct Frame3 {
     pub origin: Pnt3,
     pub x: Vec3,

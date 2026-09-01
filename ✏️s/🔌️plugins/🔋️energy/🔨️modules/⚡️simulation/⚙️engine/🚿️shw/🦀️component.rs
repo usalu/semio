@@ -3,10 +3,11 @@
 use crate::props::{water_cp_j_per_kg_k, water_density};
 use crate::units::RHO_WATER;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️State
 /// 🌡️ Hot-water storage state.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WaterHeaterState {
     pub average_temperature_c: f64,
     pub top_temperature_c: f64,
@@ -15,7 +16,7 @@ pub struct WaterHeaterState {
 }
 
 /// 📤️ Water heater timestep output.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WaterHeaterOutput {
     pub heating_power_w: f64,
     pub electrical_power_w: f64,
@@ -28,7 +29,7 @@ pub struct WaterHeaterOutput {
 
 // #region 🔖️Mixed
 /// 🚿️ Fully mixed storage water heater (electric or gas).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct MixedWaterHeater {
     pub volume_l: f64,
     pub ua_standby_w_per_k: f64,
@@ -40,7 +41,7 @@ pub struct MixedWaterHeater {
 }
 
 /// ⛽️ Water heater energy source.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum WaterHeaterFuel {
     Electric,
     Gas,
@@ -76,7 +77,7 @@ impl MixedWaterHeater {
 
 // #region 🔖️Stratified
 /// 🌡️ Stratified tank with fixed node count (1-D conduction between nodes).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct StratifiedWaterHeater {
     pub volume_l: f64,
     pub node_count: usize,
@@ -139,7 +140,7 @@ impl StratifiedWaterHeater {
 
 // #region 🔖️HeatPump
 /// 🌡️ Heat-pump water heater with ambient air source.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HeatPumpWaterHeater {
     pub tank: MixedWaterHeater,
     pub rated_cop: f64,
@@ -161,7 +162,7 @@ impl HeatPumpWaterHeater {
 
 // #region 🔖️Fixtures
 /// 🚰️ Domestic hot-water fixture end use.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HotWaterFixture {
     pub name: String,
     pub peak_flow_l_s: f64,
@@ -188,7 +189,7 @@ impl HotWaterFixture {
 
 // #region 🔖️Standby
 /// 🌡️ Standby loss model for tanks and distribution piping.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct StandbyLoss {
     pub ua_w_per_k: f64,
     pub ambient_temperature_c: f64,
@@ -205,7 +206,7 @@ impl StandbyLoss {
 
 // #region 🔖️DrainRecovery
 /// ♻️ Drain-water heat recovery heat exchanger.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DrainWaterHeatRecovery {
     pub effectiveness: f64,
     pub ua_w_per_k: f64,

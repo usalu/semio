@@ -2,7 +2,6 @@
 
 use crate::artifacts::jack::Camera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use store::ArtifactPack;
 
@@ -10,8 +9,8 @@ use store::ArtifactPack;
 /// 👥️ Shareable live subset of rewrite view state (before-pane camera, LOD) — node selection/hover
 /// broadcasts automatically via the framework's typed `PresenceInteraction` (ticket
 /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`), no longer mirrored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.rewrite.presence")]
 #[dsl(layout = "lines")]
 pub struct RewritePresence {
@@ -82,8 +81,8 @@ impl ArtifactPack for RewritePresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum RewritePresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

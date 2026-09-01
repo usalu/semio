@@ -18,6 +18,7 @@ use crate::os_spr::{decode_envelopes, decode_server_frame, encode_client_frame, 
 use crate::os_spr::{ActorId, MutationId};
 use crate::os_store::{ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
 
@@ -827,14 +828,15 @@ async fn stamp_session(peer: &mut PresencePeer, session_color: Option<u8>, surfa
     peer.surface = surface.map(str::to_string);
 }
 
-/// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
-/// `js_sys::Date` in the browser wasm build (no `SystemTime` there).
-#[cfg(not(target_arch = "wasm32"))]
+/// @emoji ⏰️ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` on native AND
+/// `wasm32-wasip2` (WASI's clock backs it fine), `js_sys::Date` only in the actual browser wasm
+/// build (`target_arch = "wasm32"` is TRUE for wasip2 too, so that arm is narrowed to exclude it).
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 async fn now_ms() -> u64 {
     js_sys::Date::now() as u64
 }
@@ -865,7 +867,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
@@ -876,7 +878,7 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + crate::os_dsl::ToValue + crate::os_dsl::FromValue + Serialize + serde::de::DeserializeOwned + crate::os_store::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + Serialize + serde::de::DeserializeOwned + crate::os_spr::Mutation<P> + crate::os_spr::OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
@@ -1072,8 +1074,19 @@ impl ArtifactHost {
         let (event_tx, _event_rx) = broadcast::channel(256);
         #[cfg(not(target_arch = "wasm32"))]
         let runner = spawn_actor(self.pool.clone(), generation, config, remote, cmd_rx, event_tx.clone()).await;
-        #[cfg(target_arch = "wasm32")]
+        // 🌉️ Narrowed to match `mod wasm_actor`'s own gate: it is a browser WebSocket/`web_sys`
+        // bridge, and `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too. On the WASI
+        // component target neither actor exists — `native_actor` is `tokio_tungstenite`/
+        // `tokio::net::TcpStream`, which a component cannot open — so `open` registers the document
+        // and hands back its channels WITHOUT a sync actor, which is the only thing a component
+        // with no socket of its own can do. That is already the documented story: no plugin
+        // activates the `sync`/`worker` features that reach this module (see `mod wasm_actor`).
+        // `OpenDocument::runner` and `ArtifactChannels::runner` are themselves
+        // `cfg(not(target_arch = "wasm32"))`, so nothing downstream expects a runner here.
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         spawn_actor(self.pool.clone(), config, remote, cmd_rx, event_tx.clone()).await;
+        #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+        let _ = (&self.pool, config, remote, cmd_rx);
         #[cfg(not(target_arch = "wasm32"))]
         {
             let weak_host = std::sync::Arc::downgrade(&self.inner);
@@ -2784,7 +2797,10 @@ pub use native_actor::{ArtifactActorRunnerHandle, ArtifactActorRunnerTicket, Art
 /// @emoji 🌐️ Browser wgpu build: the actor runs on `spawn_local` with a `web_sys::WebSocket` semio_hub
 /// transport. No filesystem, so folder bindings are ignored (the browser uses the dev-middleware
 /// SSE watch instead, wired by WS-E's TS twin). Kept coherent so a future in-wasm host can link it.
-#[cfg(target_arch = "wasm32")]
+/// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only WebSocket
+/// bridge, so it is narrowed to exclude the WASI component target — no plugin currently activates
+/// the `sync`/`worker` features that reach this module at all.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_actor {
     use super::*;
     use wasm_bindgen::prelude::*;
@@ -3069,7 +3085,7 @@ mod wasm_actor {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_actor::spawn_actor;
 //#endregion 🔖️WasmActor
 
@@ -3774,7 +3790,7 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     struct DemoDiff {
         n: Option<i32>,
     }

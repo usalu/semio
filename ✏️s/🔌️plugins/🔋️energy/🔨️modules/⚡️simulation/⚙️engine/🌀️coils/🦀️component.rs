@@ -4,10 +4,11 @@ use crate::curves::PerformanceCurve;
 use crate::props::{latent_heat_vaporization, moist_air_enthalpy_j_per_kg, saturation_pressure_pa};
 use crate::units::{CP_DRY_AIR, H_FG_0C};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️HeatingCoil
 /// 🔥️ Heating coil types and ratings.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum HeatingCoil {
     Electric { capacity_w: f64, efficiency: f64 },
     Gas { capacity_w: f64, efficiency: f64 },
@@ -16,7 +17,7 @@ pub enum HeatingCoil {
 }
 
 /// 📥️ Heating coil inlet air state.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct CoilAirState {
     pub temperature_c: f64,
     pub humidity_ratio: f64,
@@ -25,7 +26,7 @@ pub struct CoilAirState {
 }
 
 /// 📤️ Heating coil output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HeatingCoilOutput {
     pub outlet: CoilAirState,
     pub total_heating_w: f64,
@@ -36,7 +37,7 @@ pub struct HeatingCoilOutput {
 
 // #region 🔖️CoolingCoil
 /// ❄️ Cooling coil types including DX stages.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum CoolingCoil {
     ChilledWater { ua_w_per_k: f64, water_inlet_c: f64, water_flow_kg_s: f64, water_cp: f64 },
     DxSingleSpeed { rated_capacity_w: f64, rated_shr: f64, cop_curve: PerformanceCurve },
@@ -45,7 +46,7 @@ pub enum CoolingCoil {
 }
 
 /// ❄️ DX compressor stage.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DxStage {
     pub capacity_w: f64,
     pub cop: f64,
@@ -53,7 +54,7 @@ pub struct DxStage {
 }
 
 /// 📤️ Cooling coil output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct CoolingCoilOutput {
     pub outlet: CoilAirState,
     pub total_cooling_w: f64,

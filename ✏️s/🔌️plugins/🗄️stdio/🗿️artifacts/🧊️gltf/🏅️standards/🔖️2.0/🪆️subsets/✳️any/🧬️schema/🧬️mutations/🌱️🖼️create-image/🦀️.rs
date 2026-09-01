@@ -1,12 +1,11 @@
 //! 🧬️ Direct create-image mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use serde::{Deserialize, Serialize};
 use crate::artifacts::gltf::engine::{GltfAccessorType, GltfComponentType};
 use crate::artifacts::gltf::schema::snapshot::*;
 use crate::artifacts::gltf::GltfSnapshot;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level_collections::*;
 pub const ID: &str = "s.stdio.gltf.mutation.create-image.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/images"];
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] #[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)] #[value(rename_all = "camelCase")]
 pub struct GltfCreateImagePayload { pub position: usize }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfCreateImagePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { if payload.position > base.document.images.len() { return Err(reject("gltf.mutation.insert-out-of-range", "document/images", "position must be within the collection")); }   Ok(()) }
@@ -14,9 +13,9 @@ pub fn validate(payload: &GltfCreateImagePayload, base: &GltfSnapshot) -> Result
 pub fn apply(payload: &GltfCreateImagePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); repair(&mut next.document, GltfTopLevelFamily::Images, &Change::Insert(payload.position))?; next.document.images.insert(payload.position, GltfImage::default()); Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateImageMutation {
     Apply(GltfCreateImagePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

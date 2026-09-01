@@ -3,10 +3,11 @@
 use crate::props::{latent_heat_vaporization, moist_air_density, moist_air_enthalpy_j_per_kg};
 use crate::units::{CP_DRY_AIR, P_STD};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️HumiditySolutionMethod
 /// 💧️ Humidity ratio integration method for zone air mass balance.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum HumiditySolutionMethod {
     AnalyticalSteadyState,
     ThirdOrderBackward,
@@ -15,7 +16,7 @@ pub enum HumiditySolutionMethod {
 
 // #region 🔖️ZoneAirState
 /// 🌡️ Zone air state with BDF3 temperature history [T_n, T_{n-1}, T_{n-2}, T_{n-3}].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneAirState {
     pub temp_c: f64,
     pub humidity_ratio: f64,
@@ -42,7 +43,7 @@ impl ZoneAirState {
 
 // #region 🔖️ZoneAirBalance
 /// ⚖️ Zone air energy and moisture balance inputs [W] and [kg/s].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneAirBalance {
     pub volume_m3: f64,
     pub conditioned: bool,
@@ -77,7 +78,7 @@ impl ZoneAirBalance {
 
 // #region 🔖️ZoneAirResult
 /// 📊️ Zone air step result including unmet loads.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneAirResult {
     pub temp_c: f64,
     pub humidity_ratio: f64,

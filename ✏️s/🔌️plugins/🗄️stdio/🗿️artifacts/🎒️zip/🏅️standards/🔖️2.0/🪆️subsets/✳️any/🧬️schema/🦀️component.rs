@@ -3,21 +3,20 @@
 use crate::artifacts::zip::schema::snapshot::ZipEntry;
 use crate::artifacts::zip::{ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Artifact
 /// 🧬️ Full `stdio.zip` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entries: Vec<ZipEntry>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comment: String,
 }
 //#endregion Artifact

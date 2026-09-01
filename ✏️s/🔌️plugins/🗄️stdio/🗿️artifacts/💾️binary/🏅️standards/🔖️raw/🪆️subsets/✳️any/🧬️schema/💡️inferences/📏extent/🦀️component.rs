@@ -5,14 +5,13 @@
 //! fabricate one — it reports exactly what the bytes themselves honestly are.
 
 use crate::artifacts::binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Extent
 /// 📏️ binary's real extent over its opaque `bytes` blob.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BinaryExtent {
     pub byte_length: u64,
     pub is_empty: bool,

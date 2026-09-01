@@ -13,6 +13,7 @@ use crate::app::testkit::{assert_proposes_transaction, assert_transaction_commit
 use protocol::{Mutation, MutationDiff};
 use semio_framework::{ActionKind, Fault, IconName, ToolFactoryKey, ToolJobFactory, ToolOperationSpec, ToolExecutionContract};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::{Backbone, BackboneMessage, EngineHandles, MemoryBackbone};
 use ui_wgpu::wgpu::LocalizedLabel;
 
@@ -47,7 +48,7 @@ impl store::ArtifactPack for TxnSnapshot {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub(crate) struct TxnDiff {
     count: Option<i32>,
 }

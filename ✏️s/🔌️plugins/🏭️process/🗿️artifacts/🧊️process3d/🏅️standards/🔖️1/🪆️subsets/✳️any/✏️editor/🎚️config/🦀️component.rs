@@ -13,14 +13,14 @@
 //! identical flattening of its own world camera/sun).
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧰️ The utility active when the config carries no explicit override.
 pub const PROCESS3D_DEFAULT_UTILITY: &str = "select";
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "process3dcfg")]
 #[dsl(id = "process3d.config")]
 #[dsl(layout = "lines")]
@@ -44,7 +44,7 @@ pub struct Process3dConfig {
     /// 🗣️ Was read off `ViewModel::locale`.
     pub locale: String,
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `process.machines` hot-swap installs.
-    #[serde(default = "default_contributions_json")]
+    #[value(default = "default_contributions_json")]
     pub contributions_json: String,
 }
 
@@ -135,7 +135,7 @@ store::impl_whole_record_config!(Process3dConfig);
 /// `Process3dRuntime` field writes). Every field already carries its own setter, so `backwards()`
 /// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
 /// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
 pub enum Process3dConfigMutation {
     #[dsl(key = "engagement-input")]
     SetEngagementInput { value: String },

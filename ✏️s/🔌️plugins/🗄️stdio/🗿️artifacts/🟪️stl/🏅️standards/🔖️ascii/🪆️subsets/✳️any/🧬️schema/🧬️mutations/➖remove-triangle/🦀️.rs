@@ -6,7 +6,7 @@ use super::*;
 
 //#region 🔖️Payload
 /// ➖️ Removes the triangle at `index` (no-op if out of range).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct RemoveTriangle {
     pub(crate) index: usize,

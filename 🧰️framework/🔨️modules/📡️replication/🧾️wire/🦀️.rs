@@ -181,6 +181,37 @@ pub enum UndoPolicy {
     CompensatingAction,
 }
 
+/// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids` (this crate
+/// sits below `os-kernel`). A fieldless enum with no `#[serde(...)]` tag attribute serializes as
+/// its bare variant name string; mirrored here exactly.
+impl crate::value::ToValue for UndoPolicy {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                UndoPolicy::ExactBaseOnly => "ExactBaseOnly",
+                UndoPolicy::TransformAgainstConcurrent => "TransformAgainstConcurrent",
+                UndoPolicy::SemanticUndo => "SemanticUndo",
+                UndoPolicy::CompensatingAction => "CompensatingAction",
+            }
+            .to_string(),
+        )
+    }
+}
+impl crate::value::FromValue for UndoPolicy {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::String(tag) = value else {
+            return Err(crate::value::ValueError::new(format!("expected a string for UndoPolicy, found {value:?}")));
+        };
+        match tag.as_str() {
+            "ExactBaseOnly" => Ok(UndoPolicy::ExactBaseOnly),
+            "TransformAgainstConcurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
+            "SemanticUndo" => Ok(UndoPolicy::SemanticUndo),
+            "CompensatingAction" => Ok(UndoPolicy::CompensatingAction),
+            other => Err(crate::value::ValueError::new(format!("unknown UndoPolicy variant `{other}`"))),
+        }
+    }
+}
+
 /// @emoji ⚖️ How strict an authority is about accepting a `MutationOutcome` whose messages reach a
 /// given `crate::diagnostic::Severity`. Local/authority state only — never wire-carried, never part of
 /// an artifact's shared history (see the region doc above). `Normal` is the default: the
@@ -191,6 +222,34 @@ pub enum MergePolicy {
     #[default]
     Normal,
     Vigilant,
+}
+
+/// 🌉️ Hand-written, not derived — same DAG reason as `UndoPolicy` above. A fieldless enum with no
+/// `#[serde(...)]` tag attribute serializes as its bare variant name string; mirrored here exactly.
+impl crate::value::ToValue for MergePolicy {
+    fn to_value(&self) -> crate::value::DslValue {
+        crate::value::DslValue::String(
+            match self {
+                MergePolicy::LaissezFaire => "LaissezFaire",
+                MergePolicy::Normal => "Normal",
+                MergePolicy::Vigilant => "Vigilant",
+            }
+            .to_string(),
+        )
+    }
+}
+impl crate::value::FromValue for MergePolicy {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::String(tag) = value else {
+            return Err(crate::value::ValueError::new(format!("expected a string for MergePolicy, found {value:?}")));
+        };
+        match tag.as_str() {
+            "LaissezFaire" => Ok(MergePolicy::LaissezFaire),
+            "Normal" => Ok(MergePolicy::Normal),
+            "Vigilant" => Ok(MergePolicy::Vigilant),
+            other => Err(crate::value::ValueError::new(format!("unknown MergePolicy variant `{other}`"))),
+        }
+    }
 }
 
 impl MergePolicy {

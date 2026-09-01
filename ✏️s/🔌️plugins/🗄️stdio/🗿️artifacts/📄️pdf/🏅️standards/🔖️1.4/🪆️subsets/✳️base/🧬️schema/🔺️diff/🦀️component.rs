@@ -19,21 +19,20 @@ use crate::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{Pa
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️PageDiff
 /// 📄️ Sparse per-field patch for one [`PageDoc`] — a WEAK entity per the recipe (a value struct,
 /// never sub-diffed beyond its own flat fields). No tri-state field exists: `PageDoc` has no
 /// optional field of its own.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
 }
 
@@ -75,29 +74,29 @@ fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
 //#endregion 🔖️PageDiff
 
 //#region 🔖️PagesTriple
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageModified {
     pub index: usize,
     pub diff: PdfPageDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageAdded {
     pub index: usize,
     pub page: PageDoc,
 }
 
 /// 📦️ Index-keyed `pages` triple (positional — the recipe's "index usize" key kind).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPagesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PdfPageModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PdfPageAdded>,
 }
 
@@ -306,12 +305,12 @@ fn validate_pages_diff(diff: &PdfPagesDiff, base_len: usize) -> MutationApplyRes
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.pdf` (1.4). `schema` is an identity field and is never diffed.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.diff")]
 pub struct PdfDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pages: Option<PdfPagesDiff>,
 }
 

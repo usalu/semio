@@ -26,10 +26,11 @@
 // this crate even when the derive is exercised in-crate.
 // extern crate self removed after merge
 
-use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
+use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue, FromValue, ToValue, ValueError};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use crate::os_spr::{DiffRegions, Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText, TouchedPaths};
 use serde::de::DeserializeOwned;
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
@@ -1639,16 +1640,16 @@ pub enum ArtifactStoreSnapshotRootClose {
 
 pub struct ArtifactStoreCloseView<'a, P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     store: &'a mut ArtifactStore<P, Mutation>,
 }
 
 impl<P, Mutation> ArtifactStoreCloseView<'_, P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn maintenance_retirements_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         self.store.maintenance_retirements_step(maximum_items, maximum_bytes)
@@ -1729,8 +1730,8 @@ where
 
 pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
@@ -1783,8 +1784,8 @@ impl<P, Mutation> ArtifactStoreCursorDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactStoreOwnedDisposer<P, Mutation> for ArtifactStoreCursorDisposer<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if maximum_items == 0 {
@@ -1970,8 +1971,8 @@ impl<P, Mutation> Drop for ArtifactStoreCursorDisposer<P, Mutation> {
 
 pub struct MemberStoreOwners<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
     initial_snapshot_retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
@@ -1983,8 +1984,8 @@ where
 
 impl<P, Mutation> MemberStoreOwners<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     pub fn new(
         snapshot_retirement: Arc<dyn SnapshotRetirementFactory<P>>,
@@ -2010,8 +2011,8 @@ where
 
 pub trait MemberStoreOwner<Mutation>: Sized
 where
-    Self: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<Self>,
+    Self: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<Self>,
 {
     fn member_store_owners() -> MemberStoreOwners<Self, Mutation>;
 }
@@ -2650,6 +2651,39 @@ impl<S> PartialEq for ArtifactChild<S> {
     }
 }
 
+/// 🌉️ Hand-written, not derived: `ArtifactChild<S>`'s `local_owner`/`_snapshot` fields are
+/// serialization-skipped (see the struct's own doc comment), a shape `#[derive(ToValue,
+/// FromValue)]` does not support — mirrors the pre-existing `#[serde(skip)]` hand-treatment,
+/// round-tripping only `child_id`/`target`.
+impl<S> ToValue for ArtifactChild<S> {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([("childId".to_string(), ToValue::to_value(&self.child_id)), ("target".to_string(), ToValue::to_value(&self.target))])
+    }
+}
+
+impl<S> FromValue for ArtifactChild<S> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let DslValue::Object(fields) = value else {
+            return Err(ValueError::new(format!("expected an object for ArtifactChild, found {value:?}")));
+        };
+        let mut child_id = None;
+        let mut target = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "childId" => child_id = Some(String::from_value(entry).map_err(|e| e.under("childId"))?),
+                "target" => target = Some(crate::os_io::ArtifactRef::from_value(entry).map_err(|e| e.under("target"))?),
+                _ => {}
+            }
+        }
+        Ok(ArtifactChild {
+            child_id: child_id.ok_or_else(|| ValueError::new("ArtifactChild missing childId"))?,
+            target: target.ok_or_else(|| ValueError::new("ArtifactChild missing target"))?,
+            local_owner: None,
+            _snapshot: PhantomData,
+        })
+    }
+}
+
 /// @emoji 🪪️ Type-erased projection of one `ArtifactChild<S>` field, dropping the compile-time-only
 /// `S` phantom so `ArtifactRefs::child_refs` can return a single homogeneous `Vec` across however
 /// many differently-`S`-typed child slots a snapshot declares.
@@ -2845,8 +2879,8 @@ impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B>
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation>(schema: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if initial_pack.is_empty() {
         return Err(VcsError::Deserialize(format!("child genesis for {id} carries an empty initial pack")));
@@ -2868,8 +2902,8 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation>(envelope_pack: &[u8]) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let (pack, spr) = decode_document_pack_bytes(envelope_pack).await?;
     let parsed = parse_document_pack::<P, Mutation>(&pack, &spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -2892,8 +2926,8 @@ where
 /// a substitute for this one. `kind` is the child's schema id.
 impl<P, Mutation> MemberFactory for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn create(kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
         create_member_store(kind, id, dialect, initial_pack).await
@@ -4662,17 +4696,18 @@ pub mod pack_rt {
     /// @emoji 📦️ Prefix for base64-wrapped pack bytes in scene `*Json` string slots (TS `PACK_B64_PREFIX`).
     pub const PACK_B64_PREFIX: &str = "pk:";
 
-    /// @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string.
+    /// @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string. RFC 4648 standard
+    /// alphabet via the first-party `semio-framework-io-base64` codec — this call site is
+    /// guest-reachable (scene `*Json` field encoding), so it is re-pointed at the codec rather than
+    /// target-gated away like this crate's genuinely host-only third-party crates.
     pub fn pack_value_to_base64(bytes: &[u8]) -> String {
-        use base64::Engine;
-        format!("{}{}", PACK_B64_PREFIX, base64::engine::general_purpose::STANDARD.encode(bytes))
+        format!("{}{}", PACK_B64_PREFIX, semio_framework_io_base64::base64_standard_encode(bytes))
     }
 
     /// @emoji 📥️ Inverse of [`pack_value_to_base64`].
     pub fn pack_value_from_base64(encoded: &str) -> Result<Vec<u8>, PackError> {
         let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Malformed { what: "pack base64", offset: 0, detail: "missing pk: prefix".into() })?;
-        use base64::Engine;
-        base64::engine::general_purpose::STANDARD.decode(payload).map_err(|error| PackError::Malformed { what: "pack base64", offset: 0, detail: error.to_string() })
+        semio_framework_io_base64::base64_standard_decode(payload).map_err(|error| PackError::Malformed { what: "pack base64", offset: 0, detail: error.to_string() })
     }
 
     /// @emoji 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
@@ -9123,8 +9158,8 @@ impl ArtifactCodec {
     /// `P::EXTENSION`. One call site per document kind (`register_document_codec_for_app`).
     pub fn of<P, Mutation>(schema: impl Into<String>) -> Self
     where
-        P: Clone + PartialEq + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
-        Mutation: self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpText + OpBinary + Send + Sync + 'static,
+        P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+        Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static,
     {
         // 🚫️async: E4 fn-pointer erasure-table thunk — VALUE goes into `ArtifactCodec::compile_dsl`
         // (`fn` slot, unnameable if `async fn`); wraps its real async body in `Box::pin` per R1(ii).
@@ -9166,8 +9201,8 @@ impl ArtifactCodec {
         // 🚫️async: E4 fn-pointer erasure-table thunk — see `compile_dsl_impl`'s tag above.
         fn apply_ops_binary_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(Vec<u8>, Vec<u8>, String), VcsError>> + 'a>>
         where
-            P: Clone + Serialize + DeserializeOwned + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
-            Mutation: OpText + OpBinary + self::Mutation<P> + Send + 'static,
+            P: Clone + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
+            Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + Send + 'static,
         {
             Box::pin(async move {
                 if ops_vec.is_empty() {
@@ -9562,8 +9597,8 @@ pub async fn merge_base<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, a
 
 pub async fn reconcile_alternative<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, alternative_name: &str, checkpoint_message: Option<String>, authors: Vec<Author>) -> Result<String, VcsError>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue,
 {
     if envelope.vcs.checkpoints.is_empty() {
         return Err(VcsError::NoCheckpoint);
@@ -11925,12 +11960,12 @@ impl CursorRevisionAccumulator {
         Self { identity_digest, applied: Vec::new(), redo: Vec::new() }
     }
 
-    fn edit_digest<Mutation: Serialize>(edit: &Edit<Mutation>) -> [u8; 32] {
-        let encoded = serde_json::to_vec(edit).expect("validated durable edit must serialize");
+    fn edit_digest<Mutation: ToValue>(edit: &Edit<Mutation>) -> [u8; 32] {
+        let encoded = crate::os_pack::json::to_json_string(edit).into_bytes();
         Self::hash_record(b"edit", &[edit.id.as_bytes(), &encoded])
     }
 
-    fn reconcile_stack<Mutation: Serialize>(records: &mut Vec<CursorRevisionRecord>, ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, domain: &[u8], identity_digest: [u8; 32]) -> Vec<String> {
+    fn reconcile_stack<Mutation: ToValue>(records: &mut Vec<CursorRevisionRecord>, ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, domain: &[u8], identity_digest: [u8; 32]) -> Vec<String> {
         let mut common = 0;
         while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
             common += 1;
@@ -11957,7 +11992,7 @@ impl CursorRevisionAccumulator {
         Vec::new()
     }
 
-    fn reconcile<Mutation: Serialize>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>) -> (Vec<String>, Vec<String>) {
+    fn reconcile<Mutation: ToValue>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>) -> (Vec<String>, Vec<String>) {
         let applied = Self::reconcile_stack(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest);
         let redo = Self::reconcile_stack(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest);
         (applied, redo)
@@ -12782,13 +12817,13 @@ impl ArtifactStoreOneItemLiveAuthority {
     }
 
     /// 🔏 Canonical oracle for explicitly bounded edits; retained large edits use the byte sealer.
-    pub fn prepared_edit_digest<Mutation: Serialize>(&self, edit: &Edit<Mutation>) -> Result<[u8; 32], String> {
+    pub fn prepared_edit_digest<Mutation: ToValue>(&self, edit: &Edit<Mutation>) -> Result<[u8; 32], String> {
         self.validate_semantic_edit(edit)?;
         Ok(CursorRevisionAccumulator::edit_digest(edit))
     }
 
     /// 📦 Seals an explicitly bounded semantic edit into exact Store-owned publication authority.
-    pub fn prepare_one_item<P, Mutation: Serialize>(self: &Arc<Self>, edit: Edit<Mutation>, post_snapshot: Arc<P>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, String> {
+    pub fn prepare_one_item<P, Mutation: ToValue>(self: &Arc<Self>, edit: Edit<Mutation>, post_snapshot: Arc<P>) -> Result<ArtifactStoreOneItemPrepared<P, Mutation>, String> {
         let edit_digest = self.prepared_edit_digest(&edit)?;
         Ok(self.seal_prepared(Box::new(edit), post_snapshot, edit_digest))
     }
@@ -13153,8 +13188,8 @@ impl<P, Mutation> Drop for ArtifactStoreOneItemPublication<P, Mutation> {
 
 pub struct ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     envelope: std::mem::ManuallyDrop<ArtifactEnvelope<P, Mutation>>,
     envelope_detached: bool,
@@ -13303,8 +13338,8 @@ impl Drop for ArtifactStorePendingReportRetirement {
 
 struct ArtifactStoreResolutionCandidateAuthority<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     candidate: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
     reservation_generation: u64,
@@ -13312,8 +13347,8 @@ where
 
 impl<P, Mutation> ArtifactStoreResolutionCandidateAuthority<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn candidate_mut(&mut self) -> &mut ArtifactStore<P, Mutation> {
         self.candidate.as_mut().expect("resolution candidate authority remains live")
@@ -13331,8 +13366,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStoreResolutionCandidateAuthority<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn drop(&mut self) {
         assert!(self.candidate.is_none(), "resolution candidate authority reached Drop before exact adoption or retained retirement handoff");
@@ -13355,8 +13390,8 @@ enum ArtifactStoreResolutionCandidateRetirementPhase {
 
 struct ArtifactStoreResolutionCandidateRetirement<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     candidate: std::mem::ManuallyDrop<Option<ArtifactStore<P, Mutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
@@ -13365,8 +13400,8 @@ where
 
 impl<P, Mutation> ArtifactStoreResolutionCandidateRetirement<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn new(candidate: ArtifactStore<P, Mutation>) -> Self {
         Self { candidate: std::mem::ManuallyDrop::new(Some(candidate)), active: std::mem::ManuallyDrop::new(None), phase: ArtifactStoreResolutionCandidateRetirementPhase::Displaced }
@@ -13375,8 +13410,8 @@ where
 
 impl<P, Mutation> ErasedSnapshotRetirement for ArtifactStoreResolutionCandidateRetirement<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
         if maximum_items == 0 {
@@ -13501,8 +13536,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStoreResolutionCandidateRetirement<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn drop(&mut self) {
         assert!(self.candidate.is_none() && self.active.is_none(), "resolution candidate retirement reached Drop before its exact store and child owners were terminal-empty");
@@ -13536,8 +13571,8 @@ async fn checkpoint_identity(checkpoint: &Checkpoint, changes: &ArtifactHistoryL
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
         let mut unique = HashSet::new();
@@ -15417,7 +15452,7 @@ where
         let actor = edit_actor_from_meta(&mutation_meta).await;
         self.replace_local_actor_retained(actor.clone())?;
         self.edit_sequence += 1;
-        let forwards_fingerprint = serde_json::to_vec(&forwards).map_err(|error| VcsError::Serialize(error.to_string()))?;
+        let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
         let reservation = self.reserve_edit_history_slot()?;
         let mut edit = Edit {
             id: mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint).await,
@@ -15481,7 +15516,7 @@ where
             let actor = edit_actor_from_meta(&mutation_meta).await;
             self.replace_local_actor_retained(actor.clone())?;
             self.edit_sequence += 1;
-            let forwards_fingerprint = serde_json::to_vec(&forwards).map_err(|error| VcsError::Serialize(error.to_string()))?;
+            let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
             let edit_id = mint_edit_id(actor.as_deref(), self.edit_sequence, &forwards_fingerprint).await;
             let reservation = self.reserve_edit_history_slot()?;
             let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
@@ -15665,11 +15700,20 @@ where
 
     pub fn snapshot_json(&self) -> Result<String, VcsError> {
         let snapshot = self.snapshot()?;
-        serde_json::to_string(&snapshot).map_err(|e| VcsError::Serialize(e.to_string()))
+        Ok(crate::os_pack::json::to_json_string(&snapshot))
     }
 
-    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON.
-    pub fn envelope_json(&self) -> Result<String, VcsError> {
+    /// @emoji 📦️ Serializes the full document envelope (snapshot + VCS history) as JSON. Method-
+    /// local `where` bound (not the enclosing `impl` block's `ToValue + FromValue`): this is the
+    /// one call site left on the hand-written `Serialize for ArtifactEnvelope`/`ArtifactEnvelopeOwners`
+    /// pair (~L2313/L2391), which stays serde-shaped deliberately — `ArtifactEnvelopeRead` and its
+    /// nested fields (`ArtifactVcsRead`, `ArtifactCursorOwners`, `OwnerRef`, `HistoryLane`, …) are
+    /// explicit LATER-wave serde removal, not this chokepoint fix.
+    pub fn envelope_json(&self) -> Result<String, VcsError>
+    where
+        P: Serialize,
+        Mutation: Serialize,
+    {
         serde_json::to_string(&*self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
     }
 
@@ -16374,8 +16418,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+    P: Clone + ToValue + FromValue,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P>,
 {
     fn drop(&mut self) {
         let terminal = self.envelope_detached
@@ -17296,8 +17340,8 @@ pub trait SpaceMember {
 
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     async fn document_id(&self) -> &str {
         self.envelope().id.as_str()
@@ -17958,8 +18002,9 @@ macro_rules! space_members {
 
 //#region SpaceHistoryDocument
 /// @emoji 📌️ One member document's position at the moment a `SpaceCheckpoint` was recorded.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SpaceMemberPin {
     pub document_id: String,
     pub checkpoint_id: String,
@@ -17970,8 +18015,9 @@ pub struct SpaceMemberPin {
 
 /// @emoji 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SpaceCheckpoint {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -17982,8 +18028,9 @@ pub struct SpaceCheckpoint {
     pub members: Vec<SpaceMemberPin>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SpaceAlternative {
     pub id: String,
     pub name: String,
@@ -18001,8 +18048,9 @@ pub const S_SPACE_HISTORY_SCHEMA: &str = "os.space.history";
 /// an ordinary `ArtifactVcs` document kind (dogfooded — no bespoke transport), holding the
 /// space-level checkpoint/alternative graph that `SpaceHost` composes on top of every registered
 /// member's own history.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SpaceHistorySnapshot {
     pub checkpoints: Vec<SpaceCheckpoint>,
     pub alternatives: Vec<SpaceAlternative>,
@@ -18014,6 +18062,10 @@ pub struct SpaceHistorySnapshot {
 mod space_history_mutations;
 pub use space_history_mutations::{CommitSpaceCheckpoint, CreateSpaceAlternative, RemoveSpaceAlternative, RemoveSpaceCheckpoint, RestoreActiveSpaceAlternative, SpaceHistoryMutation, SwitchSpaceAlternative};
 
+// 🔀️ ToValue/FromValue for SpaceHistoryDiff are hand-written below (routed through the existing
+// serde bridge: `add_checkpoint: Option<SpaceCheckpoint>`/`add_alternative: Option<SpaceAlternative>`
+// embed foreign types this crate can't implement ToValue/FromValue for under the orphan rule) —
+// not derived here, see that impl's docstring.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceHistoryDiff {
@@ -18086,6 +18138,21 @@ impl MutationDiff<SpaceHistorySnapshot> for SpaceHistoryDiff {
     }
 }
 
+/// 🔀️ Routed through the existing `serde`-based `to_dsl_value`/`from_dsl_value` bridge rather
+/// than a derived impl: framework code stays exempt from the `ToValue`/`FromValue` migration
+/// ban (only `✏️s/` plugin manifests must reach zero third-party), and this keeps the trait's
+/// `DslValue` shape identical to what `OpBinary::encode_op`/`decode_op` already puts on the wire.
+impl ToValue for SpaceHistoryDiff {
+    fn to_value(&self) -> DslValue {
+        to_dsl_value(self).expect("SpaceHistoryDiff converts to DslValue infallibly")
+    }
+}
+impl FromValue for SpaceHistoryDiff {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        from_dsl_value(value).map_err(ValueError::new)
+    }
+}
+
 impl DiffRegions for SpaceHistoryDiff {
     fn touches(&self) -> TouchedPaths {
         let mut regions = Vec::new();
@@ -18121,6 +18188,23 @@ impl DiffRegions for SpaceHistoryDiff {
 // property of `pack_rt::decode_json_value`'s output, not specific to this type; `semio_compose_rs`'s
 // `ComposeWireMutation` needs the exact same fix and calls the same `pack_rt::` function.
 use pack_rt::renormalize_whole_number_floats;
+
+/// 🔀️ Same rationale as `SpaceHistoryDiff`'s impl above: the aggregate's `#[serde(tag =
+/// "operation", content = "payload")]` shape is adjacently-tagged, which
+/// `#[derive(ToValue, FromValue)]` does not support (see the fan-out playbook's attribute-
+/// coverage table) — routed through the existing serde bridge instead of a hand-matched
+/// `{"operation": ..., "payload": ...}` encoder, and byte-identical to `OpBinary::encode_op`
+/// below as a result.
+impl ToValue for SpaceHistoryMutation {
+    fn to_value(&self) -> DslValue {
+        to_dsl_value(self).expect("SpaceHistoryMutation converts to DslValue infallibly")
+    }
+}
+impl FromValue for SpaceHistoryMutation {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        from_dsl_value(value).map_err(ValueError::new)
+    }
+}
 
 impl OpText for SpaceHistoryMutation {
     fn print_op(&self) -> String {
@@ -19193,8 +19277,8 @@ pub mod test_support {
     /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
     pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
-        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + PartialEq + std::fmt::Debug + Send + Sync + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = ArtifactStore::new(envelope).await.expect("test support store construction");
@@ -19344,8 +19428,8 @@ pub mod test_support {
     /// {@link parse_document_text} on any technology once it implements `ArtifactDsl` + `OpText`.
     pub async fn assert_document_text_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
-        Mutation: Clone + OpText + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + OpBinary + Send + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
+        Mutation: Clone + OpText + self::Mutation<P> + PartialEq + ToValue + FromValue + OpBinary + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
         let files = print_document_text(store.envelope()).await.expect("print document text");
@@ -19412,8 +19496,8 @@ pub mod test_support {
     /// storage formats must never diverge on the same store.
     pub async fn assert_document_pack_round_trip<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
-        Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + Serialize + DeserializeOwned + Send + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
+        Mutation: Clone + OpText + OpBinary + self::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
         let pack_files = print_document_pack(store.envelope()).await.expect("print document pack");
@@ -19488,8 +19572,8 @@ pub mod test_support {
     /// the replay ground truth.
     pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
     where
-        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
-        Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         let live = store.snapshot().expect("store snapshot");
         let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");
@@ -19514,8 +19598,8 @@ pub mod test_support {
 
     /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
     pub trait SubsetRoundtripSpec {
-        type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + Serialize + DeserializeOwned;
-        type Mutation: Clone + PartialEq + std::fmt::Debug + Mutation<Self::Snapshot> + OpText + OpBinary;
+        type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + ToValue + FromValue;
+        type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary;
         type Inference: Clone + PartialEq + std::fmt::Debug + Default;
         async fn dialect() -> crate::os_io::ArtifactDialect;
         async fn fidelity() -> IoFidelityClass;
@@ -20981,13 +21065,13 @@ mod tests {
 
     struct ArtifactStore<P, Mutation>(super::ArtifactStore<P, Mutation>)
     where
-        P: Clone + Serialize + DeserializeOwned,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>;
+        P: Clone + ToValue + FromValue,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P>;
 
     impl<P, Mutation> ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + 'static,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn new(envelope: ArtifactEnvelope<P, Mutation>) -> Self {
             Self(super::ArtifactStore::new(envelope).await.expect("test fixture history is valid"))
@@ -21000,8 +21084,8 @@ mod tests {
 
     impl<P, Mutation> std::ops::Deref for ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>,
+        P: Clone + ToValue + FromValue,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
     {
         type Target = super::ArtifactStore<P, Mutation>;
 
@@ -21012,8 +21096,8 @@ mod tests {
 
     impl<P, Mutation> std::ops::DerefMut for ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P>,
+        P: Clone + ToValue + FromValue,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
     {
         fn deref_mut(&mut self) -> &mut Self::Target {
             &mut self.0
@@ -21022,8 +21106,8 @@ mod tests {
 
     impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
     where
-        P: Clone + Serialize + DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + ToValue + FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn document_id(&self) -> &str {
             SpaceMember::document_id(&self.0).await
@@ -21154,8 +21238,8 @@ mod tests {
     /// deliberately rejects an empty pack, this fixture-only default is NOT that).
     impl<P, Mutation> MemberFactory for ArtifactStore<P, Mutation>
     where
-        P: Clone + Default + Serialize + DeserializeOwned + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + Default + ToValue + FromValue + ArtifactPack + MemberStoreOwner<Mutation> + Send + 'static,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         async fn create(_kind: &str, id: &str, dialect: &crate::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<Self, VcsError> {
             let seeded = if initial_pack.is_empty() { P::default().encode_pack() } else { initial_pack.to_vec() };
@@ -21342,7 +21426,7 @@ mod tests {
 
     impl<Mutation> ArtifactStoreOwnedDisposer<DemoSnapshot, Mutation> for DemoStoreOwnedDisposer<Mutation>
     where
-        Mutation: Clone + Serialize + DeserializeOwned + super::Mutation<DemoSnapshot>,
+        Mutation: Clone + ToValue + FromValue + super::Mutation<DemoSnapshot>,
     {
         fn close_step(&mut self, _store: &mut ArtifactStoreCloseView<'_, DemoSnapshot, Mutation>, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
             Ok(SnapshotRetirementStep::Blocked)
@@ -21389,7 +21473,7 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
     pub(crate) struct LossyDiff;
 
     impl MutationDiff<DemoSnapshot> for LossyDiff {
@@ -22778,8 +22862,8 @@ mod tests {
 
     async fn owned_test_envelope<P, Mutation>(store: &ArtifactStore<P, Mutation>) -> ArtifactEnvelope<P, Mutation>
     where
-        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned + Send + 'static,
-        Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + Serialize + DeserializeOwned + Send + 'static,
+        P: Clone + ArtifactDsl + ArtifactPack + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + 'static,
+        Mutation: Clone + OpText + OpBinary + super::Mutation<P> + PartialEq + ToValue + FromValue + Send + 'static,
     {
         let files = print_document_pack(store.envelope()).await.expect("print owned test envelope");
         parse_document_pack::<P, Mutation>(&files.pack, &files.spr).await.expect("parse owned test envelope").envelope

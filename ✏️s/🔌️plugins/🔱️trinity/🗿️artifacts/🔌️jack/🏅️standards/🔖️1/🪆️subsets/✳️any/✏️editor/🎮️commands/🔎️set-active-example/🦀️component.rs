@@ -5,7 +5,6 @@ use crate::artifacts::jack::JackSnapshot;
 use crate::core;
 use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
-use serde_json::json;
 use store::ArtifactDsl;
 
 /// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
@@ -20,7 +19,7 @@ pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Ve
         Err(error) => return (error_result_json(&error), Vec::new()),
     };
     match crate::executor::execute(&graph, &parsed) {
-        Ok((result, operations)) => (serde_json::to_string(&result).unwrap_or_default(), operations),
+        Ok((result, operations)) => (pack::to_json_string(&result).unwrap_or_default(), operations),
         Err(error) => (error_result_json(&error), Vec::new()),
     }
 }

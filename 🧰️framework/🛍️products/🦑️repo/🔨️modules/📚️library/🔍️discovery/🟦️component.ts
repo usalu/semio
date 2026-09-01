@@ -4808,6 +4808,65 @@ export function inspectRustAssertionMessageSpans(source: string): readonly RustA
   return rows;
 }
 
+/** 🧭️ Recognizes every same-file zero-arg `fn NAME() -> PathBuf` whose ENTIRE body is exactly the
+ * ancestor-walk-to-`nx.json` idiom seeded from `CARGO_MANIFEST_DIR` (`test_repo_root`/`find_repo_root`'s
+ * shared strategy — 🏃️run/🦀️component.rs, 📦️bin.rs): `let mut V = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+ * loop { if V.join("nx.json").is_file() { return V; } assert!(V.pop(), ..); }`. `nx.json` is this
+ * repo's one canonical root marker — a single `nx.json` exists repo-wide, at the true root, never
+ * nested under any crate — so any successful return from this loop is provably the repo root, the
+ * same base a literal `CARGO_MANIFEST_DIR` proves, regardless of how many `.pop()` hops the walk
+ * takes at runtime. Matched purely by shape (not by name), so it generalizes to every crate's own
+ * copy of this idiom; a `SEMIO_REPO_ROOT`-env-var branch ahead of the loop (`find_repo_root`'s own
+ * shape) is deliberately NOT matched — that path can resolve outside `CARGO_MANIFEST_DIR`'s ancestry
+ * entirely, so proving it would need a genuinely different, unverified argument. */
+function rustRepoRootAncestorWalkHelperNames(tokens: readonly RustToken[], pairs: ReadonlyMap<number, number>): ReadonlySet<string> {
+  const names = new Set<string>();
+  const prefixes = [["PathBuf", "::", "from", "("], ["std", "::", "path", "::", "PathBuf", "::", "from", "("], ["Path", "::", "new", "("], ["std", "::", "path", "::", "Path", "::", "new", "("]];
+  for (let index = 0; index < tokens.length; index++) {
+    if (tokens[index]?.text !== "fn") continue;
+    const nameToken = tokens[index + 1];
+    if (nameToken?.kind !== "identifier" || tokens[index + 2]?.text !== "(" || tokens[index + 3]?.text !== ")" || tokens[index + 4]?.text !== "->" || tokens[index + 5]?.text !== "PathBuf" || tokens[index + 6]?.text !== "{") continue;
+    const bodyOpen = index + 6, bodyClose = pairs.get(bodyOpen);
+    if (bodyClose === undefined) continue;
+    let cursor = bodyOpen + 1;
+    if (tokens[cursor]?.text !== "let") continue;
+    cursor += 1;
+    if (tokens[cursor]?.text === "mut") cursor += 1;
+    const varToken = tokens[cursor];
+    if (varToken?.kind !== "identifier") continue;
+    const variable = varToken.text;
+    cursor += 1;
+    if (tokens[cursor]?.text !== "=") continue;
+    cursor += 1;
+    const prefix = prefixes.find((candidate) => candidate.every((text, offset) => tokens[cursor + offset]?.text === text));
+    if (!prefix) continue;
+    const openParen = cursor + prefix.length - 1, closeParen = pairs.get(openParen), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
+    if (closeParen === undefined || closeParen !== openParen + environment.length + 1 || !environment.every((text, offset) => tokens[openParen + offset + 1]?.text === text)) continue;
+    cursor = closeParen + 1;
+    if (tokens[cursor]?.text !== ";" || tokens[cursor + 1]?.text !== "loop" || tokens[cursor + 2]?.text !== "{") continue;
+    const loopOpen = cursor + 2, loopClose = pairs.get(loopOpen);
+    if (loopClose === undefined || loopClose + 1 !== bodyClose) continue;
+    let inner = loopOpen + 1;
+    if (tokens[inner]?.text !== "if" || tokens[inner + 1]?.text !== variable || tokens[inner + 2]?.text !== "." || tokens[inner + 3]?.text !== "join" || tokens[inner + 4]?.text !== "(") continue;
+    const joinOpen = inner + 4, joinClose = pairs.get(joinOpen);
+    if (joinClose === undefined) continue;
+    const markerArgument = tokens.slice(joinOpen + 1, joinClose);
+    if (markerArgument.length !== 1 || markerArgument[0]?.kind !== "string") continue;
+    let after = joinClose + 1;
+    if (tokens[after]?.text !== "." || tokens[after + 1]?.text !== "is_file" || tokens[after + 2]?.text !== "(" || tokens[after + 3]?.text !== ")" || tokens[after + 4]?.text !== "{") continue;
+    const ifOpen = after + 4, ifClose = pairs.get(ifOpen);
+    if (ifClose === undefined || tokens[ifOpen + 1]?.text !== "return" || tokens[ifOpen + 2]?.text !== variable || tokens[ifOpen + 3]?.text !== ";" || ifOpen + 4 !== ifClose) continue;
+    const assertStart = ifClose + 1;
+    if (tokens[assertStart]?.text !== "assert" || tokens[assertStart + 1]?.text !== "!" || tokens[assertStart + 2]?.text !== "(") continue;
+    const assertOpen = assertStart + 2, assertClose = pairs.get(assertOpen);
+    if (assertClose === undefined) continue;
+    if (tokens[assertOpen + 1]?.text !== variable || tokens[assertOpen + 2]?.text !== "." || tokens[assertOpen + 3]?.text !== "pop" || tokens[assertOpen + 4]?.text !== "(" || tokens[assertOpen + 5]?.text !== ")" || tokens[assertOpen + 6]?.text !== ",") continue;
+    if (tokens[assertClose + 1]?.text !== ";" || assertClose + 2 !== loopClose) continue;
+    names.add(nameToken.text);
+  }
+  return names;
+}
+
 /** 🧭️ One path component and the immutable manifest-relative components preceding it. */
 export interface RustManifestPathReference {
   readonly start: number;
@@ -4822,6 +4881,7 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens);
   if (tokens.some((token, index) => /^[()[\]{}]$/u.test(token.text) && !pairs.has(index))) return [];
   if (tokens.some((token, index) => token.text === "std" && ["mod", "as", "let"].includes(tokens[index - 1]?.text ?? ""))) return [];
+  const repoRootHelperNames = rustRepoRootAncestorWalkHelperNames(tokens, pairs);
   type Loop = { readonly values: readonly RustToken[]; readonly uses: Set<number>; valid: boolean };
   type Binding = { readonly kind: "path"; readonly base: readonly string[] } | { readonly kind: "loop"; readonly loop: Loop };
   type Candidate = RustManifestPathReference & { readonly loop?: Loop };
@@ -4865,10 +4925,13 @@ export function inspectRustManifestPathReferences(source: string): readonly Rust
     } else {
       if (tokens[cursor]?.text === "::") cursor++;
       const prefix = [["std", "::", "path", "::", "Path", "::", "new", "("], ["std", "::", "path", "::", "PathBuf", "::", "from", "("]].find((candidate) => candidate.every((text, offset) => tokens[cursor + offset]?.text === text));
-      if (!prefix) return null;
-      const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
-      if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
-      base = []; cursor = close + 1;
+      if (prefix) {
+        const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
+        if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
+        base = []; cursor = close + 1;
+      } else if (tokens[cursor]?.kind === "identifier" && repoRootHelperNames.has(tokens[cursor]!.text) && tokens[cursor + 1]?.text === "(" && tokens[cursor + 2]?.text === ")") {
+        base = []; cursor = cursor + 3;
+      } else return null;
     }
     while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 1]?.text === "join" && tokens[cursor + 2]?.text === "(") {
       const close = pairs.get(cursor + 2);
@@ -5003,6 +5066,7 @@ export function inspectRustManifestPathCandidates(source: string): readonly Rust
   const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), limit = 256;
   if (tokens.some((token, index) => /^[()[\]{}]$/u.test(token.text) && !pairs.has(index))) return [];
   if (tokens.some((token, index) => token.text === "std" && ["mod", "as", "let", "type", "struct", "use"].includes(tokens[index - 1]?.text ?? ""))) return [];
+  const repoRootHelperNames = rustRepoRootAncestorWalkHelperNames(tokens, pairs);
   type State = { valid: boolean };
   type Value = { readonly state: State; readonly dependencies: readonly State[] } & (
     { readonly kind: "string"; readonly token: RustToken } |
@@ -5054,10 +5118,13 @@ export function inspectRustManifestPathCandidates(source: string): readonly Rust
     } else {
       if (token.text === "::") cursor++;
       const prefix = [["std", "::", "path", "::", "Path", "::", "new", "("], ["std", "::", "path", "::", "PathBuf", "::", "from", "("]].find((row) => row.every((text, offset) => tokens[cursor + offset]?.text === text));
-      if (!prefix) return null;
-      const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
-      if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
-      value = { kind: "path", parts: [], state: { valid: true }, dependencies: [] }; cursor = close + 1;
+      if (prefix) {
+        const open = cursor + prefix.length - 1, close = pairs.get(open), environment = ["env", "!", "(", '"CARGO_MANIFEST_DIR"', ")"];
+        if (close !== open + environment.length + 1 || !environment.every((text, offset) => tokens[open + offset + 1]?.text === text)) return null;
+        value = { kind: "path", parts: [], state: { valid: true }, dependencies: [] }; cursor = close + 1;
+      } else if (tokens[cursor]?.kind === "identifier" && repoRootHelperNames.has(tokens[cursor]!.text) && tokens[cursor + 1]?.text === "(" && tokens[cursor + 2]?.text === ")") {
+        value = { kind: "path", parts: [], state: { valid: true }, dependencies: [] }; cursor = cursor + 3;
+      } else return null;
     }
     while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 2]?.text === "(") {
       const close = pairs.get(cursor + 2);
@@ -5411,14 +5478,20 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
     return close === undefined ? null : { openParen: index, close };
   };
   /** 🧫️ Consumes a bounded whitelist of pass-through combinators that never smuggle a fresh,
-   * possibly-manifest-rooted value into the chain — only exact-matched fallbacks are trusted. */
+   * possibly-manifest-rooted value into the chain — only exact-matched fallbacks are trusted.
+   * `parent`/`to_path_buf`/`clone`/`as_path`/`to_owned` are included because each is a pure identity
+   * or ancestor-of-self operation on the SAME filesystem path: none of them can turn a path rooted
+   * outside the repo into one rooted inside it. `parent` in particular only ever walks UP the tree —
+   * a temp directory's ancestor is still under the same non-repo root, however many hops are taken —
+   * so it stays sound with no bound on repetition, unlike e.g. `join`, which is handled separately by
+   * the caller precisely because it CAN introduce a fresh, potentially manifest-relative segment. */
   const passThroughSuffix = (start: number, end: number): number => {
     let cursor = start;
     while (cursor + 2 < end && tokens[cursor]?.text === "." && tokens[cursor + 2]?.text === "(") {
       const name = tokens[cursor + 1]?.text, close = pairs.get(cursor + 2);
       if (close === undefined || close >= end) break;
       const empty = close === cursor + 3;
-      if ((name === "unwrap" || name === "ok" || name === "next" || name === "unwrap_or_default") && empty) { cursor = close + 1; continue; }
+      if ((name === "unwrap" || name === "ok" || name === "next" || name === "unwrap_or_default" || name === "parent" || name === "to_path_buf" || name === "clone" || name === "as_path" || name === "to_owned") && empty) { cursor = close + 1; continue; }
       if ((name === "expect" || name === "nth" || name === "skip") && close > cursor + 2) { cursor = close + 1; continue; }
       if (name === "unwrap_or_else" && (tokensEqual(cursor + 3, close, ["std", "::", "env", "::", "temp_dir"]) || tokensEqual(cursor + 3, close, ["env", "::", "temp_dir"]))) { cursor = close + 1; continue; }
       if (name === "map" && (tokensEqual(cursor + 3, close, ["PathBuf", "::", "from"]) || tokensEqual(cursor + 3, close, ["std", "::", "path", "::", "PathBuf", "::", "from"]))) { cursor = close + 1; continue; }
@@ -5455,7 +5528,7 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
       const inner = rootEnd(cursor + 1, close, bindings, depth);
       return inner === close ? close + 1 : null;
     }
-    if (tokens[cursor]?.kind === "identifier" && tokens[cursor + 1]?.text !== "::" && bindings.get(tokens[cursor]!.text)?.kind === "nonrepo") return cursor + 1;
+    if (tokens[cursor]?.kind === "identifier" && tokens[cursor + 1]?.text !== "::" && bindings.get(tokens[cursor]!.text)?.kind === "nonrepo") return passThroughSuffix(cursor + 1, end);
     for (const segments of [["std", "env", "temp_dir"], ["env", "temp_dir"], ["std", "env", "args"], ["env", "args"]]) {
       const call = matchCall(cursor, segments);
       if (call && call.close === call.openParen + 1) return passThroughSuffix(call.close + 1, end);
@@ -5530,6 +5603,127 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
     }
     return false;
   };
+  /** 🔎️ Locates one free function's body and positional parameter names — qualified to a specific
+   * `mod NAME { .. }` block when `qualifier` is given, else uniquely by bare name — refusing on any
+   * ambiguity (more than one candidate) exactly like `helperReturnsNonRepo`'s same-file uniqueness
+   * requirement, just scoped one level narrower so two same-named functions in different modules
+   * (e.g. two sibling test modules each declaring their own `materialize`) never collide. */
+  const resolveQualifiedFunctionBody = (qualifier: string | null, name: string): { readonly open: number; readonly close: number; readonly params: readonly string[] } | null => {
+    let searchStart = 0, searchEnd = tokens.length;
+    if (qualifier !== null) {
+      const modMatches: number[] = [];
+      for (let index = 0; index < tokens.length; index++) if (tokens[index]?.text === "mod" && tokens[index + 1]?.text === qualifier && tokens[index + 2]?.text === "{") modMatches.push(index);
+      if (modMatches.length !== 1) return null;
+      const modOpen = modMatches[0]! + 2, modClose = pairs.get(modOpen);
+      if (modClose === undefined) return null;
+      searchStart = modOpen + 1; searchEnd = modClose;
+    }
+    const fnMatches: number[] = [];
+    for (let index = searchStart; index < searchEnd; index++) if (tokens[index]?.text === "fn" && tokens[index + 1]?.text === name) fnMatches.push(index);
+    if (fnMatches.length !== 1) return null;
+    const fnIndex = fnMatches[0]!;
+    if (tokens[fnIndex + 2]?.text !== "(") return null;
+    const paramsOpen = fnIndex + 2, paramsClose = pairs.get(paramsOpen);
+    if (paramsClose === undefined) return null;
+    const braceStart = rustFindTopLevel(tokens, pairs, paramsClose + 1, searchEnd, new Set(["{", ";"]));
+    const braceEnd = braceStart >= 0 && tokens[braceStart]?.text === "{" ? pairs.get(braceStart) : undefined;
+    if (braceEnd === undefined) return null;
+    const params = rustTokenSegments(tokens, pairs, paramsOpen + 1, paramsClose, ",").map(([first, last]) => {
+      const nameIndex = tokens[first]?.text === "mut" ? first + 1 : first;
+      return tokens[nameIndex]?.kind === "identifier" && tokens[nameIndex + 1]?.text === ":" && nameIndex < last ? tokens[nameIndex]!.text : "";
+    });
+    return { open: braceStart + 1, close: braceEnd, params };
+  };
+  /** 🧩️ Evaluates one function body's TUPLE tail into per-position proven-non-repo flags, given the
+   * literal string arguments (if any) its caller passed for named parameters. A leading top-level
+   * `match <param> { "lit" => .., .., _ => {} }` — reachable only when the body's tail has no
+   * separating `;` from a preceding brace-terminated statement — is eliminated (treated as a no-op
+   * and skipped) ONLY when every non-wildcard arm is a single string literal that provably does not
+   * equal the known argument, and the trailing `_` arm is empty: that proves, for THIS SPECIFIC
+   * call's actual argument, only the wildcard arm can run, without evaluating any other arm's effects
+   * (sound constant-propagation, not "assume the happy path" — any arm that could match, or a match
+   * whose scrutinee isn't a known literal, refuses instead of guessing). Bounded to exactly one same-
+   * file hop for the callee's OWN internal lets (`depth: 1` below), matching the one-hop convention
+   * used throughout this function. */
+  const tupleTailPositions = (bodyOpen: number, bodyClose: number, literalBindings: ReadonlyMap<string, string>): readonly boolean[] | null => {
+    const bindings = new Map<string, Binding>();
+    const segments = rustTokenSegments(tokens, pairs, bodyOpen, bodyClose, ";");
+    const hasTrailingSemicolon = bodyClose > bodyOpen && tokens[bodyClose - 1]?.text === ";";
+    for (let index = 0; index < segments.length; index++) {
+      const [segStart, segEnd] = segments[index]!, isTail = index === segments.length - 1 && !hasTrailingSemicolon;
+      if (!isTail) {
+        if (tokens[segStart]?.text === "let") {
+          const equal = rustFindTopLevel(tokens, pairs, segStart + 1, segEnd, new Set(["="]));
+          const nameIndex = tokens[segStart + 1]?.text === "mut" ? segStart + 2 : segStart + 1, nameToken = tokens[nameIndex];
+          if (equal >= 0 && nameToken?.kind === "identifier" && nameIndex + 1 === equal) {
+            const proven = rootEnd(equal + 1, segEnd, bindings, 1) !== null;
+            bindings.delete(nameToken.text);
+            if (proven) bindings.set(nameToken.text, { kind: "nonrepo" });
+          }
+        }
+        continue;
+      }
+      let tailStart = segStart;
+      if (tokens[tailStart]?.text === "match") {
+        const braceIndex = rustFindTopLevel(tokens, pairs, tailStart + 1, segEnd, new Set(["{"]));
+        const matchClose = braceIndex < 0 ? undefined : pairs.get(braceIndex);
+        if (braceIndex < 0 || matchClose === undefined) return null;
+        const scrutinee = tokens.slice(tailStart + 1, braceIndex);
+        if (scrutinee.length !== 1 || scrutinee[0]?.kind !== "identifier") return null;
+        const literalValue = literalBindings.get(scrutinee[0]!.text);
+        if (literalValue === undefined) return null;
+        const arms = rustTokenSegments(tokens, pairs, braceIndex + 1, matchClose, ",");
+        if (arms.length === 0) return null;
+        for (let armIndex = 0; armIndex < arms.length; armIndex++) {
+          const [armFirst, armLast] = arms[armIndex]!;
+          const arrow = rustFindTopLevel(tokens, pairs, armFirst, armLast, new Set(["=>"]));
+          if (arrow < 0) return null;
+          const patternLength = arrow - armFirst, isLastArm = armIndex === arms.length - 1;
+          if (isLastArm) {
+            if (patternLength !== 1 || tokens[armFirst]?.text !== "_") return null;
+            const bodyTokens = tokens.slice(arrow + 1, armLast);
+            const emptyBody = bodyTokens.length === 0 || (bodyTokens.length === 2 && (bodyTokens[0]!.text === "{" && bodyTokens[1]!.text === "}" || bodyTokens[0]!.text === "(" && bodyTokens[1]!.text === ")"));
+            if (!emptyBody) return null;
+          } else {
+            if (patternLength !== 1 || tokens[armFirst]?.kind !== "string") return null;
+            if (tokens[armFirst]!.text.slice(1, -1) === literalValue) return null;
+          }
+        }
+        tailStart = matchClose + 1;
+        if (tailStart >= segEnd) return null;
+      }
+      if (tokens[tailStart]?.text === "(" && pairs.get(tailStart) === segEnd - 1) {
+        const elements = rustTokenSegments(tokens, pairs, tailStart + 1, segEnd - 1, ",");
+        if (elements.length < 2) return null;
+        return elements.map(([elFirst, elLast]) => rootEnd(elFirst, elLast, bindings, 1) === elLast);
+      }
+      return [rootEnd(tailStart, segEnd, bindings, 1) === segEnd];
+    }
+    return null;
+  };
+  /** 🪢️ Resolves a tuple-pattern `let`'s right-hand-side call (`qualifier::name(..)` or `name(..)`,
+   * consuming the ENTIRE span up to the statement's `;` — no trailing suffix chain trusted) into per-
+   * position proven-non-repo flags for its returned tuple, threading any literal string arguments
+   * into the callee by parameter name. */
+  const tupleCallNonRepoPositions = (start: number, end: number, arity: number): readonly boolean[] | null => {
+    let cursor = start, qualifier: string | null = null;
+    if (tokens[cursor]?.kind !== "identifier") return null;
+    if (tokens[cursor + 1]?.text === "::" && tokens[cursor + 2]?.kind === "identifier") { qualifier = tokens[cursor]!.text; cursor += 2; }
+    const nameToken = tokens[cursor];
+    if (nameToken?.kind !== "identifier" || tokens[cursor + 1]?.text !== "(") return null;
+    const argOpen = cursor + 1, argClose = pairs.get(argOpen);
+    if (argClose === undefined || argClose + 1 !== end) return null;
+    const resolved = resolveQualifiedFunctionBody(qualifier, nameToken.text);
+    if (!resolved || resolved.params.length === 0) return null;
+    const argumentSpans = rustTokenSegments(tokens, pairs, argOpen + 1, argClose, ",");
+    const literalBindings = new Map<string, string>();
+    for (let argIndex = 0; argIndex < argumentSpans.length && argIndex < resolved.params.length; argIndex++) {
+      const [argFirst, argLast] = argumentSpans[argIndex]!, parameterName = resolved.params[argIndex];
+      if (argLast === argFirst + 1 && literal(tokens[argFirst]) && parameterName) literalBindings.set(parameterName, tokens[argFirst]!.text.slice(1, -1));
+    }
+    const positions = tupleTailPositions(resolved.open, resolved.close, literalBindings);
+    return positions && positions.length === arity ? positions : null;
+  };
   const visit = (start: number, end: number, bindings: Map<string, Binding>): void => {
     for (let index = start; index < end;) {
       const token = tokens[index]!;
@@ -5555,6 +5749,28 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
       }
       if (token.text === "let") {
         const boundary = rustFindTopLevel(tokens, pairs, index + 1, end, new Set([";"])), stop = boundary < 0 ? end : boundary;
+        // 🧬️ Tuple-pattern destructure `let (a, _, c) = qualifier::fn(..);` — bind each named (non-`_`)
+        // position whose slot is independently proven non-repo by `tupleCallNonRepoPositions`; any
+        // unrecognized shape just binds nothing (the prior, always-safe default).
+        if (tokens[index + 1]?.text === "(") {
+          const patternClose = pairs.get(index + 1);
+          const elements = patternClose === undefined ? [] : rustTokenSegments(tokens, pairs, index + 2, patternClose, ",");
+          const names: (string | null)[] = [];
+          let patternOk = patternClose !== undefined && patternClose < stop && tokens[patternClose + 1]?.text === "=" && elements.length > 0;
+          if (patternOk) for (const [first, last] of elements) {
+            if (last === first + 1 && tokens[first]?.text === "_") { names.push(null); continue; }
+            if (last === first + 1 && tokens[first]?.kind === "identifier") { names.push(tokens[first]!.text); continue; }
+            if (last === first + 2 && tokens[first]?.text === "mut" && tokens[first + 1]?.kind === "identifier") { names.push(tokens[first + 1]!.text); continue; }
+            patternOk = false; break;
+          }
+          if (patternOk) {
+            for (const name of names) if (name) bindings.delete(name);
+            const positions = tupleCallNonRepoPositions(patternClose! + 2, stop, names.length);
+            if (positions) for (let position = 0; position < names.length; position++) { const name = names[position]; if (name && positions[position]) bindings.set(name, { kind: "nonrepo" }); }
+          }
+          index = boundary < 0 ? end : boundary + 1;
+          continue;
+        }
         const equal = rustFindTopLevel(tokens, pairs, index + 1, stop, new Set(["="]));
         const nameIndex = tokens[index + 1]?.text === "mut" ? index + 2 : index + 1, nameToken = tokens[nameIndex];
         if (equal >= 0 && nameToken?.kind === "identifier" && nameIndex + 1 === equal) {

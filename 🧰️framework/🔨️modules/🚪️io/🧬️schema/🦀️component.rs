@@ -21,6 +21,7 @@
 //! need documented in the os-kernel glue's own comment beside the (still double-mounted) `os_io`.
 
 use dsl::Diagnostic;
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
@@ -48,8 +49,9 @@ pub struct Dialect {
 /// 🎯️ Owned serde twin of `Dialect` — the persisted/wire form; every dialect consumer outside a
 /// `'static` compile-time registration (document envelopes, the hub's multi-user pin, WIT
 /// `io-run`/`io-routes`, the io leaf generators) reads/writes THIS type.
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactDialect {
     pub artifact_kind: String,
     pub standard: String,
@@ -149,8 +151,9 @@ fn is_kebab_segment(segment: &str) -> bool {
 
 /// 🔗️ A reference to one artifact: its id plus the dialect it is materialized in. Renders to/from
 /// the wire URI `"<artifact_id>!<kind>@<standard>/<subset>"`.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ArtifactRef {
     pub artifact_id: String,
     pub dialect: ArtifactDialect,

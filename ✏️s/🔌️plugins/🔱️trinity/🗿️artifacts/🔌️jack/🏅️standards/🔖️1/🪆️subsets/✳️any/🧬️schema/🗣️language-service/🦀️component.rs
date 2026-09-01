@@ -539,7 +539,7 @@ pub fn example_graph() -> Graph {
 
 /// 🧩️ [`example_graph_fixture`] serialized as fixture JSON.
 pub fn example_graph_fixture_json() -> String {
-    serde_json::to_string(&example_graph_fixture()).unwrap_or_else(|_| "{}".into())
+    pack::to_json_string(&example_graph_fixture())
 }
 // #endregion 🔖️ExampleFixture
 struct Parser {

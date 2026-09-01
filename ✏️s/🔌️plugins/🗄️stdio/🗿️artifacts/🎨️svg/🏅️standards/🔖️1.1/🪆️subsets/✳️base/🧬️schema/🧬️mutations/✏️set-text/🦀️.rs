@@ -4,24 +4,23 @@ use crate::artifacts::svg::schema::mutation_support::attribute_diff_at_path;
 use crate::artifacts::svg::schema::snapshot::{transform_list_to_string, view_box_to_string, NodePath, TransformOp, ViewBox};
 use crate::artifacts::svg::SvgSnapshot;
 use crate::artifacts::xml::schema::snapshot::{XmlDeclaration, XmlDoctype, XmlNode};
-use serde::{Deserialize, Serialize};
 
 #[path = "📝️text/🦀️component.rs"]
 pub mod text;
 #[path = "💾️binary/🦀️component.rs"]
 pub mod binary;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SetTextPayload {
     pub path: NodePath,
     pub text: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum SetTextMutation { Apply(SetTextPayload), Restore(SvgDiff) }
 
 impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTextMutation {

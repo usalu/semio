@@ -5,7 +5,6 @@
 //! construction stub.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOVALUE_DOCUMENT_SCHEMA: &str = "stdio.semio.value";
@@ -17,8 +16,8 @@ pub const STDIO_SEMIOVALUE_DOCUMENT_SCHEMA: &str = "stdio.semio.value";
 /// (f6-final-summary.md §4.3, las/jpg-confirmed gap), and every other id-shaped type this program
 /// introduces (`SemioQuaternion` in the shared `🧮️geometry` engine) follows the same named-field
 /// convention rather than risk the same class of bug.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ValueId {
     pub value: String,
 }
@@ -36,9 +35,9 @@ impl ValueId {
 /// the same convention `json`'s `JsonMember` uses, this subset's own informing source). Derives
 /// `Default` (never constructed as a "real" empty entry — required by the shared
 /// `engine::triples::NamedTripleDiff<K,D,T>`'s `Deserialize` derive, which needs `T: Default` due
-/// to a `#[serde(default)]`-triggered bound-inference quirk on ITS generic fields).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+/// to a `#[value(default)]`-triggered bound-inference quirk on ITS generic fields).
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioValueEntry {
     pub key: String,
     pub value: SemioValue,
@@ -57,8 +56,8 @@ pub struct SemioValueEntry {
 /// internally-tagged (`tag = "kind"`) representation can only merge the tag into map-shaped
 /// content; a tuple variant wrapping a non-map payload compiles but fails at RUNTIME serialization
 /// (identical citation in `json`'s own `JsonValue` doc comment).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioValue {
     Null,
     Bool { value: bool },
@@ -83,8 +82,8 @@ impl Default for SemioValue {
 /// values resolve against. Real per-node diffability (see `🔺️diff`) makes this the format's
 /// "keyed repeating structure" per the recipe, not just a scalar container. Derives `Default` for
 /// the same `NamedTripleDiff<K,D,T>: Deserialize` bound-inference reason as `SemioValueEntry`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioValueNode {
     pub id: ValueId,
     pub value: SemioValue,
@@ -92,8 +91,8 @@ pub struct SemioValueNode {
 //#endregion 🔖️ValueGraph
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value")]
 pub struct SemioValueSnapshot {
     #[state(artifact)]
@@ -105,7 +104,7 @@ pub struct SemioValueSnapshot {
     /// preserved), id-addressable, a real strong-entity collection (never a `HashMap`, so decode
     /// -> encode never silently reorders it).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub nodes: Vec<SemioValueNode>,
 }
 
@@ -197,7 +196,7 @@ impl store::ArtifactPack for SemioValueSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `stdio.semio.value` — the shape `mutate-semio-value` compares under `ordered-json-v1`, derived
 /// from the snapshot type itself rather than hand-written a second time in the adapter, where it
 /// could drift away from the type it claims to project. A thin `serde_json` wrapper (already a

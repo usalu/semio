@@ -2,13 +2,15 @@
 //! 🧬️ Transparent builder contribution mutation roster.
 use super::{DependencyTestDiff, DependencyTestSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "➕️add-value/🦀️.rs"]
 mod add_value;
 pub use add_value::AddValue;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DependencyTestSnapshot, diff = DependencyTestDiff, schema = "dep-target.document")]
 pub enum DependencyTestOp { AddValue(AddValue) }
 

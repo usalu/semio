@@ -8,12 +8,14 @@
 use crate::artifacts::playbook::mutations::PlaybookMutation;
 use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
 use crate::artifacts::playbook::{PlaybookBlock, PlaybookDiff, PlaybookSnapshot};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "replace-block")]
 pub struct ReplaceBlock {
     pub step_id: String,

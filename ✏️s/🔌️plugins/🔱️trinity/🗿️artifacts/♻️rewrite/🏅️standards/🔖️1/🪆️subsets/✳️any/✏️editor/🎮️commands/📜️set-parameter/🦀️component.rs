@@ -12,7 +12,7 @@ pub(crate) fn set_parameter(state: &RewriteSnapshot, name: &str, value: &str) ->
     if name.is_empty() {
         return Ok(Emit::default());
     }
-    let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return Ok(Emit::default());
     };
     let kind = rhs.parameters.iter().find(|param| param.name == name).map(|param| param.kind.clone());

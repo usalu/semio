@@ -1,7 +1,9 @@
 //! 🏗️ Typed building energy model entities, validation, and cross-references.
 
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 #[cfg(test)]
 use crate::error::{Diagnostics, Error, Severity};
+use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::collections::HashSet;
@@ -10,6 +12,19 @@ use std::collections::HashSet;
 /// 🆔️ Stable internal entity identifier.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct EntityId(pub u32);
+
+// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports named-field
+// structs, not a tuple struct like this one (see `semio-framework-value-derive`'s own docstring).
+impl ToValue for EntityId {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for EntityId {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u32::from_value(value).map(EntityId)
+    }
+}
 
 impl EntityId {
     pub fn new(id: u32) -> Self {
@@ -31,6 +46,61 @@ pub(crate) struct FixedTable<K, V> {
 impl<K, V> Default for FixedTable<K, V> {
     fn default() -> Self {
         Self { slots: Box::default(), len: 0, admitted: false, faulted: false }
+    }
+}
+
+// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` does not auto-infer
+// per-type-parameter bounds (unlike `serde_derive`), so a generic struct like this one needs its
+// bound spelled out explicitly; hand-writing is simpler here than threading a `#[value(bound =
+// "…")]` container attribute through. Mirrors every field verbatim, `slots` as a JSON-like array
+// of either `null` (an unoccupied slot) or a 2-element `[key, value]` pair.
+impl<K: ToValue, V: ToValue> ToValue for FixedTable<K, V> {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([
+            (
+                "slots".to_string(),
+                DslValue::Array(
+                    self.slots
+                        .iter()
+                        .map(|slot| match slot {
+                            Some((key, value)) => DslValue::Array(vec![key.to_value(), value.to_value()]),
+                            None => DslValue::Null,
+                        })
+                        .collect(),
+                ),
+            ),
+            ("len".to_string(), self.len.to_value()),
+            ("admitted".to_string(), self.admitted.to_value()),
+            ("faulted".to_string(), self.faulted.to_value()),
+        ])
+    }
+}
+impl<K: FromValue, V: FromValue> FromValue for FixedTable<K, V> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let entries = DslValue::into_object(value)?;
+        let field = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+        let slots_array = match field("slots") {
+            DslValue::Array(items) => items,
+            other => return Err(ValueError::new(format!("expected an array, found {other:?}")).under("slots")),
+        };
+        let slots: Vec<Option<(K, V)>> = slots_array
+            .into_iter()
+            .enumerate()
+            .map(|(index, item)| -> Result<Option<(K, V)>, ValueError> {
+                match item {
+                    DslValue::Null => Ok(None),
+                    DslValue::Array(pair) if pair.len() == 2 => {
+                        let mut iter = pair.into_iter();
+                        let key = K::from_value(iter.next().expect("checked len == 2")).map_err(|error| error.under("0"))?;
+                        let value = V::from_value(iter.next().expect("checked len == 2")).map_err(|error| error.under("1"))?;
+                        Ok(Some((key, value)))
+                    }
+                    other => Err(ValueError::new(format!("expected null or a 2-element array, found {other:?}"))),
+                }
+                .map_err(|error| error.under(index))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self { slots: slots.into_boxed_slice(), len: usize::from_value(field("len")).map_err(|error| error.under("len"))?, admitted: bool::from_value(field("admitted")).map_err(|error| error.under("admitted"))?, faulted: bool::from_value(field("faulted")).map_err(|error| error.under("faulted"))? })
     }
 }
 
@@ -166,7 +236,7 @@ impl<K: Ord, V> FixedTable<K, V> {
 
 // #region 🔖️Site
 /// 🌍️ Site location and orientation.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Site {
     pub latitude_deg: f64,
     pub longitude_deg: f64,
@@ -178,7 +248,7 @@ pub struct Site {
 
 // #region 🔖️Zone
 /// 🏠️ Thermal zone with volume and conditioning flags.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Zone {
     pub id: EntityId,
     pub name: String,
@@ -189,7 +259,7 @@ pub struct Zone {
 }
 
 /// 🪑️ Space within a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Space {
     pub id: EntityId,
     pub name: String,
@@ -200,7 +270,7 @@ pub struct Space {
 
 // #region 🔖️Surface
 /// 🧱️ Surface boundary type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum SurfaceClass {
     ExteriorWall,
     InteriorWall,
@@ -213,7 +283,7 @@ pub enum SurfaceClass {
 }
 
 /// 📐️ Planar polygon surface.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Surface {
     pub id: EntityId,
     pub name: String,
@@ -228,7 +298,7 @@ pub struct Surface {
 }
 
 /// 🌡️ Exterior boundary condition for surfaces.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum OutsideBoundary {
     OutdoorAir,
     Ground,
@@ -238,7 +308,7 @@ pub enum OutsideBoundary {
 }
 
 /// 🪟️ Fenestration (window, skylight, door).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Fenestration {
     pub id: EntityId,
     pub name: String,
@@ -254,7 +324,7 @@ pub struct Fenestration {
 
 // #region 🔖️Material
 /// 🧱️ Opaque material layer.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Material {
     pub id: EntityId,
     pub name: String,
@@ -268,7 +338,7 @@ pub struct Material {
 }
 
 /// 🧱️ Layered construction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Construction {
     pub id: EntityId,
     pub name: String,
@@ -280,11 +350,23 @@ pub struct Construction {
 /// 📅️ Schedule reference by id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ScheduleId(pub u32);
+
+// 🌱️ Hand-written, not derived — same tuple-struct reason as `EntityId` above.
+impl ToValue for ScheduleId {
+    fn to_value(&self) -> DslValue {
+        self.0.to_value()
+    }
+}
+impl FromValue for ScheduleId {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        u32::from_value(value).map(ScheduleId)
+    }
+}
 // #endregion 🔖️Schedule
 
 // #region 🔖️Gains
 /// 👤️ People internal gain object.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PeopleGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -297,7 +379,7 @@ pub struct PeopleGain {
 }
 
 /// 💡️ Lighting internal gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct LightingGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -309,7 +391,7 @@ pub struct LightingGain {
 }
 
 /// 🔌️ Electric equipment gain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EquipmentGain {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -322,7 +404,7 @@ pub struct EquipmentGain {
 
 // #region 🔖️Hvac
 /// 🌡️ Thermostat setpoint control.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Thermostat {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -333,7 +415,7 @@ pub struct Thermostat {
 }
 
 /// ❄️ Ideal loads air system for a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct IdealLoadsSystem {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -346,7 +428,7 @@ pub struct IdealLoadsSystem {
 }
 
 /// 💧️ Humidistat control for a zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Humidistat {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -357,7 +439,7 @@ pub struct Humidistat {
 }
 
 /// 🎛️ Setpoint manager type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum SetpointManagerKind {
     Scheduled,
     OutdoorAirReset { low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64 },
@@ -366,7 +448,7 @@ pub enum SetpointManagerKind {
 }
 
 /// 🎛️ Setpoint manager for air/plant loops.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SetpointManager {
     pub id: EntityId,
     pub name: String,
@@ -375,7 +457,7 @@ pub struct SetpointManager {
 }
 
 /// 🏠️ Zone equipment assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ZoneEquipmentAssignment {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -386,7 +468,7 @@ pub struct ZoneEquipmentAssignment {
 }
 
 /// 🏠️ Zone equipment catalog reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum ZoneEquipmentType {
     Baseboard,
     Radiant,
@@ -399,7 +481,7 @@ pub enum ZoneEquipmentType {
 }
 
 /// 🌀️ Air loop configuration reference in model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ModelAirLoop {
     pub id: EntityId,
     pub name: String,
@@ -410,7 +492,7 @@ pub struct ModelAirLoop {
 }
 
 /// 🏭️ Plant loop configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PlantLoopConfig {
     pub id: EntityId,
     pub name: String,
@@ -422,7 +504,7 @@ pub struct PlantLoopConfig {
 }
 
 /// 🏭️ Plant loop fluid type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum PlantLoopType {
     Heating,
     Cooling,
@@ -430,7 +512,7 @@ pub enum PlantLoopType {
 }
 
 /// 🌬️ Outdoor air system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct OutdoorAirSystem {
     pub id: EntityId,
     pub air_loop_id: EntityId,
@@ -439,7 +521,7 @@ pub struct OutdoorAirSystem {
 }
 
 /// 🌳️ Shading surface for solar obstruction.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ShadingSurface {
     pub id: EntityId,
     pub name: String,
@@ -448,7 +530,7 @@ pub struct ShadingSurface {
 }
 
 /// 📋️ Space list grouping.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SpaceList {
     pub id: EntityId,
     pub name: String,
@@ -456,7 +538,7 @@ pub struct SpaceList {
 }
 
 /// 🏠️ Thermal enclosure grouping zones.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ThermalEnclosure {
     pub id: EntityId,
     pub name: String,
@@ -464,14 +546,14 @@ pub struct ThermalEnclosure {
 }
 
 /// 🔗️ Surface adjacency pair.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct AdjacencyPair {
     pub surface_a_id: EntityId,
     pub surface_b_id: EntityId,
 }
 
 /// 💨️ Mechanical ventilation specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct MechanicalVentilation {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -482,7 +564,7 @@ pub struct MechanicalVentilation {
 }
 
 /// 🌐️ Airflow network definition in model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct AirflowNetworkDefinition {
     pub zone_node_ids: Vec<(EntityId, u32)>,
     pub outdoor_node_id: u32,
@@ -490,7 +572,7 @@ pub struct AirflowNetworkDefinition {
 }
 
 /// ⚡️ Electrical load center.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ElectricalLoadCenter {
     pub id: EntityId,
     pub name: String,
@@ -500,7 +582,7 @@ pub struct ElectricalLoadCenter {
 }
 
 /// ☀️ PV system assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PvSystemAssignment {
     pub id: EntityId,
     pub dc_capacity_w: f64,
@@ -512,7 +594,7 @@ pub struct PvSystemAssignment {
 }
 
 /// 🔋️ Battery storage assignment.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct BatteryAssignment {
     pub id: EntityId,
     pub capacity_kwh: f64,
@@ -522,7 +604,7 @@ pub struct BatteryAssignment {
 }
 
 /// 🚿️ Service hot water system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ShwSystemConfig {
     pub id: EntityId,
     pub heater_capacity_w: f64,
@@ -532,7 +614,7 @@ pub struct ShwSystemConfig {
 }
 
 /// ☀️ Solar thermal collector system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SolarThermalConfig {
     pub id: EntityId,
     pub collector_area_m2: f64,
@@ -543,7 +625,7 @@ pub struct SolarThermalConfig {
 }
 
 /// ❄️ Refrigeration system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RefrigerationConfig {
     pub id: EntityId,
     pub case_count: u32,
@@ -552,7 +634,7 @@ pub struct RefrigerationConfig {
 }
 
 /// 💧️ Water use system.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WaterSystemConfig {
     pub id: EntityId,
     pub fixture_count: u32,
@@ -561,7 +643,7 @@ pub struct WaterSystemConfig {
 }
 
 /// ⚠️ Fault definition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct FaultDefinition {
     pub id: EntityId,
     pub target_equipment_id: EntityId,
@@ -571,7 +653,7 @@ pub struct FaultDefinition {
 }
 
 /// ⚠️ Fault type catalog.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum FaultType {
     SensorBias,
     CoilFouling,
@@ -581,7 +663,7 @@ pub enum FaultType {
 }
 
 /// 📊️ Output variable registration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct OutputVariableSpec {
     pub name: String,
     pub key: String,
@@ -589,7 +671,7 @@ pub struct OutputVariableSpec {
 }
 
 /// 📊️ Output reporting frequency.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum OutputReportFrequency {
     Timestep,
     Hourly,
@@ -599,7 +681,7 @@ pub enum OutputReportFrequency {
 }
 
 /// 📐️ Sizing object for design-day autosize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SizingObject {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -608,7 +690,7 @@ pub struct SizingObject {
 }
 
 /// 📐️ Sizing type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum SizingType {
     Heating,
     Cooling,
@@ -616,14 +698,14 @@ pub enum SizingType {
 }
 
 /// 📐️ Design day type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum DesignDayType {
     Heating,
     Cooling,
 }
 
 /// 💡️ Daylight zone configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DaylightZoneConfig {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -633,14 +715,14 @@ pub struct DaylightZoneConfig {
 }
 
 /// 🌡️ Room air model selection per zone.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RoomAirModelAssignment {
     pub zone_id: EntityId,
     pub model: RoomAirModelType,
 }
 
 /// 🌡️ Room air model type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum RoomAirModelType {
     WellMixed,
     OneNodeDisplacement,
@@ -649,7 +731,7 @@ pub enum RoomAirModelType {
 }
 
 /// 🌡️ Ground temperature configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct GroundTemperatureConfig {
     pub building_surface_c: [f64; 12],
     pub shallow_c: [f64; 12],
@@ -665,7 +747,7 @@ impl Default for GroundTemperatureConfig {
 
 // #region 🔖️Infiltration
 /// 💨️ Zone infiltration specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Infiltration {
     pub id: EntityId,
     pub zone_id: EntityId,
@@ -680,7 +762,7 @@ pub struct Infiltration {
 
 // #region 🔖️Model
 /// 🏢️ Complete building energy model (single native representation).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Model {
     pub name: String,
     pub version: String,

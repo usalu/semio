@@ -5,18 +5,18 @@
 use super::*;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SetSpatialNode {
     pub(crate) id: String,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) kind: Option<SpatialKind>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     pub(crate) parent_id: Option<Option<String>>,
-    #[serde(default)]
+    #[value(default)]
     pub(crate) placement: Option<SemioTransform>,
 }
 

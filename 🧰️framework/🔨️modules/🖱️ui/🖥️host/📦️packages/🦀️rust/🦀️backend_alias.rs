@@ -19,7 +19,10 @@
 
 //#region 🔖️Host
 
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; `backend_webgpu` is browser-only,
+// and this crate has no wasip2 `ActiveBackend` — it is the native desktop windowing host, never
+// embedded inside a shipped plugin component.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub type ActiveBackend = backend_webgpu::WebGpuBackend;
 
 #[cfg(target_os = "macos")]

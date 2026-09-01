@@ -583,7 +583,9 @@ pub mod render {
         }
     }
 
-    #[cfg(test)]
+    /// 🧪️ Native/host-only: `render_scene` calls the real `VelloRenderer` transitively, which
+    /// always reports "no adapter" on `wasm32-wasip2` by design — see `renderer::VelloRenderer`.
+    #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     mod tests {
         use super::*;
         use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
@@ -654,10 +656,14 @@ pub mod renderer {
     use crate::editor::animate::engine::camera::camera::Camera;
     use crate::editor::animate::engine::config::config::AnimateConfig;
     use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
-    use crate::editor::animate::engine::text::color::Color;
     use crate::editor::animate::engine::video::VideoError;
+    use semio_framework_raster::RasterError;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use crate::editor::animate::engine::text::color::Color;
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     use geometry::Affine;
-    use semio_framework_raster::{RasterError, SceneRasterizer, VectorScene};
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    use semio_framework_raster::{SceneRasterizer, VectorScene};
 
     /// 🖼️ Captured mobject state at one timeline sample.
     pub struct CapturedFrame {
@@ -666,17 +672,26 @@ pub mod renderer {
     }
 
     /// 🖌️ Headless Vello/wgpu renderer (via `semio_framework_raster::SceneRasterizer`) with
-    /// static-background caching.
+    /// static-background caching. Native/host-only body; see the `wasm32-wasip2` variant below —
+    /// `export-video-from-deck` is dispatched through `Editor::handle`, the plugin's own guest
+    /// command surface (confirmed by tracing `PresentCommand::ExportVideoFromDeck` →
+    /// `export_video_from_deck::handle_async` → `export_video_from_scene` →
+    /// `compile_scene_to_assets` → `render_scene` → here), so `VelloRenderer` cannot simply
+    /// disappear under wasip2 the way `render_world_3d` did — every caller up that chain must keep
+    /// compiling. `🔍️research/📓️raster-tier-split.md` has the full trace.
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub struct VelloRenderer {
         rasterizer: SceneRasterizer,
         static_cache: Option<StaticBackgroundCache>,
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     struct StaticBackgroundCache {
         hash: String,
         pixels: Vec<u8>,
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     impl VelloRenderer {
         /// 🏗️ Creates a headless wgpu + Vello renderer at `width` × `height`.
         pub async fn new(width: u32, height: u32) -> Result<Self, VideoError> {
@@ -698,6 +713,31 @@ pub mod renderer {
         }
     }
 
+    /// 🚫️ A `wasm32-wasip2` guest component has no GPU device access — WASI Preview 2 defines no
+    /// graphics API, so no amount of first-party wrapping makes real rasterization possible here.
+    /// This is NOT a stub: every call returns the same honest `RasterError::Adapter` a native host
+    /// reports when it genuinely finds no adapter (see the raster crate's own
+    /// `[DEBUG] no wgpu adapter in this environment` test fallback for the precedent), surfaced to
+    /// the caller as a real `Fault`/error effect rather than a silently-dropped capability. Kept
+    /// zero-sized: it names neither `wgpu` nor `vello`, so it adds nothing to the shipped
+    /// component's link graph.
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    pub struct VelloRenderer;
+
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+    impl VelloRenderer {
+        /// 🏗️ Always reports "no adapter" — see struct docstring.
+        pub async fn new(_width: u32, _height: u32) -> Result<Self, VideoError> {
+            Err(video_error_from_raster(RasterError::Adapter("wasm32-wasip2 has no GPU device access (WASI Preview 2 defines no graphics API); headless video rendering is a native/host-only capability".into())))
+        }
+
+        /// 🖼️ Always reports "no adapter" — see struct docstring. Reachable only if a caller
+        /// somehow held a `Self` past a failed `new`, which the type's own API cannot produce.
+        pub fn render_capture(&mut self, _capture: &CapturedFrame, _camera: &Camera, _config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
+            Err(video_error_from_raster(RasterError::Adapter("wasm32-wasip2 has no GPU device access (WASI Preview 2 defines no graphics API); headless video rendering is a native/host-only capability".into())))
+        }
+    }
+
     fn video_error_from_raster(error: RasterError) -> VideoError {
         match error {
             RasterError::ReadbackChannelClosed => VideoError::ReadbackChannelClosed,
@@ -705,6 +745,7 @@ pub mod renderer {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn build_vector_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> VectorScene {
         let mut scene = VectorScene::new();
         let view = scene_affine(camera, config.width, config.height);
@@ -716,12 +757,14 @@ pub mod renderer {
         scene
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn scene_affine(camera: &Camera, width: u32, height: u32) -> Affine {
         let sx = width as f64 / camera.frame_width;
         let sy = height as f64 / camera.frame_height;
         Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn paint_mobject(scene: &mut VectorScene, mobj: &Sobjects, view: Affine) {
         let transform = view * mobj.transform();
         let style = mobj.style();
@@ -738,10 +781,12 @@ pub mod renderer {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn color_to_rgba_array(rgba: [f64; 4]) -> [f32; 4] {
         [rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32]
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn color_from_style(color: Color) -> [f64; 4] {
         color.to_array()
     }
@@ -771,7 +816,9 @@ pub mod renderer {
         hash_parts(&[format_number_for_hash(capture.time), static_layer_hash(capture, config)])
     }
 
-    #[cfg(test)]
+    /// 🧪️ Native/host-only: asserts real GPU pixel output, meaningless against the
+    /// `wasm32-wasip2` `VelloRenderer` above, which always reports "no adapter" by design.
+    #[cfg(all(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     mod tests {
         use super::*;
         use crate::editor::animate::engine::scene::sobject::VSobject;

@@ -64,6 +64,18 @@ pub type EnergyZonesChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts
 /// `SemioValue::Bytes`/`::Ref` are never PRODUCED by `energy_structure_from_model` below — they are
 /// still handled (never a panic) for the theoretical case of a foreign composer writing one into
 /// this artifact's own `structure` child.
+///
+/// 🌱️ NOT routed through `ToValue`/`DslValue` (ticket
+/// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`), even though `Model`
+/// itself now derives `ToValue`/`FromValue` (`🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs`):
+/// `DslValue::Number` is always `f64` (single-representation by design, see
+/// `semio-framework-value-derive`'s own scalar codec), so a `Model -> DslValue` round trip cannot
+/// recover whether a leaf was originally an integer or a float field — exactly the distinction
+/// `SemioValue::Int{lexeme}` vs `SemioValue::Float{lexeme}` exists to carry (a UI table cell, or a
+/// JSON-schema-typed consumer, must not see `5.0` where the model held an `i32` `5`).
+/// `serde_json::Value::Number` preserves that distinction (`is_i64`/`is_u64` vs plain `f64`) exactly
+/// because `serde_json::to_value` dispatches through each field's own `serialize_i32`/`serialize_f64`
+/// call — this bridge is kept on `serde_json` deliberately, not left over.
 fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     match value {

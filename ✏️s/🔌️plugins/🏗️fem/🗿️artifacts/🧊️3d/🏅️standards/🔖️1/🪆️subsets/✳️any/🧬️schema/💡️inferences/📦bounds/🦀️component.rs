@@ -4,20 +4,20 @@
 //! benefits from per-entity incremental caching, unlike `puzzle3d`'s `flatPosition`.
 
 use crate::artifacts::fem3d::Fem3dSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Bounds
 /// 📦️ Axis-aligned 3d bounding box in meters (empty snapshot: both corners at the origin).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dBoundingBox {
     pub min: [f64; 3],
     pub max: [f64; 3],
 }
 
 /// 📦️ `bounds` — 3d extent plus node/element counts.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dBounds {
     pub bounding_box: Fem3dBoundingBox,
     pub node_count: u32,

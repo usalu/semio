@@ -3,21 +3,20 @@
 use crate::artifacts::csv::schema::snapshot::CsvRecord;
 use crate::artifacts::csv::CsvSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.csv` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub has_header: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<CsvRecord>,
 }
 //#endregion 🔖️Artifact

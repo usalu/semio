@@ -7,7 +7,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<JackSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let out: JackSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("jack<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
+    let out: JackSnapshot = dsl::FromValue::from_value(pack::json_to_dsl_value(&from.to_pack_value())).map_err(|e: dsl::ValueError| store::TextError::new(format!("jack<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)
 }
 

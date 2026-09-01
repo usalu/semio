@@ -6,10 +6,9 @@ use crate::artifacts::step::StepSnapshot;
 use crate::artifacts::step::schema::diff::StepDiff;
 use protocol::command::DiffAlgebra;
 use crate::artifacts::step::standards::v_ap214::subsets::cc2::schema::mutations::{StepCc2Mutation};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetSnapshot {
     pub snapshot: StepSnapshot,

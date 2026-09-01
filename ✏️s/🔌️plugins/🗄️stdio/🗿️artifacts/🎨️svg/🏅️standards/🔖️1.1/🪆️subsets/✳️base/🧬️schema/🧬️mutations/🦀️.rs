@@ -1,7 +1,6 @@
 //! 🧬️ Transparent SvgMutation aggregate.
 use crate::artifacts::svg::schema::diff::SvgDiff;
 use crate::artifacts::svg::SvgSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use super::set_declaration::{SetDeclarationMutation, SetDeclarationPayload};
 pub use super::set_doctype::{SetDoctypeMutation, SetDoctypePayload};
@@ -13,8 +12,8 @@ pub use super::set_text::{SetTextMutation, SetTextPayload};
 pub use super::set_view_box::{SetViewBoxMutation, SetViewBoxPayload};
 pub use super::set_transform::{SetTransformMutation, SetTransformPayload};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "s.stdio.svg")]
 pub enum SvgMutation {
     SetDeclaration(SetDeclarationMutation),

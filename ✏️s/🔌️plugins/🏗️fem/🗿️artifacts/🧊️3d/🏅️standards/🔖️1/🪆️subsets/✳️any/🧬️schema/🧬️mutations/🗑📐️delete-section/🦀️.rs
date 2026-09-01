@@ -4,14 +4,14 @@ use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSectionsDelta};
 use crate::artifacts::fem3d::mutations::{Fem3dMutation, create_section};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🗑️ Removes an existing cross-section by id, capturing nothing itself (the removed payload is
 /// recovered from `base` inside `↩️inverse`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-section")]
 pub struct DeleteSection {
     pub id: String,

@@ -2,11 +2,13 @@
 use super::super::{FlowFixture, FlowDiff, FlowDelta, FlowCollectionDelta, FlowMutation, Widget};
 use crate::os_spr::{MutationKind, MutationOutcome, SemanticDescriptor, Identified};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_dsl::DslRecord, crate::os_dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, crate::os_ToValue, FromValue, dsl::DslRecord, crate::os_dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "add-widget")]
 pub struct AddWidget { pub index: u32, #[dsl(block)] pub widget: Widget }
 

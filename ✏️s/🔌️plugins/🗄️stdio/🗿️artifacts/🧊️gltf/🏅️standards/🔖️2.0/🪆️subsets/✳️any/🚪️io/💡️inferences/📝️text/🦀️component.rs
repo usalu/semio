@@ -1,7 +1,5 @@
 //! 📖️ Canonical text I/O for one glTF inference leaf.
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::{cmp::Ordering, fmt};
 
 use crate::artifacts::gltf::schema::inferences::GLTF_INFERENCE_FIELDS;
@@ -14,8 +12,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 📨️Envelope
 pub const GLTF_INFERENCE_LEAF_ENVELOPE_VERSION: u32 = 1;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfInferenceLeafEnvelope {
     pub id: String,
     pub algorithm_version: u32,

@@ -4,15 +4,13 @@ mod tests {
     use crate::artifacts::gltf::schema::mutations::delete_scene::{diff, inverse, mutation};
     use crate::artifacts::gltf::schema::snapshot::GltfScene;
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
-    use serde_json::Value;
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Contract {
         vectors: Vec<Vector>,
     }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Vector {
         base: SceneState,
         payload: mutation::GltfDeleteScenePayload,
@@ -22,14 +20,14 @@ mod tests {
         inverse: Value,
         rejections: Vec<Rejection>,
     }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct SceneState {
         scene: usize,
         scenes: Vec<GltfScene>,
     }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Rejection {
         payload: Option<mutation::GltfDeleteScenePayload>,
         base: Option<SceneState>,

@@ -4,7 +4,7 @@
 
 use crate::artifacts::fem3d::FemCamera;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 // #region 🔖️Config
 /// 🧮️ B1: fem3d's real `ArtifactApp::Config` — absorbs both former `Fem3dPlayApp` `RefCell` fields
@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 /// `ArtifactStore` exactly like document content, with a real `backwards` per `Fem3dConfigMutation`
 /// instead of never being VCS'd at all. Mirrors `Fem2dConfig`'s identical B1 recipe, minus a `locale`
 /// field (fem3d never carried a `ViewModel::locale` the way fem2d did).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "fem3dcfg")]
 #[dsl(layout = "lines")]
 pub struct Fem3dConfig {
@@ -94,7 +94,8 @@ store::impl_whole_record_config!(Fem3dConfig);
 /// WHOLE `Fem3dConfig` (not a granular patch type): `diff()` returns "the full config after this op", and
 /// `MutationDiff<Fem3dConfig>::apply` for `Fem3dConfig` itself (`store::impl_whole_record_config!`) just
 /// returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(tag = "kind")]
 pub enum Fem3dConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

@@ -11,7 +11,6 @@
 use crate::artifacts::gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfJson, GltfMesh, GltfPrimitive, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues};
 use crate::artifacts::gltf::schema::snapshot::{GltfDocument, GltfSourceForm};
 use crate::artifacts::gltf::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Base64
 /// 🔤️ Standard base64 alphabet (RFC 4648 §4) — glTF `data:` URIs never use the URL-safe variant.
@@ -222,6 +221,37 @@ impl<'de> Deserialize<'de> for GltfAccessorType {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let s = String::deserialize(deserializer)?;
         Self::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+/// 🧵 `ToValue`/`FromValue` mirrors of the two hand-rolled `serde` impls just above — additive,
+/// not a replacement: the real byte-exact `.gltf`/`.glb` codec in this file still speaks
+/// `serde_json` (out of this batch's scope, see
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+/// 🔍️research/📓️serde-fanout-stdio-trinity-space.md`), but the sibling `📸️snapshot` module's own
+/// `GltfSparseIndices`/`GltfAccessor` etc. need these two leaf types to implement `ToValue`/
+/// `FromValue` too, for the SAME numeric-code / spec-string wire shape (never the bare Rust
+/// variant name).
+impl dsl::ToValue for GltfComponentType {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::ToValue::to_value(&self.code())
+    }
+}
+impl dsl::FromValue for GltfComponentType {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let code = <u64 as dsl::FromValue>::from_value(value)?;
+        Self::from_code(code).map_err(dsl::ValueError::new)
+    }
+}
+impl dsl::ToValue for GltfAccessorType {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::ToValue::to_value(&self.as_str().to_string())
+    }
+}
+impl dsl::FromValue for GltfAccessorType {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let s = <String as dsl::FromValue>::from_value(value)?;
+        Self::from_str(&s).map_err(dsl::ValueError::new)
     }
 }
 //#endregion 🔖️AccessorModelSerde

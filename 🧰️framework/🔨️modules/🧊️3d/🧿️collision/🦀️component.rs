@@ -223,7 +223,7 @@ fn coplanar_triangle_intersect(t1: [Point3; 3], t2: [Point3; 3], normal: Vector3
             }
         }
     }
-    point_in_or_on_triangle_2d(p1[0], p2) || point_in_or_on_triangle_2d(p2[0], p1)
+    p1.iter().any(|&p| point_in_or_on_triangle_2d(p, p2)) || p2.iter().any(|&p| point_in_or_on_triangle_2d(p, p1))
 }
 
 /// 🔺️🔺️ Möller (1997) fast triangle-triangle intersection test, extended with an explicit
@@ -246,7 +246,10 @@ fn triangle_triangle_intersect(t1: [Point3; 3], t2: [Point3; 3]) -> bool {
     }
 
     let dir = n1.cross(n2);
-    if dir.dot(dir) < TRI_EPS * TRI_EPS {
+    // 🛡️ Scale-invariant parallel check: `n1`/`n2` carry each triangle's raw area (unnormalized),
+    // so comparing `|dir|` against a bare `TRI_EPS` would misclassify small triangles as
+    // coplanar; comparing against `|n1|²·|n2|²` compares `sin(angle-between-planes)` instead.
+    if dir.dot(dir) < TRI_EPS * TRI_EPS * n1.dot(n1).max(1e-12) * n2.dot(n2).max(1e-12) {
         return coplanar_triangle_intersect(t1, t2, n1);
     }
 

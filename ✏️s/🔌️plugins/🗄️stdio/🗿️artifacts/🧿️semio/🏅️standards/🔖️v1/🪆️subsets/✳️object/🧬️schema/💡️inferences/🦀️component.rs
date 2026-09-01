@@ -14,15 +14,14 @@
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::composition::{compute_semio_object_composition, SemioObjectComposition};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio object snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `composition`, backed by the `🧩composition/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.object.inference")]
 pub struct SemioObjectInference {
     #[derived]

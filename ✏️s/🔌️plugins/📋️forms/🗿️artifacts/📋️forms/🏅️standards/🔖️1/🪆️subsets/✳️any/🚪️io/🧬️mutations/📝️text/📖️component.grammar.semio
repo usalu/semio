@@ -13,8 +13,7 @@ start mutation
 # (`add-layer`/`set-stroke`/`move-layer`/`set-fill`) this file previously carried — the real
 # `FormMutation` enum's wire verbs are completely disjoint (forms is a step/block wizard, not a
 # layered canvas).
-mutation = create-step / delete-step / reorder-step / rename-step / change-step-description
-     / create-block / delete-block / move-block-to-step / replace-block / change-form-title
+mutation = create-step | delete-step | reorder-step | rename-step | change-step-description | create-block | delete-block | move-block-to-step | replace-block | change-form-title
 
 create-step = "create-step" SP "step=" step SP "index=" opt-usize
 delete-step = "delete-step" SP "id=" text
@@ -34,7 +33,7 @@ change-form-title = "change-form-title" SP "new-title=" opt-text
 step = quoted-text
 block = quoted-text
 text = quoted-text
-opt-text = "-" / quoted-text
+opt-text = "-" | quoted-text
 usize = OCTET+
-opt-usize = "-" / usize
+opt-usize = "-" | usize
 quoted-text = DQUOTE OCTET* DQUOTE

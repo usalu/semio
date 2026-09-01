@@ -58,6 +58,12 @@ pub struct FlowExtensionSetting {
     pub description: String,
 }
 
+/// 🔢️ Builds the `serde_json::Value` for a [`FlowExtensionSetting::default`] of a whole number —
+/// factored out so extension crates never need `serde_json` themselves just to set this field.
+pub fn integer_setting_default(value: i64) -> serde_json::Value {
+    serde_json::json!(value)
+}
+
 /// 📦️ Builds a `flow.extension` JSON manifest from registry catalogue metadata.
 #[allow(clippy::too_many_arguments, reason = "manifest needs id+name+version+registry+activation_events+widgets+commands+settings together; a params struct would ripple into every flow/module/*/rs call site outside this ticket's scope")]
 pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowExtensionWidget>, commands: Vec<FlowExtensionCommand>, settings: Vec<FlowExtensionSetting>) -> String {
@@ -111,7 +117,40 @@ pub fn evaluate_function_json(registry: &Registry, tree_json: &str, in_dict_json
         Err(err) => serde_json::json!({ "error": err.to_string() }).to_string(),
     }
 }
+/// 🔀️ Parses a WIT `extension::invoke` "evaluate" capability request (`{"operatorId","inputJson"}`)
+/// and runs it against `registry` — factored out of every flow extension's own guest bundle so
+/// those crates never need `serde_json`/`serde::Deserialize` themselves
+/// (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
+pub fn evaluate_invoke_json(registry: &Registry, request: &[u8]) -> Result<Vec<u8>, String> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct EvaluateRequest {
+        operator_id: String,
+        input_json: String,
+    }
+    let request: EvaluateRequest = serde_json::from_slice(request).map_err(|err| err.to_string())?;
+    Ok(evaluate_json(registry, &request.operator_id, &request.input_json).into_bytes())
+}
 // #endregion 🔖️Evaluate
+
+// #region 🔖️TopicContribution
+/// 🗺️ Builds the `"flow.extension"` topic contribution one host app (`flow-play`,
+/// `procedural3d-play`) consumes — factored out of every flow extension's own guest bundle so those
+/// crates never need `serde_json` themselves. See
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
+pub fn flow_extension_topic_contribution(app_id: &str, extension_id: &str, label: &str, icon_id: &str, manifest_json: &str) -> semio_framework::TopicContribution {
+    semio_framework::TopicContribution::new(
+        "flow.extension",
+        semio_framework_os_kernel::DslValue::object([
+            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(app_id.to_string())),
+            ("extensionId".to_string(), semio_framework_os_kernel::DslValue::String(extension_id.to_string())),
+            ("label".to_string(), semio_framework_os_kernel::DslValue::String(label.to_string())),
+            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(icon_id.to_string())),
+            ("manifestJson".to_string(), semio_framework_os_kernel::DslValue::String(manifest_json.to_string())),
+        ]),
+    )
+}
+// #endregion 🔖️TopicContribution
 
 // #region 🔖️Command
 /// ⌘️ Stub command handler returning acknowledgement JSON.

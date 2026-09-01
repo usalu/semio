@@ -46,7 +46,11 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only `wasm_bridge` session wrappers (Terrain/NodeGraph/TiledMap/Paint — each wraps a
+# pure `*Core` type that stays target-neutral). Excluded from `wasm32-wasip2` because
+# `target_arch = "wasm32"` is TRUE for the WASI component target too — the wasip2 guest never
+# attaches an `HtmlCanvasElement`, so it needs none of this bridge.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }

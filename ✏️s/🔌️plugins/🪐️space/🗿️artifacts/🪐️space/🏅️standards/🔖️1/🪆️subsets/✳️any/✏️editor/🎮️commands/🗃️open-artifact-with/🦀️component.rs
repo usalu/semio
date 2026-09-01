@@ -7,10 +7,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "open-artifact-with")]
 pub struct OpenArtifactWith {
     pub id: String,
@@ -24,7 +22,7 @@ pub async fn handle(payload: &OpenArtifactWith, doc: &ArtifactView<'_, SSpaceSna
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
     Ok(Emit::effect(Effect::ReplayShellCommand {
         action_id: "os.open-artifact-with".into(),
-        args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "documentId": row.id, "spaceId": doc.snapshot.space_id, "role": payload.role, "pluginId": payload.plugin_id, "appId": payload.app_id }))),
+        args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id, "spaceId": doc.snapshot.space_id, "role": payload.role, "pluginId": payload.plugin_id, "appId": payload.app_id }))),
     }))
 }
 
@@ -48,7 +46,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.open-artifact-with");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
+                let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("role").and_then(|v| v.as_str()), Some("viewer"));
                 assert_eq!(args.get("pluginId").and_then(|v| v.as_str()), Some("draw"));
                 assert_eq!(args.get("appId").and_then(|v| v.as_str()), Some("draw-play"));

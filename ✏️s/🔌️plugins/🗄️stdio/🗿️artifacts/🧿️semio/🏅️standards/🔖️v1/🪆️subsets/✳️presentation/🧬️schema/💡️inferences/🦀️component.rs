@@ -9,15 +9,14 @@
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::outline::{compute_semio_presentation_outline, SemioPresentationOutline};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio presentation snapshot. One field per named inference
 /// under `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation.inference")]
 pub struct SemioPresentationInference {
     #[derived]

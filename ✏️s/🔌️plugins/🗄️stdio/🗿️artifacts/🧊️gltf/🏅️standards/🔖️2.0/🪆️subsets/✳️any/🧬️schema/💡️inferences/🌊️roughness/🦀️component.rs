@@ -14,10 +14,9 @@ pub mod surface_waviness;
 use super::super::modules::measurement_contracts::*;
 use super::super::modules::vector_operations::{cross, dot, norm, normalize, sub};
 use super::geometry_core::{roughness_samples, statistics, GltfGeometryContext};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfRoughnessIndicators {
     pub deviation_from_ideal: GltfMeasure<GltfStatistics>,
     pub deviation_from_smoothed_geometry: GltfMeasure<GltfStatistics>,

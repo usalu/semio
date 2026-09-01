@@ -62,6 +62,13 @@ semio_framework_ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 wit-bindgen = { version = "0.57.1", features = ["macros"] }
+# 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): `ArtifactApp::Snapshot`/
+# `Config`/`Draft`/`Presence`/`Transient` now bound on `ToValue`/`FromValue` instead of
+# `Serialize`/`DeserializeOwned` (`🦀️component.rs`'s trait definitions). Promoted from
+# `[dev-dependencies]` because the crate's own production defaults (`NoConfig`/`NoPresence`/
+# `NoTransient`, `crate::local_interaction`'s `InteractionConfigMutation`) derive `ToValue`/
+# `FromValue` directly now, not only the test fixtures.
+semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

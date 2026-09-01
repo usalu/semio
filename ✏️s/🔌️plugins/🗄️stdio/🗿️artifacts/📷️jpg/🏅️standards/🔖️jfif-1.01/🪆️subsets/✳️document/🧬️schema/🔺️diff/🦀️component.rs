@@ -13,19 +13,18 @@ use crate::artifacts::jpg::JpgSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️ComponentsDiff
 /// 🧩️ Sparse per-field patch for one `JpgFrameComponent`. `id` is the identity, never diffed.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgComponentDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub h_sampling: Option<u8>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub v_sampling: Option<u8>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub quant_table_id: Option<u8>,
 }
 
@@ -56,28 +55,28 @@ impl JpgComponentDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgComponentModified {
     pub id: u8,
     pub diff: JpgComponentDiff,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgComponentAdded {
     pub index: usize,
     pub item: JpgFrameComponent,
 }
 
 /// 🔺️ Id-keyed `frame.components` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgComponentsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u8>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JpgComponentModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JpgComponentAdded>,
 }
 impl JpgComponentsDiff {
@@ -91,23 +90,23 @@ impl JpgComponentsDiff {
 //#region 🔖️FrameDiff
 /// 🖼️ Sparse per-field patch for one `JpgFrameHeader`, used when BOTH base and next have
 /// `Some(frame)` (see `JpgFrameChange::Modify`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgFrameFieldsDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub precision: Option<u8>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u16>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub components: Option<JpgComponentsDiff>,
 }
 /// 🌲️ `frame`'s change shape: `Modify` when both base/next have a frame (field-level patch,
 /// including the id-keyed `components` triple); `Replace` on a decode-status "kind change"
 /// (`None`<->`Some`) — mirrors xml's `XmlNodeDiff::Replace` fallback for exactly this situation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "change", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "change", rename_all = "camelCase")]
 pub enum JpgFrameChange {
     Modify(JpgFrameFieldsDiff),
     Replace { frame: Option<JpgFrameHeader> },
@@ -115,31 +114,13 @@ pub enum JpgFrameChange {
 //#endregion 🔖️FrameDiff
 
 //#region 🔖️QuantTablesDiff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgQuantTableDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub precision: Option<u8>,
-    #[serde(default, skip_serializing_if = "Option::is_none", with = "opt_quant_values")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub values: Option<[u16; 64]>,
-}
-
-/// 🧮️ `Option<[u16; 64]>` counterpart of `snapshot::quant_values` (see its doc — serde's manual
-/// array impls stop at 32 elements).
-mod opt_quant_values {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn serialize<S: Serializer>(v: &Option<[u16; 64]>, s: S) -> Result<S::Ok, S::Error> {
-        v.map(|a| a.to_vec()).serialize(s)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Option<[u16; 64]>, D::Error> {
-        let v: Option<Vec<u16>> = Option::deserialize(d)?;
-        match v {
-            None => Ok(None),
-            Some(vec) => <[u16; 64]>::try_from(vec).map(Some).map_err(|v: Vec<u16>| serde::de::Error::custom(format!("expected 64 values, got {}", v.len()))),
-        }
-    }
 }
 impl JpgQuantTableDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -165,28 +146,28 @@ impl JpgQuantTableDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgQuantTableModified {
     pub id: u8,
     pub diff: JpgQuantTableDiff,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgQuantTableAdded {
     pub index: usize,
     pub item: JpgQuantTable,
 }
 
 /// 🔺️ Id-keyed `quant_tables` (DQT) triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgQuantTablesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u8>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JpgQuantTableModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JpgQuantTableAdded>,
 }
 impl JpgQuantTablesDiff {
@@ -199,19 +180,19 @@ impl JpgQuantTablesDiff {
 
 //#region 🔖️HuffmanTablesDiff
 /// 🔑️ Compound identity for `huffman_tables` — DC id=0 and AC id=0 are different tables.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTableKey {
     pub class: JpgHuffmanClass,
     pub id: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTableDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub bits: Option<[u8; 16]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub values: Option<Vec<u8>>,
 }
 impl JpgHuffmanTableDiff {
@@ -238,28 +219,28 @@ impl JpgHuffmanTableDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTableModified {
     pub key: JpgHuffmanTableKey,
     pub diff: JpgHuffmanTableDiff,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTableAdded {
     pub index: usize,
     pub item: JpgHuffmanTable,
 }
 
 /// 🔺️ `(class, id)`-keyed `huffman_tables` (DHT) triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTablesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<JpgHuffmanTableKey>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JpgHuffmanTableModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JpgHuffmanTableAdded>,
 }
 impl JpgHuffmanTablesDiff {
@@ -275,12 +256,12 @@ pub(crate) fn huffman_key(t: &JpgHuffmanTable) -> JpgHuffmanTableKey {
 //#endregion 🔖️HuffmanTablesDiff
 
 //#region 🔖️OtherSegmentsDiff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgSegmentDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub marker: Option<u8>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<u8>>,
 }
 impl JpgSegmentDiff {
@@ -307,14 +288,14 @@ impl JpgSegmentDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgSegmentModified {
     pub index: usize,
     pub diff: JpgSegmentDiff,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgSegmentAdded {
     pub index: usize,
     pub item: JpgSegment,
@@ -322,14 +303,14 @@ pub struct JpgSegmentAdded {
 
 /// 🔺️ Index-keyed `other_segments` triple (position-transported absorb — duplicate markers are
 /// legal, so identity is position, not the marker byte).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgOtherSegmentsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JpgSegmentModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JpgSegmentAdded>,
 }
 //#endregion 🔖️OtherSegmentsDiff
@@ -877,57 +858,57 @@ fn absorb_frame(base: &mut Option<JpgFrameChange>, other: Option<JpgFrameChange>
 ///   --> .../🔺️diff/🦀️component.rs:753:34   (pub restart_interval: Option<Option<u16>>)
 /// ```
 /// `DiffCodec` is hand-rolled below (`#region 🔖️HandcraftedDiffCodec`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg.diff")]
 pub struct JpgDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub width: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<u32>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pixels: Option<Vec<u8>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub re_encode_quality: Option<Option<u8>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_version: Option<(u8, u8)>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_density_units: Option<JfifDensityUnits>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_x_density: Option<u16>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_y_density: Option<u16>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub jfif_thumbnail: Option<Option<JfifThumbnail>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub frame: Option<JpgFrameChange>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub sof_marker: Option<u8>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub arithmetic: Option<bool>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub quant_tables: Option<JpgQuantTablesDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub huffman_tables: Option<JpgHuffmanTablesDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub restart_interval: Option<Option<u16>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub other_segments: Option<JpgOtherSegmentsDiff>,
 }
 

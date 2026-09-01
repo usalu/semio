@@ -4,7 +4,7 @@ use crate::artifacts::process3d::schema::{default_document, plate_document};
 use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️SetDocument
 pub mod set_snapshot {
@@ -20,7 +20,7 @@ pub mod set_snapshot {
     /// — see the snapshot facet's own doc comment), so this payload carries the snapshot as JSON
     /// text now, parsed at the handler — matches the migration recipe's `SetSnapshot`/
     /// `SetSnapshotJson` collapse.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "document")]
     pub struct SetDocument {
         pub json: String,
@@ -32,7 +32,7 @@ pub mod set_snapshot {
         _cfg: &ConfigView<'_, Process3dConfig>,
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
-        let snapshot: Process3dSnapshot = serde_json::from_str(&payload.json).map_err(|e| Fault::from(e.to_string()))?;
+        let snapshot: Process3dSnapshot = semio_framework_os_kernel::json::from_json_str(&payload.json).map_err(|e| Fault::from(e.to_string()))?;
         Ok(Emit { effects: vec![crate::editor::process3d::reset_process3d_document_effect(&snapshot)], ..Default::default() })
     }
 }
@@ -45,7 +45,7 @@ pub mod set_active_example {
     /// 📄️ Loading a bundled example replaces the whole document, so it routes through
     /// `editor::process3d::reset_process3d_document_effect` (a `Effect::LoadDocument`) rather than
     /// the banned whole-snapshot mutation — see `set_snapshot::SetDocument`'s doc comment.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "active-example")]
     pub struct SetActiveExample {
         pub example_id: String,

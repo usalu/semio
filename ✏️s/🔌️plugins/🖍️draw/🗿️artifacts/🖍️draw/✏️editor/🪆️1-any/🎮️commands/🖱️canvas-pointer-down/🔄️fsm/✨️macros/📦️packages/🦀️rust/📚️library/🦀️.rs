@@ -28,10 +28,3 @@ pub fn derive_statechart_schema(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     component::expand_statechart_schema(&derive_input).unwrap_or_else(|e| e.to_compile_error()).into()
 }
-
-/// 🗃️ Emits a `#[wasm_bindgen]`-exported class wrapping one machine instance.
-// 🚫️async: E3 proc-macro entry point — signature is fixed by rustc as fn(TokenStream) -> TokenStream
-#[proc_macro]
-pub fn export_wasm_machine(input: TokenStream) -> TokenStream {
-    component::expand_export_wasm_machine(input.into()).unwrap_or_else(|e| e.to_compile_error()).into()
-}

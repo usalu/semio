@@ -10,15 +10,14 @@
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::profile::{compute_semio_text_profile, SemioTextProfile};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio text snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `profile`, backed by the `📊profile/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.text.inference")]
 pub struct SemioTextInference {
     #[derived]

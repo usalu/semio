@@ -15,7 +15,6 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOMODEL_DOCUMENT_SCHEMA: &str = "stdio.semio.model";
@@ -24,8 +23,8 @@ pub const STDIO_SEMIOMODEL_DOCUMENT_SCHEMA: &str = "stdio.semio.model";
 //#region 🔖️Spatial
 /// 🏢️ ifc/4 spatial-structure levels this subset targets (`IfcSite`/`IfcBuilding`/
 /// `IfcBuildingStorey`/`IfcSpace`) — the master plan's exact "(site/building/storey/space)" list.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum SpatialKind {
     #[default]
     Site,
@@ -38,19 +37,19 @@ pub enum SpatialKind {
 /// `parent_id` pointer (not a recursive struct) — matches how ifc's own spatial containment is a
 /// graph of `IfcRelAggregates` edges over flat entities, not a nested Rust type.
 /// 🧪️ `Default` is a technical workaround, never a meaningful "empty node" -- a known
-/// `serde_derive` limitation (`#[serde(default)]` on the shared `🧰️triples::NamedTripleDiff`'s
+/// `serde_derive` limitation (`#[value(default)]` on the shared `🧰️triples::NamedTripleDiff`'s
 /// `added: Vec<T>` field spuriously infers `T: Default`, same root cause bcf's own diff module
 /// documents) means every strong-entity type reachable through a `NamedTripleDiff<K,D,T>` needs
 /// `Default` purely to satisfy that derive, not because any real code constructs a default one.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SpatialNode {
     pub id: String,
     pub kind: SpatialKind,
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub parent_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub placement: SemioTransform,
 }
 //#endregion 🔖️Spatial
@@ -61,8 +60,8 @@ pub struct SpatialNode {
 /// (never a lying black-hole variant).
 /// 🧪️ `Default` (first variant, `Wall`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum ElementClass {
     #[default]
     Wall,
@@ -82,8 +81,8 @@ pub enum ElementClass {
 /// 📐️ Owned by `model`: geometry reference resolved BY ID into a sibling subset's own snapshot
 /// (`brep`/`mesh`) — never inline duplication (w1b-type-ownership.md cross-reuse summary). Named
 /// variants throughout, never a bare tuple (f6-final-summary.md §4.3).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRef {
     #[default]
     None,
@@ -97,47 +96,47 @@ pub enum GeometryRef {
 
 /// 🏷️ IFC property-set value — weak value type, whole-value replaced in diffs, never sub-diffed
 /// (schema-design.md's strong/weak entity split).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PsetValue {
     Text { value: String },
     Number { value: f64 },
     Boolean { value: bool },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Property {
     pub key: String,
     pub value: PsetValue,
 }
 
 /// 📦️ IFC "Pset_*"-shaped named property bag.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PropertySet {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub properties: Vec<Property>,
 }
 
 /// 🏛️ Owned by `model`: one spatial/physical element — the master plan's
 /// "elements{class enum, placement, GeometryRef{Brep|Mesh|None}, psets}". `Default` is the same
 /// `serde_derive` technical workaround as `SpatialNode`'s (see that struct's doc comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioModelElement {
     pub id: String,
     pub class: ElementClass,
-    #[serde(default)]
+    #[value(default)]
     pub placement: SemioTransform,
-    #[serde(default)]
+    #[value(default)]
     pub geometry: GeometryRef,
     /// 🗺️ Which `SpatialNode` (by id) contains this element — `None` = not yet placed in the
     /// spatial tree. Checked for dangling references by `SemioModelValidator`.
-    #[serde(default)]
+    #[value(default)]
     pub spatial_id: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub psets: Vec<PropertySet>,
 }
 //#endregion 🔖️Element
@@ -147,8 +146,8 @@ pub struct SemioModelElement {
 /// `Other{label}` catch-all, same rationale as `ElementClass::Other`.
 /// 🧪️ `Default` (first variant, `Aggregates`) is the same `serde_derive` technical workaround as
 /// `SpatialKind`'s -- see `SpatialNode`'s doc comment.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum RelationKind {
     #[default]
     Aggregates,
@@ -166,8 +165,8 @@ pub enum RelationKind {
 /// shared `🧰️triples` engine; the master plan's 3-field description is the payload this key
 /// wraps, not a rejection of having one). `Default` is the same `serde_derive` technical
 /// workaround as `SpatialNode`'s.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ModelRelation {
     pub id: String,
     pub kind: RelationKind,
@@ -177,20 +176,20 @@ pub struct ModelRelation {
 //#endregion 🔖️Relation
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.model")]
 pub struct SemioModelSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub spatial: Vec<SpatialNode>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub elements: Vec<SemioModelElement>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub relations: Vec<ModelRelation>,
 }
 

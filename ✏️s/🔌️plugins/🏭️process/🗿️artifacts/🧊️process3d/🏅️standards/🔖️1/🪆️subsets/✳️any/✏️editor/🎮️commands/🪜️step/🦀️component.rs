@@ -10,13 +10,13 @@ use crate::artifacts::process3d::schema::{insert_step_mutations, next_step_id, r
 use crate::artifacts::process3d::{op::Process3dMutation, MeasureKind, Process3dSnapshot, ProcessStep, StepOrigin};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️AddStep
 pub mod add_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-step")]
     pub struct AddStep {
         pub measure: Option<String>,
@@ -63,7 +63,7 @@ pub mod add_step {
 pub mod remove_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-step")]
     pub struct RemoveStep {
         pub id: String,
@@ -88,7 +88,7 @@ pub mod remove_step {
 pub mod remove_selected_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "remove-selected-step")]
     pub struct RemoveSelectedStep {}
 
@@ -118,18 +118,15 @@ pub mod remove_selected_step {
 pub mod move_step {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "move-step")]
     pub struct MoveStep {
         pub id: String,
         pub index: usize,
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
-    /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer check whether
-    /// `payload.id` exists before emitting; `ReorderSteps` is itself a documented no-op regardless
-    /// (see its `🔺️diff/🦀️component.rs`), so the existence check is dropped honestly rather than
-    /// faked.
+    /// 🔀 Existence is validated at diff time (`ReorderSteps`'s own `target-missing` error against
+    /// `step_payloads`), so this handler stays a thin, unconditional dispatch.
     pub fn handle(
         payload: &MoveStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
@@ -150,19 +147,17 @@ pub mod update_step {
     /// `dsl` derives (now an ephemeral working-scene type containing `WorkingSolid`, itself never
     /// `dsl::DslField` — see the artifact root file's `🔖️WorkingScene` doc comment), so this
     /// carries the step as JSON text now, parsed at the handler.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "update-step")]
     pub struct UpdateStep {
         pub step_json: String,
     }
 
-    /// 🔧️ Programmatic full-step edit — each field carries its own semantic mutation now
-    /// (`RenameStep`/`ChangeStepEnabled`/`ChangeStepOrigin`/`ReplaceStepMeasure`), so this diffs
-    /// `payload.step` against the current entity and emits one targeted mutation per changed field.
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` is a composed CHILD
-    /// HANDLE now (see `ProcessWorkingScene`'s doc comment) — this can no longer read the existing
-    /// step to diff against, so it always emits all four targeted mutations unconditionally
-    /// (each is itself a documented no-op regardless — see their `🔺️diff/🦀️component.rs` files).
+    /// 🔧️ Programmatic full-step edit — each field carries its own semantic mutation
+    /// (`RenameStep`/`ChangeStepEnabled`/`ChangeStepOrigin`/`ReplaceStepMeasure`). This always emits
+    /// all four unconditionally rather than diffing `payload.step` against the current entity first;
+    /// each mutation's own `mutation.no-op` guard against `step_payloads` makes an unchanged field a
+    /// harmless warning rather than a spurious write.
     pub fn handle(
         payload: &UpdateStep,
         doc: &ArtifactView<'_, Process3dSnapshot>,
@@ -170,7 +165,7 @@ pub mod update_step {
         _ctx: &mut crate::editor::process3d::Process3dDispatchCtx,
     ) -> Result<Emit<Process3dMutation, Process3dConfigMutation>, Fault> {
         let _ = doc;
-        let step: ProcessStep = serde_json::from_str(&payload.step_json).map_err(|e| Fault::from(e.to_string()))?;
+        let step: ProcessStep = semio_framework_os_kernel::json::from_json_str(&payload.step_json).map_err(|e| Fault::from(e.to_string()))?;
         let operations = vec![
             Process3dMutation::RenameStep(RenameStep { id: step.id.clone(), new_label: step.label.clone() }),
             Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: step.id.clone(), new_enabled: step.enabled }),
@@ -186,15 +181,14 @@ pub mod update_step {
 pub mod set_step_enabled {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "set-step-enabled")]
     pub struct SetStepEnabled {
         pub id: String,
         pub enabled: bool,
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: see `MoveStep::handle`'s doc
-    /// comment — same composed-`steps`-handle gap, same documented-no-op mutation regardless.
+    /// 🔘 See `MoveStep::handle`'s doc comment — existence is validated at diff time.
     pub fn handle(
         payload: &SetStepEnabled,
         doc: &ArtifactView<'_, Process3dSnapshot>,

@@ -7,13 +7,12 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️PathSegment
 /// ✏️ A single SVG-style path command — the honest, complete production set for `Path.segments`
 /// (no `*OCTET`/size-eos catch-all: every field a real drawn quantity).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PathSegment {
     MoveTo {
         to: SemioPoint2,
@@ -48,23 +47,23 @@ pub enum PathSegment {
 /// `SvgNodeDiff` recursive-diff template per the master plan. `style` fields are a referential
 /// `Option<String>` into `SemioDrawingSnapshot.styles` by name (checked by `SemioDrawingValidator`
 /// — dangling references are a real referential-invariant breach, not silently tolerated).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DrawNode {
     Path {
         segments: Vec<PathSegment>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         style: Option<String>,
     },
     Text {
         value: String,
         at: SemioPoint2,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         style: Option<String>,
     },
     Group {
         transform: SemioTransform,
-        #[serde(default)]
+        #[value(default)]
         children: Vec<DrawNode>,
     },
     /// 🖼️ Raster payload embedded verbatim (typed raw retention — real bytes, not a lie).
@@ -83,19 +82,19 @@ impl Default for DrawNode {
 /// (`NamedTripleDiff<String, DrawStyleDiff, DrawStyle>` in the diff facet).
 /// 🩹 `Default` derived (not just decoration) — required transitively as the `T` of
 /// `triples::NamedTripleDiff<String, DrawStyleDiff, DrawStyle>`'s generated `Deserialize` impl
-/// (serde-derive's bound inference for `#[serde(default)]` fields on a generic container reaches
+/// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawStyle {
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub fill: Option<SemioRgba>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub stroke: Option<SemioRgba>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub stroke_width: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub opacity: Option<f32>,
 }
 //#endregion 🔖️Style
@@ -105,8 +104,8 @@ pub struct DrawStyle {
 /// the diff facet — mirrors gif-frame ordering precedent).
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawLayer {
     pub id: String,
     pub name: String,
@@ -117,12 +116,12 @@ pub struct DrawLayer {
 
 //#region 🔖️Canvas
 /// 🖼️ Document-level viewport/backdrop.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DrawCanvas {
     pub width: f64,
     pub height: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub background: Option<SemioRgba>,
 }
 
@@ -138,8 +137,8 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {
     #[state(artifact)]
@@ -147,10 +146,10 @@ pub struct SemioDrawingSnapshot {
     #[state(artifact)]
     pub canvas: DrawCanvas,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub styles: Vec<DrawStyle>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub layers: Vec<DrawLayer>,
 }
 
@@ -824,10 +823,10 @@ impl store::ArtifactPack for SemioDrawingSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.drawing` — the shape `mutate-semio-drawing` compares under `ordered-json-v1`,
 /// derived from the snapshot type itself rather than hand-written a second time in the adapter. The
-/// projection is deeply discriminated: `DrawNode` and `PathSegment` are both `#[serde(tag = "kind",
+/// projection is deeply discriminated: `DrawNode` and `PathSegment` are both `#[value(tag = "kind",
 /// rename_all = "camelCase")]` enums nested to arbitrary depth, so a hand-written adapter
 /// projection would have to reproduce every discriminator at every level. A thin `serde_json`
 /// wrapper (already a direct dependency of this crate, used behind this interface per CLAUDE.md's

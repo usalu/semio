@@ -1,12 +1,11 @@
 //! 🗂 `structure` — logical drawing statistics derived only from modeled layers and entities.
 
 use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Structure
 /// 🗂️ Dwg (ac1024) logical drawing statistics.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DwgStructure {
     pub layer_count: u32,
     pub entity_count: u32,

@@ -19,7 +19,6 @@ use protocol::command::DiffAlgebra;
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::DiffCodec;
 use protocol::MutationDiff;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see
@@ -223,10 +222,10 @@ fn indexed_inverse<T: Clone, D>(triple: &IndexedTripleDiff<D, T>, base_items: &[
 /// 🔺️ Sparse diff for one [`SemioAudioChannel`] — a strong entity per the recipe. One field
 /// today (`samples`); kept as its own type (rather than folding into the collection triple
 /// directly) so a future per-channel field slots in without reshaping `channels`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAudioChannelDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub samples: Option<Vec<f32>>,
 }
 
@@ -308,16 +307,16 @@ fn tags_inverse(d: &SemioAudioTagsDiff, base_items: &[SemioAudioTag]) -> SemioAu
 //#region 🔖️Diff
 /// 🔺️ Diff for `s.stdio.semio.audio`. No `snapshot: Option<SemioAudioSnapshot>` full-replace
 /// slot anywhere — every field is sparse.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAudioDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub sample_rate: Option<u32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<SemioAudioFormat>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub channels: Option<SemioAudioChannelsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub tags: Option<SemioAudioTagsDiff>,
 }
 

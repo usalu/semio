@@ -23,7 +23,6 @@ use crate::artifacts::xml::schema::snapshot::{xml_document_from_text, xml_docume
 use crate::artifacts::zip::opc::resolve_relationship_target;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
@@ -88,7 +87,7 @@ pub mod remove_alternate_content;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = PptxSnapshot, diff = PptxDiff, schema = "PptxStrictMutation")]
 pub enum PptxStrictMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

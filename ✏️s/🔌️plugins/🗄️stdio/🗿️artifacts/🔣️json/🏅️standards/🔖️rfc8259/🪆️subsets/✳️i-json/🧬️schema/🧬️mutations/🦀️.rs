@@ -33,15 +33,14 @@ use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::mutatio
 };
 use crate::artifacts::json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Root
 /// 🌳️ RFC 7493 §2.1 made structural: the top-level value of an I-JSON text is an object or an array,
 /// and this type cannot spell anything else. `SetTopLevel` carries it instead of a bare `JsonValue`,
 /// which is the one representational difference between this vocabulary and the ✳️any sibling's that
 /// costs nothing at run time.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonIJsonRoot {
     Object { members: Vec<JsonMember> },
     Array { items: Vec<JsonValue> },
@@ -95,9 +94,9 @@ pub mod remove_array_element;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "JsonIJsonMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum JsonIJsonMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// 🌳️ §2.1 — replaces the whole document root with an object or an array.

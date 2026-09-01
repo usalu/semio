@@ -11,13 +11,19 @@ start op
 # `ObjMutation::InsertVertex{index:1, vertex:ObjVertex{x:9.0,y:9.0,z:9.0,w:Some(1.0)}}.print_op()`
 # is exactly `"insert-vertex index=1 vertex { x=9 y=9 z=9 w=1 }"`. Keyword = kebab-case of the
 # Rust variant name (`to_kebab`, `🗣️dsl/✨️derive/🦀️component.rs`'s own documented convention:
-# `InsertTexcoord` -> `insert-tex-coord`); field keys are likewise kebab-case of the Rust field
+# `InsertVertex` -> `insert-vertex`) EXCEPT where a leaf carries an explicit
+# `#[dsl(keyword = "...")]`, which wins: the three tex-coord leaves are spelled `insert-texcoord` /
+# `remove-texcoord` / `set-texcoord` on the wire, not the `insert-tex-coord` that `to_kebab` would
+# derive from their `InsertTexCoord` variant idents. The oracle catalog, the `.feature` scenario ids
+# and `KINDS` all speak the override, so the productions below do too; the leaf DESCRIPTOR's own
+# `semanticKind` is the derived `insert-tex-coord`, and those two vocabularies are independent.
+# Field keys are likewise kebab-case of the Rust field
 # ident (`face_index_from` -> `face-index-from`), printed `key=value` in `keyed_field_rank` order
 # (declaration order — every field on every `ObjMutation` variant, and every nested record field,
 # is rank 0, so print order is exactly Rust struct-declaration order throughout).
 comment none
 
-op = set-snapshot | insert-vertex | remove-vertex | set-vertex | insert-tex-coord | remove-tex-coord | set-tex-coord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
+op = set-snapshot | insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
 
 # Rust's own whole-valued-float `Display` (`1.0` -> `"1"`) means every numeric field below
 # accepts INT as well as FLOAT — same reasoning as the sibling snapshot grammar's own `number`.
@@ -47,9 +53,9 @@ face-block = "face" "{" "vertices" "=" "[" face-vertex-item* "]" "}"
 insert-vertex = "insert-vertex" "index" "=" INT vertex-block
 remove-vertex = "remove-vertex" "index" "=" INT
 set-vertex = "set-vertex" "index" "=" INT vertex-block
-insert-tex-coord = "insert-tex-coord" "index" "=" INT texcoord-block
-remove-tex-coord = "remove-tex-coord" "index" "=" INT
-set-tex-coord = "set-tex-coord" "index" "=" INT texcoord-block
+insert-texcoord = "insert-texcoord" "index" "=" INT texcoord-block
+remove-texcoord = "remove-texcoord" "index" "=" INT
+set-texcoord = "set-texcoord" "index" "=" INT texcoord-block
 insert-normal = "insert-normal" "index" "=" INT normal-block
 remove-normal = "remove-normal" "index" "=" INT
 set-normal = "set-normal" "index" "=" INT normal-block

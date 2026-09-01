@@ -6,12 +6,12 @@ use crate::artifacts::process3d::diff::Process3dDiff;
 use crate::artifacts::process3d::mutations::replace_machine_capabilities::ReplaceMachineCapabilities;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Capability, Process3dSnapshot, Workshop};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️ReplaceMachineCapabilities
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ReplaceMachineCapabilities {
     pub id: String,
     pub new_capabilities: Vec<Capability>,

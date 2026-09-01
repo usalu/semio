@@ -94,14 +94,19 @@ semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️produc
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
-parry3d = "0.17"
+semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", default-features = false }
 serde.workspace = true
 serde_json.workspace = true
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# 🌉️ Browser-only bridge (`BoardSession`'s WebGPU/DOM canvas surface, wasm-pack built as
+# `@semio-tech/puzzle-wasm`). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"`
+# is TRUE for the WASI component target too — declaring these under the bare arch gate linked
+# `wasm-bindgen`/`js-sys`/`web-sys` into the shipped plugin component, which must stay free of
+# third-party runtime dependencies. Mirrors the `not(… target_env = "p2")` split above.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 wasm-bindgen.workspace = true
 js-sys = "0.3.83"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

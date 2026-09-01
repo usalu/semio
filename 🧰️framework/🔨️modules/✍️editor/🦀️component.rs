@@ -10,7 +10,7 @@ use serde::Deserialize;
 
 // #region ⚠️ Errors
 /// 🧯️ Errors from `EditorHost`'s own JSON-boundary parsing (theme/scene sync). The
-/// `#[cfg(target_arch = "wasm32")] #[wasm_bindgen]` methods on `EditorSession` stay
+/// `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))] #[wasm_bindgen]` methods on `EditorSession` stay
 /// `Result<_, JsValue>` — that shape is dictated by the `wasm_bindgen` ABI, not this crate's own
 /// error handling, so it is not migrated here.
 #[derive(Debug)]
@@ -1391,24 +1391,26 @@ fn next_char_boundary(text: &str, index: usize) -> usize {
 // #endregion 🔖️EditorState
 
 // #region 🔖️Wasm
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is browser-only
+// (attaches an `HtmlCanvasElement`), so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use semio_framework_async::browser::future_to_promise;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use std::cell::RefCell;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use std::rc::Rc;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use web_sys::HtmlCanvasElement;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 struct EditorSessionInner {
     host: EditorHost,
     gpu: gpu_session::CanvasGpuSession,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl EditorSessionInner {
     fn set_logical_size(&mut self, lw: u32, lh: u32, dpr: f64, pw: u32, ph: u32) {
         self.host.set_size(lw, lh, dpr);
@@ -1421,13 +1423,13 @@ impl EditorSessionInner {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 pub struct EditorSession {
     state: Rc<RefCell<EditorSessionInner>>,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 impl EditorSession {
     #[wasm_bindgen(constructor)]

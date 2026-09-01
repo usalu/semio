@@ -5,10 +5,11 @@ use crate::results::{SizingResult, SizingTables};
 use crate::site::{DesignDay, DesignDayKind};
 use crate::units::CP_DRY_AIR;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️SizingConfig
 /// 📐️ Sizing configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SizingConfig {
     pub heating_design_day: DesignDay,
     pub cooling_design_day: DesignDay,
@@ -50,7 +51,7 @@ impl Default for SizingConfig {
 
 // #region 🔖️Sizing
 /// 🧭️ Cursor-owned sizing pass used by interactive simulation finalization.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) struct SizingBuilder {
     config: SizingConfig,
     stage: SizingStage,
@@ -67,14 +68,14 @@ pub(crate) struct SizingBuilder {
     fault: Option<SizingFault>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum SizingFault {
     ZoneResultBacking,
     EquipmentResultBacking,
     NameBacking,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub(crate) enum SizingStage {
     ReserveZoneResults,
     ReserveEquipmentResults,

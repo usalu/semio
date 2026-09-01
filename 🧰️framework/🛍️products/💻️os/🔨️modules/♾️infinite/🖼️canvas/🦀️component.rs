@@ -8,9 +8,9 @@ mod renderer {
         pub use vello;
         pub use vello::kurbo;
         pub use vello::peniko;
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         pub use vello::util;
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
         pub use vello::wgpu;
         pub use vello::Scene;
         pub use vello_svg;
@@ -1253,7 +1253,10 @@ pub mod canvas_content {
 // #endregion 🔖️CanvasContent
 
 // #region 🔖️GpuSession
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is the browser WebGPU canvas
+// session shared by every surface/editor session bridge, so it is narrowed to exclude the WASI
+// component target (which attaches no `HtmlCanvasElement`).
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub mod gpu_session {
     use super::renderer::vello_backend::{util, vello, wgpu};
     use super::{Color, Scene};

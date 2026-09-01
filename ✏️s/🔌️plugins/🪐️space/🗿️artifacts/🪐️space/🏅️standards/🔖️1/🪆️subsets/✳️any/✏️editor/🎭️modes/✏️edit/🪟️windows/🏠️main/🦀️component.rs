@@ -151,7 +151,7 @@ mod tests {
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
         let config = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }], ..Default::default() };
         let node = render(&document, &config);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = pack::to_json_string(&node);
         assert!(json.contains("user:1, user:2"), "presence must reach the table cell: {json}");
     }
 
@@ -165,14 +165,14 @@ mod tests {
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
         let UiNode::ComponentScene(node) = render_table(&document, &SpaceIndexConfig::default()) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-        assert_eq!(rows[0]["id"], serde_json::json!("artifact:artifact-1"), "row id must carry the frozen artifact:<id> grammar: {rows:?}");
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+        assert_eq!(rows[0]["id"], pack::json!("artifact:artifact-1"), "row id must carry the frozen artifact:<id> grammar: {rows:?}");
         let buttons = rows[0]["actions"]["buttons"].as_array().expect("actions cell has buttons");
         assert_eq!(buttons.len(), 2, "open + delete: {buttons:?}");
         let open_button = buttons.iter().find(|button| button["action"]["action"] == "openArtifact").expect("open button present");
-        assert_eq!(open_button["action"]["args"]["id"], serde_json::json!("artifact-1"));
+        assert_eq!(open_button["action"]["args"]["id"], pack::json!("artifact-1"));
         let delete_button = buttons.iter().find(|button| button["action"]["action"] == "requestDeleteArtifact").expect("delete button present");
-        assert_eq!(delete_button["action"]["args"]["id"], serde_json::json!("artifact-1"));
+        assert_eq!(delete_button["action"]["args"]["id"], pack::json!("artifact-1"));
     }
 
     /// 🆔️ Contract §C0 lane 4-F: `render(...)` must wrap the table in a real button carrying the

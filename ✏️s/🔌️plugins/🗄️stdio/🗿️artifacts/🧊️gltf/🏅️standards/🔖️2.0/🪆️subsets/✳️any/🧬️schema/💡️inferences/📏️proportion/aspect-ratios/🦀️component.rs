@@ -35,24 +35,23 @@ pub fn encode_result(indicators: &GltfEntityIndicators) -> Result<serde_json::Va
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::Deserialize;
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Context {
         points: Vec<[f64; 3]>,
         triangles: Vec<[usize; 3]>,
         valid: bool,
     }
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         context: Context,
         value: Option<GltfVec3>,
         availability: String,
     }
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

@@ -37,7 +37,10 @@ extern crate self as semio_framework_os_kernel;
 extern crate self as spr;
 extern crate self as store;
 extern crate self as vcs;
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this alias only feeds the browser
+// wasm-bindgen async-fn codegen in this crate's session/transport bridges, so it is narrowed to
+// exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 extern crate semio_framework_async as wasm_bindgen_futures;
 
 // 🏷️ Former standalone crate names — proc-macros (`dsl_derive`) and in-tree `use store::` /
@@ -134,6 +137,10 @@ pub mod os_pack {
     pub use pack::http;
     #[cfg(not(target_arch = "wasm32"))]
     pub use pack::io;
+    // 🌉️ `DslValue ↔ pack::json::Value` bridge + `to_json_string`/`from_json_str` — ticket
+    // `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution`
+    // seam and every plugin converting off `serde_json` route JSON text through this.
+    pub use pack::json;
     pub use pack::source;
 
     // 🎾️ The flat codec/ids/source surface arrives through `component`'s `pub use pack::*` above —
@@ -257,11 +264,22 @@ pub mod os_store {
     mod component;
     pub use component::*;
 
-    #[cfg(feature = "sync")]
+    // 🌉️ Also excluded from `wasm32-wasip2`, not just gated on the `sync` feature. This module's
+    // `use tokio::sync::{broadcast, mpsc}` is unconditional, and `tokio` is deliberately absent from
+    // wasip2 (see this crate's `Cargo.toml`: the dependency is
+    // `cfg(not(all(target_arch = "wasm32", target_env = "p2")))`). Cargo feature unification can still
+    // switch `sync` on inside a wasip2 plugin's graph — `🌉️mcp` and the wgpu renderer both request it
+    // — and the module would then fail to resolve `tokio`. Excluding it here matches what the feature's
+    // own docstring already states: WASI-P2 guest plugins never link the sync actor's transport.
+    #[cfg(all(feature = "sync", not(all(target_arch = "wasm32", target_env = "p2"))))]
     #[path = "../../🔨️modules/🏪️store/🔄️sync/🦀️component.rs"]
     pub mod sync;
 
-    #[cfg(all(feature = "worker", target_arch = "wasm32"))]
+    // 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; `👷️worker/🦀️component.rs` is an
+    // unconditional `wasm_bindgen` Web Worker `postMessage` bridge with no internal target split of
+    // its own, so the mount itself is narrowed to exclude the WASI component target (which has no
+    // "Web Worker" concept for an in-guest plugin).
+    #[cfg(all(feature = "worker", target_arch = "wasm32", not(target_env = "p2")))]
     #[path = "../../🔨️modules/🏪️store/👷️worker/🦀️component.rs"]
     pub mod worker;
 }
@@ -289,10 +307,19 @@ pub use crate::os_store::*;
 #[path = "../../🔨️modules/🧬️semio/🦀️component.rs"]
 pub mod os_semio;
 
+// 🧩️ `.sxt` extension package pack/unpack/verify is host-only: installing a runtime extension is
+// native-host tooling (only caller repo-wide: `semio-framework-os`'s host crate), never something a
+// guest component does to itself. `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, so this
+// mount is narrowed to exclude the WASI component target with the full
+// `not(all(target_arch = "wasm32", target_env = "p2"))` form — a bare arch gate would also exclude
+// the browser wasm32 target, which does not need to lose this capability. See
+// `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml`'s matching `zip` target-gate.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 #[path = "../../🔨️modules/🧩️extension/🦀️component.rs"]
 pub mod os_extension;
 
 pub use crate::os_engine::*;
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub use crate::os_extension as extension;
 pub use crate::os_semio::*;
 pub use crate::os_vcs::*;
@@ -301,6 +328,13 @@ pub use crate::os_vcs::*;
 pub use crate::os_dsl::grammar::*;
 pub use crate::os_dsl::notation::*;
 pub use crate::os_dsl::{diagnostic::*, lexer::*, span::*, token::*, trust::*};
+
+/// 🌱️ Crate-root re-export of `os_dsl::schema`'s `ToValue`/`FromValue`/`DslValue`/`ValueError` —
+/// `#[derive(ToValue, FromValue)]` (`semio-framework-value-derive`) generates fully-qualified
+/// `::semio_framework_os_kernel::ToValue`/`FromValue` paths, so every plugin depending on this
+/// crate under that literal name needs them reachable at the crate root, not only as
+/// `crate::schema::ToValue`.
+pub use crate::os_dsl::schema::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🧪️Tests
 /// 🚨️ Every `#[path]` in this file must point at a file that exists. A mount whose target moved

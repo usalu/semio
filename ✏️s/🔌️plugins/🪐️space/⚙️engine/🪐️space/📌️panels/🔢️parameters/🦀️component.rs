@@ -8,7 +8,6 @@ use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode,
     UiToggleNode, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
-use serde_json::json;
 
 //#region 🔖️Manifest
 pub async fn definition() -> PanelTabDefinition {

@@ -10,15 +10,14 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::shape::{compute_semio_table_shape, SemioTableShape};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a semio table snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `shape`, backed by the `📐shape/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table.inference")]
 pub struct SemioTableInference {
     #[derived]

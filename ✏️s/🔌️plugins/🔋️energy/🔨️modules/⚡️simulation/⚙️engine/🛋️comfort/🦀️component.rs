@@ -2,10 +2,11 @@
 
 use crate::props::saturation_pressure_pa;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ComfortInput
 /// 🧍️ Inputs for comfort evaluation per ISO 7730 / ASHRAE 55.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ComfortInput {
     pub air_temp_c: f64,
     pub mean_radiant_temp_c: f64,
@@ -19,7 +20,7 @@ pub struct ComfortInput {
 
 // #region 🔖️AdaptiveComfort
 /// 🌿️ Adaptive comfort standard.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum AdaptiveStandard {
     Ashrae55,
     Cen15251,

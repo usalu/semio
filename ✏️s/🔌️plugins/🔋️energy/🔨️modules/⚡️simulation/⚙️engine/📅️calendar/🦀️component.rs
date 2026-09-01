@@ -1,10 +1,11 @@
 //! 📅️ Simulation calendar: run periods, day-of-week, leap years, DST shifts.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Date
 /// 📅️ Calendar date for scheduling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SimDate {
     pub year: u16,
     pub month: u8,
@@ -56,7 +57,7 @@ impl SimDate {
 
 // #region 🔖️RunPeriod
 /// 📅️ Run period specification.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RunPeriod {
     pub start_month: u8,
     pub start_day: u8,
@@ -97,7 +98,7 @@ impl RunPeriod {
 }
 
 /// 📅️ Hour iterator for a run period.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct RunPeriodHours {
     current: SimDate,
     end: SimDate,
@@ -140,7 +141,7 @@ impl Iterator for RunPeriodHours {
 
 // #region 🔖️Dst
 /// 🕐️ Daylight saving time rule (simplified US-style).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DstRule {
     pub start_month: u8,
     pub start_week: u8,

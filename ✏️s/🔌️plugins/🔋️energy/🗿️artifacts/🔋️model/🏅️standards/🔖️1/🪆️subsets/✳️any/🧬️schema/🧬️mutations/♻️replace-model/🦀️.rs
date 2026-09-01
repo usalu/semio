@@ -4,12 +4,17 @@ use crate::artifacts::model::diff::EnergyModelDiff;
 use crate::artifacts::model::mutations::EnergyModelMutation;
 use crate::artifacts::model::EnergyModelSnapshot;
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_os_kernel::ToValue;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// ♻️ Replaces the composed model structure and zones from one typed model document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ReplaceModel {
     pub new_model_json: String,
 }
@@ -37,10 +42,10 @@ pub const KINDS: &[&str] = &["replace-model"];
 //#region 🌉️TestBridge
 /// 🔮️ Reports the forward and inverse behavior of one committed language-neutral vector.
 pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { serde_json::from_str(text).map_err(|error| error.to_string()) };
+    let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { pack::json::from_json_str::<EnergyModelSnapshot>(text).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: EnergyModelMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: EnergyModelMutation = pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base);
@@ -50,17 +55,24 @@ pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, a
         let outcome = <EnergyModelMutation as protocol::Mutation<EnergyModelSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
-    });
-    Ok(report.to_string())
+    // 🌉️ `MutationMessage` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`) is a
+    // framework-owned type that has not itself gained `ToValue`/`FromValue` — its two call sites
+    // here go through the PRE-EXISTING `protocol::to_dsl_value` serde bridge (framework-internal,
+    // exempt) and land in `pack::json::Value` via `pack::json::from_dsl_value`, same as
+    // `➗️mathematical`'s identical bridge function.
+    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let report = pack::json::object([
+        ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), pack::json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), pack::json::from_dsl_value(&forward.diff().to_value())),
+        ("messages".to_string(), messages_json),
+        ("inverseSteps".to_string(), pack::json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), pack::json::from_dsl_value(&undone.to_value())),
+        ("inverseMessages".to_string(), inverse_messages_json),
+    ]);
+    Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 
@@ -71,7 +83,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff, SemanticMutation};
 
     fn demo_model_json(name: &str) -> String {
-        serde_json::to_string(&crate::model::Model { name: name.into(), ..crate::model::Model::default() }).expect("Model serializes")
+        pack::json::to_json_string(&crate::model::Model { name: name.into(), ..crate::model::Model::default() })
     }
 
     fn mutation(name: &str) -> EnergyModelMutation {

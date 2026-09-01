@@ -8,6 +8,7 @@ use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_
 use protocol::{Mutation, MutationDiff};
 use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::EngineHandles;
 
 const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surface", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -43,7 +44,7 @@ impl store::ArtifactPack for SurfaceSnapshot {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub(crate) struct SurfaceDiff {
     count: Option<i32>,
 }

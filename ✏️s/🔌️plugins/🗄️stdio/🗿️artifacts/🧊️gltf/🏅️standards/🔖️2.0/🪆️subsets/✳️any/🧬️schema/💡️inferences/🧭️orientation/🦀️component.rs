@@ -10,10 +10,9 @@ pub mod orientation_consistency;
 use super::super::modules::measurement_contracts::*;
 use super::super::modules::mesh_topology::Topology;
 use super::geometry_core::{GltfGeometryContext, GltfPairGeometry};
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfOrientationIndicators {
     pub main_axis_direction: GltfMeasure<GltfVec3>,
     pub face_normal_distribution: GltfMeasure<GltfStatistics>,

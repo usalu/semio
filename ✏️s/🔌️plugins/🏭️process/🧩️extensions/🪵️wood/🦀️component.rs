@@ -180,13 +180,13 @@ fn bundle() -> ExtensionBundle {
     let bundle = semio_framework::io::resolve_ready(bundle.mode(semio_framework_plugin::ExecutionMode::Declarative));
     semio_framework::io::resolve_ready(bundle.contributes_topic(
         "process.machines",
-        serde_json::json!({
-            "appId": HOST_APP_ID,
-            "moduleId": catalog.catalog_id(),
-            "label": catalog.label(),
-            "iconId": catalog.icon_id(),
-            "machinesJson": serde_json::to_string(&catalog.machines()).unwrap_or_default(),
-        }),
+        semio_framework_os_kernel::DslValue::object([
+            ("appId".to_string(), semio_framework_os_kernel::DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), semio_framework_os_kernel::DslValue::String(catalog.catalog_id().to_string())),
+            ("label".to_string(), semio_framework_os_kernel::DslValue::String(catalog.label().to_string())),
+            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String(catalog.icon_id().to_string())),
+            ("machinesJson".to_string(), semio_framework_os_kernel::DslValue::String(semio_framework_os_kernel::json::to_json_string(&catalog.machines()))),
+        ]),
     ))
 }
 
@@ -243,8 +243,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn machines_round_trip_json() {
         let machines = WoodCatalog.machines();
-        let json = serde_json::to_string(&machines).expect("serialize");
-        let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
+        let json = semio_framework_os_kernel::json::to_json_string(&machines);
+        let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
         assert_eq!(parsed, machines);
     }
 
@@ -263,11 +263,11 @@ mod tests {
         assert_eq!(manifest.topic_contributions.len(), 1);
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "process.machines");
-        let payload = topic_contribution.payload.as_object().expect("object payload");
-        assert_eq!(payload["appId"], "process3d-play");
-        assert_eq!(payload["moduleId"], "wood");
-        assert_eq!(payload["label"], "Wood");
-        assert!(serde_json::from_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string")).is_ok());
+        let payload = &topic_contribution.payload;
+        assert_eq!(payload["appId"].as_str(), Some("process3d-play"));
+        assert_eq!(payload["moduleId"].as_str(), Some("wood"));
+        assert_eq!(payload["label"].as_str(), Some("Wood"));
+        assert!(semio_framework_os_kernel::json::from_json_str::<Vec<WorkshopMachine>>(payload["machinesJson"].as_str().expect("string")).is_ok());
     }
 }
 //#endregion 🧪️Tests

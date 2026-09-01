@@ -144,13 +144,9 @@ mod tests {
         assert!(!after.contains("Circular Saw"), "removed machine must disappear from the catalogue tree");
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `AddStep` dispatches a
-    /// `CreateStep` mutation, which is a documented no-op now (`steps` composes an
-    /// `s.stdio.semio.flow` CHILD HANDLE — no resolver, see `ProcessWorkingScene`'s doc comment),
-    /// so the end-to-end "edit a machine parameter, then add a step, then read the sized tool back
-    /// off the document" path no longer has a real document to read from. The real, unaffected part
-    /// of this test — `measure_for_capability` sizing a cut tool from a capability's own edited
-    /// parameter — is asserted directly instead.
+    /// 🔧 `measure_for_capability` sizing a cut tool from a capability's own edited parameter,
+    /// asserted directly (the full "edit a machine parameter, then AddStep, then read the sized
+    /// tool back off the document" path is covered end to end by the `🎮️commands/🪜️step` tests).
     #[semio_framework_async_macros::async_test]
     async fn workshop_machine_parameter_edit_sizes_the_capability_measure() {
         use crate::artifacts::process3d::schema::inferences::measure_for_capability;

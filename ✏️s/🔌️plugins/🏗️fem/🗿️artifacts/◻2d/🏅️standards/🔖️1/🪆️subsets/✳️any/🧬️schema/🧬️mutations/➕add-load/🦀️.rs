@@ -4,13 +4,13 @@ use crate::artifacts::fem2d::{Fem2dSnapshot, FemLoad, load_id};
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dLoadCasesDelta, Fem2dLoadCasesPatchEntry};
 use crate::artifacts::fem2d::mutations::{Fem2dMutation, remove_load};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// ➕️ Attaches a [`FemLoad`] to an existing load case's `loads` member collection.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "add-load")]
 pub struct AddLoad {
     pub case_id: String,

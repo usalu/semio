@@ -29,8 +29,10 @@ path = "📦️glue.rs"
 [dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-serde = { workspace = true }
-serde_json = { workspace = true }
+# 🌱️ `pack::json::Value` — first-party `serde_json::Value` replacement for the `computersJson`
+# payload; `contributes_topic` now also speaks `DslValue` end to end, so `serde`/`serde_json` are
+# fully gone from this crate.
+pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -11,7 +11,7 @@
 
 /// 🧵️ A non-decreasing knot vector for a degree-`p` B-spline with `n` control points, satisfying
 /// `len == n + p + 1`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct KnotVector {
     pub knots: Vec<f64>,
     pub degree: usize,

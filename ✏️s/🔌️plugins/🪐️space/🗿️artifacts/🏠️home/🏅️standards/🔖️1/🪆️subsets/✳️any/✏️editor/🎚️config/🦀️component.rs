@@ -12,7 +12,6 @@
 //! (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C1/§C6) and the signed-in
 //! client identity.
 
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️DirectoryJson
@@ -25,39 +24,39 @@ use std::collections::BTreeMap;
 /// convention instead: the DSL-layer field stays a plain `String`, the rich-type round trip happens by
 /// hand, entirely inside this file. `SpaceView`/`MemberView`/`UserView` (the read model's own leaves)
 /// already derive `Serialize`/`Deserialize`; only the two WRAPPER structs need a hand-written wire shape.
-#[derive(Serialize, Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 struct DirectorySpaceWire {
     view: store::os_directory::SpaceView,
     members: Vec<store::os_directory::MemberView>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(value_derive::ToValue, value_derive::FromValue, Default)]
 struct DirectoryReadModelWire {
-    #[serde(default)]
+    #[value(default)]
     spaces: BTreeMap<String, DirectorySpaceWire>,
-    #[serde(default)]
+    #[value(default)]
     cursor: u64,
-    #[serde(default)]
+    #[value(default)]
     users: BTreeMap<String, store::os_directory::UserView>,
 }
 
 /// 📇️ Encodes a `DirectoryReadModel` as the `directory_json` DSL field's wire value.
 async fn directory_to_json(model: &store::os_directory::DirectoryReadModel) -> String {
     let wire = DirectoryReadModelWire { spaces: model.spaces.iter().map(|(id, space)| (id.clone(), DirectorySpaceWire { view: space.view.clone(), members: space.members.clone() })).collect(), cursor: model.cursor, users: model.users.clone() };
-    serde_json::to_string(&wire).unwrap_or_else(|_| "{}".into())
+    pack::to_json_string(&wire)
 }
 
 /// 📇️ Decodes `directory_json` back into a `DirectoryReadModel` — malformed/empty input yields the
 /// empty model (never panics: this reads persisted config text, which must never crash a boot).
 async fn directory_from_json(json: &str) -> store::os_directory::DirectoryReadModel {
-    let wire: DirectoryReadModelWire = serde_json::from_str(json).unwrap_or_default();
+    let wire: DirectoryReadModelWire = pack::from_json_str(json).unwrap_or_default();
     store::os_directory::DirectoryReadModel { spaces: wire.spaces.into_iter().map(|(id, space)| (id, store::os_directory::DirectorySpace { view: space.view, members: space.members })).collect(), cursor: wire.cursor, users: wire.users }
 }
 //#endregion 🔖️DirectoryJson
 
 //#region 🔖️Config
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(id = "home.config")]
 #[dsl(extension = "homecfg")]
 #[dsl(layout = "lines")]
@@ -140,7 +139,7 @@ store::impl_whole_record_config!(HomeConfig);
 //#region 🔖️ConfigOperations
 /// @emoji 🧮️ `HomeConfig`'s operation enum — mirrors `engine::space::config::SpaceConfigMutation`'s
 /// whole-record-diff design (see its doc comment for the full rationale).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum HomeConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
@@ -225,7 +224,7 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
             HomeConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
             HomeConfigMutation::SetLocale { value } => next.locale = value.clone(),
             HomeConfigMutation::FoldDirectoryEvent { event_json } => {
-                if let Ok(event) = serde_json::from_str::<store::os_directory::DirectoryEvent>(event_json) {
+                if let Ok(event) = pack::from_json_str::<store::os_directory::DirectoryEvent>(event_json) {
                     next.directory_json = directory_to_json(&store::os_directory::fold(next.directory(), &event));
                 }
             }
@@ -280,7 +279,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fold_directory_event_updates_the_read_model() {
         let config = HomeConfig::default();
-        let event_json = serde_json::json!({
+        let event_json = pack::json!({
             "seq": 1,
             "id": "evt-1",
             "hlc": { "physicalMs": 0, "logical": 0 },

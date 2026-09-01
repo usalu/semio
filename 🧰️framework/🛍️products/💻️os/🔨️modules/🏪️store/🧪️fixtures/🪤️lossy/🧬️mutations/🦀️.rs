@@ -1,11 +1,13 @@
 use super::{DemoSnapshot, LossyDiff, assert_fixture_descriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "🔢️set-n/🦀️.rs"] mod set_n;
 pub use set_n::SetN;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 #[mutations(snapshot = DemoSnapshot, diff = LossyDiff, schema = "lossy.doc")]
 pub(crate) enum LossyMutation {
     SetN(SetN),

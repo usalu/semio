@@ -2,11 +2,10 @@
 use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.unbind-scene-root-node.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfUnbindSceneRootNodePayload {
     pub scene: usize,
     pub node: usize,
@@ -31,9 +30,9 @@ pub fn apply(payload: &GltfUnbindSceneRootNodePayload, base: &GltfSnapshot) -> R
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum UnbindSceneRootNodeMutation {
     Apply(GltfUnbindSceneRootNodePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

@@ -4,7 +4,7 @@ use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRul
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
@@ -12,8 +12,8 @@ use store::ArtifactDsl;
 /// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: mirrors `Process3dSnapshot`'s
 /// flattened `stock_*`/composed-child field shape exactly, so `to_snapshot`/`from_snapshot` stay a
 /// plain field-for-field copy.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.process.process3d")]
 pub struct Process3dArtifact {
     #[state(artifact)]
@@ -922,25 +922,32 @@ pub fn next_step_id() -> String {
 /// `🎮️commands/🌍️world` command modules — building `Process3dMutation`s from an immutable
 /// `&Process3dSnapshot` keeps every handler free of manual mutation, since the VCS store applies them.
 ///
-/// 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `steps` composes an
-/// `s.stdio.semio.flow` CHILD HANDLE now (no inline content, no resolver to read it back — see
-/// `ProcessWorkingScene`'s own doc comment), so `CreateStep`/`DeleteStep`'s `diff()` is a documented
-/// no-op (same "pending the child dispatch seam" bridge `📐️cad`'s per-object mutations use). These
-/// two builders can no longer compute a real cursor/index from `fixture.steps` (a handle has no
-/// `.len()`); `insert_step_mutations` still emits the (now no-op) `CreateStep` for call-site source
-/// compatibility but the cursor advance is honestly skipped rather than guessed.
+/// 🌉️ Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline record
+/// (`26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4) — `CreateStep`/`DeleteStep` are real
+/// mutations against it now, so these builders compute a real index/cursor from `fixture.step_payloads`
+/// again instead of guessing.
 pub fn insert_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, step: ProcessStep) -> Vec<crate::artifacts::process3d::op::Process3dMutation> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::create_step;
-    let _ = fixture;
-    vec![Process3dMutation::CreateStep(create_step::mutation::CreateStep { index: 0, step })]
+    use crate::artifacts::process3d::schema::mutations::{change_cursor, create_step};
+    let index = fixture.resolved_up_to.map(|cursor| cursor + 1).unwrap_or(fixture.step_payloads.len());
+    let mut operations = vec![Process3dMutation::CreateStep(create_step::mutation::CreateStep { index, step })];
+    if fixture.resolved_up_to.is_some() {
+        operations.push(Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(index) }));
+    }
+    operations
 }
 
 pub fn remove_step_mutations(fixture: &crate::artifacts::process3d::Process3dSnapshot, id: &str) -> Option<Vec<crate::artifacts::process3d::op::Process3dMutation>> {
     use crate::artifacts::process3d::op::Process3dMutation;
-    use crate::artifacts::process3d::schema::mutations::delete_step;
-    let _ = fixture;
-    Some(vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })])
+    use crate::artifacts::process3d::schema::mutations::{change_cursor, delete_step};
+    let removed_index = fixture.step_payloads.iter().position(|step| step.id == id)?;
+    let mut operations = vec![Process3dMutation::DeleteStep(delete_step::mutation::DeleteStep { id: id.to_string() })];
+    if let Some(cursor) = fixture.resolved_up_to {
+        if cursor >= removed_index {
+            operations.push(Process3dMutation::ChangeCursor(change_cursor::mutation::ChangeCursor { new_resolved_up_to: Some(cursor.saturating_sub(1)) }));
+        }
+    }
+    Some(operations)
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -950,11 +957,48 @@ mod tests {
     use super::*;
 
     //#region 🔖️ExampleFixtures
+    /// 🧭️ Every `step.origin` on a document must name a machine+capability that actually exists in
+    /// that document's own `workshop` — the mutations' only source of truth for legal origins.
+    fn assert_origins_resolve(document: &crate::artifacts::process3d::Process3dSnapshot) {
+        for step in &document.step_payloads {
+            let origin = step.origin.as_ref().unwrap_or_else(|| panic!("step {:?} is missing its origin", step.id));
+            let machine = document.workshop.machines.iter().find(|m| m.id == origin.machine_id).unwrap_or_else(|| panic!("step {:?} references unknown machine {:?}", step.id, origin.machine_id));
+            assert!(
+                machine.capabilities.iter().any(|c| c.id == origin.capability_id),
+                "step {:?} references unknown capability {:?} on machine {:?}",
+                step.id,
+                origin.capability_id,
+                machine.id
+            );
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn default_document_parses_timber_example() {
         let document = default_document();
         assert!(!document.steps.child_id.is_empty());
         assert!(document.resolved_up_to.is_none());
+
+        let printed = document.print_dsl();
+        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("timber fixture round trip");
+        assert_eq!(round_tripped, document, "timber fixture must round-trip through print_dsl/parse_dsl unchanged");
+
+        match &document.stock_payload.solid {
+            crate::artifacts::process3d::WorkingSolid::Box { width, depth, height } => {
+                assert!((*width - 3.0).abs() < 1e-9, "timber beam width should be 3.0m, got {width}");
+                assert!((*depth - 0.2).abs() < 1e-9, "timber beam depth should be 0.2m, got {depth}");
+                assert!((*height - 0.3).abs() < 1e-9, "timber beam height should be 0.3m, got {height}");
+            }
+            other => panic!("expected timber beam stock to be a non-degenerate Box, got {other:?}"),
+        }
+
+        let expected_ids = ["crosscut", "lap-joint-cut", "dowel-drill", "dowel-attach"];
+        assert_eq!(document.step_payloads.len(), expected_ids.len(), "timber joinery timeline should have {} steps", expected_ids.len());
+        for (step, expected_id) in document.step_payloads.iter().zip(expected_ids.iter()) {
+            assert_eq!(&step.id, expected_id);
+            assert!(step.enabled, "step {:?} should be enabled", step.id);
+        }
+        assert_origins_resolve(&document);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -962,6 +1006,27 @@ mod tests {
         let document = plate_document();
         assert!(!document.steps.child_id.is_empty());
         assert_eq!(document.resolved_up_to, Some(2));
+
+        let printed = document.print_dsl();
+        let round_tripped = <crate::artifacts::process3d::Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("plate fixture round trip");
+        assert_eq!(round_tripped, document, "plate fixture must round-trip through print_dsl/parse_dsl unchanged");
+
+        match &document.stock_payload.solid {
+            crate::artifacts::process3d::WorkingSolid::Box { width, depth, height } => {
+                assert!((*width - 1.2).abs() < 1e-9, "plate width should be 1.2m, got {width}");
+                assert!((*depth - 0.8).abs() < 1e-9, "plate depth should be 0.8m, got {depth}");
+                assert!((*height - 0.02).abs() < 1e-9, "plate height should be 0.02m, got {height}");
+            }
+            other => panic!("expected plate stock to be a non-degenerate Box, got {other:?}"),
+        }
+
+        assert_eq!(document.step_payloads.len(), 4, "drilled plate timeline should have 4 holes");
+        for (index, step) in document.step_payloads.iter().enumerate() {
+            assert_eq!(step.id, format!("drill-{}", index + 1));
+            assert!(step.enabled, "step {:?} should be enabled", step.id);
+            assert!(matches!(step.measure, crate::artifacts::process3d::ProcessMeasure::Drill { .. }), "plate step {:?} should be a Drill measure", step.id);
+        }
+        assert_origins_resolve(&document);
     }
     //#endregion 🔖️ExampleFixtures
 
@@ -1013,8 +1078,8 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = MetalCatalog.machines();
-            let json = serde_json::to_string(&machines).expect("serialize");
-            let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
+            let json = semio_framework_os_kernel::json::to_json_string(&machines);
+            let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
             assert_eq!(parsed, machines);
         }
 
@@ -1076,8 +1141,8 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = WoodCatalog.machines();
-            let json = serde_json::to_string(&machines).expect("serialize");
-            let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
+            let json = semio_framework_os_kernel::json::to_json_string(&machines);
+            let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
             assert_eq!(parsed, machines);
         }
 
@@ -1138,8 +1203,8 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = RoboticCatalog.machines();
-            let json = serde_json::to_string(&machines).expect("serialize");
-            let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
+            let json = semio_framework_os_kernel::json::to_json_string(&machines);
+            let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
             assert_eq!(parsed, machines);
         }
 
@@ -1200,8 +1265,8 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn machines_round_trip_json() {
             let machines = ConcreteCatalog.machines();
-            let json = serde_json::to_string(&machines).expect("serialize");
-            let parsed: Vec<WorkshopMachine> = serde_json::from_str(&json).expect("deserialize");
+            let json = semio_framework_os_kernel::json::to_json_string(&machines);
+            let parsed: Vec<WorkshopMachine> = semio_framework_os_kernel::json::from_json_str(&json).expect("deserialize");
             assert_eq!(parsed, machines);
         }
 

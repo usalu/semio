@@ -633,12 +633,14 @@ pub struct HubOptions {
 }
 
 /// 🏠️ Builds the real `McpServer` for a `--folder`/`--hub`-bound session: opens a real
-/// `HeadlessWorkspace`, a real `workspace::PluginArtifactChannel` targeting `note` (the
-/// one plugin with a committed descriptor — `📓️status.md`'s E2-builder-descriptor entry) when the
-/// registry/wasm are both resolvable, and falls back to `MockArtifactChannel` with a clear stderr
-/// diagnostic otherwise (never a silent downgrade). `folder`/`hub` are mutually exclusive; neither
-/// given falls back to [`build_server_with_principal`] (`NullBackend` + `MockArtifactChannel`,
-/// unchanged pre-P7 behavior — every pre-existing P1a/P1b/P2/P6 test keeps passing).
+/// `HeadlessWorkspace` and a `workspace::RoutingArtifactChannel`, which resolves the owning plugin
+/// per capability from the compiled catalog and lazily opens one `PluginArtifactChannel` per plugin
+/// (ticket 26/08/29/AI-MCP-END-TO-END packet W8 — the predecessor pinned the single plugin `note`,
+/// then a single-plugin-only `resolve_default_plugin_id`, both of which break the moment more than
+/// one plugin is installed). Falls back to `MockArtifactChannel` with a clear stderr diagnostic when
+/// the registry/wasm are not resolvable — never a silent downgrade. `folder`/`hub` are mutually
+/// exclusive; neither given falls back to [`build_server_with_principal`] (`NullBackend` +
+/// `MockArtifactChannel`), which is the honest "bare" tier, not a failure.
 fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, bridge: Option<BridgeSlot>) -> Result<McpServer, GatewayError> {
     let catalog = std::sync::Arc::new(build_catalog());
     let origin_label;
@@ -809,7 +811,7 @@ mod quick {
     fn workspace_backed_tools_degrade_to_a_retryable_plugin_unavailable_without_a_binding() {
         let server = fixture_server();
         for name in ["artifact_create", "artifact_open", "artifact_validate", "artifact_snapshot", "artifact_export", "inference_list", "inference_get", "ui_focus", "ui_reveal"] {
-            let result = server.tools.call(name, serde_json::json!({})).unwrap_or_else(|| panic!("{name} resolves"));
+            let result = server.tools.call(name, serde_json::json!({})).unwrap_or_else(|error| panic!("{name} resolves: {error:?}"));
             assert!(result.is_error, "{name} must not fabricate a success");
             let structured = result.structured_content.as_ref().unwrap_or_else(|| panic!("{name} answers structurally"));
             assert!(structured["code"] == "PLUGIN_UNAVAILABLE" || structured["code"] == "INPUT_INVALID", "{name}: {structured}");

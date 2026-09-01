@@ -101,12 +101,14 @@ pub fn curate_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
 
 //#region 🔖️Typology
 /// 🌳️ One node in a module's typology tree — object kinds reference a node by its path of segment ids.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct TypologyNode {
     pub id: String,
     pub label: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub children: Vec<TypologyNode>,
 }
 
@@ -562,8 +564,8 @@ const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
 //#region 🔖️SourcingModuleTopicPayload
 /// 🗂️ `topic_contribution.payload` shape for the `"sourcing.module"` topic.
 /// See `TopicContribution` in `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs`.
-#[derive(serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct SourcingModuleTopicPayload {
     app_id: String,
     module_id: String,
@@ -908,14 +910,14 @@ mod tests {
             plugin_id: "sourcing-module-beams".into(),
             topic_contribution: Some(semio_framework::TopicContribution::new(
                 "sourcing.module",
-                serde_json::json!({
-                    "appId": SOURCING_CURATE_APP_ID,
-                    "moduleId": beams.module_id(),
-                    "label": beams.label(),
-                    "iconId": "beam",
-                    "typologyJson": serde_json::to_string(&beams.typology()).unwrap(),
-                    "kindsJson": serde_json::to_string(&beams.demo_kinds()).unwrap(),
-                }),
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String(SOURCING_CURATE_APP_ID.to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String(beams.module_id().to_string())),
+                    ("label".to_string(), semio_framework::DslValue::String(beams.label().to_string())),
+                    ("iconId".to_string(), semio_framework::DslValue::String("beam".to_string())),
+                    ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&beams.typology()))),
+                    ("kindsJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&beams.demo_kinds()))),
+                ]),
             )),
         };
         let contributions_json = serde_json::to_string(&vec![entry]).unwrap();
@@ -931,14 +933,14 @@ mod tests {
             plugin_id: "sourcing-module-test".into(),
             topic_contribution: Some(TopicContribution::new(
                 "sourcing.module",
-                serde_json::json!({
-                    "appId": "sourcing-curate",
-                    "moduleId": "hot-test",
-                    "label": "Hot Test",
-                    "iconId": "box",
-                    "typologyJson": serde_json::to_string(&TypologyNode::new("hot-test", "Hot Test", vec![])).unwrap(),
-                    "kindsJson": "[]",
-                }),
+                semio_framework::DslValue::object([
+                    ("appId".to_string(), semio_framework::DslValue::String("sourcing-curate".to_string())),
+                    ("moduleId".to_string(), semio_framework::DslValue::String("hot-test".to_string())),
+                    ("label".to_string(), semio_framework::DslValue::String("Hot Test".to_string())),
+                    ("iconId".to_string(), semio_framework::DslValue::String("box".to_string())),
+                    ("typologyJson".to_string(), semio_framework::DslValue::String(semio_framework_os_kernel::json::to_json_string(&TypologyNode::new("hot-test", "Hot Test", vec![])))),
+                    ("kindsJson".to_string(), semio_framework::DslValue::String("[]".to_string())),
+                ]),
             )),
         };
         let json = serde_json::to_string(&vec![entry]).unwrap();

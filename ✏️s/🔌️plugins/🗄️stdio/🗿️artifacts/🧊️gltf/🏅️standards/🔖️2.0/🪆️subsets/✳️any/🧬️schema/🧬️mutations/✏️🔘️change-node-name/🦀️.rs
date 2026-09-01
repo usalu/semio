@@ -3,34 +3,31 @@ use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometr
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::artifacts::gltf::GltfSnapshot;
 use dsl::DslValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+/// 🕳️ `value`/`before`/`after` need no `#[value(...)]` attribute at all (not even `deserialize_with
+/// = "required_option"`, the `serde` equivalent needed here): `serde`'s derive implicitly treats
+/// EVERY `Option<T>` field as if `#[serde(default)]` were present (silently defaults to `None` on
+/// a missing key) unless overridden — `required_option` existed only to defeat that leniency. This
+/// derive has the OPPOSITE default: a field with no `#[value(default)]` is required regardless of
+/// its type, so a bare `Option<String>` field already rejects a missing key while still decoding a
+/// present `null` as `None` (the blanket `impl<T: FromValue> FromValue for Option<T>` handles that
+/// distinction on its own) — exactly the semantics `required_option` was hand-rolled to get.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfChangeNodeNamePayload {
     pub node: u32,
-    #[serde(deserialize_with = "required_option")]
     pub value: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfChangeNodeNameRestore {
     pub node: u32,
-    #[serde(deserialize_with = "required_option")]
     pub before: Option<String>,
-    #[serde(deserialize_with = "required_option")]
     pub after: Option<String>,
-}
-
-fn required_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    Option::<String>::deserialize(deserializer)
 }
 //#endregion 🔖️Payload
 
@@ -349,9 +346,13 @@ pub fn apply_restore(restore: &GltfChangeNodeNameRestore, base: &GltfSnapshot) -
 //#endregion ⚙️Validation
 
 //#region 🧬️Operation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+/// 🕳️ `deny_unknown_fields` here is parsed but NOT enforced (the derive only enforces it for
+/// `Data::Struct` — see `🌱️value/✨️derive`'s module docs): no top-level-extra-key test exists for
+/// THIS enum's own `{"phase": …, "value": …}` wrapper (only for the nested payload structs above,
+/// whose OWN `deny_unknown_fields` this derive fully enforces).
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "phase", content = "value", rename_all = "camelCase", deny_unknown_fields)]
 pub enum ChangeNodeNameMutation {
     Apply(GltfChangeNodeNamePayload),
     Restore(GltfChangeNodeNameRestore),
@@ -496,11 +497,11 @@ mod direct_leaf_tests {
 
     #[test]
     fn restore_wire_requires_nullable_witnesses_and_excludes_document_diffs() {
-        assert!(serde_json::from_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"after":"Pivot"}}"#).is_err());
-        assert!(serde_json::from_str::<ChangeNodeNameMutation>(r#"{"phase":"apply","value":{"node":0}}"#).is_err());
-        assert!(serde_json::from_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"before":null,"after":"Pivot","sourceForm":"glb"}}"#).is_err());
-        let wire = serde_json::to_value(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: None, after: Some("Pivot".into()) })).expect("restore encodes");
-        assert_eq!(wire, serde_json::json!({ "phase": "restore", "value": { "node": 0, "before": null, "after": "Pivot" } }));
+        assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"after":"Pivot"}}"#).is_err());
+        assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"apply","value":{"node":0}}"#).is_err());
+        assert!(pack::from_json_str::<ChangeNodeNameMutation>(r#"{"phase":"restore","value":{"node":0,"before":null,"after":"Pivot","sourceForm":"glb"}}"#).is_err());
+        let wire = pack::to_json_string(&ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node: 0, before: None, after: Some("Pivot".into()) }));
+        assert_eq!(pack::parse_json(&wire).expect("restore encodes valid json"), pack::json!({ "phase": "restore", "value": { "node": 0, "before": null, "after": "Pivot" } }));
     }
 
     #[test]

@@ -9,7 +9,6 @@
 use crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
 
 use super::topology::{compute_semio_flow_topology, SemioFlowTopology};
 
@@ -19,8 +18,8 @@ use super::topology::{compute_semio_flow_topology, SemioFlowTopology};
 /// `Default` — safe here because `SemioFlowTopology` hand-rolls its own `Default` to agree with
 /// `compute_semio_flow_topology(&SemioFlowSnapshot::default())` (see the slug dir's own doc
 /// comment), so the derived struct-level `Default` (all-default fields) matches `infer` honestly.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.flow.inference")]
 pub struct SemioFlowInference {
     #[derived]

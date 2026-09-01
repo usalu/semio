@@ -17,8 +17,8 @@
 //#region 🔖️Location
 /// 📍️ LOCATION header line — 9 fields + the `LOCATION` keyword itself = the spec's 10
 /// comma-separated tokens (https://bigladdersoftware.com/epx/docs/9-6/auxiliary-programs/energyplus-weather-file-epw-data-dictionary.html#location).
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwLocation {
     pub city: String,
     pub state_province: String,
@@ -34,8 +34,8 @@ pub struct EpwLocation {
 
 //#region 🔖️DataPeriods
 /// 📅️ One named period from the DATA PERIODS header line.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwDataPeriod {
     pub name: String,
     pub start_day_of_week: String,
@@ -46,8 +46,8 @@ pub struct EpwDataPeriod {
 /// 📅️ DATA PERIODS header line, structured: `records_per_hour` is a plain integer count (no
 /// float-formatting hazard) plus a list of named periods. The leading period-count token is
 /// derived from `periods.len()` on encode rather than stored (it is redundant, not lossy).
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwDataPeriods {
     pub records_per_hour: u32,
     pub periods: Vec<EpwDataPeriod>,
@@ -58,8 +58,8 @@ pub struct EpwDataPeriods {
 /// 🌡️ One hourly EPW data record — all 35 spec columns, in spec order, each a `String` (see
 /// module doc comment for why). Field order here is the WIRE order used by `⚙️engine`'s
 /// encoder/decoder and by this module's own diff/mutation index accessors below.
-#[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwRecord {
     pub year: String,
     pub month: String,
@@ -278,7 +278,6 @@ impl EpwRecord {
 //#endregion 🔖️Record
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
@@ -286,8 +285,8 @@ pub const STDIO_EPW_DOCUMENT_SCHEMA: &str = "stdio.epw";
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.epw` snapshot — all 8 EPW header lines + every hourly record, lossless.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw")]
 pub struct EpwSnapshot {
     #[state(artifact)]
@@ -297,34 +296,34 @@ pub struct EpwSnapshot {
     pub location: EpwLocation,
     /// 🌡️ Header line 2, retained verbatim (design-day sizing summary; not structurally decoded).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub design_conditions: String,
     /// 📆️ Header line 3, retained verbatim (named typical/extreme week ranges).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub typical_extreme_periods: String,
     /// 🌍️ Header line 4, retained verbatim (per-depth monthly ground temperatures).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub ground_temperatures: String,
     /// 🎉️ Header line 5, retained verbatim (holiday/DST flags).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub holidays_dst: String,
     /// 💬️ Header line 6, retained verbatim.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments_1: String,
     /// 💬️ Header line 7, retained verbatim.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments_2: String,
     /// 📅️ Header line 8 — structured (see [`EpwDataPeriods`]).
     #[state(artifact)]
     pub data_periods: EpwDataPeriods,
     /// 🌡️ Hourly data records, in file order, each carrying all 35 EPW columns.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<EpwRecord>,
 }
 

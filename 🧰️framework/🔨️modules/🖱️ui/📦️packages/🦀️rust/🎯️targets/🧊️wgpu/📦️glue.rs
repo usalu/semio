@@ -1,4 +1,24 @@
 //! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "wgpu-engine").
+//!
+//! ✅ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): the wgpu-tier split
+//! this docstring used to describe as reverted is now done. `action.rs` and `input.rs` turned out
+//! to be 100% target-neutral (zero `wgpu::`/`bytemuck`/etc reference — the "reads mostly as
+//! target-neutral value and fault types" hypothesis was exactly right) and are now mounted
+//! unconditionally, no `wgpu-engine` gate at all. `draw.rs` and `widgets.rs`'s `gizmo` submodule
+//! were genuinely mixed, so the target-neutral half (`DrawList` + its whole CPU accumulation API,
+//! `mesh_content_version`, `paint_selection_marquee`, and the gizmo placement/tip/hit-test math)
+//! was split into the sibling file `draw_types.rs`, mounted unconditionally; the real GPU pipeline
+//! (`SceneColorTarget`, `MeshGpuTable`'s `wgpu::Buffer`s, `RasterTexture*`, the shader/pass code,
+//! and `gizmo::paint_orbit_view_gizmo` which needs the font/icon-atlas-bearing `WidgetContext`)
+//! stays exactly where it was, still `wgpu-engine`-gated. `prepared.rs` and `kernel_3d_scene`
+//! (`semio-framework-ui-scene`'s `math` module) turned out to already be wasm-safe in full — only
+//! their re-export gate was too coarse — so their mounts/re-exports are unconditional too.
+//! `♾️infinite`'s `🌍️world/🦀️component.rs` no longer needs `wgpu-engine` for any of its
+//! unconditionally-mounted board/mesh3d/action-queue logic; its one genuinely GPU-adjacent
+//! function (`render_world_3d`, called only from `📺️renderer`'s native/browser host engine, never
+//! from wasip2 guest logic) is now itself `#[cfg(not(all(target_arch = "wasm32", target_env =
+//! "p2")))]`-gated. See `.🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`
+//! for the full per-symbol classification and before/after `cargo tree -i` evidence.
 
 #[path = "../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
 mod icon_name_gen;
@@ -48,6 +68,13 @@ pub mod cursor;
 #[path = "🦀️draw.rs"]
 pub mod draw;
 
+/// 🧩️ Target-neutral half of `draw.rs` (`DrawList` + its CPU accumulation API, `mesh_content_version`,
+/// `paint_selection_marquee`) and of `widgets.rs`'s `gizmo` submodule (placement/tip-geometry/
+/// hit-test math) — mounted unconditionally so `wasm32-wasip2` program components can use them
+/// without `wgpu-engine`. See this file's top docstring.
+#[path = "🦀️draw_types.rs"]
+pub mod draw_types;
+
 #[path = "🦀️geometry.rs"]
 pub mod geometry;
 
@@ -70,15 +97,20 @@ pub mod minimap;
 #[path = "🦀️gpu.rs"]
 pub mod gpu;
 
-#[cfg(feature = "wgpu-engine")]
+/// 🧩️ 100% target-neutral (job-driven CPU staging/admission state machine for GPU uploads — zero
+/// `wgpu::`/`bytemuck`/etc reference anywhere in the file, confirmed by grep). Mounted
+/// unconditionally; its one browser-only item (`OffscreenPresentToken`) already carries its own
+/// `not(target_env = "p2")` item-level gate.
 #[path = "🦀️prepared.rs"]
 pub mod prepared;
 
-#[cfg(feature = "wgpu-engine")]
+/// 🧩️ 100% target-neutral (hit-testing/pointer/keyboard input state — zero `wgpu::` reference
+/// anywhere in the file, confirmed by grep). Mounted unconditionally.
 #[path = "🦀️input.rs"]
 pub mod input;
 
-#[cfg(feature = "wgpu-engine")]
+/// 🧩️ 100% target-neutral (bounded action reservation/queue — zero `wgpu::` reference anywhere in
+/// the file, confirmed by grep). Mounted unconditionally.
 #[path = "🦀️action.rs"]
 pub mod action;
 
@@ -176,6 +208,9 @@ pub mod presence_bar;
 #[path = "🦀️widgets.rs"]
 pub mod widgets;
 
+// 🌉️ Pre-existing exclusion (kept through the revert above): `target_os = "wasi"` is TRUE for
+// `wasm32-wasip2`, and `host.rs` is the browser/native clipboard-and-input host bridge with no
+// wasip2 arm of its own.
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 #[path = "🦀️host.rs"]
 pub mod host;
@@ -196,18 +231,23 @@ pub use geometry::Rect;
 #[cfg(feature = "wgpu")]
 pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_color, presence_css_var, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
 pub use theme::{GlassStyle, Level, Rgba, Theme};
+// 🧩️ `DrawList`'s CPU draw-command accumulator + the two selection-marquee paint helpers that push
+// into it, plus the orbit-view-gizmo placement/hit-test math — all target-neutral, split out of the
+// `wgpu-engine`-only `draw`/`widgets` modules into `draw_types` so `wasm32-wasip2` program
+// components can build a `DrawList` and hit-test the gizmo without linking real `wgpu`.
+pub use draw_types::{gizmo, mesh_content_version, paint_selection_marquee, DrawList};
 
 // 🖥️ Retained-mode engine surface (feature = "wgpu-engine" only).
 #[cfg(feature = "wgpu-engine")]
 pub use arena::{Arena, NodeId};
-#[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
+#[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_env = "p2")))]
 pub use cursor::apply_canvas_cursor;
 #[cfg(all(feature = "wgpu-engine", not(target_os = "wasi")))]
 pub use cursor::apply_window_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
-pub use draw::{ear_clip_polygon, mesh_content_version, paint_selection_marquee, DrawList, IconAtlas, MeshGpuTable, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
+pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
@@ -225,7 +265,6 @@ pub use shell::{Shell, ShellEvent};
 // `dispatch_event`/`needs_frame`/`drain_commands`) was never re-exported at all before this pass;
 // this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
 // own closing wiring request.
-#[cfg(feature = "wgpu-engine")]
 pub use action::{
     checked_action_string_bytes, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, BoundedClaimedActionDraft,
     BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, ACTION_ITEM_BYTE_CAPACITY, ACTION_STRING_BYTE_CAPACITY,
@@ -242,28 +281,27 @@ pub use gpu::GpuContext;
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
-#[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
 pub use paint::{paint_retained_glyph_step, RetainedGlyphCursor, RetainedGlyphStep, RETAINED_NODE_TEXT_MAX_BYTES};
-#[cfg(all(feature = "wgpu-engine", target_arch = "wasm32"))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use prepared::OffscreenPresentToken;
-#[cfg(feature = "wgpu-engine")]
 pub use prepared::{
     PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput,
     PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
 };
-#[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated
 // verbatim from `🧰️framework/🔨️modules/🧊️3d/🎬️scene/🦀️component.rs` per ticket
 // 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH). `kernel_3d_scene`
 // stays the name every existing call site (`draw.rs`, `widgets.rs`) already uses — this is now an
-// alias onto the scene crate's module rather than a `#[path]` file mount.
-#[cfg(feature = "wgpu-engine")]
+// alias onto the scene crate's module rather than a `#[path]` file mount. `semio-framework-ui-scene`
+// is "wasm-safe, minimal deps" by its own crate description (non-optional dep of this crate
+// regardless of feature), so ungating this re-export (ticket
+// 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) adds no new dependency edge —
+// it only widens which feature tier can reach names that were always compiled in.
 pub use ui_scene::math as kernel_3d_scene;
 
-#[cfg(feature = "wgpu-engine")]
 pub use kernel_3d_scene::{
     aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
     lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal,

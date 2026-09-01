@@ -1,61 +1,13 @@
-//! 🌉️ Fem2d play app — the `wasm-bindgen` VCS bridge: a JS-facing surface distinct from the WASM
-//! Component Model plugin ABI the rest of this crate speaks. Only compiled for `target_arch = "wasm32"`.
-
-#[cfg(target_arch = "wasm32")]
-mod wasm_bridge {
-    use crate::artifacts::fem2d::mutations::Fem2dStore;
-    use std::cell::RefCell;
-    use store::create_document_envelope;
-    use wasm_bindgen::prelude::*;
-
-    #[wasm_bindgen]
-    pub struct Fem2dSnapshotVcs {
-        store: RefCell<Fem2dStore>,
-    }
-
-    #[wasm_bindgen]
-    impl Fem2dSnapshotVcs {
-        #[wasm_bindgen(js_name = create)]
-        pub async fn create() -> Result<Fem2dSnapshotVcs, JsValue> {
-            let store = Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", crate::artifacts::fem2d::schema::empty_fem2d_snapshot(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
-            Ok(Self { store: RefCell::new(store) })
-        }
-
-        #[wasm_bindgen(js_name = dispatchText)]
-        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = dispatchBinary)]
-        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = projectionJson)]
-        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = envelopeJson)]
-        pub async fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = generation)]
-        pub async fn generation(&self) -> u32 {
-            self.store.borrow().generation() as u32
-        }
-    }
-}
+//! 🌉️ Fem2d play app — the wasm-bindgen `Fem2dSnapshotVcs` VCS bridge that used to live here was
+//! deleted — nothing ever built it for `wasm32-unknown-unknown` (no engine entry, no `wasm` script
+//! target) — see `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
 
 // #region 🧪️Tests
 #[cfg(test)]
 mod tests {
     /// 🧪️ The store type aliases live in `crate::artifacts::fem2d::mutations` (`Fem2dEnvelope`/`Fem2dStore`) and
     /// are exercised by that node's own tests plus `crate::artifacts::fem2d::spr`'s
-    /// `fem2d_document_text_round_trips_through_the_store` — the `wasm_bridge` module above only builds
-    /// under `target_arch = "wasm32"`, so this file's non-wasm32 half has nothing native-testable of its
-    /// own beyond that shared coverage.
+    /// `fem2d_document_text_round_trips_through_the_store`.
     #[test]
     fn fem2d_store_type_alias_constructs_from_an_empty_envelope() {
         let store =

@@ -18,6 +18,14 @@ path = "📦️glue.rs"
 [dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+# 🚧️ `protocol` (not `os-kernel`) deliberately: this crate's own "wasm-safe, minimal deps" boundary
+# (see the module docstring) forbids the OS kernel, but `ToValue`/`FromValue` are natively owned by
+# `semio-framework-replication` ("depends on neither" — its own description) and `os-kernel` only
+# re-exports them. `#[derive(ToValue, FromValue)]` hardcodes its expansion at `::semio_framework_os_kernel::…`
+# (see the fan-out playbook), which is wrong for a crate that must never depend on the OS kernel, so
+# the `NodeGraph*Record` impls below are hand-written against `protocol::value::` directly instead of
+# derived. Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`.
+protocol = { path = "../../../../📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 
 [dependencies.semio-framework-geometry]
 path = "../../../../📐️geometry/📦️packages/🦀️rust"

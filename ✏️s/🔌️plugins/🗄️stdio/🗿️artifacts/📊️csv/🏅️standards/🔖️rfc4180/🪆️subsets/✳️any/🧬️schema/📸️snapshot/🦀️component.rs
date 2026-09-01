@@ -5,7 +5,6 @@
 
 use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 fn default_true() -> bool {
     true
@@ -16,12 +15,12 @@ fn default_true() -> bool {
 /// quoting means whether a field WAS quoted is real information worth preserving losslessly,
 /// so re-serializing can reproduce the exact source bytes rather than a lossy normal form
 /// (https://www.rfc-editor.org/rfc/rfc4180#section-2, rule 5).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CsvField {
-    #[serde(default)]
+    #[value(default)]
     pub value: String,
-    #[serde(default)]
+    #[value(default)]
     pub quoted: bool,
 }
 //#endregion 🔖️Field
@@ -30,10 +29,10 @@ pub struct CsvField {
 /// 📄 One RFC 4180 record (row) — a strong-like entity, index-keyed within
 /// `CsvSnapshot::records`. Field COUNT is real, per-record information (rfc4180 is a
 /// loosely-typed grid on the wire even though most producers keep it rectangular).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CsvRecord {
-    #[serde(default)]
+    #[value(default)]
     pub fields: Vec<CsvField>,
 }
 //#endregion 🔖️Record
@@ -42,18 +41,18 @@ pub struct CsvRecord {
 /// 📸️ Persisted `stdio.csv` snapshot (RFC 4180 table, with a header-row option). The
 /// header row (when present) is `records[0]` — RFC 4180 draws no structural distinction
 /// between a header record and a data record, only a convention of which one comes first.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv")]
 pub struct CsvSnapshot {
     #[state(artifact)]
     pub schema: String,
     /// 📑 Whether the first record is a header row (RFC 4180's own optional convention).
     #[state(artifact)]
-    #[serde(default = "default_true")]
+    #[value(default = "default_true")]
     pub has_header: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<CsvRecord>,
 }
 

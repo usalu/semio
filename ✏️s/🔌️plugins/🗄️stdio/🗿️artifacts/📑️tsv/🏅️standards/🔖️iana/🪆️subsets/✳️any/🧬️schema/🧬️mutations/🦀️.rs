@@ -6,7 +6,6 @@ use crate::artifacts::tsv::standards::iana::subsets::any::schema::diff::{dec_row
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 /// 📐️ Typed content mutation for `stdio.tsv`.
@@ -31,9 +30,9 @@ pub mod set_cell;
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = TsvSnapshot, diff = TsvDiff, schema = "TsvMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum TsvMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ↩️ Toggles whether the encoded text ends with a line terminator.

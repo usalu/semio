@@ -65,10 +65,5 @@ default-features = false
 features = ["rwh_06"]
 optional = true
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-semio-framework-async = { workspace = true }
-wasm-bindgen.workspace = true
-
-
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

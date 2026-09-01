@@ -2,12 +2,12 @@
 
 use crate::artifacts::fem3d::{FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the fem3d artifact.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.fem.fem3d")]
 pub struct Fem3dDiff {
     #[state(artifact)]
@@ -47,8 +47,8 @@ pub struct Fem3dDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🧩 Identified-collection delta for `nodes`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dNodesDelta {
     pub added: Vec<FemNode>,
     pub removed: Vec<String>,
@@ -57,16 +57,16 @@ pub struct Fem3dNodesDelta {
 }
 
 /// 🩹 One patched `nodes` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dNodesPatchEntry {
     pub id: String,
     pub item: FemNode,
 }
 
 /// 🧩 Identified-collection delta for `elements`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dElementsDelta {
     pub added: Vec<FemElement>,
     pub removed: Vec<String>,
@@ -75,16 +75,16 @@ pub struct Fem3dElementsDelta {
 }
 
 /// 🩹 One patched `elements` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dElementsPatchEntry {
     pub id: String,
     pub item: FemElement,
 }
 
 /// 🧩 Identified-collection delta for `materials`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dMaterialsDelta {
     pub added: Vec<FemMaterial>,
     pub removed: Vec<String>,
@@ -93,16 +93,16 @@ pub struct Fem3dMaterialsDelta {
 }
 
 /// 🩹 One patched `materials` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dMaterialsPatchEntry {
     pub id: String,
     pub item: FemMaterial,
 }
 
 /// 🧩 Identified-collection delta for `sections`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dSectionsDelta {
     pub added: Vec<FemSection>,
     pub removed: Vec<String>,
@@ -111,16 +111,16 @@ pub struct Fem3dSectionsDelta {
 }
 
 /// 🩹 One patched `sections` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dSectionsPatchEntry {
     pub id: String,
     pub item: FemSection,
 }
 
 /// 🧩 Identified-collection delta for `solids`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dSolidsDelta {
     pub added: Vec<FemSolid>,
     pub removed: Vec<String>,
@@ -129,16 +129,16 @@ pub struct Fem3dSolidsDelta {
 }
 
 /// 🩹 One patched `solids` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dSolidsPatchEntry {
     pub id: String,
     pub item: FemSolid,
 }
 
 /// 🧩 Identified-collection delta for `supports`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dSupportsDelta {
     pub added: Vec<FemSupport>,
     pub removed: Vec<String>,
@@ -147,16 +147,16 @@ pub struct Fem3dSupportsDelta {
 }
 
 /// 🩹 One patched `supports` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dSupportsPatchEntry {
     pub id: String,
     pub item: FemSupport,
 }
 
 /// 🧩 Identified-collection delta for `loadCases`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dLoadCasesDelta {
     pub added: Vec<FemLoadCase>,
     pub removed: Vec<String>,
@@ -165,16 +165,16 @@ pub struct Fem3dLoadCasesDelta {
 }
 
 /// 🩹 One patched `loadCases` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dLoadCasesPatchEntry {
     pub id: String,
     pub item: FemLoadCase,
 }
 
 /// 🧩 Identified-collection delta for `combinations`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct Fem3dCombinationsDelta {
     pub added: Vec<FemCombination>,
     pub removed: Vec<String>,
@@ -183,8 +183,8 @@ pub struct Fem3dCombinationsDelta {
 }
 
 /// 🩹 One patched `combinations` entry (whole-entity replacement).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Fem3dCombinationsPatchEntry {
     pub id: String,
     pub item: FemCombination,

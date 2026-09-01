@@ -2,12 +2,11 @@
 
 use crate::artifacts::home::S_HOME_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted S Home launcher document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.home")]
 #[dsl(extension = "shome")]
 #[dsl(layout = "lines")]
@@ -15,7 +14,7 @@ pub struct SHomeSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(key = "gen")]
     pub catalog_generation: u64,
 }
@@ -88,10 +87,10 @@ pub fn s_home_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <SHomeSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <SHomeSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <SHomeSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
+    let report = pack::json!({
+        "parsed": pack::json_from_dsl_value(&dsl::ToValue::to_value(&parsed)),
+        "reparsed": pack::json_from_dsl_value(&dsl::ToValue::to_value(&reparsed)),
+        "packDecoded": pack::json_from_dsl_value(&dsl::ToValue::to_value(&unpacked)),
         "canonicalText": canonical,
         "canonicalTextAgain": canonical_again,
     });

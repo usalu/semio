@@ -9,7 +9,7 @@ use crate::artifacts::model::EnergyModelSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(_payload: &ReplaceModel, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
     let model = crate::artifacts::model::energy_model(base);
-    let new_model_json = serde_json::to_string(&model).unwrap_or_default();
+    let new_model_json = pack::json::to_json_string(&model);
     vec![EnergyModelMutation::ReplaceModel(ReplaceModel { new_model_json })]
 }
 //#endregion 🔖️Inverse

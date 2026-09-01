@@ -4,7 +4,6 @@
 
 use crate::engine::space::S_PLAY_CATALOGUE_TAB_ID;
 use semio_framework_os::OsWorkflowCamera;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Types
@@ -13,8 +12,8 @@ use std::collections::BTreeMap;
 /// per-window options keyed by window-instance id" rule). Distinct from `semio_framework_os::OsWorkflowCamera`
 /// (a plain, non-`dsl`-field data type this crate can't blanket-impl `dsl::DslField` for under the
 /// orphan rule) — converts to/from it 1:1 at the render boundary.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct SpaceWindowCamera {
     pub x: f64,
     pub y: f64,
@@ -48,8 +47,8 @@ impl From<SpaceWindowCamera> for OsWorkflowCamera {
 /// _>`, per the Configured Node Apps recipe) — today that's always
 /// `crate::engine::space::modes::main::windows::workflow::S_PLAY_WINDOW_WORKFLOW`, since split-pane
 /// window *instances* aren't a thing anywhere in this codebase yet.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(id = "s.spacecfg")]
 #[dsl(layout = "lines")]
 pub struct SpaceConfig {
@@ -163,7 +162,7 @@ store::impl_whole_record_config!(SpaceConfig);
 // migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as
 // block3d's `Block3dConfigMutation`/gis's `Gis2dConfigMutation`).
 #[allow(clippy::large_enum_variant)]
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum SpaceConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

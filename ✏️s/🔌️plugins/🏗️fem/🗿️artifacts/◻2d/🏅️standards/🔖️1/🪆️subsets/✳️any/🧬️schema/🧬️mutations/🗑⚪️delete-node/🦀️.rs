@@ -4,14 +4,14 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dNodesDelta};
 use crate::artifacts::fem2d::mutations::{Fem2dMutation, create_node};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🗑️ Removes an existing structural node by id, capturing nothing itself (the removed payload is
 /// recovered from `base` inside `↩️inverse`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-node")]
 pub struct DeleteNode {
     pub id: String,

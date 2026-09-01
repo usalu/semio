@@ -64,8 +64,8 @@ mod tests {
         document.artifacts.push(SpaceArtifactRow { id: "artifact-1".into(), name: "First".into(), dialect: SpaceArtifactDialect { artifact_kind: "s.draw.draw".into(), standard: "1".into(), subset: "*".into() }, ..Default::default() });
         let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-        assert_eq!(rows[0]["id"], serde_json::json!("artifact:artifact-1"));
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+        assert_eq!(rows[0]["id"], pack::json!("artifact:artifact-1"));
         assert!(rows[0].get("actions").is_none(), "the viewer never carries a row actions cell: {:?}", rows[0]);
     }
 }

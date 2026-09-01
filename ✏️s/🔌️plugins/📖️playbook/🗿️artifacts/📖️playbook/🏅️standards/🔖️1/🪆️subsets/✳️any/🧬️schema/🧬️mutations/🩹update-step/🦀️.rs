@@ -9,17 +9,20 @@
 use crate::artifacts::playbook::mutations::PlaybookMutation;
 use crate::artifacts::playbook::schema::diff::text::diff_replace_content;
 use crate::artifacts::playbook::{PlaybookDiff, PlaybookSnapshot};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "update-step")]
 pub struct UpdateStep {
     pub step_id: String,
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 

@@ -2,6 +2,7 @@
 //! 📡️ Direct test domain for contributed mutation wire planning.
 
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -19,8 +20,9 @@ impl crate::store::ArtifactPack for WireTestSnapshot {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct WireTestDiff {
     pub(crate) deltas: Vec<i32>,
 }

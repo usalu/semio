@@ -7,12 +7,11 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Composition
 /// 🧩️ Semio object composition census.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioObjectComposition {
     pub has_brep: bool,
     pub has_mesh: bool,

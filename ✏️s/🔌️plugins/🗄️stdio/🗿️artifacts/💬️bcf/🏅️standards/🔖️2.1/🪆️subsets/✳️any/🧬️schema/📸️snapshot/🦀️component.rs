@@ -8,12 +8,11 @@
 
 use crate::artifacts::bcf::STDIO_BCF_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Geometry
 /// 📐 A 3D point/vector (BCF-XML `visinfo.xsd` `Point`/`Direction` — both are `{X,Y,Z}` triples).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfPoint3 {
     pub x: f64,
     pub y: f64,
@@ -23,8 +22,8 @@ pub struct BcfPoint3 {
 /// 📷 A viewpoint's camera — the `visinfo.xsd` `PerspectiveCamera`/`OrthogonalCamera` choice,
 /// typed as a real Rust enum rather than two optional fields (the XSD makes them mutually
 /// exclusive via `xs:choice`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum BcfCamera {
     Perspective { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, field_of_view: f64 },
     Orthogonal { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, view_to_world_scale: f64 },
@@ -35,21 +34,21 @@ pub enum BcfCamera {
 /// 👁️ `visinfo.xsd` `ComponentVisibility`: `DefaultVisibility` attribute (spec default `true`)
 /// plus the `Exceptions` component list (IFC guids of components whose visibility is the inverse
 /// of the default).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfVisibility {
     pub default_visibility: bool,
-    #[serde(default)]
+    #[value(default)]
     pub exceptions: Vec<String>,
 }
 
 /// 🎨 One `visinfo.xsd` `ComponentColoringColor`: a hex color (`ColorType`, e.g. `"FFFF0000"`)
 /// applied to a set of component IFC guids.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfColoring {
     pub color: String,
-    #[serde(default)]
+    #[value(default)]
     pub components: Vec<String>,
 }
 
@@ -57,14 +56,14 @@ pub struct BcfColoring {
 /// per this artifact's completeness target (a `Component` element's own optional
 /// `OriginatingSystem`/`AuthoringToolId` children are out of scope — not modeled, matching the
 /// target's `selection: Vec<String>` shape exactly).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfComponents {
-    #[serde(default)]
+    #[value(default)]
     pub selection: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub visibility: BcfVisibility,
-    #[serde(default)]
+    #[value(default)]
     pub coloring: Vec<BcfColoring>,
 }
 //#endregion 🔖️Components
@@ -74,14 +73,14 @@ pub struct BcfComponents {
 /// identity, `date`/`author`/`text` are the required `<Date>`/`<Author>`/`<Comment>` children
 /// verbatim, `viewpoint_ref` is the optional `<Viewpoint Guid="...">` child's `Guid` attribute
 /// (references a `BcfViewpoint` in the same topic by guid, not a filename).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfComment {
     pub guid: String,
     pub date: String,
     pub author: String,
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub viewpoint_ref: Option<String>,
 }
 //#endregion 🔖️Comment
@@ -94,17 +93,17 @@ pub struct BcfComment {
 /// canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form, per
 /// `codec_retention_law` — arbitrary on-disk filenames from a real BCF tool are read on decode but
 /// not preserved verbatim; the typed content is what round-trips).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfViewpoint {
     pub guid: String,
-    #[serde(default)]
+    #[value(default)]
     pub camera: Option<BcfCamera>,
-    #[serde(default)]
+    #[value(default)]
     pub components: Option<BcfComponents>,
     /// 🖼️ Referenced snapshot image bytes (PNG) — legitimate bytes-payload exception (the format
     /// IS bytes here), per the recipe's raw-payload allowlist.
-    #[serde(default)]
+    #[value(default)]
     pub snapshot: Option<Vec<u8>>,
 }
 //#endregion 🔖️Viewpoint
@@ -116,25 +115,25 @@ pub struct BcfViewpoint {
 /// elements* per `markup.xsd`'s real element sequence (NOT attributes — a defect in this
 /// artifact's pre-wave model, which wrongly treated `Priority` as an attribute). `comments` and
 /// `viewpoints` are guid-keyed collections, each with its own per-field diff.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfTopic {
     pub guid: String,
     pub title: String,
-    #[serde(default)]
+    #[value(default)]
     pub description: String,
     pub status: String,
-    #[serde(default)]
+    #[value(default)]
     pub priority: String,
-    #[serde(default)]
+    #[value(default)]
     pub labels: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub creation_date: String,
-    #[serde(default)]
+    #[value(default)]
     pub creation_author: String,
-    #[serde(default)]
+    #[value(default)]
     pub comments: Vec<BcfComment>,
-    #[serde(default)]
+    #[value(default)]
     pub viewpoints: Vec<BcfViewpoint>,
 }
 //#endregion 🔖️Topic
@@ -144,33 +143,33 @@ pub struct BcfTopic {
 /// `bcf.version` or consumed by a topic's `markup.bcf`/`.bcfv`/snapshot triad -- e.g.
 /// `project.bcfp`, custom extension files, or a topic folder that lacks a `markup.bcf` entirely.
 /// This artifact's own simple package wrapper's raw-retention mechanism (see module doc).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfRawPart {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 //#endregion 🔖️RawPart
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfSnapshot {
     #[state(artifact)]
     pub schema: String,
     /// 🏷️ `bcf.version`'s `VersionId` attribute (e.g. `"2.1"`).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub version: String,
     /// 🗂️ Guid-keyed topics — the primary typed content.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub topics: Vec<BcfTopic>,
     /// 🗄️ Name-keyed raw retention for everything not modeled above.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub parts: Vec<BcfRawPart>,
 }
 

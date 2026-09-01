@@ -5,12 +5,11 @@
 //! no `InferredField` needed.
 
 use crate::artifacts::obj::schema::snapshot::ObjSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Obj's vertex-derived spatial bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ObjBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

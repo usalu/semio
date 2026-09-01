@@ -176,9 +176,11 @@ const preview: Preview = {
     terminology: Terminology.NATIVE,
     iconRenderer: IconRenderer.WEBGL,
   },
-  // Storybook composes decorators left-to-right with the LAST entry outermost, so this list reads
-  // innermost → outermost: appearance/level closest to the story, async wasm gate wrapping everything.
-  decorators: [withAppearance, withLevel, withTerminology, withLocale, withTheme, withRenderer, withWasm],
+  // 🧭️ `decorators` is NOT set here — see the assignment at the end of this file. Every decorator is
+  // an `export const` declared BELOW this object, so naming them inside this literal reads them
+  // while they are still in their temporal dead zone: the module throws
+  // `ReferenceError: Cannot access 'withAppearance' before initialization` the moment it evaluates,
+  // Storybook's preview never boots, and every story renders an empty `#storybook-root`.
   tags: ["autodocs"],
 };
 
@@ -412,3 +414,11 @@ export const withWasm: Decorator = (Story, context) => {
   );
 };
 //#endregion 🔖️withWasm
+
+//#region 🔖️Decorators
+/** 🎀️ Assigned after every decorator above is initialized, not inside `preview`'s object literal —
+ * see the note there. Storybook composes decorators left-to-right with the LAST entry outermost, so
+ * this list reads innermost → outermost: appearance/level closest to the story, async wasm gate
+ * wrapping everything. */
+preview.decorators = [withAppearance, withLevel, withTerminology, withLocale, withTheme, withRenderer, withWasm];
+//#endregion 🔖️Decorators

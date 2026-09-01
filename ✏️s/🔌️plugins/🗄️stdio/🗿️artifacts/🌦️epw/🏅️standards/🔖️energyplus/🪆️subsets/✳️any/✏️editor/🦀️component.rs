@@ -15,7 +15,6 @@ use crate::editor::epw::modes::edit::windows::main;
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -32,7 +31,7 @@ pub const EPW_EDITOR_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.epw", 
 /// per-record columns are addressable — the 8 verbatim header lines (LOCATION, DESIGN CONDITIONS, …)
 /// have no cell in a flat record table, so they are not yet editable through this surface
 /// (documented honestly, matching energy's own `SetStructureField` scope note).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum EpwEditorCommand {
     #[dsl(key = "set-record-cell")]
     SetCell { row: u32, column: String, value: String },

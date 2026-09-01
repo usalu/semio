@@ -11,7 +11,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
 use crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::create_brep;
@@ -26,7 +25,7 @@ use super::scale_object;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioObjectSnapshot, diff = SemioObjectDiff, schema = "s.stdio.semio.object")]
 pub enum SemioObjectMutation {
     MoveObject(move_object::MoveObject),
@@ -70,7 +69,7 @@ pub fn inverse_semio_object_mutation(mutation: &SemioObjectMutation, base: &Semi
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioObjectMutation`]. `create-brep`/`create-mesh`/`create-properties` carry a `store::os_io::ArtifactRef` `target`
 /// field, the exact value an external caller cannot construct by hand; decoding the committed vector

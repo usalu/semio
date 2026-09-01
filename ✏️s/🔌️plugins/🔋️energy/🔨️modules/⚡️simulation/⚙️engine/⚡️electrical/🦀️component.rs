@@ -2,10 +2,11 @@
 
 use crate::units::deg_to_rad;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️EndUse
 /// 💡️ Generic electrical end-use load.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EndUseLoad {
     pub name: String,
     pub rated_power_w: f64,
@@ -29,7 +30,7 @@ impl EndUseLoad {
 
 // #region 🔖️Pv
 /// ☀️ Photovoltaic array with inverter.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PvSystem {
     pub dc_capacity_w: f64,
     pub module_efficiency: f64,
@@ -66,7 +67,7 @@ impl PvSystem {
 
 // #region 🔖️Wind
 /// 💨️ Wind turbine with cut-in/rated/cut-out speeds.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WindTurbine {
     pub rated_power_w: f64,
     pub cut_in_m_s: f64,
@@ -94,7 +95,7 @@ impl WindTurbine {
 
 // #region 🔖️Generator
 /// 🔌️ Backup generator (diesel or gas).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Generator {
     pub rated_power_w: f64,
     pub fuel_lhv_j_per_kg: f64,
@@ -118,7 +119,7 @@ impl Generator {
 
 // #region 🔖️Inverter
 /// 🔄️ DC/AC inverter with efficiency curve.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Inverter {
     pub rated_ac_w: f64,
     pub peak_efficiency: f64,
@@ -140,7 +141,7 @@ impl Inverter {
 
 // #region 🔖️Battery
 /// 🔋️ Electrochemical storage with SOC limits.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Battery {
     pub capacity_kwh: f64,
     pub max_charge_w: f64,
@@ -189,7 +190,7 @@ impl Battery {
 
 // #region 🔖️Transformer
 /// 🔌️ Building transformer with no-load and load losses.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Transformer {
     pub rated_kva: f64,
     pub no_load_loss_w: f64,
@@ -214,7 +215,7 @@ impl Transformer {
 
 // #region 🔖️Grid
 /// 🏭️ Grid interconnection balance for one timestep.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct GridBalance {
     pub building_load_w: f64,
     pub pv_generation_w: f64,

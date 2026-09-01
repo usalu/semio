@@ -5,11 +5,10 @@
 use crate::artifacts::step::standards::v_ap214::engine::ladder::ClassEdit;
 use crate::artifacts::step::standards::v_ap214::subsets::cc1::schema::mutations::{class_diff, class_inverse, StepCc1Mutation};
 use crate::artifacts::step::StepSnapshot;
-use serde::{Deserialize, Serialize};
 use crate::artifacts::step::standards::v_ap214::engine::ladder::ProductIdentity;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetProductIdentity {
     pub identity: Option<ProductIdentity>,

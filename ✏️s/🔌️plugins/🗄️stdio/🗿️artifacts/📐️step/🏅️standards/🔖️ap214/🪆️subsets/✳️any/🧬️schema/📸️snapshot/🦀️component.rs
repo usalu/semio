@@ -8,7 +8,6 @@
 use crate::artifacts::step::engine::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 use crate::artifacts::step::STDIO_STEP_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️BrepModelReexport
 /// 🧱 The BrepMesh analyzer types live with the derived view in `engine::brep`, not here — the
@@ -22,8 +21,8 @@ pub use crate::artifacts::step::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 /// `Reference` = a `#456` instance pointer, `Enum` = `.T.`/`.F.`/`.UNKNOWN.`-shaped enumeration or
 /// domain-select literal, `Aggregate` = a parenthesized list, `TypedValue` = a simple/complex
 /// defined-type wrapper (`IFCLENGTHMEASURE(3000.)`-shaped).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum StepValue {
     Unset,
     Derived,
@@ -62,12 +61,12 @@ pub const ISO_10303_21_IMPLEMENTATION_LEVEL: &str = "2;1";
 /// 📇️ `FILE_DESCRIPTION(description, implementation_level)` — ISO 10303-21 §8.2.2. `description`
 /// is `LIST[1:?] OF STRING`, hence the hand-written [`Default`]: a derived one would give the
 /// empty list the standard forbids.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepFileDescription {
-    #[serde(default = "unpopulated_string_list")]
+    #[value(default = "unpopulated_string_list")]
     pub description: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub implementation_level: String,
 }
 
@@ -81,22 +80,22 @@ impl Default for StepFileDescription {
 /// originating_system, authorization)` — ISO 10303-21 §8.2.3. `author` and `organization` are
 /// `LIST[1:?] OF STRING`, so this carries the same hand-written [`Default`] as
 /// [`StepFileDescription`] for the same reason.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepFileName {
-    #[serde(default)]
+    #[value(default)]
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub timestamp: String,
-    #[serde(default = "unpopulated_string_list")]
+    #[value(default = "unpopulated_string_list")]
     pub author: Vec<String>,
-    #[serde(default = "unpopulated_string_list")]
+    #[value(default = "unpopulated_string_list")]
     pub organization: Vec<String>,
-    #[serde(default)]
+    #[value(default)]
     pub preprocessor_version: String,
-    #[serde(default)]
+    #[value(default)]
     pub originating_system: String,
-    #[serde(default)]
+    #[value(default)]
     pub authorization: String,
 }
 
@@ -118,10 +117,10 @@ impl Default for StepFileName {
 /// is a real (and diagnosable) state — `check_ccN_conformance` reports it as a hard `CODE_FILE_
 /// SCHEMA` violation — but an empty LIST is not a state the exchange structure can even carry, so
 /// the default is the one unpopulated entry rather than none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepFileSchema {
-    #[serde(default = "unpopulated_string_list")]
+    #[value(default = "unpopulated_string_list")]
     pub schemas: Vec<String>,
 }
 
@@ -134,14 +133,14 @@ impl Default for StepFileSchema {
 /// 📇️ The full typed `HEADER;` section — all three standard records. Its `Default` is ISO
 /// 10303-21 §8.2's conformant minimum, so `StepSnapshot::default()` writes an exchange structure a
 /// conformant reader accepts instead of one it refuses.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepHeader {
-    #[serde(default)]
+    #[value(default)]
     pub file_description: StepFileDescription,
-    #[serde(default)]
+    #[value(default)]
     pub file_name: StepFileName,
-    #[serde(default)]
+    #[value(default)]
     pub file_schema: StepFileSchema,
 }
 //#endregion 🔖️Header
@@ -151,23 +150,23 @@ pub struct StepHeader {
 /// (`#N=(TYPE1(...)TYPE2(...))`) — spec-legal (ISO 10303-21 §4.2), rare in real AP214 exports
 /// (far more common in IFC's select-type disambiguation), never silently dropped: a plain
 /// single-typed instance leaves this empty; a complex one keeps every extra type here.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepComplexType {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub args: Vec<StepValue>,
 }
 
 /// 🧩️ One `#N = TYPE(args...)` instance — id-keyed identity, positional argument list.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct StepEntity {
     pub id: u64,
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub args: Vec<StepValue>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub complex: Vec<StepComplexType>,
 }
 //#endregion 🔖️Entity
@@ -178,17 +177,17 @@ pub struct StepEntity {
 /// positions default gracefully; complex instances retain every constituent type via
 /// `StepEntity::complex`). BrepMesh is a derived analyzer view
 /// (`crate::artifacts::step::engine::brep::analyze_brep_mesh`), not stored here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.step")]
 pub struct StepSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: StepHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entities: Vec<StepEntity>,
 }
 
@@ -220,7 +219,7 @@ fn value_from_part21(v: &Part21Value) -> StepValue {
         Part21Value::Enum(s) => StepValue::Enum(s.clone()),
         Part21Value::Ref(id) => StepValue::Reference(*id),
         Part21Value::List(items) => StepValue::Aggregate(items.iter().map(value_from_part21).collect()),
-        Part21Value::Typed(name, items) => {
+        Part21Value::Typed { name, items } => {
             let value = if items.len() == 1 { value_from_part21(&items[0]) } else { StepValue::Aggregate(items.iter().map(value_from_part21).collect()) };
             StepValue::TypedValue { type_name: name.clone(), value: Box::new(value) }
         }
@@ -238,7 +237,7 @@ fn value_to_part21(v: &StepValue) -> Part21Value {
         StepValue::Enum(s) => Part21Value::Enum(s.clone()),
         StepValue::Reference(id) => Part21Value::Ref(*id),
         StepValue::Aggregate(items) => Part21Value::List(items.iter().map(value_to_part21).collect()),
-        StepValue::TypedValue { type_name, value } => Part21Value::Typed(type_name.clone(), vec![value_to_part21(value)]),
+        StepValue::TypedValue { type_name, value } => Part21Value::Typed { name: type_name.clone(), items: vec![value_to_part21(value)] },
     }
 }
 

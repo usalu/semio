@@ -3,7 +3,6 @@
 //! the value type + its pure `compute` fn (no `InferredField`).
 
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ GIF87a logical-screen-derived raster geometry. `bit_depth` reads the Global Color Table's
@@ -12,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// file with no GCT still color-resolves every image through its own per-image Local Color Table,
 /// which this whole-snapshot scalar doesn't drill into. `has_alpha` is always `false` — GIF87a
 /// (§18-24) has no transparency concept at all (`GifImage::rgba()`'s own doc), not a heuristic.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GifDimensions {
     pub width: u32,
     pub height: u32,

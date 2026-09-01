@@ -68,7 +68,7 @@ describe("🔣️ contract", () => {
 });
 
 describe("🥒️ feature profile", () => {
-  const source = `@capability-thing @oracle-pdf-writer @comparison-semantic-pdf-v1
+  const source = `@capability-thing @oracle-pdf-writer @oracle-input-subject-raw @comparison-semantic-pdf-v1
 Feature: A thing
   Some description.
 
@@ -100,6 +100,7 @@ Feature: A thing
     expect(feature.errors).toEqual([]);
     expect(feature.capability).toBe("thing");
     expect(feature.oracle).toBe("pdf-writer");
+    expect(feature.oracleInput).toBe("subject-raw");
     expect(feature.comparison).toBe("semantic-pdf-v1");
     expect(feature.background).toHaveLength(1);
     expect(feature.scenarios.map((scenario) => scenario.id)).toEqual(["one", "outlined-a", "outlined-b"]);

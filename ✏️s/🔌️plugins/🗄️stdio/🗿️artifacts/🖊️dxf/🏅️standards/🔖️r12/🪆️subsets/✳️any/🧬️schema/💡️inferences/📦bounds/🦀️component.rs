@@ -12,12 +12,11 @@
 //! fold) — no `InferredField` needed.
 
 use crate::artifacts::dxf::schema::snapshot::{DxfEntity, DxfSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Bounds
 /// 📦️ Dxf's entity-derived 3D bounding box.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DxfBounds {
     pub min: [f64; 3],
     pub max: [f64; 3],

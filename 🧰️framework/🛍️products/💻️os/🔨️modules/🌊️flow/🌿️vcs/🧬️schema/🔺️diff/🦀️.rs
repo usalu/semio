@@ -1,6 +1,7 @@
 //! 🧵️ Ordered Flow structural changes corresponding to the adjacent JSON schema.
 use super::{apply_flow_collection_delta, FlowCollectionDelta, FlowFixture, FlowLayoutEntry, MutationApplyResult, MutationDiff, SynapseSpec, Widget};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧬️Schema
 /// 🗂️ Ordered structural fragments; only the explicit import leaf emits Fixture.
@@ -14,8 +15,9 @@ pub enum FlowDelta {
 }
 
 /// 🧶️ Sequential structural changes compose by concatenation, never by semantic replay.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FlowDiff {
     pub deltas: Vec<FlowDelta>,
 }

@@ -3,13 +3,12 @@
 
 use crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dialect
 /// 🪪️ One artifact's coordinate inside a space's index — mirrors the freeze's
 /// `dialect { artifactKind, standard, subset }` shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 pub struct SpaceArtifactDialect {
     pub artifact_kind: String,
     pub standard: String,
@@ -20,8 +19,8 @@ pub struct SpaceArtifactDialect {
 //#region 🔖️Row
 /// 📇️ One row of a space's artifact index — persisted metadata only, never the artifact's own
 /// document bytes (those live in their own backbone document, addressed by `id`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase", default)]
 pub struct SpaceArtifactRow {
     pub id: String,
     pub name: String,
@@ -38,8 +37,8 @@ pub struct SpaceArtifactRow {
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted S Space index document snapshot — one per hub space, document id `index`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.space.space")]
 #[dsl(extension = "sspace")]
 #[dsl(layout = "lines")]
@@ -214,10 +213,10 @@ pub fn s_space_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <SSpaceSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <SSpaceSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <SSpaceSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
+    let report = pack::json!({
+        "parsed": pack::json_from_dsl_value(&dsl::ToValue::to_value(&parsed)),
+        "reparsed": pack::json_from_dsl_value(&dsl::ToValue::to_value(&reparsed)),
+        "packDecoded": pack::json_from_dsl_value(&dsl::ToValue::to_value(&unpacked)),
         "canonicalText": canonical,
         "canonicalTextAgain": canonical_again,
     });

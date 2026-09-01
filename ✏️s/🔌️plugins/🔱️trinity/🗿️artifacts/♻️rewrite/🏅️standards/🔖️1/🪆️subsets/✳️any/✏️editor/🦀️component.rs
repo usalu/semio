@@ -87,7 +87,7 @@ fn nakagin_fixture_json() -> String {
 }
 
 pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
-    let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
+    let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
         return BTreeMap::new();
     };
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
@@ -120,8 +120,8 @@ pub(crate) fn rewrite_action(action: &str, args: Option<semio_framework_plugin::
 }
 
 /// 🪟️ Binds window chrome through its retained renderer action descriptor.
-pub(crate) fn rewrite_window_action(action: &str, args: Option<serde_json::Value>) -> semio_framework_plugin::ActionDescriptor {
-    semio_framework_plugin::ActionDescriptor { controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework::optional_json_to_dsl(args) }
+pub(crate) fn rewrite_window_action(action: &str, args: Option<pack::JsonValue>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: TRINITY_REWRITE_PLAY_CONTROLLER_ID.into(), action: action.into(), args: args.map(|value| pack::json_to_dsl_value(&value)) }
 }
 
 /// 🏷️ Admits resolved Rewrite text into the semantic UI contract.
@@ -177,20 +177,20 @@ pub(crate) fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
 }
 
 fn build_rule_from_state(state: &RewriteSnapshot) -> Result<crate::artifacts::rewrite::schema::Rule, String> {
-    let lhs: crate::artifacts::rewrite::schema::Lhs = serde_json::from_str(&state.lhs_json).map_err(|e| e.to_string())?;
-    let rhs: Rhs = serde_json::from_str(&state.rhs_json).map_err(|e| e.to_string())?;
+    let lhs: crate::artifacts::rewrite::schema::Lhs = pack::from_json_str(&state.lhs_json).map_err(|e| e.to_string())?;
+    let rhs: Rhs = pack::from_json_str(&state.rhs_json).map_err(|e| e.to_string())?;
     Ok(crate::artifacts::rewrite::schema::Rule { name: TRINITY_REWRITE_PLAY_RULE_NAME.into(), lhs, rhs })
 }
 
 pub(crate) fn compiled_jack_query(state: &RewriteSnapshot) -> String {
     let rule_json = match build_rule_from_state(state) {
-        Ok(rule) => serde_json::to_string(&rule).unwrap_or_default(),
+        Ok(rule) => pack::to_json_string(&rule).unwrap_or_default(),
         Err(_) => return String::new(),
     };
-    let bindings_json = serde_json::to_string(&state.parameter_bindings).unwrap_or_else(|_| "{}".into());
+    let bindings_json = pack::to_json_string(&state.parameter_bindings);
     crate::artifacts::rewrite::schema::rule_query_json(&rule_json, &bindings_json)
         .ok()
-        .and_then(|json| serde_json::from_str::<serde_json::Value>(&json).ok())
+        .and_then(|json| pack::parse_json(&json).ok())
         .and_then(|value| value.get("query").and_then(|query| query.as_str()).map(str::to_string))
         .unwrap_or_else(|| build_rule_from_state(state).map(|rule| crate::artifacts::rewrite::schema::build_rule_query(&rule, &state.parameter_bindings)).unwrap_or_default())
 }
@@ -270,14 +270,14 @@ fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPo
 }
 
 pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
-    let Ok(lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(lhs_json) else {
+    let Ok(lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(lhs_json) else {
         return nakagin_fixture_json();
     };
     crate::artifacts::jack::Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
 }
 
 pub(crate) fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
-    let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
+    let Ok(rhs) = pack::from_json_str::<Rhs>(rhs_json) else {
         return nakagin_fixture_json();
     };
     crate::artifacts::jack::Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout)).ok().and_then(|graph| graph.fixture_json().ok()).unwrap_or_else(nakagin_fixture_json)
@@ -337,21 +337,21 @@ pub(crate) fn rewrite_io() -> semio_framework_plugin::AppIo {
 fn rewrite_lod_json_for_window(cfg: &RewriteConfig, window_id: &str) -> Option<String> {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
-        Some(serde_json::json!({ "automatic": true }).to_string())
+        Some(pack::json!({ "automatic": true }).to_string())
     } else {
-        Some(serde_json::json!({ "automatic": false, "forcedLabel": mode }).to_string())
+        Some(pack::json!({ "automatic": false, "forcedLabel": mode }).to_string())
     }
 }
 
 fn trinity_rewrite_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![semio_framework_plugin::MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
-    let rows: Vec<serde_json::Value> = serde_json::from_str(&crate::editor::rewrite::world::trinity_lod_scale_json()).unwrap_or_default();
+    let rows: Vec<pack::JsonValue> = pack::parse_json(&crate::editor::rewrite::world::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(<[pack::JsonValue]>::to_vec)).unwrap_or_default();
     items.extend(rows.into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(semio_framework_plugin::MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_window_action("setLodMode", Some(serde_json::json!({ "windowId": window_id }))) }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: rewrite_window_action("setLodMode", Some(pack::json!({ "windowId": window_id }))) }
 }
 
 /// 🕹️ `selection`/`hover` are left unset: `ArtifactApp::render` has no `InteractionView` (only
@@ -378,7 +378,7 @@ pub(crate) fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_js
 /// its JSON-array `operations` shape (rather than a typed sub-enum) — the same
 /// `{"operation":"setFixture"|"deleteSelection", ...}` payload `apply_rewrite_node_graph_edit_operations`
 /// already parses, carried as an opaque string field.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 pub enum TrinityRewriteCommand {
     // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
     #[dsl(key = "node-graph-edit")]
@@ -678,7 +678,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
         // "nakagin" manifest — the synthetic `rewrite.*` clause kinds fail that validation and the
         // wrapper silently falls back to the nakagin fixture, which would leave the "graph" domain's
         // topology missing every `lhs-*`/`rhs-*` id entirely.
-        if let Ok(lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) {
+        if let Ok(lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) {
             let lhs_fixture = lhs_semantic_graph_fixture(&lhs, &state.rule_layout);
             let mut parent_of: BTreeMap<String, String> = BTreeMap::new();
             for edge in lhs_fixture.edges() {
@@ -690,7 +690,7 @@ impl ArtifactEditor for TrinityRewritePlayApp {
                 ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: parent_of.get(&node.id).cloned() });
             }
         }
-        if let Ok(rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) {
+        if let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) {
             for node in rhs_semantic_graph_fixture(&rhs, &state.rule_layout).nodes() {
                 ordered.push(TopologyNode { id: node.id.clone(), granularity: "node".into(), parent: None });
             }
@@ -850,8 +850,8 @@ mod tests {
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
     /// replacement for the deleted `TrinityRewriteCommand::SetSelection`.
     fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritePlayApp>>, ids: &[&str]) {
-        let targets: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": id })).collect();
-        let args = serde_json::json!({ "domainId": "graph", "targets": serde_json::to_string(&targets).unwrap() });
+        let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
+        let args = pack::json!({ "domainId": "graph", "targets": pack::to_json_string(&targets) });
         app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
     }
 
@@ -883,8 +883,8 @@ mod tests {
         let mut app = new_app();
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
         let after = app.render(TRINITY_REWRITE_PLAY_BODY_AFTER, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&before).unwrap().contains("node-graph"));
-        assert!(serde_json::to_string(&after).unwrap().contains("node-graph"));
+        assert!(pack::to_json_string(&before).contains("node-graph"));
+        assert!(pack::to_json_string(&after).contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -892,12 +892,12 @@ mod tests {
         let mut app = new_app();
         let before_state = app.snapshot().unwrap();
         let result = app
-            .dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: serde_json::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local"))
+            .dispatch_typed(TrinityRewriteCommand::SetViewport { surface_id: Some(TRINITY_REWRITE_PLAY_SURFACE_BEFORE.into()), viewport_json: pack::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local"))
             .expect("viewport");
         assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.snapshot().unwrap(), before_state, "document is untouched by a viewport pan");
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live config camera");
+        assert!(pack::to_json_string(&before).contains("2.5"), "render reads the live config camera");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -916,8 +916,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_lhs_rhs_graphs() {
         let mut app = new_app();
-        let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_LHS, None, &ViewModel::default()).expect("render")).unwrap();
-        let rhs_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_RHS, None, &ViewModel::default()).expect("render")).unwrap();
+        let lhs_json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_LHS, None, &ViewModel::default()).expect("render"));
+        let rhs_json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_RHS, None, &ViewModel::default()).expect("render"));
         assert!(lhs_json.contains("node-graph"));
         assert!(rhs_json.contains("node-graph"));
         assert!(lhs_json.contains("\"editable\":true"));
@@ -938,14 +938,14 @@ mod tests {
     async fn add_and_delete_rhs_set_clause() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::AddRuleClause { kind: "set".into() }, &meta("local")).expect("add clause");
-        let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
+        let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 2);
         select_graph(&mut app, &["rhs-set-1"]);
         let result = app
-            .dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: serde_json::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
+            .dispatch_typed(TrinityRewriteCommand::NodeGraphEdit { surface_id: TRINITY_REWRITE_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
             .expect("delete selection");
         assert!(!result.mutations.is_empty());
-        let rhs: Rhs = serde_json::from_str(&app.snapshot().unwrap().rhs_json).unwrap();
+        let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);
     }
 
@@ -953,14 +953,14 @@ mod tests {
     async fn jack_view_renders_compiled_query_tokens() {
         let mut app = new_app();
         let node = app.render(TRINITY_REWRITE_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("tokensJson"));
+        assert!(pack::to_json_string(&node).contains("tokensJson"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_scenes_have_lod_json() {
         let mut app = new_app();
         let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&before).unwrap().contains("lodJson"));
+        assert!(pack::to_json_string(&before).contains("lodJson"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -974,7 +974,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn trinity_rewrite_labels_resolve_native_by_default() {
         let mut app = new_app();
-        let json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render")).unwrap();
+        let json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render"));
         assert!(json.contains("\"Pieces\""));
         assert!(!json.contains("Stücke"));
     }
@@ -983,14 +983,14 @@ mod tests {
     async fn trinity_rewrite_labels_translate_panels_in_german() {
         let mut app = new_app();
         app.dispatch_typed(TrinityRewriteCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
-        let document_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render")).unwrap();
+        let document_json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render"));
         assert!(document_json.contains("Stücke"));
         assert!(!document_json.contains("\"Pieces\""));
-        let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render")).unwrap();
+        let catalogue_json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render"));
         assert!(catalogue_json.contains("Katalog"));
         assert!(catalogue_json.contains("Zu LHS hinzufügen"));
         assert!(catalogue_json.contains("Zu RHS hinzufügen"));
-        let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).expect("render")).unwrap();
+        let parameters_json = pack::to_json_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).expect("render"));
         assert!(parameters_json.contains("\"Parameter\""));
         let definition = create_rewrite_app();
         let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");

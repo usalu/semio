@@ -1,16 +1,15 @@
 //! 🧬️ Direct change-material-double-sided mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::artifacts::gltf::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.change-material-double-sided.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/doubleSided"];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn touched_paths(payload: &GltfChangeMaterialDoubleSidedPayload) -> Vec<String> {
     vec![format!("document/materials/{}/doubleSided", payload.material)]
 }
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialDoubleSidedRejection {
     pub code: String,
     pub path: String,
@@ -20,8 +19,8 @@ pub struct GltfChangeMaterialDoubleSidedRejection {
 fn failure(value: GltfMaterialAnimationFailure) -> GltfChangeMaterialDoubleSidedRejection {
     GltfChangeMaterialDoubleSidedRejection { code: value.code.into(), path: value.path, detail: value.detail.into() }
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfChangeMaterialDoubleSidedPayload {
     pub material: usize,
     pub double_sided: bool,
@@ -56,9 +55,9 @@ mod tests {
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeMaterialDoubleSidedMutation {
     Apply(GltfChangeMaterialDoubleSidedPayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

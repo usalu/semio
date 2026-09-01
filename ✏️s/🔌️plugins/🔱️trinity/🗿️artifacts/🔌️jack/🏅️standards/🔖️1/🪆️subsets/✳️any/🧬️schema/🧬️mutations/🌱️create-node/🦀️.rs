@@ -2,12 +2,11 @@
 use crate::artifacts::jack::diff::JackDiff;
 use crate::artifacts::jack::mutations::TrinityGraphMutation;
 use crate::artifacts::jack::{JackSnapshot, Node};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱️ `create-node` payload — full initial node payload (id/kind/name/geometry/ports fixed at
 /// creation; `properties` always starts empty, set afterward via `change-data-property`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateNode {
     pub node: Node,

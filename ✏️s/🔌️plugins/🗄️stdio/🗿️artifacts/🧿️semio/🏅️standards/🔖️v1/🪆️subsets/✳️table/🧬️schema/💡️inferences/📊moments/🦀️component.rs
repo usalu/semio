@@ -20,14 +20,13 @@
 use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 use crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals;
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 📊️ One numeric column's descriptive moments. `SemioColumnMoments::default()` (all-zero) is the
 /// honest "no numeric data" value for a column with zero parseable cells — same convention
 /// `✳️mesh`'s `SemioAabb::default()` uses for "no geometry".
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioColumnMoments {
     pub count: u32,
     pub mean: f64,

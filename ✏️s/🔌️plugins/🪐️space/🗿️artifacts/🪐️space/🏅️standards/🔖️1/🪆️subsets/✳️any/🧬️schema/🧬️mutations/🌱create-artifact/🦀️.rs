@@ -2,14 +2,13 @@
 use crate::artifacts::space::standards::v1::subsets::any::schema::diff::SSpaceDiff;
 use crate::artifacts::space::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, SpaceArtifactRow};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutation
 /// 🌱 `create-artifact` payload — the full initial row (id/name/kind/schema/dialect/timestamps all
 /// fixed at creation, mirroring `dag`'s `CreateNode { node: DagNodeSpec }` shape).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-artifact")]
 pub struct CreateArtifact {
     #[dsl(block)]

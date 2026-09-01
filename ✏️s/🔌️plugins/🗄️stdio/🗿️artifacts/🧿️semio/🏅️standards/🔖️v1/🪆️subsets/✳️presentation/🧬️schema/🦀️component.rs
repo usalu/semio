@@ -3,22 +3,21 @@
 
 use crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideLayout, SlideMaster};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.presentation")]
 pub struct SemioPresentationArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub masters: Vec<SlideMaster>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub layouts: Vec<SlideLayout>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub slides: Vec<Slide>,
 }
 

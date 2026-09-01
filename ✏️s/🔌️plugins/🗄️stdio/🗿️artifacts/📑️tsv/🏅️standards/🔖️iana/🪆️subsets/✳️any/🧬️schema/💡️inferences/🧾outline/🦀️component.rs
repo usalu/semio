@@ -4,12 +4,11 @@
 //! distinction, so this never assumes rectangularity or a header row).
 
 use crate::artifacts::tsv::TsvSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Tsv` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TsvOutline {
     pub record_count: u32,
     pub column_count: u32,

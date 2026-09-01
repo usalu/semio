@@ -4,16 +4,15 @@ mod tests {
     use crate::artifacts::gltf::schema::mutations::change_material_alpha_mode::{diff, inverse, mutation};
     use crate::artifacts::gltf::schema::snapshot::GltfAlphaMode;
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
     use std::collections::BTreeMap;
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct State {
         material: usize,
         alpha_mode: GltfAlphaMode,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         base: State,
         mutation: mutation::GltfChangeMaterialAlphaModePayload,
@@ -23,7 +22,7 @@ mod tests {
         undo: State,
         rejections: BTreeMap<String, String>,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

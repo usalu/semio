@@ -7,11 +7,9 @@ use crate::artifacts::home::op::SHomeMutation;
 use crate::artifacts::home::SHomeSnapshot;
 use crate::editor::home::config::{HomeConfig, HomeConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "rename-space")]
 pub struct RenameSpace {
     pub space_id: String,
@@ -23,10 +21,10 @@ pub struct RenameSpace {
 pub async fn handle(payload: &RenameSpace, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>) -> Result<Emit<SHomeMutation, HomeConfigMutation>, Fault> {
     if payload.name.trim().is_empty() {
         let current_name = cfg.snapshot.directory().spaces.get(&payload.space_id).map(|space| space.view.name.clone()).unwrap_or_default();
-        let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": current_name })).ok();
+        let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id, "name": current_name })));
         return Ok(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(125), dialog_id: "renameSpace".into(), args }));
     }
-    let args = dsl::to_dsl_value(&json!({ "spaceId": payload.space_id, "name": payload.name })).ok();
+    let args = Some(pack::json_to_dsl_value(&pack::json!({ "spaceId": payload.space_id, "name": payload.name })));
     Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.directory.rename-space".into(), args }))
 }
 //#endregion 🔖️Handle
@@ -46,7 +44,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_name_opens_the_dialog_preseeded_with_the_current_name() {
-        let event_json = serde_json::json!({
+        let event_json = pack::json!({
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
             "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Old Name", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
             "recordedAtMs": 1000
@@ -59,7 +57,7 @@ mod tests {
             other => panic!("expected OpenDialog, got {other:?}"),
         };
         assert_eq!(dialog_id, "renameSpace");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args")).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
         assert_eq!(args_value["name"], "Old Name");
     }
 
@@ -75,7 +73,7 @@ mod tests {
             })
             .expect("a ReplayShellCommand effect");
         assert_eq!(action_id, "os.directory.rename-space");
-        let args_value: serde_json::Value = dsl::from_dsl_value(args.expect("args")).expect("json");
+        let args_value: pack::JsonValue = pack::json_from_dsl_value(&args.expect("args"));
         assert_eq!(args_value["spaceId"], "sp-1");
         assert_eq!(args_value["name"], "New Name");
     }

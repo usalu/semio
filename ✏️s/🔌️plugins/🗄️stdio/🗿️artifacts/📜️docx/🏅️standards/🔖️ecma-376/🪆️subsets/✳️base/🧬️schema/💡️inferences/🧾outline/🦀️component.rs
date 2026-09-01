@@ -5,12 +5,11 @@
 
 use crate::artifacts::docx::schema::snapshot::DocxBlock;
 use crate::artifacts::docx::DocxSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Docx` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxOutline {
     pub paragraph_count: u32,
     pub table_count: u32,

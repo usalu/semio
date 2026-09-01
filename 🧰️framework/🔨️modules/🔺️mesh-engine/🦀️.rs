@@ -629,7 +629,7 @@ fn gltf_resolve_buffers(document: &json::Value, embedded_bin: Option<&[u8]>) -> 
     document
         .get("buffers")
         .and_then(json::Value::as_array)
-        .unwrap_or(&[])
+        .map_or(&[][..], Vec::as_slice)
         .iter()
         .enumerate()
         .map(|(i, buffer)| match buffer.get("uri").and_then(json::Value::as_str) {
@@ -709,7 +709,7 @@ fn gltf_normalize_components(component_type: u64, components: &mut [f64]) -> Res
 }
 
 fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Vec<u8>], bv_idx: usize, extra_offset: usize, component_type: u64, accessor_type: &str, count: usize) -> Result<Vec<f64>, String> {
-    let bv = document.get("bufferViews").and_then(json::Value::as_array).unwrap_or(&[]).get(bv_idx).ok_or_else(|| format!("gltf: bufferView index {bv_idx} out of range"))?;
+    let bv = document.get("bufferViews").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(bv_idx).ok_or_else(|| format!("gltf: bufferView index {bv_idx} out of range"))?;
     let buffer_index = bv.get("buffer").and_then(json::Value::as_u64).unwrap_or(0) as usize;
     let byte_offset = bv.get("byteOffset").and_then(json::Value::as_u64).unwrap_or(0) as usize;
     let byte_stride = bv.get("byteStride").and_then(json::Value::as_u64).map(|value| value as usize);
@@ -723,7 +723,7 @@ fn gltf_read_bufferview_elements(document: &json::Value, buffers: &[Vec<u8>], bv
 /// 🧩️ Decodes `document.accessors[accessor_index]` against `buffers` — dense `bufferView` read,
 /// then `accessor.sparse` substitution (base is zero-filled when there's no `bufferView`).
 fn gltf_decode_accessor(document: &json::Value, buffers: &[Vec<u8>], accessor_index: usize) -> Result<Vec<f64>, String> {
-    let accessor = document.get("accessors").and_then(json::Value::as_array).unwrap_or(&[]).get(accessor_index).ok_or_else(|| format!("gltf: accessor index {accessor_index} out of range"))?;
+    let accessor = document.get("accessors").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(accessor_index).ok_or_else(|| format!("gltf: accessor index {accessor_index} out of range"))?;
     let component_type = accessor.get("componentType").and_then(json::Value::as_u64).ok_or_else(|| "gltf: accessor missing componentType".to_string())?;
     let accessor_type = accessor.get("type").and_then(json::Value::as_str).ok_or_else(|| "gltf: accessor missing type".to_string())?;
     let count = accessor.get("count").and_then(json::Value::as_u64).unwrap_or(0) as usize;
@@ -855,20 +855,20 @@ fn gltf_append_primitive(mesh: &mut MeshData, document: &json::Value, primitive:
 }
 
 fn gltf_append_mesh(mesh: &mut MeshData, document: &json::Value, mesh_index: usize, buffers: &[Vec<u8>], matrix: GlbMatrix) -> Result<(), String> {
-    let source = document.get("meshes").and_then(json::Value::as_array).unwrap_or(&[]).get(mesh_index).ok_or_else(|| format!("gltf: mesh index {mesh_index} out of range"))?;
-    for primitive in source.get("primitives").and_then(json::Value::as_array).unwrap_or(&[]) {
+    let source = document.get("meshes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(mesh_index).ok_or_else(|| format!("gltf: mesh index {mesh_index} out of range"))?;
+    for primitive in source.get("primitives").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
         gltf_append_primitive(mesh, document, primitive, buffers, matrix)?;
     }
     Ok(())
 }
 
 fn gltf_append_node(mesh: &mut MeshData, document: &json::Value, node_index: usize, parent: GlbMatrix, buffers: &[Vec<u8>]) -> Result<(), String> {
-    let node = document.get("nodes").and_then(json::Value::as_array).unwrap_or(&[]).get(node_index).ok_or_else(|| format!("gltf: node index {node_index} out of range"))?;
+    let node = document.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice).get(node_index).ok_or_else(|| format!("gltf: node index {node_index} out of range"))?;
     let matrix = glb_matrix_mul(parent, gltf_node_local_matrix(node));
     if let Some(mesh_index) = node.get("mesh").and_then(json::Value::as_u64) {
         gltf_append_mesh(mesh, document, mesh_index as usize, buffers, matrix)?;
     }
-    for child in node.get("children").and_then(json::Value::as_array).unwrap_or(&[]) {
+    for child in node.get("children").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
         if let Some(child_index) = child.as_u64() {
             gltf_append_node(mesh, document, child_index as usize, matrix, buffers)?;
         }
@@ -887,17 +887,17 @@ pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
     let mut mesh = MeshData::default();
 
     let scene_index = document.get("scene").and_then(json::Value::as_u64).map(|value| value as usize);
-    let scenes = document.get("scenes").and_then(json::Value::as_array).unwrap_or(&[]);
+    let scenes = document.get("scenes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice);
     let scene = scene_index.and_then(|index| scenes.get(index)).or_else(|| scenes.first());
 
     if let Some(scene) = scene {
-        for node in scene.get("nodes").and_then(json::Value::as_array).unwrap_or(&[]) {
+        for node in scene.get("nodes").and_then(json::Value::as_array).map_or(&[][..], Vec::as_slice) {
             if let Some(node_index) = node.as_u64() {
                 gltf_append_node(&mut mesh, &document, node_index as usize, glb_identity(), &buffers)?;
             }
         }
     } else {
-        let mesh_count = document.get("meshes").and_then(json::Value::as_array).map(<[json::Value]>::len).unwrap_or(0);
+        let mesh_count = document.get("meshes").and_then(json::Value::as_array).map_or(0, Vec::len);
         for mesh_index in 0..mesh_count {
             gltf_append_mesh(&mut mesh, &document, mesh_index, &buffers, glb_identity())?;
         }

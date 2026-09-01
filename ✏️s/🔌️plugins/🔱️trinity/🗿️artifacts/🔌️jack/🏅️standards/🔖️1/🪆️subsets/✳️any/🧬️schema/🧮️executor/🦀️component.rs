@@ -92,7 +92,7 @@ pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
 /// ▶️ Execute jack and return JSON result.
 pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     let result = run(graph, source)?;
-    serde_json::to_string(&result).map_err(|e| e.to_string())
+    pack::to_json_string(&result).map_err(|e| e.to_string())
 }
 
 fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {

@@ -3,10 +3,11 @@
 use crate::props::{latent_heat_vaporization, saturation_pressure_pa};
 use crate::units::H_FG_0C;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Humidifier
 /// 💦️ Humidifier types.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum Humidifier {
     SteamElectric { capacity_kg_s: f64, efficiency: f64 },
     SteamGas { capacity_kg_s: f64, efficiency: f64 },
@@ -15,7 +16,7 @@ pub enum Humidifier {
 }
 
 /// 📥️ Humidifier boundary conditions.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HumidifierInlet {
     pub dry_bulb_c: f64,
     pub humidity_ratio: f64,
@@ -25,7 +26,7 @@ pub struct HumidifierInlet {
 }
 
 /// 📤️ Humidifier output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct HumidifierOutput {
     pub humidity_ratio: f64,
     pub water_added_kg_s: f64,
@@ -36,7 +37,7 @@ pub struct HumidifierOutput {
 
 // #region 🔖️Dehumidifier
 /// 🌬️ Dehumidifier types.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum Dehumidifier {
     Refrigerant { cop: f64, capacity_kg_s: f64 },
     Desiccant { regen_temp_c: f64, moisture_removal_kg_s: f64, regen_power_w: f64 },
@@ -44,7 +45,7 @@ pub enum Dehumidifier {
 }
 
 /// 📥️ Dehumidifier boundary conditions.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DehumidifierInlet {
     pub dry_bulb_c: f64,
     pub humidity_ratio: f64,
@@ -54,7 +55,7 @@ pub struct DehumidifierInlet {
 }
 
 /// 📤️ Dehumidifier output.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DehumidifierOutput {
     pub humidity_ratio: f64,
     pub moisture_removed_kg_s: f64,

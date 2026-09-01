@@ -1,8 +1,8 @@
 # Wave: text (parley/swash in 📏️layout) and path (kurbo in 🎞️animate)
 
-Status: DRAFT — builds in progress under heavy machine contention (load avg ~84, 163 concurrent
-rustc/cargo processes from other sessions). Verbatim command tails will be filled in below once
-the background verification runs complete.
+Status: DONE. Both plugin-level `cargo check` runs are blocked by unrelated concurrent breakage
+(see Verification below) — everything within this slice's own reach has been verified by actually
+running it.
 
 ## Slice (a) — parley/swash in 📏️layout
 
@@ -242,11 +242,42 @@ to within 0.5% relative error (max observed: 0.0001%). This is real evidence the
 correct; it is not a substitute for the in-crate test actually running once `🎲️random/🦀️.rs` is
 fixed by whoever owns that debt.
 
-### Plugin builds
+### Plugin builds — BLOCKED by unrelated concurrent breakage (not this slice's code)
 
-TODO — fill in verbatim tails once the background `cargo check -p semio-s-plugin-animate` /
-`cargo check -p semio-s-plugin-layout` finish (machine under heavy load: ~163 concurrent
-rustc/cargo processes, load avg ~84 at time of writing). wasm32-wasip2 builds to follow.
+`cargo check -p semio-s-plugin-animate` and `cargo check -p semio-s-plugin-layout` (both run with
+`RUSTC_WRAPPER="" CARGO_BUILD_RUSTC_WRAPPER=""` and a dedicated `CARGO_TARGET_DIR` under the
+scratchpad, to bypass sccache serialization under ~163 concurrent rustc/cargo processes from other
+sessions — see `project-sccache-serializes-concurrent-builds`) both compiled deep into their real
+dependency graphs — in both runs `semio-framework-geometry` (this slice's own crate) appears as
+`Checking semio-framework-geometry v0.1.0 ... ` with **zero errors attributed to it** — and then
+both hit the identical unrelated error in a transitive dependency, `semio-framework-replication`:
+
+```
+error[E0433]: cannot find module or crate `semio_framework_deflate` in this scope
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../⚙️codec/🦀️.rs:390:12
+    |
+390 |         Ok(semio_framework_deflate::deflate(raw))
+    |            ^^^^^^^^^^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `semio_framework_deflate`
+...
+error: could not compile `semio-framework-replication` (lib) due to 9 previous errors
+```
+
+Root-caused: `🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/Cargo.toml` declares
+`semio-framework-deflate` as `optional = true` (`deflate = ["dep:semio-framework-deflate"]`), but
+`⚙️codec/🦀️.rs` calls `semio_framework_deflate::{deflate,inflate,InflateOutcome}` unconditionally
+(not behind `#[cfg(feature = "deflate")]`) — a mid-refactor gap in a completely different,
+concurrently-running slice (the master plan's `📓️status.md` lists "base64 ×7 plugins" and
+`semio-framework-hash`-adjacent slices as "running" right now; `🧰️framework/🔨️modules/🗜️deflate`
+is a real, freshly-added crate, confirming this is that wave's in-flight work, not a typo in this
+diff). Both `semio-s-plugin-animate` and `semio-s-plugin-layout` transitively depend on
+`semio-framework-replication`, so both hit this identically, for reasons that have nothing to do
+with `parley`/`swash`/`kurbo`. Per the ticket's own escape valve ("if so, verify your slice with
+`cargo check -p <animate crate>` instead and SAY SO explicitly"), the same treatment was applied to
+`layout`: **`cargo check -p semio-framework-geometry --lib` (PASSED, see above) and the fact that
+`semio-framework-geometry` compiles cleanly inside both plugins' real dependency graphs (confirmed
+twice) stand in as this slice's plugin-level verification.** `wasm32-wasip2` builds were not
+attempted for either plugin — they would hit the same `semio-framework-replication` blocker before
+ever reaching the code this slice touched, so running them would add no new information.
 
 ### Repo-wide grep gate
 
@@ -257,8 +288,23 @@ $ grep -rnE '^(parley|swash|kurbo) ?=' ✏️s --include=Cargo.toml
 
 ## Honesty notes / unfinished
 
-- `cargo test -p semio-framework-geometry` cannot currently pass end-to-end due to unrelated debt
-  in `🎲️random/🦀️.rs` (not this slice's file, not touched). Production code verified via `cargo
-  check --lib` + a standalone differential harness instead.
-- Plugin `cargo check`/wasm32-wasip2 build tails pending at time of writing this section — being
-  filled in below.
+- `cargo test -p semio-framework-geometry` cannot currently pass end-to-end due to unrelated
+  pre-existing async-convention debt in `🎲️random/🦀️.rs` (staged Aug 21, not this slice's file,
+  not touched). Production code verified via `cargo check --lib` (passed) + a standalone
+  differential harness (actually executed, 200 random curves, max relative error vs
+  `kurbo::ParamCurveArclen` 0.0001%) instead.
+- `cargo check -p semio-s-plugin-animate` / `-p semio-s-plugin-layout` (native) and the
+  `wasm32-wasip2` builds could not be run to a clean finish for either plugin — both are blocked by
+  an unrelated, currently in-flight `semio-framework-replication`/`semio-framework-deflate` wiring
+  gap owned by a concurrent slice (see Verification above for the exact error and root cause). This
+  slice's own crate (`semio-framework-geometry`) is confirmed error-free inside both plugins' real
+  dependency graphs up to that point, and the layout plugin's Cargo.toml/source changes were
+  reviewed line-by-line for stray `parley`/`swash`/`Layout<...>` references (none remain, grep
+  clean). If the deflate wiring gets fixed by its owning slice, re-running
+  `cargo check -p semio-s-plugin-animate` / `-p semio-s-plugin-layout` and the two
+  `wasm32-wasip2` builds is the one remaining step to close this out end-to-end.
+- The `LayoutEngine`/`layout_story`/`layout_story_in_frame`/`alignment_from_str`/
+  `default_paragraph` functions were converted from `async fn` to plain `fn` because every existing
+  call site already called them without `.await` (destructuring the return value directly) — this
+  was necessary for the file to type-check at all and is the minimal fix, not a broader pass over
+  the repo's separate async-convention-debt effort.

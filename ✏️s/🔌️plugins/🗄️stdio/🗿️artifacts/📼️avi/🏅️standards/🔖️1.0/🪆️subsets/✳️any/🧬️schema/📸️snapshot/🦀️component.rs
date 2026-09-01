@@ -12,7 +12,6 @@
 
 use crate::artifacts::avi::standards::v1_0::subsets::any::io as engine;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
@@ -20,8 +19,8 @@ pub const STDIO_AVI_DOCUMENT_SCHEMA: &str = "stdio.avi";
 
 //#region 🔖️MainHeader
 /// 🏷️ `avih` — MainAVIHeader, all 14 DWORDs typed (56 bytes). <https://learn.microsoft.com/windows/win32/directshow/avimainheader>
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviMainHeader {
     pub micro_sec_per_frame: u32,
     pub max_bytes_per_sec: u32,
@@ -34,7 +33,7 @@ pub struct AviMainHeader {
     pub width: u32,
     pub height: u32,
     /// 🕳️ `dwReserved[4]` — verbatim, never fabricated.
-    #[serde(default)]
+    #[value(default)]
     pub reserved: Vec<u32>,
 }
 //#endregion 🔖️MainHeader
@@ -44,8 +43,8 @@ pub struct AviMainHeader {
 /// the trailing `rcFrame` rectangle is NOT: real encoders (ffmpeg's own AVI-1.0 muxer included)
 /// still write the classic pre-Win32 form with `rcFrame` as 4 16-bit `SHORT`s (56 bytes total), not
 /// only the modern 4 `LONG`s form (64 bytes) most docs describe. <https://learn.microsoft.com/windows/win32/directshow/avistreamheader>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviStreamHeader {
     pub fcc_type: String,
     pub fcc_handler: String,
@@ -70,11 +69,11 @@ pub struct AviStreamHeader {
     /// form). `decode_avi` records whichever width the source actually used so a real 56-byte
     /// `strh` round-trips byte-for-byte instead of being silently promoted to 64 bytes. Hand-built
     /// headers default to `16`, the complete/preferred form.
-    #[serde(default = "default_rc_frame_width")]
+    #[value(default = "default_rc_frame_width")]
     pub rc_frame_width: u8,
     /// 📎 Any bytes beyond the documented 64-byte `AVISTREAMHEADER`, verbatim — rare, retained so
     /// an unusually padded real `strh` round-trips losslessly rather than being silently truncated.
-    #[serde(default)]
+    #[value(default)]
     pub strh_extra: Vec<u8>,
 }
 
@@ -112,8 +111,8 @@ fn default_rc_frame_width() -> u8 {
 
 //#region 🔖️StreamFormat
 /// 🎨️ `strf`, discriminated by the owning stream's `fccType`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "format", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "format", rename_all = "camelCase")]
 pub enum AviStreamFormat {
     /// 🖼️ `BITMAPINFOHEADER` (40 bytes; `vids`). <https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader>
     BitmapInfo { size: u32, width: i32, height: i32, planes: u16, bit_count: u16, compression: String, size_image: u32, x_pels_per_meter: i32, y_pels_per_meter: i32, colors_used: u32, colors_important: u32 },
@@ -125,7 +124,7 @@ pub enum AviStreamFormat {
         avg_bytes_per_sec: u32,
         block_align: u16,
         bits_per_sample: u16,
-        #[serde(default)]
+        #[value(default)]
         extra: Vec<u8>,
     },
     /// 📦 Any other `fccType` — verbatim `strf` payload bytes.
@@ -143,26 +142,26 @@ impl Default for AviStreamFormat {
 /// 🎞️ One `movi` chunk belonging to this stream — fourcc (e.g. `"00dc"`), payload bytes, and
 /// whether `idx1` (or the no-`idx1` fallback, per spec: absent index ⇒ every scanned chunk is
 /// treated as a sync point) marks it a keyframe.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviChunk {
     pub fourcc: String,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
     pub keyframe: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviStream {
     pub strh: AviStreamHeader,
     pub strf: AviStreamFormat,
-    #[serde(default)]
+    #[value(default)]
     pub chunks: Vec<AviChunk>,
     /// 📦️ Typed-raw retention for this stream's `strl` children besides `strh`/`strf` (e.g. a
     /// `vprp` video-properties chunk, `JUNK` padding) — verbatim fourcc + payload, replayed after
     /// `strh`/`strf` on encode. Real ffmpeg AVI-1.0 output carries both of these inside `strl`.
-    #[serde(default)]
+    #[value(default)]
     pub strl_extra: Vec<RiffChunk>,
 }
 //#endregion 🔖️Chunk
@@ -171,37 +170,37 @@ pub struct AviStream {
 /// 📦️ Typed-raw retention for a top-level RIFF child this codec doesn't otherwise type (any
 /// entry inside `AVI `'s body besides `hdrl`/`movi`/`idx1`) — verbatim fourcc + payload, replayed
 /// at the same relative position (after `idx1`) on encode.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RiffChunk {
     pub fourcc: String,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 //#endregion 🔖️RawChunk
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.avi")]
 pub struct AviSnapshot {
     #[state(artifact)]
-    #[serde(default = "default_schema")]
+    #[value(default = "default_schema")]
     pub schema: String,
     #[state(artifact)]
     pub main_header: AviMainHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub streams: Vec<AviStream>,
     #[state(artifact)]
     pub idx1_present: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub unknown_chunks: Vec<RiffChunk>,
     /// 📦️ Typed-raw retention for `hdrl` children besides `avih`/`strl` (e.g. `JUNK` padding
     /// directly inside `hdrl`) — verbatim fourcc + payload, replayed after every `strl` on encode.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub hdrl_extra: Vec<RiffChunk>,
 }
 

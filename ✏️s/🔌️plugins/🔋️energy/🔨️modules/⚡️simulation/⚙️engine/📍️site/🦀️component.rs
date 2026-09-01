@@ -12,10 +12,11 @@ use crate::units::{deg_to_rad, rad_to_deg};
 use semio_s_plugin_stdio::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwRecord;
 use semio_s_plugin_stdio::artifacts::epw::EpwSnapshot;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️WeatherRecord
 /// 🌡️ One timestep of outdoor weather.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct WeatherRecord {
     pub year: u16,
     pub month: u8,
@@ -84,7 +85,7 @@ impl TryFrom<&EpwRecord> for WeatherRecord {
 
 // #region 🔖️Epw
 /// 📄️ EPW weather file parsed into typed records.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EpwWeather {
     pub location: String,
     pub latitude_deg: f64,
@@ -146,14 +147,14 @@ impl EpwWeather {
 
 // #region 🔖️DesignDay
 /// 🌡️ Sizing design day specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum DesignDayKind {
     Heating,
     Cooling,
     Custom,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct DesignDay {
     pub name: String,
     pub kind: DesignDayKind,
@@ -166,7 +167,7 @@ pub struct DesignDay {
     pub solar_model: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum DesignDayHumidity {
     Wetbulb { wetbulb_at_max_c: f64 },
     Dewpoint { dewpoint_c: f64 },
@@ -189,7 +190,7 @@ impl DesignDay {
 
 // #region 🔖️Solar
 /// ☀️ Solar position for a site and datetime.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct SolarPosition {
     pub altitude_deg: f64,
     pub azimuth_deg: f64,
@@ -219,7 +220,7 @@ pub fn sky_temperature_k(t_dry_c: f64, t_dew_c: f64) -> f64 {
 
 // #region 🔖️Ground
 /// 🌍️ Ground temperature model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum GroundTemperatureModel {
     Monthly { temperatures_c: [f64; 12] },
     Shallow { annual_amplitude_k: f64, phase_shift_days: f64, mean_c: f64 },
@@ -243,7 +244,7 @@ impl GroundTemperatureModel {
 }
 
 /// 🚰️ Water mains temperature model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum WaterMainsModel {
     Constant { temperature_c: f64 },
     Monthly { temperatures_c: [f64; 12] },

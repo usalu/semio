@@ -208,7 +208,7 @@ pub fn partial_correlation(corr: &MatD, i: usize, j: usize, given: &[usize]) -> 
 /// `crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_internals::MatD::lu_solve` — adequate at causal-discovery scale (small `p`, modest
 /// condition numbers); swap to Householder QR internally if that ever becomes a bottleneck, the
 /// public API here would not need to change.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct LinearFit {
     pub coefficients: Vec<f64>,
     pub std_errors: Vec<f64>,
@@ -260,7 +260,7 @@ pub fn ols(x: &MatD, y: &[f64], intercept: bool) -> Result<LinearFit, Statistics
 // #region 🔖️Logistic
 /// 📐️ Logistic fit via iteratively reweighted least squares (IRLS): `β ← β + (XᵀWX)⁻¹Xᵀ(y − μ)`,
 /// `W = diag(μ(1−μ))` clamped to `≥ 1e-10` to avoid weight collapse near separation.
-#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, value_derive::ToValue, value_derive::FromValue)]
 pub struct LogisticFit {
     pub coefficients: Vec<f64>,
     pub std_errors: Vec<f64>,
@@ -398,7 +398,7 @@ fn build_strata(x: &[u32], y: &[u32], given: &[&[u32]], nx: usize, ny: usize, gi
 
 // #region 🔖️Tests
 /// 📏️ A hypothesis-test outcome: statistic, two-sided p-value, and (possibly fractional) degrees of freedom.
-#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct TestResult {
     pub statistic: f64,
     pub p_value: f64,

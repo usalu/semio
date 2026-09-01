@@ -18,6 +18,9 @@ use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
 };
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state.
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -26,7 +29,7 @@ use store::EngineHandles;
 /// `SetStructureField` only reaches the two top-level scalars the tree renders as addressable nodes
 /// (`name`/`version`) — the tree's other nodes are a read overview of the model's collection sizes,
 /// not yet individually addressable edit targets; documented honestly, not silently incomplete.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslOps)]
 pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-structure-field")]
     SetStructureField { field: String, value: String },
@@ -252,7 +255,7 @@ impl ArtifactEditor for EnergyModelEditor {
             }
             _ => unreachable!("simulation events returned before document mutation dispatch"),
         };
-        let new_model_json = serde_json::to_string(&model).unwrap_or_default();
+        let new_model_json = pack::json::to_json_string(&model);
         Ok(Emit { artifact_mutations: vec![EnergyModelMutation::ReplaceModel(ReplaceModel { new_model_json })], description: Some(description), ..Default::default() })
     }
 

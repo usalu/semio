@@ -5,34 +5,34 @@
 
 /// 📦️ Owned by `mp3`: one ID3v2 text/binary frame, typed-raw (`id`/`flags` decoded, `data`
 /// retained verbatim — this codec does not interpret ID3 text-encoding bytes).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Id3Frame {
     pub id: String,
     pub flags: u16,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 
 /// 📦️ Owned by `mp3`: the ID3v2 tag header (version/flags, as two named fields — not a bare
 /// tuple, per the recipe's own ban) + its frames.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Id3v2Tag {
     pub major_version: u8,
     pub minor_version: u8,
     pub flags: u8,
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<Id3Frame>,
 }
 
 /// 📦️ Owned by `mp3`: the 128-byte ID3v1 trailer, retained verbatim as a NAMED struct (not a
 /// bare `[u8;128]`, per the recipe's tuple/array-gap guidance) — this codec does not decode
 /// ID3v1's fixed-width title/artist/album/year/comment/genre sub-fields.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Id3v1Tag {
-    #[serde(default)]
+    #[value(default)]
     pub raw: Vec<u8>,
 }
 
@@ -40,8 +40,8 @@ pub struct Id3v1Tag {
 /// individually (raw bit-field values, matching the spec's own encoding — e.g.
 /// `channel_mode: 3` = mono, per `fixtures/mp3/NOTES.md`), plus the frame's payload bytes
 /// (opaque-retained; the HONEST boundary this artifact draws — no Huffman/MDCT decode).
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Mp3FrameHeader {
     /// `0`=MPEG2.5, `2`=MPEG2, `3`=MPEG1 (`1` is the spec-reserved value).
     pub mpeg_version_id: u8,
@@ -61,36 +61,35 @@ pub struct Mp3FrameHeader {
     pub emphasis: u8,
 }
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Mp3Frame {
     pub header: Mp3FrameHeader,
-    #[serde(default)]
+    #[value(default)]
     pub payload: Vec<u8>,
 }
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_MP3_DOCUMENT_SCHEMA: &str = "stdio.mp3";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp3")]
 pub struct Mp3Snapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub id3v2: Option<Id3v2Tag>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<Mp3Frame>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub id3v1: Option<Id3v1Tag>,
 }
 

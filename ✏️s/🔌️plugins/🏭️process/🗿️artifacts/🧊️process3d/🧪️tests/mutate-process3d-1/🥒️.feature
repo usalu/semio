@@ -36,23 +36,20 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
   and `replace-stock-solid` for the large structured BREP child handle. `change-cursor` is the one
   document-level scalar, the replay position the viewer resolves up to.
 
-  A gap, named kind by kind rather than averaged away. Seven of the sixteen kinds — `create-step`,
-  `delete-step`, `rename-step`, `change-step-enabled`, `change-step-origin`, `replace-step-measure`
-  and `reorder-steps`, that is every step-scoped verb — are implemented TODAY as documented no-ops.
-  Their diff builders take `_payload` and `_base` by underscore and return
-  `MutationOutcome::empty().warn("mutation.no-op", ...)`, because the timeline is a composed
-  `s.stdio.semio.flow` child and no link resolver exists yet. Their committed vectors record exactly
-  that: a fully formed step payload, a before-snapshot equal to the after-snapshot, an empty diff and
-  one `mutation.no-op` message. This case asserts that declared behaviour precisely — the empty diff,
-  the warning and the untouched document — which is a real check on the documented degradation, and
-  it does NOT assert observability for those seven, which is why they are listed by name in the
-  adapter's own `mutation_is_observable` call. Their forward semantics are uncovered until the flow
-  link resolver lands, and no fixture was invented to hide that.
+  All sixteen kinds are genuine, ticket `26/09/01/PROCESS-END-TO-END`. The seven step-scoped verbs —
+  `create-step`, `delete-step`, `rename-step`, `change-step-enabled`, `change-step-origin`,
+  `replace-step-measure` and `reorder-steps` — used to be documented no-ops (the timeline read
+  through an unresolved composed `s.stdio.semio.flow` child, with no resolver reaching it), but
+  `step_payloads` is the durable, inline timeline record since `26/08/12/UNIFIED-COMPOSABLE-
+  ARTIFACT-SYSTEM` wave 4, so every one of them now mutates it directly and re-mints `steps`/
+  `tool_solids` to match (`process3d_step_timeline_diff`, reusing `process_working_scene_to_
+  snapshot`'s own minting). Their committed vectors record the real observed effect, and the
+  adapter's `mutation_is_observable` call no longer lists any kind as exempt.
 
-  The other nine are genuine. `replace-machine-capabilities` trades a blade cut for a GATED pocket
-  cut, so a capability list that dropped the gate rule fails. `move-stock` lifts AND tilts, so a pose
-  codec that carried position and forgot the axis-angle fails. `replace-stock-solid` reissues the
-  stock BREP child handle, which is the one place a content-addressed digest has to move.
+  `replace-machine-capabilities` trades a blade cut for a GATED pocket cut, so a capability list
+  that dropped the gate rule fails. `move-stock` lifts AND tilts, so a pose codec that carried
+  position and forgot the axis-angle fails. `replace-stock-solid` reissues the stock BREP child
+  handle, which is the one place a content-addressed digest has to move.
 
   The identity round trip reads the artifact's own committed demo example, a 12 KB document whose
   workshop is hex-encoded JSON carrying a bench saw, a drill, an attacher, a circular saw with a

@@ -835,7 +835,9 @@ pub mod native {
 /// interface via an unbounded channel) so a future in-wasm host can link this client. NOT the
 /// production browser path today — the React shell uses lane 1-C's TypeScript `DirectoryClient`
 /// (`🏪️store/🔄️sync`'s own module doc: "The production browser shell instead uses a TS twin").
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, and this bridge is browser-only,
+// so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub mod browser {
     use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
     use semio_framework_async::browser::JsFuture;

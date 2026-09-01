@@ -40,7 +40,6 @@ use crate::artifacts::obj::schema::snapshot::{ObjFaceVertex, ObjGroup, ObjObject
 use crate::artifacts::obj::ObjSnapshot;
 use protocol::{Mutation, MutationDiff};
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -91,9 +90,9 @@ pub mod set_unknown_statements;
 /// 📐️ Typed content mutation for `stdio.obj`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = ObjSnapshot, diff = ObjDiff, schema = "ObjMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ObjMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
 

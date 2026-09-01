@@ -14,14 +14,13 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️VideoModel
 /// 🎞️ Owned by the `video` subset (per `w1b-type-ownership.md`): `SemioVideoStream`,
 /// `SemioVideoSample`, plus this subset's own `SemioVideoStreamKind`/`SemioRational` (not shared
 /// engine types — `Rational` is video-specific, unlike `SemioPoint3`/`SemioTransform` etc).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum SemioVideoStreamKind {
     #[default]
     Video,
@@ -31,8 +30,8 @@ pub enum SemioVideoStreamKind {
 
 /// 🎚️ A frame/sample rate as an exact fraction — named struct, never a bare tuple (f6-final-summary.md
 /// §4.3: `dsl` has no blanket `DslField` impl for tuples of any arity).
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioRational {
     pub num: i64,
     pub den: i64,
@@ -47,31 +46,31 @@ impl Default for SemioRational {
 
 /// 🎯️ One decoded/encoded unit within a stream. `data` is the format's opaque compressed payload
 /// (honest boundary — never decoded by this subset).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoSample {
     pub pts: u64,
-    #[serde(default)]
+    #[value(default)]
     pub key: bool,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 
 /// 🎞️ One elementary stream (video/audio/subtitle track) inside the container.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoStream {
-    #[serde(default)]
+    #[value(default)]
     pub kind: SemioVideoStreamKind,
-    #[serde(default)]
+    #[value(default)]
     pub codec: String,
-    #[serde(default)]
+    #[value(default)]
     pub width: u32,
-    #[serde(default)]
+    #[value(default)]
     pub height: u32,
-    #[serde(default)]
+    #[value(default)]
     pub rate: SemioRational,
-    #[serde(default)]
+    #[value(default)]
     pub samples: Vec<SemioVideoSample>,
 }
 //#endregion 🔖️VideoModel
@@ -81,14 +80,14 @@ pub const STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA: &str = "stdio.semio.video";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.video")]
 pub struct SemioVideoSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub streams: Vec<SemioVideoStream>,
 }
 

@@ -9,11 +9,10 @@ use crate::artifacts::bmp::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use crate::editor::bmp::modes::edit;
 use crate::editor::bmp::modes::edit::windows::main;
 use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Command
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum BmpEditCommand {
     SetPixelRegion { pixels: Vec<u8> },
 }

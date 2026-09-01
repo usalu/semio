@@ -6,12 +6,11 @@
 //! row/col grid).
 
 use crate::artifacts::xlsx::XlsxSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Xlsx` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct XlsxOutline {
     pub sheet_names: Vec<String>,
     pub sheet_count: u32,

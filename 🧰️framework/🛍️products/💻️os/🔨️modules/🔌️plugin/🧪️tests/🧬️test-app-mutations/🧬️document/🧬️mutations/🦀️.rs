@@ -4,8 +4,9 @@
 pub(crate) use set_count::SetCount;
 pub(crate) use set_label::SetLabel;
 
-#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize,dsl::DslOps,dsl::Mutations)]
+#[derive(Clone,Debug,PartialEq,serde::Serialize,serde::Deserialize,ToValue, FromValue, dsl::DslOps,dsl::Mutations)]
 #[serde(tag="operation",content="payload",rename_all="camelCase",deny_unknown_fields)]
+#[value(tag = "operation", content = "payload", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot=super::TestSnapshot,diff=super::TestDiff,schema="plugin.testkit.document")]
 pub(crate) enum TestMutation { SetCount(SetCount), SetLabel(SetLabel) }
 

@@ -2,12 +2,12 @@
 
 use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, dsl::DslRecord, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[dsl(id = "fem.fem2d", layout = "lines")]
 #[artifact_schema(id = "s.fem.fem2d")]
 pub struct Fem2dSnapshot {
@@ -101,13 +101,13 @@ pub fn fem2d_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical_again = <Fem2dSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
     let packed = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
     let unpacked = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
-    let report = serde_json::json!({
-        "parsed": serde_json::to_value(&parsed).map_err(|error| error.to_string())?,
-        "reparsed": serde_json::to_value(&reparsed).map_err(|error| error.to_string())?,
-        "packDecoded": serde_json::to_value(&unpacked).map_err(|error| error.to_string())?,
-        "canonicalText": canonical,
-        "canonicalTextAgain": canonical_again,
-    });
-    Ok(report.to_string())
+    let report = dsl::DslValue::object([
+    ("parsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&parsed))),
+    ("reparsed".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&reparsed))),
+    ("packDecoded".to_string(), dsl::ToValue::to_value(&dsl::ToValue::to_value(&unpacked))),
+    ("canonicalText".to_string(), dsl::ToValue::to_value(&canonical)),
+    ("canonicalTextAgain".to_string(), dsl::ToValue::to_value(&canonical_again)),
+    ]);
+    Ok(dsl::json::to_json_string(&report))
 }
 //#endregion 🌉️IdentityBridge

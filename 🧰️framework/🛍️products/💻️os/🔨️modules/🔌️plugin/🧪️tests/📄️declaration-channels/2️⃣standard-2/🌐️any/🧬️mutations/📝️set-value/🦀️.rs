@@ -2,10 +2,12 @@
 //! 📝️ Replaces the Std2Any fixture's value with an authored i32.
 use super::{Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct SetValue { pub value: i32 }
 
 impl protocol::MutationKind<Std2AnySnapshot, Std2AnyMutation> for SetValue {

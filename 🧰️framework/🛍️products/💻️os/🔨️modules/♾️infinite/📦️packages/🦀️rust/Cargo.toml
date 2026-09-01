@@ -35,26 +35,57 @@ path = "📦️glue.rs"
 
 [dependencies]
 semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value-derive = { path = "../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-job = { workspace = true }
 semio-framework = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 math = { path = "../../../../../../🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 geometry = { path = "../../../../../../🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 graph = { path = "../../../../../../🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
 ui_styling = { path = "../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
 semio_framework_3d = { path = "../../../../../../🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 compiler = { path = "../../../../../../🔨️modules/📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
-vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
-typst = "0.14.2"
-typst-svg = "0.14.2"
-typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
 base64 = "0.22.1"
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
+# ⚠️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): a prior attempt to move
+# `vello`/`vello_svg`'s `wgpu` feature and `ui_wgpu`'s `wgpu-engine` feature behind a
+# `not(target_env = "p2")` target table was REVERTED here because `🌍️world/🦀️component.rs` named
+# ~26 `ui_wgpu::wgpu` symbols (`Mesh3dFault`, `BoundedActionFault`, …) unconditionally, forcing
+# `wgpu-engine` to stay on for every target including wasip2. That root cause is now fixed: those
+# symbols were split into the target-neutral `ui_wgpu::draw_types`/`ui_wgpu::gizmo`/`action`/`input`
+# tier (see `🖱️ui/🎯️targets/🧊️wgpu/📦️glue.rs`'s top docstring), so `wgpu-engine` — and with it the
+# real `wgpu` crate and its `wasm-bindgen-futures`/`js-sys`/`wasm-bindgen` chain — can finally be
+# narrowed away from `wasm32-wasip2` here too. `gpu_session` (`🖼️canvas/🦀️component.rs`, the only
+# consumer of `vello::Renderer`/`util::RenderContext`/`vello::wgpu` in this crate) is already
+# `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]`-gated, so no wasip2 capability is
+# lost — `vello::Scene`/`peniko`/`kurbo` (the target-neutral drawing-command/geometry types this
+# crate's `🎲️board` code builds unconditionally) stay available via `default-features = false`.
+#
+# 🔤️ `typst-assets` (fonts blob for `dump-guestslim-typst-fonts`, a native dev-tool `[[bin]]` never
+# built as part of the wasip2 component) lives here too, same reasoning. `typst`/`typst-svg`
+# themselves were deleted outright (not narrowed) — grepped zero usage anywhere in this crate's
+# source on ANY target, native included; they dragged in `usvg@0.45.1`/`biblatex`/`citationberg`/
+# `comemo`/`ciborium`/… (100+ crates) for nothing. `usvg@0.46.0` (via `vello_svg`, used
+# unconditionally by `🖼️canvas`'s icon/SVG-icon rendering) is unrelated and stays on both targets.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu", "wgpu-engine"] }
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.9.0", default-features = true, features = ["wgpu"] }
+typst-assets = { version = "0.14.2", features = ["fonts"], optional = true }
+
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+ui_wgpu = { path = "../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
+vello = { version = "0.7.0", default-features = false }
+vello_svg = { version = "0.9.0", default-features = false }
+
+# 🌉️ Browser-only session bridges (`gpu_session`/`wasm_session`/`wasm_bridge` in `🖼️canvas` and
+# `🎲️board/…/🕸️dag`, plus the `wasm_bindgen_futures` alias their async-fn codegen needs). Excluded
+# from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the WASI component target too —
+# the wasip2 guest never attaches an `HtmlCanvasElement`. `dag_debug_log`/`pointer_event_now_ms`
+# (same `🕸️dag` file) needed genuine wasip2 arms instead — see their docstrings.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 semio-framework-async = { workspace = true }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"

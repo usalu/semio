@@ -32,7 +32,7 @@ title-line = "title" "=" opt-hex
 document-line = "document" "=" child-handle
 flow-line = "flow" "=" child-handle
 
-opt-hex = "[0]" / "[1," hex "]"
+opt-hex = "[0]" | "[1," hex "]"
 child-handle = "[" hex "," hex "]"
 
 # `hex` (bare, deliberately not defined as a local production) is the framework's built-in `hex`

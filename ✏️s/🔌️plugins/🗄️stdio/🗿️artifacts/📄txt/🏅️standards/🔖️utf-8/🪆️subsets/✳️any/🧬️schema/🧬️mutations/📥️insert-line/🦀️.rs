@@ -3,16 +3,15 @@
 use crate::artifacts::txt::TxtSnapshot;
 use crate::artifacts::txt::schema::diff::{TxtDiff, TxtLineAdded, TxtLinesDiff};
 use crate::artifacts::txt::schema::mutation_support::{native_shape_error, native_snapshot_error, native_text_error, txt_u32_to_usize, txt_usize_to_u32};
-use serde::{Deserialize, Serialize};
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
 #[path = "📝️text/🦀️.rs"]
 pub mod text;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertLineMutation {
     pub index: u32,
     pub text: String,

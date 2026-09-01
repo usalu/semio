@@ -10,10 +10,8 @@ use crate::artifacts::space::standards::v1::subsets::any::schema::snapshot::SSpa
 use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation};
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "open-artifact")]
 pub struct OpenArtifact {
     pub id: String,
@@ -22,7 +20,7 @@ pub struct OpenArtifact {
 pub async fn handle(payload: &OpenArtifact, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let row = doc.snapshot.artifacts.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.mutation.target-missing"), format!("artifact `{}` not found", payload.id)))?;
     let artifact_ref = format!("{}@{}/{}", row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset);
-    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "documentId": row.id, "spaceId": doc.snapshot.space_id }))) }))
+    Ok(Emit::effect(Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "documentId": row.id, "spaceId": doc.snapshot.space_id }))) }))
 }
 
 //#region 🧪️Tests
@@ -44,7 +42,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.open-artifact");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().unwrap());
+                let args = pack::json_from_dsl_value(&args.clone().unwrap());
                 assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(id.as_str()));
                 assert!(args.get("role").is_none(), "role is omitted so the shell resolves OpeningPreferences");
             }

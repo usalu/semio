@@ -30,7 +30,7 @@ results-line = "results" "=" child-handle
 
 # `title`'s absent form is a bare `-`, NOT the `[0]`/`[1,...]` bracket convention
 # `raster.document`/`playbook.playbook` use — a distinct hand-rolled `enc_opt_str` in this file.
-opt-hex = "-" / hex
+opt-hex = "-" | hex
 child-handle = "[" hex "," hex "]"
 
 # `hex` (bare, deliberately not defined as a local production) is the framework's built-in `hex`

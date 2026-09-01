@@ -1,6 +1,7 @@
 //! ⚡️ Imperative core module: side-effecting action operators.
 
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
+use pack::json::{array, object, to_string, Value as JsonValue};
 
 // #region 🔖️LogPrint
 /// 📝️ Writes a message to the effect log.
@@ -91,32 +92,17 @@ pub fn register(registry: &mut Registry) {
 
 /// 📚️ Builds a catalogue JSON for UI palettes.
 pub fn catalogue_json(registry: &Registry) -> String {
-    let items: Vec<serde_json::Value> = registry
-        .operator_catalogue()
-        .into_iter()
-        .map(|info| {
-            serde_json::json!({
-                "kind": info.id,
-                "name": info.name,
-                "abbreviation": info.abbreviation,
-                "icon": info.icon,
-                "summary": info.summary,
-                "inputs": info.inputs.iter().map(|channel| serde_json::json!({
-                    "name": channel.name,
-                    "code": channel.code,
-                })).collect::<Vec<_>>(),
-            })
-        })
-        .collect();
-    serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue",
-        "sections": [{
-            "id": "actions",
-            "title": "Actions",
-            "items": items,
-        }],
-    }))
-    .unwrap_or_else(|_| "{}".into())
+    let items = array(registry.operator_catalogue().into_iter().map(|info| {
+        object([
+            ("kind".to_string(), JsonValue::from(info.id.as_str())),
+            ("name".to_string(), JsonValue::from(info.name.as_str())),
+            ("abbreviation".to_string(), JsonValue::from(info.abbreviation.as_str())),
+            ("icon".to_string(), JsonValue::from(info.icon.as_str())),
+            ("summary".to_string(), JsonValue::from(info.summary.as_str())),
+            ("inputs".to_string(), array(info.inputs.iter().map(|channel| object([("name".to_string(), JsonValue::from(channel.name.as_str())), ("code".to_string(), JsonValue::from(channel.code.as_str()))])))),
+        ])
+    }));
+    to_string(&object([("schema".to_string(), JsonValue::from("imperative.catalogue")), ("sections".to_string(), array([object([("id".to_string(), JsonValue::from("actions")), ("title".to_string(), JsonValue::from("Actions")), ("items".to_string(), items)])]))]))
 }
 
 pub fn module_registry() -> Registry {
@@ -181,10 +167,11 @@ mod tests {
     async fn catalogue_json_includes_input_channels() {
         let registry = module_registry();
         let raw = catalogue_json(&registry);
-        let parsed: serde_json::Value = serde_json::from_str(&raw).expect("catalogue json");
-        let message = parsed["sections"][0]["items"].as_array().and_then(|items| items.iter().find(|item| item["kind"] == "log.print")).and_then(|item| item["inputs"].as_array()).and_then(|inputs| inputs.first().cloned()).expect("log.print inputs");
-        assert_eq!(message["name"], "message");
-        assert_eq!(message["code"], "S");
+        let parsed = pack::json::parse(&raw).expect("catalogue json");
+        let items = parsed.get("sections").and_then(JsonValue::as_array).and_then(|sections| sections.first()).and_then(|section| section.get("items")).and_then(JsonValue::as_array).expect("catalogue items");
+        let message = items.iter().find(|item| item.get("kind").and_then(JsonValue::as_str) == Some("log.print")).and_then(|item| item.get("inputs")).and_then(JsonValue::as_array).and_then(|inputs| inputs.first()).expect("log.print inputs");
+        assert_eq!(message.get("name").and_then(JsonValue::as_str), Some("message"));
+        assert_eq!(message.get("code").and_then(JsonValue::as_str), Some("S"));
     }
 
     #[semio_framework_async_macros::async_test]

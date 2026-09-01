@@ -5,6 +5,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use dsl::DslValue;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[cfg(test)]
 use ::graph::manifest::PropertyValue;
@@ -251,8 +252,9 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 }
 
 /// 🔌️ Visual shape of a port handle cap.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
     Semicircle,
@@ -260,8 +262,9 @@ pub enum PortShape {
 }
 
 /// 📐️ Edge routing style between port handles.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, ToValue, FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
     Bezier,
@@ -269,35 +272,48 @@ pub enum EdgeRouteStyle {
 }
 
 /// 🪝️ Named horizontal port on a DAG node edge.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct IoPortSpec {
     pub id: String,
     pub label: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[value(default, skip_serializing_if = "String::is_empty")]
     pub code: String,
     #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[value(default, skip_serializing_if = "String::is_empty")]
     pub abbreviation: String,
     #[serde(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
+    #[value(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
     pub full_name: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[value(rename = "type", skip_serializing_if = "Option::is_none")]
     #[dsl(key = "type")]
     pub value_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub value: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
     #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
+    #[value(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
     pub artifact_kind: Option<String>,
     #[serde(default = "default_port_cardinality")]
+    #[value(default = "default_port_cardinality")]
     pub cardinality: String,
     #[serde(default)]
+    #[value(default)]
     pub shape: PortShape,
     #[serde(default = "default_port_visible")]
+    #[value(default = "default_port_visible")]
     pub visible: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub resolved: Option<bool>,
 }
 
@@ -366,16 +382,18 @@ impl IoPortSpec {
 }
 
 /// 🖼️ Screen media payload for output nodes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagMedia {
     pub kind: DagMediaKind,
     pub src: String,
 }
 
 /// 🎬️ Screen media kind discriminator.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub enum DagMediaKind {
     Image,
     Svg,
@@ -393,8 +411,9 @@ const DAG_PREVIEW_MAX_IMAGE: f64 = 200.0;
 const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
 #[serde(rename_all = "camelCase", tag = "variant")]
+#[value(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
     Empty,
@@ -638,15 +657,18 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTre
 // #endregion 🔖️PreviewContent
 
 /// 🧩️ Tagged node kind: computation, slider, select, or screen.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
     Computation {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
         #[serde(default)]
+        #[value(default)]
         variadic_inputs: bool,
         #[serde(default)]
+        #[value(default)]
         variadic_outputs: bool,
     },
     Slider {
@@ -659,11 +681,13 @@ pub enum DagNodeKind {
     Select {
         options: Vec<String>,
         #[serde(default)]
+        #[value(default)]
         selected: u64,
         output: IoPortSpec,
     },
     Screen {
         #[serde(default)]
+        #[value(default)]
         media: Option<DagMedia>,
         input: IoPortSpec,
     },
@@ -673,13 +697,16 @@ pub enum DagNodeKind {
     },
     Image {
         #[serde(default)]
+        #[value(default)]
         src: String,
         output: IoPortSpec,
     },
     Preview {
         #[serde(default)]
+        #[value(default)]
         content: DagPreviewContent,
         #[serde(default)]
+        #[value(default)]
         expanded: BTreeSet<String>,
         input: IoPortSpec,
     },
@@ -698,12 +725,16 @@ pub enum DagNodeKind {
     },
     AppInstance {
         #[serde(rename = "instanceId")]
+        #[value(rename = "instanceId")]
         instance_id: String,
         #[serde(rename = "pluginId")]
+        #[value(rename = "pluginId")]
         plugin_id: String,
         #[serde(rename = "appId")]
+        #[value(rename = "appId")]
         app_id: String,
         #[serde(rename = "appIcon", default)]
+        #[value(rename = "appIcon", default)]
         icon: String,
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
@@ -801,6 +832,85 @@ impl Default for DagNodeSpec {
             properties: PropertyBag::new(),
             kind: DagNodeKind::Computation { inputs: vec![], outputs: vec![], variadic_inputs: false, variadic_outputs: false },
         }
+    }
+}
+
+/// 🔀️ Hand-written, not derived: `kind` is `#[serde(flatten)]`-merged onto this struct's own object,
+/// and `flatten` is deliberately unsupported by `#[derive(ToValue, FromValue)]` (see that derive's
+/// module doc's "Deliberately NOT supported" list). Mirrors `DagNodeKind`'s own internally-tagged
+/// shape (a flat object carrying `kind` + the matched variant's own fields) by merging its entries
+/// directly into this struct's own entries on encode, and by handing the FULL decoded entries back to
+/// `DagNodeKind::from_value` on decode — its internally-tagged decoder already reads only the keys it
+/// needs from that object and ignores the rest, exactly like serde's own flatten.
+impl ::semio_framework_os_kernel::ToValue for DagNodeSpec {
+    fn to_value(&self) -> ::semio_framework_os_kernel::DslValue {
+        let mut entries: Vec<(String, ::semio_framework_os_kernel::DslValue)> = vec![
+            ("id".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.id)),
+            ("name".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.name)),
+            ("abbreviation".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.abbreviation)),
+            ("icon".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.icon)),
+            ("x".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.x)),
+            ("y".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.y)),
+            ("width".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.width)),
+            ("height".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.height)),
+        ];
+        if let Some(operator_kind) = &self.operator_kind {
+            entries.push(("operatorKind".to_string(), ::semio_framework_os_kernel::ToValue::to_value(operator_kind)));
+        }
+        entries.push(("properties".to_string(), ::semio_framework_os_kernel::ToValue::to_value(&self.properties)));
+        match ::semio_framework_os_kernel::ToValue::to_value(&self.kind) {
+            ::semio_framework_os_kernel::DslValue::Object(kind_entries) => entries.extend(kind_entries),
+            other => entries.push(("kind".to_string(), other)),
+        }
+        ::semio_framework_os_kernel::DslValue::Object(entries)
+    }
+}
+impl ::semio_framework_os_kernel::FromValue for DagNodeSpec {
+    fn from_value(value: ::semio_framework_os_kernel::DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        let entries = ::semio_framework_os_kernel::DslValue::into_object(value)?;
+        let find = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let id = match find("id") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("id"))?,
+            None => return Err(::semio_framework_os_kernel::ValueError::new("missing field `id`")),
+        };
+        let name = match find("name") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("name"))?,
+            None => return Err(::semio_framework_os_kernel::ValueError::new("missing field `name`")),
+        };
+        let abbreviation = match find("abbreviation") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("abbreviation"))?,
+            None => ::std::default::Default::default(),
+        };
+        let icon = match find("icon") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("icon"))?,
+            None => ::std::default::Default::default(),
+        };
+        let x = match find("x") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("x"))?,
+            None => ::std::default::Default::default(),
+        };
+        let y = match find("y") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("y"))?,
+            None => ::std::default::Default::default(),
+        };
+        let width = match find("width") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("width"))?,
+            None => default_node_width(),
+        };
+        let height = match find("height") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("height"))?,
+            None => default_node_height(),
+        };
+        let operator_kind = match find("operatorKind") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("operatorKind"))?,
+            None => ::std::default::Default::default(),
+        };
+        let properties = match find("properties") {
+            Some(v) => ::semio_framework_os_kernel::FromValue::from_value(v).map_err(|error: ::semio_framework_os_kernel::ValueError| error.under("properties"))?,
+            None => ::std::default::Default::default(),
+        };
+        let kind = ::semio_framework_os_kernel::FromValue::from_value(::semio_framework_os_kernel::DslValue::Object(entries))?;
+        Ok(Self { id, name, abbreviation, icon, x, y, width, height, operator_kind, properties, kind })
     }
 }
 
@@ -1980,10 +2090,13 @@ pub fn dag_lod_scale_json() -> String {
 }
 // #endregion 🔖️Lod
 
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, but wasip2 has real stderr (WASI),
+// so it takes the `eprintln!` arm rather than the browser `console.log` one — case (b): wasip2 gets
+// its own implementation via the existing native path, not a browser bridge.
 fn dag_debug_log(msg: &str) {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     web_sys::console::log_1(&msg.into());
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     eprintln!("{msg}");
 }
 
@@ -2675,12 +2788,15 @@ struct MinimapWidgetLayout {
     viewport: (f64, f64, f64, f64),
 }
 
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; pointer-event timestamps are a
+// browser canvas concept the wasip2 guest has no pointer events to timestamp in the first place,
+// so it shares the existing native no-op (`0.0`) rather than reading a WASI clock for no consumer.
 fn pointer_event_now_ms() -> f64 {
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
     {
         js_sys::Date::now()
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
     {
         0.0
     }
@@ -2748,15 +2864,18 @@ pub struct DagCamera {
 }
 
 /// 🔗️ Edge between port handles.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagFixtureEdge {
     pub id: String,
     pub source: String,
     pub target: String,
     #[serde(default)]
+    #[value(default)]
     pub route_style: EdgeRouteStyle,
     #[serde(default)]
+    #[value(default)]
     pub properties: PropertyBag,
 }
 
@@ -6107,7 +6226,9 @@ impl DagHost {
 // #endregion 🔖️DagHost
 
 // #region 🔖️WasmSession
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this session bridge is browser-only
+// (attaches an `HtmlCanvasElement`), so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_session {
     use super::*;
     use semio_framework_async::browser::future_to_promise;
@@ -6278,7 +6399,7 @@ mod wasm_session {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use wasm_session::DagSession;
 // #endregion 🔖️WasmSession
 
@@ -8560,14 +8681,14 @@ fn dag_index_to_wire(index: usize) -> u64 {
 
 /// 🏷️ `id` → `new_id` — `rename-node`'s delta. `id` is the node's identity field (its display `name`
 /// has its own `ChangedNodeName`), so this also drives every `"<id>@<port>"` edge endpoint rewrite.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct RenamedNode {
     pub id: String,
     pub new_id: String,
 }
 
 /// ↔️ `move-node`'s delta — FINAL-state absolute `(x, y)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct MovedNode {
     pub id: String,
     pub x: f64,
@@ -8575,7 +8696,7 @@ pub struct MovedNode {
 }
 
 /// 📐️ `resize-node`'s delta — FINAL-state absolute `(width, height)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ResizedNode {
     pub id: String,
     pub width: f64,
@@ -8583,21 +8704,21 @@ pub struct ResizedNode {
 }
 
 /// 🔤️ `change-node-name`'s delta — the node's display label (distinct from its `id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeName {
     pub id: String,
     pub new_name: String,
 }
 
 /// 🖼️ `change-node-icon`'s delta.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeIcon {
     pub id: String,
     pub new_icon: String,
 }
 
 /// 🔡️ `change-node-abbreviation`'s delta.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeAbbreviation {
     pub id: String,
     pub new_abbreviation: String,
@@ -8605,7 +8726,7 @@ pub struct ChangedNodeAbbreviation {
 
 /// 🧮️ `change-node-operator-kind`'s delta — a single (non-nested) `Option<String>`, since the delta
 /// struct's own presence on {@link DagDiff} already distinguishes "untouched" from "touched".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ChangedNodeOperatorKind {
     pub id: String,
     pub new_operator_kind: Option<String>,
@@ -8614,7 +8735,7 @@ pub struct ChangedNodeOperatorKind {
 /// 🔁️ `replace-node-kind`'s delta — whole-value swap of the tagged `kind` (an 11-variant enum whose
 /// interior the editor edits via a clone-mutate-refit cycle, never a sparse per-field patch — see this
 /// ticket's report for the measurement that ruled out finer per-variant verbs).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 pub struct ReplacedNodeKind {
     pub id: String,
     pub new_kind: DagNodeKind,
@@ -8622,7 +8743,7 @@ pub struct ReplacedNodeKind {
 
 /// 🗃️ `replace-node-properties`'s delta — whole-value swap of the node's `PropertyBag` (no piecewise
 /// per-property editing gesture exists on this board).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct ReplacedNodeProperties {
     pub id: String,
     pub new_properties: PropertyBag,
@@ -8630,7 +8751,7 @@ pub struct ReplacedNodeProperties {
 
 /// ↩️ `rename-node`'s edge-endpoint cascade — one entry per edge whose `source`/`target` string
 /// referenced the renamed id. `None` means that side of the edge wasn't touched.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 pub struct RewrittenEdgeEndpoint {
     pub id: String,
     pub new_source: Option<String>,
@@ -8645,8 +8766,9 @@ pub use mutations::*;
 
 /// 🔺️ Sparse field delta — every field records WHAT CHANGED (an id, a new value, a captured payload),
 /// never a whole post-mutation record or a whole-collection/whole-document snapshot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct DagDelta {
     pub created_node: Option<DagNodeSpec>,
     /// 🔢️ Companion to `created_node` — the FINAL-state insertion index (this board's node order is
@@ -8821,8 +8943,9 @@ impl DagDelta {
 }
 
 /// 🎞️ Ordered structural deltas; composition preserves every preceding effect and rejection.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DagDiff {
     pub steps: Vec<DagDelta>,
 }
@@ -9153,7 +9276,9 @@ impl crate::os_spr::OpBinary for DagMutation {
 //#endregion 🔖️OpText
 
 //#region 🔖️WasmBridge
-#[cfg(target_arch = "wasm32")]
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only
+// wasm-bindgen bridge, so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;

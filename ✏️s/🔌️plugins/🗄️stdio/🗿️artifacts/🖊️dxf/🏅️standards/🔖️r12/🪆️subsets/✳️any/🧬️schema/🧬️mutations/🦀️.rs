@@ -81,7 +81,6 @@ use crate::artifacts::dxf::schema::snapshot::{DxfBlock, DxfEntity, DxfHeaderVar,
 use crate::artifacts::dxf::DxfSnapshot;
 use protocol::OpBinary;
 use protocol::{Mutation, MutationDiff, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
@@ -126,9 +125,9 @@ pub mod set_block;
 /// 📐️ Typed content mutation for `stdio.dxf`. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none, and `no`
 /// is not an approved semantic verb.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = DxfSnapshot, diff = DxfDiff, schema = "DxfMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DxfMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
 

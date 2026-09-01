@@ -17,7 +17,6 @@ use infinite_board_port_directed::{
 };
 use infinite_board_port_directed_normal::BoardHost;
 pub use infinite_canvas as canvas;
-use serde::Serialize;
 use std::cell::Cell;
 use std::collections::HashMap;
 
@@ -119,10 +118,10 @@ fn trinity_lod_index(zoom: f64) -> usize {
 }
 
 pub fn trinity_lod_scale_json() -> String {
-    let rows: Vec<serde_json::Value> = TRINITY_LODS
+    let rows: Vec<pack::JsonValue> = TRINITY_LODS
         .iter()
         .map(|lod| {
-            serde_json::json!({
+            pack::json!({
                 "id": lod.id,
                 "name": lod.name,
                 "description": lod.description,
@@ -130,7 +129,7 @@ pub fn trinity_lod_scale_json() -> String {
             })
         })
         .collect();
-    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+    pack::json_to_string(&pack::json_array(rows))
 }
 
 fn trinity_node_radius(node: &Node) -> f64 {
@@ -146,8 +145,8 @@ fn trinity_circle_port_angle(index: usize, count: usize, left: bool) -> f64 {
     base + t * spread
 }
 
-fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
-    let nodes: Vec<serde_json::Value> = graph
+fn trinity_graph_to_board_fixture(graph: &Graph) -> pack::JsonValue {
+    let nodes: Vec<pack::JsonValue> = graph
         .nodes
         .values()
         .map(|node| {
@@ -156,20 +155,20 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
             let out_ports: Vec<_> = node.ports.iter().filter(|port| port.direction == PortDirection::Out).collect();
             let mut handles = Vec::new();
             for (index, port) in in_ports.iter().enumerate() {
-                handles.push(serde_json::json!({
+                handles.push(pack::json!({
                     "id": port_key(&node.id, &port.id),
                     "handleKind": TRINITY_BOARD_PORT_HANDLE_KIND,
                     "angle": trinity_circle_port_angle(index, in_ports.len(), true),
                 }));
             }
             for (index, port) in out_ports.iter().enumerate() {
-                handles.push(serde_json::json!({
+                handles.push(pack::json!({
                     "id": port_key(&node.id, &port.id),
                     "handleKind": TRINITY_BOARD_PORT_HANDLE_KIND,
                     "angle": trinity_circle_port_angle(index, out_ports.len(), false),
                 }));
             }
-            serde_json::json!({
+            pack::json!({
                 "id": node.id,
                 "x": node.x,
                 "y": node.y,
@@ -181,11 +180,11 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
             })
         })
         .collect();
-    let edges: Vec<serde_json::Value> = graph
+    let edges: Vec<pack::JsonValue> = graph
         .edges
         .values()
         .map(|edge| {
-            serde_json::json!({
+            pack::json!({
                 "id": edge.id,
                 "source": edge.source,
                 "target": edge.target,
@@ -193,7 +192,7 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
             })
         })
         .collect();
-    serde_json::json!({
+    pack::json!({
         "schema": "puzzle.2d.fixture",
         "camera": {
             "x": graph.camera.x,
@@ -205,14 +204,14 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
     })
 }
 
-fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
-    let nodes: Vec<serde_json::Value> = graph
+fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> pack::JsonValue {
+    let nodes: Vec<pack::JsonValue> = graph
         .nodes
         .values()
         .map(|node| {
             let radius = trinity_node_radius(node);
-            let handles: Vec<serde_json::Value> = node.ports.iter().map(|port| serde_json::json!({ "id": port_key(&node.id, &port.id) })).collect();
-            serde_json::json!({
+            let handles: Vec<pack::JsonValue> = node.ports.iter().map(|port| pack::json!({ "id": port_key(&node.id, &port.id) })).collect();
+            pack::json!({
                 "id": node.id,
                 "x": node.x,
                 "y": node.y,
@@ -222,15 +221,15 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
             })
         })
         .collect();
-    let edges: Vec<serde_json::Value> = graph.edges.values().map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target })).collect();
-    serde_json::json!({
+    let edges: Vec<pack::JsonValue> = graph.edges.values().map(|edge| pack::json!({ "source": edge.source, "target": edge.target })).collect();
+    pack::json!({
         "schema": JackSnapshot::SCHEMA,
         "nodes": nodes,
         "edges": edges,
     })
 }
 
-fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), TrinityRewriteError> {
+fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &pack::JsonValue) -> Result<(), TrinityRewriteError> {
     let nodes = fixture.get("nodes").and_then(|v| v.as_array()).ok_or(TrinityRewriteError::ForceLayoutFixtureMissingNodes)?;
     for node in nodes {
         let Some(obj) = node.as_object() else {
@@ -432,28 +431,28 @@ impl TrinityBridge {
 
     pub fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
-        Ok(serde_json::to_string(&result)?)
+        Ok(pack::to_json_string(&result))
     }
 
     pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
         let fixture_json = self.fixture_json()?;
         let out = JackRunWithFixture { result, fixture_json };
-        Ok(serde_json::to_string(&out)?)
+        Ok(pack::to_json_string(&out))
     }
 
     pub fn tokenize_jack_json(&self, source: &str) -> Result<String, TrinityRewriteError> {
         let tokens = tokenize_jack(source);
-        Ok(serde_json::to_string(&tokens)?)
+        Ok(pack::to_json_string(&tokens))
     }
 
     pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, TrinityRewriteError> {
         let items = complete_jack(&self.graph, source, cursor);
-        Ok(serde_json::to_string(&items)?)
+        Ok(pack::to_json_string(&items))
     }
 
     pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
-        let rule: Rule = serde_json::from_str(rule_json)?;
+        let rule: Rule = pack::from_json_str(rule_json)?;
         let bindings = crate::artifacts::rewrite::schema::parse_bindings_json(bindings_json)?;
         let query = crate::artifacts::rewrite::schema::build_rule_query(&rule, &bindings);
         let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
@@ -462,7 +461,7 @@ impl TrinityBridge {
             self.dispatch(operations)?;
             self.rebuild_engine();
         }
-        Ok(serde_json::to_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result })?)
+        Ok(pack::to_json_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result }))
     }
 
     pub fn node_overlays_json(&self) -> Result<String, TrinityRewriteError> {
@@ -516,11 +515,11 @@ impl TrinityBridge {
                 }
             }
         }
-        Ok(serde_json::to_string(&ids)?)
+        Ok(pack::to_json_string(&ids))
     }
 
     pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
-        let ids: Vec<String> = serde_json::from_str(json)?;
+        let ids: Vec<String> = pack::from_json_str(json)?;
         self.board.set_highlighted_ids(ids);
         Ok(())
     }
@@ -667,16 +666,33 @@ fn trinity_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String 
     format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
 }
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
 struct JackRunWithFixture {
-    #[serde(flatten)]
     result: QueryResult,
     fixture_json: String,
+}
+
+/// 🌱️ Hand-written `ToValue` — the derive has no `#[serde(flatten)]` equivalent (fan-out
+/// playbook's "not supported" list), so `result`'s own object entries are spliced directly into
+/// the parent object rather than nested under a `"result"` key, matching the old flattened wire
+/// shape byte-for-byte.
+impl dsl::ToValue for JackRunWithFixture {
+    fn to_value(&self) -> dsl::DslValue {
+        let dsl::DslValue::Object(mut entries) = dsl::ToValue::to_value(&self.result) else {
+            unreachable!("QueryResult::to_value always produces an object")
+        };
+        entries.push(("fixtureJson".to_string(), dsl::ToValue::to_value(&self.fixture_json)));
+        dsl::DslValue::Object(entries)
+    }
 }
 //#endregion 🔖️TrinityBridge
 
 //#region 🔖️WasmBridge
+// 🌉️ The wasm-bindgen `mod wasm_bridge` (envelope-loading VCS class) and `mod wasm_session`
+// (`TrinitySession` WebGPU canvas host, with its DOM `HtmlCanvasElement` attach) that used to
+// follow the helpers below were deleted — nothing ever built either for `wasm32-unknown-unknown`
+// (no engine entry, no `wasm` script target) — see
+// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`. The helpers themselves
+// stay: they are exercised directly by native `#[cfg(test)]` tests below.
 #[cfg(any(target_arch = "wasm32", test))]
 const TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 #[cfg(any(target_arch = "wasm32", test))]
@@ -718,470 +734,7 @@ impl<Page> TrinityRewriteCallerPageOwner<Page> {
 fn trinity_rewrite_page_handle_matches(operation: u64, generation: u64, expected_operation: u64, expected_generation: u64) -> bool {
     operation == expected_operation && generation == expected_generation
 }
-
-#[cfg(target_arch = "wasm32")]
-mod wasm_bridge {
-    use super::trinity_rewrite_envelope_credits_are_valid;
-    use std::cell::RefCell;
-
-    use wasm_bindgen::prelude::*;
-
-    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
-
-    use crate::editor::jack::TrinityJackPlayApp;
-
-    type TrinityRewriteApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>>;
-
-    fn js_fault(error: impl ToString) -> JsValue {
-        JsValue::from_str(&error.to_string())
-    }
-
-    #[wasm_bindgen]
-    pub struct TrinityRewriteEnvelopeLoadHandle {
-        operation: u64,
-        generation: u64,
-    }
-
-    impl TrinityRewriteEnvelopeLoadHandle {
-        fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
-            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
-        }
-    }
-
-    #[wasm_bindgen]
-    impl TrinityRewriteEnvelopeLoadHandle {
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.operation
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-    }
-
-    #[wasm_bindgen]
-    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum TrinityRewriteEnvelopePageFault {
-        None,
-        PageTooLarge,
-        StaleGeneration,
-        UnknownHandle,
-        Closing,
-        Capacity,
-        MissingOwner,
-    }
-
-    fn page_fault(code: &str) -> TrinityRewriteEnvelopePageFault {
-        match code {
-            "artifact-envelope.ingress-stale" => TrinityRewriteEnvelopePageFault::StaleGeneration,
-            "artifact-envelope.ingress-handle" | "artifact-envelope.ingress-owner" => TrinityRewriteEnvelopePageFault::UnknownHandle,
-            "artifact-envelope.ingress-closing" => TrinityRewriteEnvelopePageFault::Closing,
-            _ => TrinityRewriteEnvelopePageFault::Capacity,
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct TrinityRewriteEnvelopePageAdmission {
-        accepted: bool,
-        fault: TrinityRewriteEnvelopePageFault,
-        operation: u64,
-        generation: u64,
-        owner: TrinityRewriteCallerPageOwner<js_sys::Uint8Array>,
-    }
-
-    impl TrinityRewriteEnvelopePageAdmission {
-        fn successful(handle: &TrinityRewriteEnvelopeLoadHandle) -> Self {
-            Self { accepted: true, fault: TrinityRewriteEnvelopePageFault::None, operation: handle.operation, generation: handle.generation, owner: TrinityRewriteCallerPageOwner { page: None } }
-        }
-
-        fn rejected(handle: &TrinityRewriteEnvelopeLoadHandle, fault: TrinityRewriteEnvelopePageFault, owner: js_sys::Uint8Array) -> Self {
-            Self { accepted: false, fault, operation: handle.operation, generation: handle.generation, owner: TrinityRewriteCallerPageOwner::new(owner) }
-        }
-    }
-
-    #[wasm_bindgen]
-    impl TrinityRewriteEnvelopePageAdmission {
-        #[wasm_bindgen(getter)]
-        pub fn accepted(&self) -> bool {
-            self.accepted
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn fault(&self) -> TrinityRewriteEnvelopePageFault {
-            self.fault
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.operation
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-
-        #[wasm_bindgen(js_name = hasPage)]
-        pub fn has_page(&self) -> bool {
-            self.owner.has_page()
-        }
-
-        #[wasm_bindgen(js_name = isSamePage)]
-        pub fn is_same_page(&self, source: &js_sys::Uint8Array) -> bool {
-            self.owner.page.as_ref().is_some_and(|page| js_sys::Object::is(page.as_ref(), source.as_ref()))
-        }
-
-        #[wasm_bindgen(js_name = takePage)]
-        pub fn take_page(&mut self) -> Option<js_sys::Uint8Array> {
-            self.owner.take_page()
-        }
-
-        #[wasm_bindgen(js_name = closeStep)]
-        pub fn close_step(&mut self) -> bool {
-            self.owner.close_step()
-        }
-
-        #[wasm_bindgen(js_name = terminalIsEmpty)]
-        pub fn terminal_is_empty(&self) -> bool {
-            !self.owner.has_page()
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct TrinityRewriteArtifactVcs {
-        app: RefCell<TrinityRewriteApp>,
-    }
-
-    impl TrinityRewriteArtifactVcs {
-        fn admit_owned_envelope_page(&self, handle: &TrinityRewriteEnvelopeLoadHandle, source: js_sys::Uint8Array) -> TrinityRewriteEnvelopePageAdmission {
-            let len = source.length() as usize;
-            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                return TrinityRewriteEnvelopePageAdmission::rejected(handle, TrinityRewriteEnvelopePageFault::PageTooLarge, source);
-            }
-            let admitted = self.app.borrow_mut().construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
-                let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-                source.copy_to(&mut bytes[..len]);
-                store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
-            });
-            match admitted {
-                Ok(()) => TrinityRewriteEnvelopePageAdmission::successful(handle),
-                Err(fault) => TrinityRewriteEnvelopePageAdmission::rejected(handle, page_fault(&fault.code.0), source),
-            }
-        }
-    }
-
-    #[wasm_bindgen]
-    impl TrinityRewriteArtifactVcs {
-        #[wasm_bindgen(constructor)]
-        pub async fn new() -> Result<TrinityRewriteArtifactVcs, JsValue> {
-            let app = VcsArtifactApp::new(EditorApp::<TrinityJackPlayApp>::default()).await;
-            Ok(Self { app: RefCell::new(app) })
-        }
-
-        #[wasm_bindgen(js_name = beginEnvelopeLoad)]
-        pub fn begin_envelope_load(&self, maximum_pages: usize, maximum_bytes: usize) -> Result<TrinityRewriteEnvelopeLoadHandle, JsValue> {
-            if !trinity_rewrite_envelope_credits_are_valid(maximum_pages, maximum_bytes) {
-                return Err(js_fault("trinity-rewrite-envelope.invalid-credits"));
-            }
-            let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
-            Ok(TrinityRewriteEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0 })
-        }
-
-        #[wasm_bindgen(js_name = admitEnvelopePage)]
-        pub fn admit_envelope_page(&self, handle: &TrinityRewriteEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> TrinityRewriteEnvelopePageAdmission {
-            self.admit_owned_envelope_page(handle, source.clone())
-        }
-
-        #[wasm_bindgen(js_name = retryEnvelopePage)]
-        pub fn retry_envelope_page(&self, admission: &mut TrinityRewriteEnvelopePageAdmission) -> TrinityRewriteEnvelopePageAdmission {
-            let handle = TrinityRewriteEnvelopeLoadHandle { operation: admission.operation, generation: admission.generation };
-            let Some(owner) = admission.owner.take_page() else {
-                return TrinityRewriteEnvelopePageAdmission {
-                    accepted: false,
-                    fault: TrinityRewriteEnvelopePageFault::MissingOwner,
-                    operation: admission.operation,
-                    generation: admission.generation,
-                    owner: TrinityRewriteCallerPageOwner { page: None },
-                };
-            };
-            self.admit_owned_envelope_page(&handle, owner)
-        }
-
-        #[wasm_bindgen(js_name = sealEnvelopeLoad)]
-        pub fn seal_envelope_load(&self, handle: &TrinityRewriteEnvelopeLoadHandle) -> Result<bool, JsValue> {
-            self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = pollEnvelopeLoad)]
-        pub fn poll_envelope_load(&self, handle: &TrinityRewriteEnvelopeLoadHandle) -> Result<u8, JsValue> {
-            let mut app = self.app.borrow_mut();
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
-            let poll = app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)?;
-            match poll {
-                ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
-                ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
-                ArtifactEnvelopeDecodeOperationPoll::Ready => {
-                    if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)? {
-                        return Ok(1);
-                    }
-                    Ok(2)
-                }
-                ArtifactEnvelopeDecodeOperationPoll::Cancelled => {
-                    let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
-                    Ok(3)
-                }
-                ArtifactEnvelopeDecodeOperationPoll::Fault => {
-                    let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
-                    Ok(4)
-                }
-            }
-        }
-
-        #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
-        pub fn cancel_envelope_load(&self, handle: &TrinityRewriteEnvelopeLoadHandle) -> Result<(), JsValue> {
-            self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = closeStep)]
-        pub fn close_step(&self) -> Result<bool, JsValue> {
-            match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)? {
-                semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
-                semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
-            }
-        }
-    }
-}
 //#endregion 🔖️WasmBridge
-
-//#region 🔖️WasmSession
-#[cfg(target_arch = "wasm32")]
-mod wasm_session {
-    use super::*;
-    use crate::artifacts::jack::{Camera, Manifest};
-    use semio_framework_async::browser::future_to_promise;
-    use std::cell::RefCell;
-    use std::rc::Rc;
-    use store::ArtifactDsl;
-    use wasm_bindgen::prelude::*;
-    use web_sys::HtmlCanvasElement;
-
-    struct TrinitySessionInner {
-        host: TrinityBridge,
-        gpu: canvas::gpu_session::CanvasGpuSession,
-        width: u32,
-        height: u32,
-        dpr: f64,
-    }
-
-    #[wasm_bindgen]
-    pub struct TrinitySession {
-        state: Rc<RefCell<TrinitySessionInner>>,
-    }
-
-    #[wasm_bindgen]
-    impl TrinitySession {
-        #[wasm_bindgen(constructor)]
-        pub fn new() -> Self {
-            let dsl = include_str!("../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
-            let host = JackSnapshot::parse_dsl(dsl).ok().and_then(|fixture| Graph::from_fixture(fixture).ok()).map(|g| TrinityBridge::from_graph(&g)).unwrap_or_else(|| {
-                let empty = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "empty".into(), Some("nakagin".into()), Manifest::nakagin_default(), Camera::default(), vec![], vec![], None);
-                TrinityBridge::from_graph(&Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
-            });
-            Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
-        }
-
-        #[wasm_bindgen(js_name = loadFixtureJson)]
-        pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = TrinityBridge::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            self.state.borrow_mut().host = host;
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = fixtureJson)]
-        pub fn fixture_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = nodeOverlaysJson)]
-        pub fn node_overlays_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = attachCanvas)]
-        pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
-            let inner = self.state.clone();
-            let lw = logical_w.max(1);
-            let lh = logical_h.max(1);
-            let dpr = dpr.max(1.0);
-            let pw = ((lw as f64 * dpr).round() as u32).max(1);
-            let ph = ((lh as f64 * dpr).round() as u32).max(1);
-            future_to_promise(async move {
-                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
-                let mut g = inner.borrow_mut();
-                g.width = lw;
-                g.height = lh;
-                g.dpr = dpr;
-                g.host.set_viewport(lw, lh, dpr);
-                g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
-                Ok(JsValue::UNDEFINED)
-            })
-        }
-
-        #[wasm_bindgen(js_name = gpuReady)]
-        pub fn gpu_ready(&self) -> bool {
-            self.state.borrow().gpu.gpu_ready()
-        }
-
-        #[wasm_bindgen(js_name = detachGpu)]
-        pub fn detach_gpu(&mut self) {
-            self.state.borrow_mut().gpu.detach();
-        }
-
-        #[wasm_bindgen(js_name = setSize)]
-        pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
-            let mut inner = self.state.borrow_mut();
-            inner.width = width.max(1);
-            inner.height = height.max(1);
-            inner.dpr = dpr.max(1.0);
-            let (w, h, d) = (inner.width, inner.height, inner.dpr);
-            inner.host.set_viewport(w, h, d);
-            let pw = ((w as f64 * d).round() as u32).max(1);
-            let ph = ((h as f64 * d).round() as u32).max(1);
-            inner.gpu.resize_surface(pw, ph);
-        }
-
-        #[wasm_bindgen(js_name = setCamera)]
-        pub fn set_camera(&self, x: f64, y: f64, zoom: f64) {
-            self.state.borrow_mut().host.set_camera(x, y, zoom);
-        }
-
-        #[wasm_bindgen(js_name = lodScaleJson)]
-        pub fn lod_scale_json(&self) -> String {
-            trinity_lod_scale_json()
-        }
-
-        #[wasm_bindgen(js_name = setAutomaticLod)]
-        pub fn set_automatic_lod(&self, enabled: bool) {
-            self.state.borrow_mut().host.set_automatic_lod(enabled);
-        }
-
-        #[wasm_bindgen(js_name = setForcedDrawLodLabel)]
-        pub fn set_forced_draw_lod_label(&self, label: &str) {
-            self.state.borrow_mut().host.set_forced_draw_lod_label(label);
-        }
-
-        #[wasm_bindgen(js_name = drawLodLabel)]
-        pub fn draw_lod_label(&self) -> String {
-            self.state.borrow().host.draw_lod_label().to_string()
-        }
-
-        #[wasm_bindgen(js_name = pointerDown)]
-        pub fn pointer_down(&self, x: f64, y: f64, extend: bool) {
-            self.state.borrow_mut().host.pointer_down(x, y, extend);
-        }
-
-        #[wasm_bindgen(js_name = pointerMove)]
-        pub fn pointer_move(&self, x: f64, y: f64) {
-            self.state.borrow_mut().host.pointer_move(x, y);
-        }
-
-        #[wasm_bindgen(js_name = pointerUp)]
-        pub fn pointer_up(&self, x: f64, y: f64) {
-            self.state.borrow_mut().host.pointer_up(x, y);
-        }
-
-        #[wasm_bindgen(js_name = wheelScreen)]
-        pub fn wheel_screen(&self, x: f64, y: f64, delta_y: f64) {
-            self.state.borrow_mut().host.wheel_screen(x, y, delta_y);
-        }
-
-        #[wasm_bindgen(js_name = selectedNodeIdsJson)]
-        pub fn selected_node_ids_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.selected_node_ids_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = setHighlightedNodeIdsJson)]
-        pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.set_highlighted_node_ids_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = reorganize)]
-        pub fn reorganize(&self, _options_json: &str) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.reorganize();
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = setCanvasThemeJson)]
-        pub fn set_canvas_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
-        }
-
-        #[wasm_bindgen(js_name = renderFrame)]
-        pub fn render_frame(&self) -> Result<(), JsValue> {
-            let mut inner = self.state.borrow_mut();
-            let clear = inner.host.canvas_theme.raster_clear;
-            let scene = inner.host.board.build_vector_scene();
-            inner.gpu.render_frame(&scene, clear)
-        }
-
-        #[wasm_bindgen(js_name = runJackJson)]
-        pub fn run_jack_json(&self, query: &str) -> Result<String, JsValue> {
-            self.state.borrow_mut().host.run_jack_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = runJackJsonWithFixture)]
-        pub fn run_jack_json_with_fixture(&self, query: &str) -> Result<String, JsValue> {
-            self.state.borrow_mut().host.run_jack_with_fixture_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = tokenizeJackJson)]
-        pub fn tokenize_jack_json(&self, source: &str) -> Result<String, JsValue> {
-            self.state.borrow().host.tokenize_jack_json(source).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = completeJackJson)]
-        pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, JsValue> {
-            self.state.borrow().host.complete_jack_json(source, cursor).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = applyRewriteJson)]
-        pub fn apply_rewrite_json(&self, rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
-            self.state.borrow_mut().host.apply_rewrite_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = undo)]
-        pub fn undo(&self) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.undo().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = redo)]
-        pub fn redo(&self) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.redo().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = commitCheckpoint)]
-        pub fn commit_checkpoint(&self, message: &str) -> Result<(), JsValue> {
-            let message = if message.is_empty() { None } else { Some(message.to_string()) };
-            self.state.borrow_mut().host.commit_checkpoint(message).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = storeGeneration)]
-        pub fn store_generation(&self) -> u64 {
-            self.state.borrow().host.store_generation()
-        }
-    }
-
-    #[wasm_bindgen(js_name = ruleQueryJson)]
-    pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
-        crate::artifacts::rewrite::schema::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-pub use wasm_session::TrinitySession;
-//#endregion 🔖️WasmSession
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -1303,7 +856,7 @@ mod tests {
     async fn trinity_host_tokenize_jack_json() {
         let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
-        let tokens: Vec<JackTokenSpan> = serde_json::from_str(&json).unwrap();
+        let tokens: Vec<JackTokenSpan> = pack::from_json_str(&json).unwrap();
         assert!(tokens.iter().any(|row| row.start == 0));
     }
 
@@ -1311,7 +864,7 @@ mod tests {
     async fn trinity_host_complete_jack_json() {
         let host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.complete_jack_json("MAT", 3).unwrap();
-        let items: Vec<JackCompletion> = serde_json::from_str(&json).unwrap();
+        let items: Vec<JackCompletion> = pack::from_json_str(&json).unwrap();
         assert!(items.iter().any(|row| row.label == "MATCH"));
     }
 
@@ -1328,7 +881,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn trinity_lod_scale_json_lists_all_six_lods() {
         let json = trinity_lod_scale_json();
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&json).unwrap().as_array().unwrap().to_vec();
         assert_eq!(rows.len(), 6);
         assert_eq!(rows[0]["id"], "minimap");
         assert_eq!(rows[5]["id"], "micro");
@@ -1408,7 +961,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn apply_force_layout_positions_errors_when_nodes_missing() {
         let mut g = nakagin_graph();
-        let fixture = serde_json::json!({});
+        let fixture = pack::json!({});
         let err = apply_force_layout_positions_to_trinity_graph(&mut g, &fixture).unwrap_err();
         assert!(matches!(err, TrinityRewriteError::ForceLayoutFixtureMissingNodes));
     }
@@ -1421,9 +974,9 @@ mod tests {
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
             rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
         };
-        let rule_json = serde_json::to_string(&rule).unwrap();
+        let rule_json = pack::to_json_string(&rule);
         let out = host.apply_rewrite_json(&rule_json, "{}").unwrap();
-        let value: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let value: pack::JsonValue = pack::parse_json(&out).unwrap();
         assert!(value.get("fixture").is_some());
         let core = host.graph.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
@@ -1433,12 +986,12 @@ mod tests {
     async fn trinity_host_run_jack_json_and_with_fixture() {
         let mut host = TrinityBridge::from_graph(&nakagin_graph());
         let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
-        let result: QueryResult = serde_json::from_str(&json).unwrap();
+        let result: QueryResult = pack::from_json_str(&json).unwrap();
         assert_eq!(result.rows.len(), 1);
 
         let before = host.graph.nodes.len();
         let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").unwrap();
-        let value: serde_json::Value = serde_json::from_str(&out).unwrap();
+        let value: pack::JsonValue = pack::parse_json(&out).unwrap();
         assert!(value.get("fixtureJson").is_some());
         assert_eq!(host.graph.nodes.len(), before + 1);
     }
@@ -1449,7 +1002,7 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         host.pointer_down(400.0, 300.0, false);
         let json = host.selected_node_ids_json().unwrap();
-        let ids: Vec<String> = serde_json::from_str(&json).unwrap();
+        let ids: Vec<String> = pack::from_json_str(&json).unwrap();
         assert_eq!(ids, vec!["7dc5b737-3b6b-4068-b315-b7bacc91c2e1".to_string()]);
         assert!(host.set_highlighted_node_ids_json("[\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\"]").is_ok());
         assert_eq!(host.node_overlays_json().unwrap(), "[]");

@@ -5,7 +5,7 @@ use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::FemCombination;
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 
@@ -27,7 +27,7 @@ type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 //#region 🔖️SetSelfWeight
 //#endregion 🔖️SetSelfWeight
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "add-combination")]
 pub struct AddCombination {
     pub name: String,

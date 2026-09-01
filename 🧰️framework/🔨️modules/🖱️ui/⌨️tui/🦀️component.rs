@@ -5311,7 +5311,10 @@ pub mod host {
         }
     }
 
-    #[cfg(all(target_arch = "wasm32", feature = "tui-bindgen"))]
+    // 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too; this is a browser-only
+    // xterm.js bridge around the pure `WasmHost` renderer, so it is narrowed to exclude the
+    // WASI component target.
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "tui-bindgen"))]
     mod bindgen_host {
         use super::WasmHost;
         use wasm_bindgen::prelude::*;
@@ -5348,7 +5351,7 @@ pub mod host {
             }
         }
     }
-    #[cfg(all(target_arch = "wasm32", feature = "tui-bindgen"))]
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "tui-bindgen"))]
     pub use bindgen_host::TuiHost;
 }
 // #endregion ???WasmHost

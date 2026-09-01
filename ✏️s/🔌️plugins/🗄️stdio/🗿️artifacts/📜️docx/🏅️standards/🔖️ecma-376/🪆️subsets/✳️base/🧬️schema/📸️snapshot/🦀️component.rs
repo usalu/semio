@@ -11,41 +11,40 @@ use crate::artifacts::docx::STDIO_DOCX_DOCUMENT_SCHEMA;
 use crate::artifacts::xml::schema::snapshot::XmlNode;
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocxModel
 /// ✍️ One `w:r` run: literal text plus the formatting flags this artifact models. Any richer
 /// `w:rPr` (color, font, size, …) that a decoded run carried is not lost — see
 /// `extra_run_properties`, kept verbatim as raw `<w:rPr>` child XML so a round trip never silently
 /// drops formatting this model doesn't understand.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxRun {
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub bold: bool,
-    #[serde(default)]
+    #[value(default)]
     pub italic: bool,
-    #[serde(default)]
+    #[value(default)]
     pub underline: bool,
     /// 🗄️ Raw retention of `<w:rPr>` children this model doesn't interpret (color, font, size,
     /// strike, highlight, …), in original order.
-    #[serde(default)]
+    #[value(default)]
     pub extra_run_properties: Vec<XmlNode>,
 }
 
 /// 📄️ One `w:p` paragraph: an ordered list of runs plus an optional named style reference.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxParagraph {
-    #[serde(default)]
+    #[value(default)]
     pub runs: Vec<DocxRun>,
     /// 🎨️ `<w:pPr><w:pStyle w:val="…"/></w:pPr>` — references a `DocxStyle::id`.
-    #[serde(default)]
+    #[value(default)]
     pub style: Option<String>,
     /// 🗄️ Raw retention of `<w:pPr>` children other than `<w:pStyle>` (alignment, numbering,
     /// spacing, …), in original order.
-    #[serde(default)]
+    #[value(default)]
     pub extra_paragraph_properties: Vec<XmlNode>,
 }
 
@@ -58,42 +57,42 @@ impl DocxParagraph {
 
 /// 🔲️ One `w:tc` table cell: recursively holds its own block content (WordprocessingML cells may
 /// contain paragraphs and nested tables).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxTableCell {
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DocxBlock>,
     /// 🗄️ Raw retention of `<w:tcPr>` children (width, span, merge, shading, …).
-    #[serde(default)]
+    #[value(default)]
     pub extra_cell_properties: Vec<XmlNode>,
 }
 
 /// ➖️ One `w:tr` table row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxTableRow {
-    #[serde(default)]
+    #[value(default)]
     pub cells: Vec<DocxTableCell>,
     /// 🗄️ Raw retention of `<w:trPr>` children (height, header-row flag, …).
-    #[serde(default)]
+    #[value(default)]
     pub extra_row_properties: Vec<XmlNode>,
 }
 
 /// 🏛️ One `w:tbl` table.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxTable {
-    #[serde(default)]
+    #[value(default)]
     pub rows: Vec<DocxTableRow>,
     /// 🗄️ Raw retention of `<w:tblPr>` children (borders, width, look, …).
-    #[serde(default)]
+    #[value(default)]
     pub extra_table_properties: Vec<XmlNode>,
 }
 
 /// 🧱️ One block-level content item inside `word/document.xml`'s `w:body` (or a table cell) — a
 /// paragraph or a table, matching WordprocessingML's own block-content model.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocxBlock {
     Paragraph(DocxParagraph),
     Table(DocxTable),
@@ -107,30 +106,30 @@ impl DocxBlock {
 }
 
 /// 🎨️ One `<w:style>` entry from `word/styles.xml`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxStyle {
     pub id: String,
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub based_on: Option<String>,
 }
 
 /// 📰 Typed semantic view of `word/document.xml`'s `w:body` (a block tree) plus `word/styles.xml`
 /// (name-keyed by `DocxStyle::id`, styleId in WordprocessingML terms).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocxDocument {
-    #[serde(default)]
+    #[value(default)]
     pub body: Vec<DocxBlock>,
-    #[serde(default)]
+    #[value(default)]
     pub styles: Vec<DocxStyle>,
 }
 //#endregion 🔖️DocxModel
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.docx")]
 pub struct DocxSnapshot {
     #[state(artifact)]
@@ -138,11 +137,11 @@ pub struct DocxSnapshot {
     /// 📦️ Lossless OPC container — every part verbatim, including `word/document.xml` and
     /// `word/styles.xml` (kept in sync with `document` on encode; see `engine::encode_docx`).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub opc: OpcPackage,
     /// 🧬️ Typed semantic view of `word/document.xml` + `word/styles.xml`.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub document: DocxDocument,
 }
 

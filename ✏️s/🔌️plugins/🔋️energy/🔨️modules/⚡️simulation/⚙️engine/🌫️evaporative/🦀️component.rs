@@ -3,17 +3,18 @@
 use crate::props::{humidity_ratio_from_rh, latent_heat_vaporization, saturation_pressure_pa, wet_bulb_c};
 use crate::units::{CP_DRY_AIR, H_FG_0C};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️EvaporativeCooler
 /// 💧️ Evaporative cooler configuration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum EvaporativeCooler {
     Direct { effectiveness: f64, pad_area_m2: f64 },
     Indirect { sensible_effectiveness: f64, primary_flow_m3_s: f64, secondary_flow_m3_s: f64 },
 }
 
 /// 📥️ Evaporative cooler inlet state.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EvaporativeInlet {
     pub dry_bulb_c: f64,
     pub humidity_ratio: f64,
@@ -22,7 +23,7 @@ pub struct EvaporativeInlet {
 }
 
 /// 📤️ Evaporative cooler outlet state.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EvaporativeOutput {
     pub dry_bulb_c: f64,
     pub humidity_ratio: f64,

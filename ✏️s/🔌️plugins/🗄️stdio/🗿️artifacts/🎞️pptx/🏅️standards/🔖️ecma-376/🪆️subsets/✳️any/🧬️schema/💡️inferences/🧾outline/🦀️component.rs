@@ -6,12 +6,11 @@
 
 use crate::artifacts::pptx::schema::snapshot::PptxShape;
 use crate::artifacts::pptx::PptxSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Pptx` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxOutline {
     pub slide_count: u32,
     pub shape_count: u32,

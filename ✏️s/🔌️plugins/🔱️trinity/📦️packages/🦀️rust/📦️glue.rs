@@ -8,14 +8,13 @@
 
 extern crate infinite_canvas as infinite_board_port_directed;
 extern crate infinite_canvas as infinite_board_port_directed_normal;
-#[cfg(target_arch = "wasm32")]
-extern crate semio_framework_async as wasm_bindgen_futures;
 #[allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
+extern crate semio_framework_value_derive as value_derive;
 // 📌️ Command handler functions (`🎮️commands/<verb-noun>/component.rs`) are decomposed out of a
 // single `ArtifactApp::handle` match, one function per command — the uniform `Result<Emit<_, _>,
 // Fault>` signature is dictated by the dispatch call site (some commands DO fail; others never do),

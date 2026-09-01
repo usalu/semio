@@ -1,38 +1,20 @@
 //! 🧩️ CAD aec-building-energy extension — contributes energy computers and STEP import to `cad-play`.
+//!
+//! `computersJson` is built with `pack::json` (first-party `serde_json::Value` replacement)
+//! instead of a `#[derive(Serialize)]` DTO. `contributes_topic`/`TopicContribution` now speak
+//! `semio_framework::DslValue` end to end (ticket
+//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s `TopicContribution`
+//! seam), so `serde`/`serde_json` are fully gone from this crate.
 
+use pack::json::{self, Value as JsonValue};
+use semio_framework::DslValue;
 use semio_framework_plugin::{ExecutionMode, ExtensionBundle};
-use serde::Serialize;
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
 const EXTENSION_ID: &str = "cad-extension-aec-building-energy";
 const HOST_APP_ID: &str = "cad-play";
 const MODULE_ID: &str = "aec-building-energy";
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CadImportProfileManifest {
-    model_definition_id: &'static str,
-    layer_typology: BTreeMap<&'static str, &'static str>,
-    fallback_typology: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    prefer_presentation_layers: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    presentation_geometry: Option<&'static str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    namespaced_domain: Option<&'static str>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CadComputersManifest {
-    model_definition_ids: Vec<&'static str>,
-    stat_computers: Vec<&'static str>,
-    property_computers: Vec<&'static str>,
-    import_profiles: Vec<CadImportProfileManifest>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    transformation_appliers: Vec<&'static str>,
-}
 
 fn energy_layer_typology() -> BTreeMap<&'static str, &'static str> {
     BTreeMap::from([
@@ -47,21 +29,32 @@ fn energy_layer_typology() -> BTreeMap<&'static str, &'static str> {
     ])
 }
 
-fn computers_manifest() -> CadComputersManifest {
-    CadComputersManifest {
-        model_definition_ids: vec!["aec.building.energy"],
-        stat_computers: vec!["energy.demand"],
-        property_computers: vec!["energy.heatedvolume"],
-        import_profiles: vec![CadImportProfileManifest {
-            model_definition_id: "aec.building.energy",
-            layer_typology: energy_layer_typology(),
-            fallback_typology: "energy.energy.hull",
-            prefer_presentation_layers: Some(true),
-            presentation_geometry: Some("wireframe"),
-            namespaced_domain: Some("energy"),
-        }],
-        transformation_appliers: Vec::new(),
+/// 🗂️ `pack::json` analog of the former `CadImportProfileManifest`.
+fn energy_import_profile(model_definition_id: &'static str, prefer_presentation_layers: bool, presentation_geometry: Option<&'static str>) -> JsonValue {
+    let mut entries: Vec<(String, JsonValue)> = vec![
+        ("modelDefinitionId".to_string(), JsonValue::from(model_definition_id)),
+        ("layerTypology".to_string(), json::object(energy_layer_typology().into_iter().map(|(key, value)| (key.to_string(), JsonValue::from(value))))),
+        ("fallbackTypology".to_string(), JsonValue::from("energy.energy.hull")),
+    ];
+    if prefer_presentation_layers {
+        entries.push(("preferPresentationLayers".to_string(), JsonValue::from(true)));
     }
+    if let Some(geometry) = presentation_geometry {
+        entries.push(("presentationGeometry".to_string(), JsonValue::from(geometry)));
+    }
+    entries.push(("namespacedDomain".to_string(), JsonValue::from("energy")));
+    json::object(entries)
+}
+
+/// 🗂️ `pack::json` analog of the former `CadComputersManifest`.
+fn computers_manifest() -> JsonValue {
+    json::object([
+        ("modelDefinitionIds".to_string(), json::array([JsonValue::from("aec.building.energy")])),
+        ("statComputers".to_string(), json::array([JsonValue::from("energy.demand")])),
+        ("propertyComputers".to_string(), json::array([JsonValue::from("energy.heatedvolume")])),
+        ("importProfiles".to_string(), json::array([energy_import_profile("aec.building.energy", true, Some("wireframe"))])),
+        ("transformationAppliers".to_string(), json::array([])),
+    ])
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
@@ -75,13 +68,13 @@ fn bundle() -> ExtensionBundle {
     let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
     semio_framework::io::resolve_ready(bundle.contributes_topic(
         "cad.computer",
-        serde_json::json!({
-            "appId": HOST_APP_ID,
-            "moduleId": MODULE_ID,
-            "label": "AEC Building Energy",
-            "iconId": "zap",
-            "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        }),
+        DslValue::object([
+            ("appId".to_string(), DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), DslValue::String(MODULE_ID.to_string())),
+            ("label".to_string(), DslValue::String("AEC Building Energy".to_string())),
+            ("iconId".to_string(), DslValue::String("zap".to_string())),
+            ("computersJson".to_string(), DslValue::String(json::to_string(&computers_manifest()))),
+        ]),
     ))
 }
 
@@ -99,9 +92,9 @@ mod tests {
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "cad.computer");
         let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
-        let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("parse");
-        assert_eq!(parsed["statComputers"], serde_json::json!(["energy.demand"]));
-        assert_eq!(parsed["propertyComputers"], serde_json::json!(["energy.heatedvolume"]));
+        let parsed = json::parse(computers_json).expect("parse");
+        assert_eq!(parsed.get("statComputers"), Some(&json::array([JsonValue::from("energy.demand")])));
+        assert_eq!(parsed.get("propertyComputers"), Some(&json::array([JsonValue::from("energy.heatedvolume")])));
     }
 }
 //#endregion 🧪️Tests

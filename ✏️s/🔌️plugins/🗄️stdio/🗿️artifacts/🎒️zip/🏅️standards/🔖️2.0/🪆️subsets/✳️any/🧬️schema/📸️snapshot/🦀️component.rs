@@ -2,15 +2,14 @@
 
 use crate::artifacts::zip::STDIO_ZIP_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Entry
 /// 🎒️ One logical ZIP archive member: its path and decompressed semantic payload.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct ZipEntry {
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub data: Vec<u8>,
 }
@@ -18,18 +17,18 @@ pub struct ZipEntry {
 
 //#region Snapshot
 /// 📸️ Persisted `stdio.zip` snapshot.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.zip")]
 pub struct ZipSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub entries: Vec<ZipEntry>,
     /// 💬️ Archive-level comment (EOCD comment field).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comment: String,
 }
 

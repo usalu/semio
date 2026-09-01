@@ -4,14 +4,16 @@
 
 use super::super::OpeningPreferences;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Opening
 pub use super::clear_default_app::{clear_default_app, ClearDefaultApp};
 pub use super::set_default_app::{set_default_app, SetDefaultApp};
 
 /// 🎚️ Typed, invertible opening-preferences mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = OpeningPreferences, diff = OpeningPreferences, schema = "os.config.opening")]
 pub enum OpeningConfigMutation {
     SetDefaultApp(SetDefaultApp),
@@ -26,8 +28,9 @@ pub use super::change_merge_policy::{
 };
 
 /// 🛡️ Typed, invertible merge-policy mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = MergePolicySetting, diff = MergePolicySetting, schema = "os.config.merge-policy")]
 pub enum MergePolicyConfigMutation {
     ChangeMergePolicy(ChangeMergePolicy),
@@ -42,8 +45,9 @@ pub use super::sign_in::{
 pub use super::sign_out::{sign_out, SignOut};
 
 /// 🪪️ Typed, invertible identity mutation vocabulary.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = IdentitySetting, diff = IdentitySetting, schema = "os.config.identity")]
 pub enum IdentityConfigMutation {
     SignIn(SignIn),

@@ -3,24 +3,23 @@
 mod tests {
     use crate::artifacts::gltf::schema::mutations::unbind_node_child::{diff, inverse, mutation};
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Rejected {
         index: mutation::GltfUnbindNodeChildPayload,
         reference: mutation::GltfUnbindNodeChildPayload,
     }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Wire {
         malformed_payload: String,
         mutation: String,
         diff: String,
         inverse: String,
     }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Vector {
         base: GltfSnapshot,
         mutation: mutation::GltfUnbindNodeChildPayload,
@@ -32,7 +31,7 @@ mod tests {
         rejected: Rejected,
         wire: Wire,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

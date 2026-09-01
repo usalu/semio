@@ -103,7 +103,7 @@ mod tests {
         let snapshot = SSpaceSnapshot::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let json = serde_json::to_string(&<SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() })).expect("json");
+        let json = pack::to_json_string(&<SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }));
         assert!(json.contains("Unknown body"));
     }
 }

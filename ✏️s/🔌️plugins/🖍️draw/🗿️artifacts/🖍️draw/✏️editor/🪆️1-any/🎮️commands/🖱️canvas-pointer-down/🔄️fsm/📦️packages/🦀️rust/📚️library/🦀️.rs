@@ -5,9 +5,6 @@
 // bound — R3/R7.
 #![allow(async_fn_in_trait)]
 
-#[cfg(target_arch = "wasm32")]
-extern crate semio_framework_async as wasm_bindgen_futures;
-
 // 🧯️ `extern crate self as` binds only at the crate root, so it lives here rather than in the domain
 // file: `statechart!`-expanded code names this crate `fsm::…` both here and in consumer crates.
 #[allow(unused_extern_crates)]

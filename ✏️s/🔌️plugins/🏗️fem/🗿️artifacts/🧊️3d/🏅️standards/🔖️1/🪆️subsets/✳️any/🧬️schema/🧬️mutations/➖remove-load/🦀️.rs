@@ -4,14 +4,14 @@ use crate::artifacts::fem3d::{Fem3dSnapshot, load_id};
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCasesPatchEntry};
 use crate::artifacts::fem3d::mutations::{Fem3dMutation, add_load};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// ➖️ Detaches a load from an existing load case's `loads` member collection by id, capturing
 /// nothing itself (the removed payload is recovered from `base` inside `↩️inverse`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "remove-load")]
 pub struct RemoveLoad {
     pub case_id: String,

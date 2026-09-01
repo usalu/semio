@@ -4,9 +4,8 @@ use crate::engine::space::config::{SpaceConfig, SpaceConfigMutation};
 use semio_framework_os::{WorkflowMutation, WorkflowSnapshot};
 use semio_framework_plugin::{app::InteractionView, ArtifactView, ConfigView, Emit, Fault};
 
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "delete-selection")]
 pub struct DeleteSelection {}
 
@@ -46,7 +45,6 @@ mod tests {
     use crate::engine::space::testkit::{app_with_registry, dispatch, seed_draw_plugin, test_surface_id};
     use crate::engine::space::SpaceCommand;
     use semio_framework_plugin::{testkit::meta, InteractionTarget, PluginApp, INTERACTION_SELECT_ACTION_ID};
-    use serde_json::json;
 
     /// 🕹️ End-to-end proof the `graph` domain's live selection actually drives `deleteSelection` —
     /// spawns a node, selects it via the framework's real `interactionSelect` action (the only way a
@@ -59,7 +57,7 @@ mod tests {
         dispatch(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw"), x: 10.0, y: 10.0 }));
         let before = app.snapshot().expect("snapshot");
         let node_id = before.graph.nodes.first().expect("spawned node").id.clone();
-        let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]).expect("targets");
+        let targets = pack::to_json_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]);
         app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).expect("interactionSelect");
         dispatch(&mut app, SpaceCommand::DeleteSelection(DeleteSelection {}));
         let after = app.snapshot().expect("snapshot");

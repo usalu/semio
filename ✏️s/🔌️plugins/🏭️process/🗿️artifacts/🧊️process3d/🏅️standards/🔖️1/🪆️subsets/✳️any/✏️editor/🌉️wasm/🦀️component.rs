@@ -1,4 +1,8 @@
-//! 🌉️ Process3d retained document-load bridge.
+//! 🌉️ Process3d retained document-load bridge (the mounted operation registry below; the
+//! wasm-bindgen `WasmBridge` submodule that used to sit between `🔖️MountedRegistry` and
+//! `🧪️MountedLaws` was deleted — nothing ever built it for `wasm32-unknown-unknown`, no engine
+//! entry, no `wasm` script target — see
+//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
 use crate::artifacts::process3d::op::Process3dMutation;
 use crate::artifacts::process3d::Process3dSnapshot;
@@ -310,247 +314,6 @@ impl Drop for Process3dMountedRegistry {
 }
 //#endregion 🔖️MountedRegistry
 
-//#region 🔖️WasmBridge
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-mod wasm_bridge {
-    use std::cell::RefCell;
-
-    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
-    use wasm_bindgen::prelude::*;
-
-    use crate::editor::process3d::Process3dPlayApp;
-
-    use super::{Process3dIngressCredits, Process3dMountedRegistry, Process3dOutputKind, Process3dOutputLease};
-
-    type Process3dApp = VcsArtifactApp<EditorApp<Process3dPlayApp>>;
-
-    fn js_fault(error: impl ToString) -> JsValue {
-        JsValue::from_str(&error.to_string())
-    }
-
-    #[wasm_bindgen]
-    pub struct Process3dEnvelopeLoadHandle {
-        operation: u64,
-        generation: u64,
-        base_revision: u64,
-        parent_revision: u64,
-    }
-
-    impl Process3dEnvelopeLoadHandle {
-        fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
-            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
-        }
-    }
-
-    #[wasm_bindgen]
-    impl Process3dEnvelopeLoadHandle {
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.operation
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-
-        #[wasm_bindgen(getter, js_name = baseRevision)]
-        pub fn base_revision(&self) -> u64 {
-            self.base_revision
-        }
-
-        #[wasm_bindgen(getter, js_name = parentRevision)]
-        pub fn parent_revision(&self) -> u64 {
-            self.parent_revision
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct Process3dEnvelopeOutputPage {
-        lease: Option<Process3dOutputLease>,
-    }
-
-    #[wasm_bindgen]
-    impl Process3dEnvelopeOutputPage {
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.operation)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.generation)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn sequence(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.sequence)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn kind(&self) -> u8 {
-            self.lease.as_ref().map_or(u8::MAX, |lease| lease.page.kind as u8)
-        }
-
-        pub fn bytes(&self) -> js_sys::Uint8Array {
-            self.lease.as_ref().map_or_else(|| js_sys::Uint8Array::new_with_length(0), |lease| js_sys::Uint8Array::from(&lease.page.bytes[..lease.page.len]))
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct Process3dSnapshotVcs {
-        app: RefCell<Process3dApp>,
-        mounted: RefCell<Process3dMountedRegistry>,
-    }
-
-    #[wasm_bindgen]
-    impl Process3dSnapshotVcs {
-        #[wasm_bindgen(constructor)]
-        pub async fn new() -> Result<Process3dSnapshotVcs, JsValue> {
-            let app = VcsArtifactApp::new(EditorApp::<Process3dPlayApp>::default()).await;
-            Ok(Self { app: RefCell::new(app), mounted: RefCell::new(Process3dMountedRegistry::new()) })
-        }
-
-        #[wasm_bindgen(js_name = beginEnvelopeLoad)]
-        pub fn begin_envelope_load(
-            &self,
-            maximum_pages: usize,
-            maximum_bytes: usize,
-            maximum_items: usize,
-            maximum_output_pages: usize,
-            maximum_controls: usize,
-            base_revision: u64,
-            parent_revision: u64,
-        ) -> Result<Process3dEnvelopeLoadHandle, JsValue> {
-            let credits = Process3dIngressCredits::try_new(maximum_pages, maximum_bytes, maximum_items, maximum_output_pages, maximum_controls).map_err(js_fault)?;
-            if !self.mounted.borrow().can_insert() {
-                return Err(js_fault("process3d-envelope.operation-capacity"));
-            }
-            let mut app = self.app.borrow_mut();
-            let live_revision = app.artifact_generation_now().0;
-            if base_revision != live_revision || parent_revision != base_revision {
-                return Err(js_fault("process3d-envelope.initial-revision-stale"));
-            }
-            let handle = app.begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
-            if let Err(error) = crate::artifacts::process3d::spr::process3d_admit_publication_authority(handle.operation, handle.generation, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls) {
-                let _ = app.cancel_artifact_envelope_load(handle);
-                return Err(js_fault(error));
-            }
-            if let Err(error) = self.mounted.borrow_mut().insert(handle.operation.0, handle.generation.0, base_revision, parent_revision, credits) {
-                let _ = app.cancel_artifact_envelope_load(handle);
-                let _ = crate::artifacts::process3d::spr::process3d_release_publication_authority(handle.operation, handle.generation);
-                return Err(js_fault(error));
-            }
-            Ok(Process3dEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0, base_revision, parent_revision })
-        }
-
-        #[wasm_bindgen(js_name = admitEnvelopePage)]
-        pub fn admit_envelope_page(&self, handle: &Process3dEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
-            let len = usize::try_from(source.length()).map_err(js_fault)?;
-            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                return Err(js_fault("process3d-envelope.page-too-large"));
-            }
-            self.mounted.borrow().operation(handle.operation, handle.generation).and_then(|operation| operation.preflight_page(len)).map_err(js_fault)?;
-            let mut app = self.app.borrow_mut();
-            app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(js_fault)?;
-            app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
-                let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-                source.copy_to(&mut bytes[..len]);
-                store::ArtifactEnvelopeDecodePage::try_from_array(bytes, len).expect("preflighted Process3d page length is fixed")
-            })
-            .map_err(js_fault)?;
-            self.mounted.borrow_mut().admit_page(handle.operation, handle.generation, len).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = sealEnvelopeLoad)]
-        pub fn seal_envelope_load(&self, handle: &Process3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-            let sealed = self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)?;
-            if sealed {
-                self.mounted.borrow_mut().publish(handle.operation, handle.generation, Process3dOutputKind::Checkpoint, 0).map_err(js_fault)?;
-            }
-            Ok(sealed)
-        }
-
-        #[wasm_bindgen(js_name = pollEnvelopeLoad)]
-        pub fn poll_envelope_load(&self, handle: &Process3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
-            let mut app = self.app.borrow_mut();
-            let live_revision = app.artifact_generation_now().0;
-            let operation = self.mounted.borrow().operation(handle.operation, handle.generation).map_err(js_fault)?;
-            if operation.base_revision != handle.base_revision || operation.parent_revision != handle.parent_revision {
-                return Err(js_fault("process3d-envelope.authoritative-owner-mismatch"));
-            }
-            crate::artifacts::process3d::spr::process3d_refresh_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation, live_revision).map_err(js_fault)?;
-            crate::artifacts::process3d::spr::process3d_validate_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation).map_err(js_fault)?;
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
-            let status = match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)? {
-                ArtifactEnvelopeDecodeOperationPoll::Pending => 0,
-                ArtifactEnvelopeDecodeOperationPoll::Progress => 1,
-                ArtifactEnvelopeDecodeOperationPoll::Ready => 2,
-                ArtifactEnvelopeDecodeOperationPoll::Cancelled => 3,
-                ArtifactEnvelopeDecodeOperationPoll::Fault => 4,
-            };
-            let mut mounted = self.mounted.borrow_mut();
-            mounted.publish(handle.operation, handle.generation, Process3dOutputKind::Progress, status).map_err(js_fault)?;
-            mounted.publish(handle.operation, handle.generation, Process3dOutputKind::Preview, status).map_err(js_fault)?;
-            if status >= 2 {
-                mounted.publish(handle.operation, handle.generation, Process3dOutputKind::Checkpoint, status).map_err(js_fault)?;
-                mounted.publish(handle.operation, handle.generation, Process3dOutputKind::Terminal, status).map_err(js_fault)?;
-            }
-            Ok(status)
-        }
-
-        #[wasm_bindgen(js_name = takeEnvelopeOutputPage)]
-        pub fn take_envelope_output_page(&self, handle: &Process3dEnvelopeLoadHandle, kind: u8) -> Result<Option<Process3dEnvelopeOutputPage>, JsValue> {
-            let kind = Process3dOutputKind::from_u8(kind).ok_or_else(|| js_fault("process3d-envelope.output-kind"))?;
-            Ok(self.mounted.borrow_mut().take(handle.operation, handle.generation, kind).map_err(js_fault)?.map(|lease| Process3dEnvelopeOutputPage { lease: Some(lease) }))
-        }
-
-        #[wasm_bindgen(js_name = resumeEnvelopeOutputPage)]
-        pub fn resume_envelope_output_page(&self, mut output: Process3dEnvelopeOutputPage) -> Result<(), JsValue> {
-            let lease = output.lease.as_mut().ok_or_else(|| js_fault("process3d-envelope.output-consumed"))?;
-            self.mounted.borrow_mut().resume(lease).map_err(js_fault)?;
-            drop(output.lease.take());
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = acknowledgeEnvelopeOutputPage)]
-        pub fn acknowledge_envelope_output_page(&self, mut output: Process3dEnvelopeOutputPage) -> Result<(), JsValue> {
-            let lease = output.lease.as_mut().ok_or_else(|| js_fault("process3d-envelope.output-consumed"))?;
-            self.mounted.borrow_mut().acknowledge_output(lease).map_err(js_fault)?;
-            drop(output.lease.take());
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = acknowledgeEnvelopeLoad)]
-        pub fn acknowledge_envelope_load(&self, handle: &Process3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-            if !self.mounted.borrow_mut().prepare_load_acknowledgement(handle.operation, handle.generation).map_err(js_fault)? {
-                return Ok(false);
-            }
-            let acknowledged = self.app.borrow_mut().acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
-            if acknowledged {
-                self.mounted.borrow_mut().remove(handle.operation, handle.generation).map_err(js_fault)?;
-                if !crate::artifacts::process3d::spr::process3d_release_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation) {
-                    return Err(js_fault("process3d-envelope.publication-release"));
-                }
-            }
-            Ok(acknowledged)
-        }
-
-        #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
-        pub fn cancel_envelope_load(&self, handle: &Process3dEnvelopeLoadHandle) -> Result<(), JsValue> {
-            self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = closeStep)]
-        pub fn close_step(&self) -> Result<bool, JsValue> {
-            let app_complete = matches!(self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?, semio_framework_plugin::PluginCloseStep::Complete);
-            let registry_complete = self.mounted.borrow_mut().close_step();
-            Ok(app_complete && registry_complete)
-        }
-    }
-}
-//#endregion 🔖️WasmBridge
-
 //#region 🧪️MountedLaws
 #[cfg(test)]
 mod mounted_laws {
@@ -736,28 +499,35 @@ mod tests {
         Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None))
     }
 
-    /// 🌉️ Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM wave 4: `steps` composes an
-    /// `s.stdio.semio.flow` CHILD HANDLE now — `CreateStep`/`DeleteStep`/`ChangeStepEnabled`/
-    /// `ChangeStepOrigin` are documented no-ops (see their own `🔺️diff/🦀️component.rs` files), so
-    /// dispatching them changes nothing about the persisted document; this asserts exactly that
-    /// (the snapshot is unchanged before/after, and undo is a further no-op on an already-unchanged
-    /// document) rather than the pre-migration "real content" assertions.
+    /// ↩️ Ticket `26/09/01/PROCESS-END-TO-END`: `step_payloads` is the durable, inline timeline
+    /// record now — `CreateStep`/`ChangeStepEnabled`/`ChangeStepOrigin`/`DeleteStep` are real
+    /// mutations against it, so this dispatches each through the wasm-facing store and asserts the
+    /// observed effect, then confirms undo restores the full pre-delete step (not merely its id).
     #[semio_framework_async_macros::async_test]
-    async fn step_mutations_dispatch_as_documented_no_ops() {
+    async fn step_mutations_dispatch_real_effects() {
         let mut store = new_store();
-        let before = store.snapshot().expect("snapshot");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("dispatch no-op create");
-        assert_eq!(store.snapshot().expect("snapshot"), before, "CreateStep must not change the persisted document");
+        let empty = store.snapshot().expect("snapshot");
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "cut-1".into() })], description: None }).expect("dispatch no-op delete");
-        assert_eq!(store.snapshot().expect("snapshot"), before, "DeleteStep must not change the persisted document");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("cut-1") })], description: None }).expect("dispatch create");
+        let after_create = store.snapshot().expect("snapshot");
+        assert_ne!(after_create, empty, "CreateStep must change the persisted document");
+        assert!(after_create.step_payloads.iter().any(|step| step.id == "cut-1"));
 
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "cut-1".into(), new_enabled: false })], description: None }).expect("dispatch no-op enabled change");
-        assert_eq!(store.snapshot().expect("snapshot"), before);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepEnabled(ChangeStepEnabled { id: "cut-1".into(), new_enabled: false })], description: None }).expect("dispatch enabled change");
+        assert!(!store.snapshot().expect("snapshot").step_payloads.iter().find(|step| step.id == "cut-1").expect("cut-1 present").enabled);
 
         let origin = StepOrigin { machine_id: "circularSaw".into(), capability_id: "crosscut".into() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "cut-1".into(), new_origin: Some(origin) })], description: None }).expect("dispatch no-op origin change");
-        assert_eq!(store.snapshot().expect("snapshot"), before);
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::ChangeStepOrigin(ChangeStepOrigin { id: "cut-1".into(), new_origin: Some(origin.clone()) })], description: None }).expect("dispatch origin change");
+        assert_eq!(store.snapshot().expect("snapshot").step_payloads.iter().find(|step| step.id == "cut-1").expect("cut-1 present").origin, Some(origin.clone()));
+
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![Process3dMutation::DeleteStep(DeleteStep { id: "cut-1".into() })], description: None }).expect("dispatch delete");
+        assert_eq!(store.snapshot().expect("snapshot"), empty, "DeleteStep must restore the pre-create document");
+
+        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        let restored = store.snapshot().expect("snapshot");
+        let restored_step = restored.step_payloads.iter().find(|step| step.id == "cut-1").expect("undo of DeleteStep must restore cut-1");
+        assert!(!restored_step.enabled, "undo must restore the disabled flag, not just the step's presence");
+        assert_eq!(restored_step.origin, Some(origin), "undo must restore the full pre-delete step, including origin");
     }
 
     #[semio_framework_async_macros::async_test]

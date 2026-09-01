@@ -39,6 +39,46 @@ impl Default for SemioKitArtifact {
     }
 }
 
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `objects`/`models`/`properties` are `store::ArtifactChild<S>`
+/// composed-artifact CHILD handles and `representations` is a `Vec<store::ArtifactLink>` LINK
+/// slot — both framework types bridged per-field through `to_dsl_value`/`from_dsl_value`
+/// (`🌱️value/🔀️serde`) rather than widening the derive macro. Same pattern as `✳️object`'s
+/// `SemioObjectArtifact` and the fan-out playbook's `PlaybookArtifact` reference — `Vec<T>` bridges
+/// the identical way `Option<T>` does, `to_dsl_value`/`from_dsl_value` only need `T: Serialize +
+/// DeserializeOwned`, which both `ArtifactChild<S>` (`#[serde(bound = "")]`, any `S`) and
+/// `ArtifactLink` already are.
+impl dsl::ToValue for SemioKitArtifact {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("types".to_string(), dsl::ToValue::to_value(&self.types)),
+            ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
+            ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
+            ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
+            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
+            ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
+        ])
+    }
+}
+impl dsl::FromValue for SemioKitArtifact {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = dsl::DslValue::into_object(value)?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: dsl::FromValue::from_value(field("schema")?)?,
+            types: dsl::FromValue::from_value(field("types")?)?,
+            designs: dsl::FromValue::from_value(field("designs")?)?,
+            objects: dsl::from_dsl_value(field("objects")?).map_err(dsl::ValueError::new)?,
+            models: dsl::from_dsl_value(field("models")?).map_err(dsl::ValueError::new)?,
+            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+            representations: dsl::from_dsl_value(field("representations")?).map_err(dsl::ValueError::new)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
+
 impl SemioKitArtifact {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn to_snapshot(&self) -> SemioKitSnapshot {

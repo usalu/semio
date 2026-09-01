@@ -8,9 +8,8 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::VcsError;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "create-studio")]
 pub struct CreateStudio {
     pub name: String,

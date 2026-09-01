@@ -12,25 +12,24 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 // still-public `os_spr::command` path instead of touching that framework facade file.
 use protocol::os_spr::command::DiffAlgebra;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️CollectionDiffs
 /// 📦️ Index-keyed `array` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonArrayDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JsonArrayModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JsonArrayAdded>,
 }
 
 /// 📦️ One `array.modified[]` entry — `index` refers to BASE state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonArrayModified {
     pub index: usize,
     pub diff: JsonValueDiff,
@@ -38,36 +37,36 @@ pub struct JsonArrayModified {
 
 /// 📦️ One `array.added[]` entry — `index` refers to FINAL state, ascending insert at
 /// `min(index, len)`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonArrayAdded {
     pub index: usize,
     pub item: JsonValue,
 }
 
 /// 📦️ Name-keyed `object` triple (member insertion order preserved on apply).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonObjectDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<JsonObjectModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<JsonObjectAdded>,
 }
 
 /// 📦️ One `object.modified[]` entry — `key` refers to BASE state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonObjectModified {
     pub key: String,
     pub diff: JsonValueDiff,
 }
 
 /// 📦️ One `object.added[]` entry — `index` is the FINAL Vec position (insertion order hint).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonObjectAdded {
     pub index: usize,
     pub key: String,
@@ -89,8 +88,8 @@ pub struct JsonObjectAdded {
 /// tri-state (`Option<Option<_>>`) fields anywhere in this artifact (§3b does not apply — this is
 /// the recipe's "enum-only" hand-roll case, same family as `dxf`). `DiffCodec` is hand-rolled
 /// below (§🔖️HandcraftedDiffCodec), grammar template copied from `SvgDiff`'s.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum JsonValueDiff {
     /// 🔁️ Whole-node replace — the node's KIND changed, or a mutation explicitly overwrites it.
     Replace {
@@ -116,12 +115,12 @@ pub enum JsonValueDiff {
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.json`. `schema` is an identity field and is never diffed.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.json.diff")]
 pub struct JsonDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<JsonValueDiff>,
 }
 

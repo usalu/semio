@@ -5,11 +5,10 @@ use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::snapshot::
 };
 use crate::artifacts::dwg::DwgSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgArtifact {
     #[state(artifact)]
@@ -17,43 +16,43 @@ pub struct DwgArtifact {
     #[state(artifact)]
     pub version: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub maintenance_version: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub codepage: u16,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub drawing: DwgLogicalDrawing,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: DwgHeaderVariables,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub classes: Vec<DwgClass>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub dependencies: Vec<DwgDependency>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub summary: DwgSummaryInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub application: DwgApplicationInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub template: DwgTemplate,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub auxiliary_header: DwgAuxiliaryHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub revision_history: DwgRevisionHistory,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub preview: DwgIndexedPreview,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub application_history: DwgApplicationHistory,
 }
 //#endregion 🔖️Artifact

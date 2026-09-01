@@ -1,4 +1,9 @@
-//! 🌉️ Procedural3d retained document-load bridge.
+//! 🌉️ Procedural3d retained document-load bridge (the mounted operation registry below; the
+//! wasm-bindgen `WasmBridge` submodule that used to sit between `🔖️MountedRegistry` and
+//! `🧪️MountedLaws` was deleted, along with the `MountedLaws` test assertions that verified its
+//! JS-facing method-name completeness — nothing ever built the bridge for `wasm32-unknown-unknown`,
+//! no engine entry, no `wasm` script target — see
+//! `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`).
 
 use crate::artifacts::procedural3d::op::Procedural3dMutation;
 use crate::artifacts::procedural3d::Procedural3dSnapshot;
@@ -310,252 +315,6 @@ impl Drop for Procedural3dMountedRegistry {
 }
 //#endregion 🔖️MountedRegistry
 
-//#region 🔖️WasmBridge
-#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
-mod wasm_bridge {
-    use std::cell::RefCell;
-
-    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
-    use wasm_bindgen::prelude::*;
-
-    use crate::editor::procedural3d::Procedural3dPlayApp;
-
-    use super::{Procedural3dIngressCredits, Procedural3dMountedRegistry, Procedural3dOutputKind, Procedural3dOutputLease};
-
-    type Procedural3dApp = VcsArtifactApp<EditorApp<Procedural3dPlayApp>>;
-
-    fn js_fault(error: impl ToString) -> JsValue {
-        JsValue::from_str(&error.to_string())
-    }
-
-    #[wasm_bindgen]
-    pub struct Procedural3dEnvelopeLoadHandle {
-        operation: u64,
-        generation: u64,
-        base_revision: u64,
-        parent_revision: u64,
-    }
-
-    impl Procedural3dEnvelopeLoadHandle {
-        fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
-            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
-        }
-    }
-
-    #[wasm_bindgen]
-    impl Procedural3dEnvelopeLoadHandle {
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.operation
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.generation
-        }
-
-        #[wasm_bindgen(getter, js_name = baseRevision)]
-        pub fn base_revision(&self) -> u64 {
-            self.base_revision
-        }
-
-        #[wasm_bindgen(getter, js_name = parentRevision)]
-        pub fn parent_revision(&self) -> u64 {
-            self.parent_revision
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct Procedural3dEnvelopeOutputPage {
-        lease: Option<Procedural3dOutputLease>,
-    }
-
-    #[wasm_bindgen]
-    impl Procedural3dEnvelopeOutputPage {
-        #[wasm_bindgen(getter)]
-        pub fn operation(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.operation)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn generation(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.generation)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn sequence(&self) -> u64 {
-            self.lease.as_ref().map_or(0, |lease| lease.page.sequence)
-        }
-
-        #[wasm_bindgen(getter)]
-        pub fn kind(&self) -> u8 {
-            self.lease.as_ref().map_or(u8::MAX, |lease| lease.page.kind as u8)
-        }
-
-        pub fn bytes(&self) -> js_sys::Uint8Array {
-            self.lease.as_ref().map_or_else(|| js_sys::Uint8Array::new_with_length(0), |lease| js_sys::Uint8Array::from(&lease.page.bytes[..lease.page.len]))
-        }
-    }
-
-    #[wasm_bindgen]
-    pub struct Procedural3dSnapshotVcs {
-        app: RefCell<Procedural3dApp>,
-        mounted: RefCell<Procedural3dMountedRegistry>,
-    }
-
-    #[wasm_bindgen]
-    impl Procedural3dSnapshotVcs {
-        #[wasm_bindgen(constructor)]
-        pub async fn new() -> Result<Procedural3dSnapshotVcs, JsValue> {
-            let app = VcsArtifactApp::new(EditorApp::<Procedural3dPlayApp>::default()).await;
-            Ok(Self { app: RefCell::new(app), mounted: RefCell::new(Procedural3dMountedRegistry::new()) })
-        }
-
-        #[wasm_bindgen(js_name = beginEnvelopeLoad)]
-        pub fn begin_envelope_load(
-            &self,
-            maximum_pages: usize,
-            maximum_bytes: usize,
-            maximum_items: usize,
-            maximum_output_pages: usize,
-            maximum_controls: usize,
-            base_revision: u64,
-            parent_revision: u64,
-        ) -> Result<Procedural3dEnvelopeLoadHandle, JsValue> {
-            let credits = Procedural3dIngressCredits::try_new(maximum_pages, maximum_bytes, maximum_items, maximum_output_pages, maximum_controls).map_err(js_fault)?;
-            if !self.mounted.borrow().can_insert() {
-                return Err(js_fault("procedural3d-envelope.operation-capacity"));
-            }
-            let mut app = self.app.borrow_mut();
-            let live_revision = app.artifact_generation_now().0;
-            if base_revision != live_revision || parent_revision != base_revision {
-                return Err(js_fault("procedural3d-envelope.initial-revision-stale"));
-            }
-            let handle = app.begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
-            if let Err(error) = crate::artifacts::procedural3d::spr::procedural3d_admit_publication_authority(handle.operation, handle.generation, base_revision, parent_revision, live_revision, maximum_items, maximum_output_pages, maximum_controls) {
-                let _ = app.cancel_artifact_envelope_load(handle);
-                return Err(js_fault(error));
-            }
-            if let Err(error) = self.mounted.borrow_mut().insert(handle.operation.0, handle.generation.0, base_revision, parent_revision, credits) {
-                let _ = app.cancel_artifact_envelope_load(handle);
-                let _ = crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(handle.operation, handle.generation);
-                return Err(js_fault(error));
-            }
-            Ok(Procedural3dEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0, base_revision, parent_revision })
-        }
-
-        #[wasm_bindgen(js_name = admitEnvelopePage)]
-        pub fn admit_envelope_page(&self, handle: &Procedural3dEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
-            let len = usize::try_from(source.length()).map_err(js_fault)?;
-            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                return Err(js_fault("procedural3d-envelope.page-too-large"));
-            }
-            self.mounted.borrow().operation(handle.operation, handle.generation).and_then(|operation| operation.preflight_page(len)).map_err(js_fault)?;
-            let mut app = self.app.borrow_mut();
-            app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(js_fault)?;
-            app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
-                let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-                source.copy_to(&mut bytes[..len]);
-                store::ArtifactEnvelopeDecodePage::try_from_array(bytes, len).expect("preflighted Procedural3d page length is fixed")
-            })
-            .map_err(js_fault)?;
-            self.mounted.borrow_mut().admit_page(handle.operation, handle.generation, len).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = sealEnvelopeLoad)]
-        pub fn seal_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-            let sealed = self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)?;
-            if sealed {
-                self.mounted.borrow_mut().publish(handle.operation, handle.generation, Procedural3dOutputKind::Checkpoint, 0).map_err(js_fault)?;
-            }
-            Ok(sealed)
-        }
-
-        #[wasm_bindgen(js_name = pollEnvelopeLoad)]
-        pub fn poll_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
-            let mut app = self.app.borrow_mut();
-            let live_revision = app.artifact_generation_now().0;
-            let operation = self.mounted.borrow().operation(handle.operation, handle.generation).map_err(js_fault)?;
-            if operation.base_revision != handle.base_revision || operation.parent_revision != handle.parent_revision {
-                return Err(js_fault("procedural3d-envelope.authoritative-owner-mismatch"));
-            }
-            crate::artifacts::procedural3d::spr::procedural3d_refresh_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation, live_revision).map_err(js_fault)?;
-            crate::artifacts::procedural3d::spr::procedural3d_validate_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation).map_err(js_fault)?;
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
-            let status = match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)? {
-                ArtifactEnvelopeDecodeOperationPoll::Pending => 0,
-                ArtifactEnvelopeDecodeOperationPoll::Progress => 1,
-                ArtifactEnvelopeDecodeOperationPoll::Ready => 2,
-                ArtifactEnvelopeDecodeOperationPoll::Cancelled => 3,
-                ArtifactEnvelopeDecodeOperationPoll::Fault => 4,
-            };
-            let mut mounted = self.mounted.borrow_mut();
-            mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Progress, status).map_err(js_fault)?;
-            mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Preview, status).map_err(js_fault)?;
-            if status >= 2 {
-                mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Checkpoint, status).map_err(js_fault)?;
-                mounted.publish(handle.operation, handle.generation, Procedural3dOutputKind::Terminal, status).map_err(js_fault)?;
-            }
-            Ok(status)
-        }
-
-        #[wasm_bindgen(js_name = takeEnvelopeOutputPage)]
-        pub fn take_envelope_output_page(&self, handle: &Procedural3dEnvelopeLoadHandle, kind: u8) -> Result<Option<Procedural3dEnvelopeOutputPage>, JsValue> {
-            let kind = Procedural3dOutputKind::from_u8(kind).ok_or_else(|| js_fault("procedural3d-envelope.output-kind"))?;
-            Ok(self.mounted.borrow_mut().take(handle.operation, handle.generation, kind).map_err(js_fault)?.map(|lease| Procedural3dEnvelopeOutputPage { lease: Some(lease) }))
-        }
-
-        #[wasm_bindgen(js_name = resumeEnvelopeOutputPage)]
-        pub fn resume_envelope_output_page(&self, mut output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
-            let lease = output.lease.as_mut().ok_or_else(|| js_fault("procedural3d-envelope.output-consumed"))?;
-            self.mounted.borrow_mut().resume(lease).map_err(js_fault)?;
-            drop(output.lease.take());
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = retryEnvelopeOutputPage)]
-        pub fn retry_envelope_output_page(&self, output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
-            self.resume_envelope_output_page(output)
-        }
-
-        #[wasm_bindgen(js_name = acknowledgeEnvelopeOutputPage)]
-        pub fn acknowledge_envelope_output_page(&self, mut output: Procedural3dEnvelopeOutputPage) -> Result<(), JsValue> {
-            let lease = output.lease.as_mut().ok_or_else(|| js_fault("procedural3d-envelope.output-consumed"))?;
-            self.mounted.borrow_mut().acknowledge_output(lease).map_err(js_fault)?;
-            drop(output.lease.take());
-            Ok(())
-        }
-
-        #[wasm_bindgen(js_name = acknowledgeEnvelopeLoad)]
-        pub fn acknowledge_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<bool, JsValue> {
-            if !self.mounted.borrow_mut().prepare_load_acknowledgement(handle.operation, handle.generation).map_err(js_fault)? {
-                return Ok(false);
-            }
-            let acknowledged = self.app.borrow_mut().acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
-            if acknowledged {
-                self.mounted.borrow_mut().remove(handle.operation, handle.generation).map_err(js_fault)?;
-                if !crate::artifacts::procedural3d::spr::procedural3d_release_publication_authority(handle.runtime_handle().operation, handle.runtime_handle().generation) {
-                    return Err(js_fault("procedural3d-envelope.publication-release"));
-                }
-            }
-            Ok(acknowledged)
-        }
-
-        #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
-        pub fn cancel_envelope_load(&self, handle: &Procedural3dEnvelopeLoadHandle) -> Result<(), JsValue> {
-            self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
-        }
-
-        #[wasm_bindgen(js_name = closeStep)]
-        pub fn close_step(&self) -> Result<bool, JsValue> {
-            let app_complete = matches!(self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?, semio_framework_plugin::PluginCloseStep::Complete);
-            let registry_complete = self.mounted.borrow_mut().close_step();
-            Ok(app_complete && registry_complete)
-        }
-    }
-}
-//#endregion 🔖️WasmBridge
-
 //#region 🧪️MountedLaws
 #[cfg(test)]
 mod mounted_laws {
@@ -753,34 +512,12 @@ mod mounted_laws {
 
     #[test]
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_three_dimensional_coverage() {
-        let bridge = include_str!("🦀️component.rs").split_once("//#region 🧪️MountedLaws").expect("mounted production bridge boundary").0;
         let owner_source = include_str!("../../🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
         let snapshot_source = include_str!("../../🧬️schema/📸️snapshot/💾️binary/🦀️component.rs");
         let lifecycle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-retained-mounted-laws.json");
         let owner_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-owner-catalog-laws.json");
         let oracle_fixture = include_str!("../../🧪️tests/🔣️p8yz-b-third-party-oracle-laws.json");
 
-        for required in [
-            "beginEnvelopeLoad",
-            "admitEnvelopePage",
-            "sealEnvelopeLoad",
-            "pollEnvelopeLoad",
-            "takeEnvelopeOutputPage",
-            "resumeEnvelopeOutputPage",
-            "retryEnvelopeOutputPage",
-            "acknowledgeEnvelopeOutputPage",
-            "acknowledgeEnvelopeLoad",
-            "cancelEnvelopeLoad",
-            "closeStep",
-            "construct_and_admit_artifact_envelope_ingress_page",
-        ] {
-            assert!(bridge.contains(required), "missing mounted lifecycle boundary: {required}");
-        }
-        let forbidden_raw_routes =
-            [["reject_whole_buffer_", "artifact_envelope_ingress"].concat(), ["dispatch_", "text("].concat(), ["dispatch_", "binary("].concat(), ["snapshot_", "json("].concat(), ["envelope_", "json("].concat(), ["ArtifactStore", "::new"].concat()];
-        for forbidden in &forbidden_raw_routes {
-            assert!(!bridge.contains(forbidden), "raw Procedural3d route survived: {forbidden}");
-        }
         assert!(owner_source.contains("mutation.delete-widget-position.3d-only"));
         assert!(owner_source.contains("PROCEDURAL3D_RETAINED_SCHEMA_DISCRIMINATOR"));
         let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P3 mounted snapshot region").1.split_once("#[cfg(test)]\nmod retained_mounted_laws").expect("P3 mounted production boundary").0;

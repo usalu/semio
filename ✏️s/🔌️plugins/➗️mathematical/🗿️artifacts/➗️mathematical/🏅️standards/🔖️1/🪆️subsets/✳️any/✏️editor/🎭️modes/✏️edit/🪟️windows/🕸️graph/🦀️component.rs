@@ -48,8 +48,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        let json = serde_json::to_string(&render(&MathematicalGraph::default(), &MathematicalCamera::default())).unwrap();
-        assert!(json.contains("node-graph"));
+        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
+        // `Debug` gives the same "the scene populated its node_graph slot" check the old JSON
+        // substring check made, without needing `serde_json` for a framework type.
+        let debug = format!("{:?}", render(&MathematicalGraph::default(), &MathematicalCamera::default()));
+        assert!(debug.contains("node_graph: Some"), "expected a populated node_graph slot: {debug}");
     }
 
     #[semio_framework_async_macros::async_test]

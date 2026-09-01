@@ -1,6 +1,6 @@
 //! 🏙️ FEM 3D artifact — document entity types (constitutional: general).
 
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
@@ -31,8 +31,8 @@ pub use crate::artifacts::fem2d::FemDof;
 // the same concrete type, so re-implementing either direction here would be a duplicate trait impl.
 
 /// 📍️ A structural node: a stable id and a global position, plain SI meters.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "node")]
 pub struct FemNode {
     pub id: String,
@@ -42,12 +42,12 @@ pub struct FemNode {
 }
 
 /// 🔩️ A two-node member: an axial `Bar` or a full 6-DOF `Frame` with a local-axis `roll` angle (radians).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Frame { id: String, start: String, end: String, material_id: String, section_id: String, roll: f64 },
 }
 
@@ -61,8 +61,8 @@ pub fn element_id(element: &FemElement) -> &str {
 /// 🧱️ Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), Poisson's ratio
 /// `nu` (dimensionless, drives `Tet4` solid elements), and density `rho` (kg/m³, drives self-weight via
 /// `Bar3`/`Frame3`/`Tet4`'s `mass()`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "material")]
 pub struct FemMaterial {
     pub id: String,
@@ -74,8 +74,8 @@ pub struct FemMaterial {
 }
 
 /// 📐️ Cross-section properties: area (m²), second moments of area about local y/z (m⁴), torsion constant (m⁴).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "section")]
 pub struct FemSection {
     pub id: String,
@@ -87,8 +87,8 @@ pub struct FemSection {
 }
 
 /// 🔒️ A support: the subset of a node's DOFs restrained to zero displacement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "support")]
 pub struct FemSupport {
     pub id: String,
@@ -99,14 +99,14 @@ pub struct FemSupport {
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL on a `Bar`/`Frame` element, or a normal
 /// pressure (Pa) over a meshed `FemSolid`'s top face, simplified as a uniform global `-Z` nodal load
 /// (see `crate::fem3d_engine::meshing::area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Nodal { id: String, node_id: String, dof: FemDof, value: f64 },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64, wz: f64 },
-    #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     Area { id: String, solid_id: String, pressure: f64 },
 }
 
@@ -118,8 +118,8 @@ pub fn load_id(load: &FemLoad) -> &str {
 }
 
 /// 📦️ A named set of loads applied together for one analysis run, optionally including self-weight.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "loadcase")]
 pub struct FemLoadCase {
     pub id: String,
@@ -132,8 +132,8 @@ pub struct FemLoadCase {
 /// 📦️ A linear combination of load cases — case id → factor terms superposed from already-solved
 /// case results. `BTreeMap` (not `Vec<(String, f64)>`, which the DSL engine has no primitive for)
 /// keyed by case id — duplicates collapse to the last value, which never happened in practice anyway.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "combination")]
 pub struct FemCombination {
     pub id: String,
@@ -157,8 +157,8 @@ pub use crate::artifacts::fem2d::FemAnalysisSettings;
 /// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
 /// (see `crate::fem3d_engine::meshing::resolve_geometry`) — mirrors `fem_2d::FemRegion`,
 /// extended into 3D via `crate::model::mesh`'s extrusion + tet-splitting.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "solid")]
 pub struct FemSolid {
     pub id: String,
@@ -175,8 +175,8 @@ pub struct FemSolid {
 /// 🎥️ Opaque camera state string; the plugin layer owns and interprets its shape. No
 /// `#[dsl(keyword = ...)]`: every field embedding this type is itself `#[dsl(block)]` (see
 /// `FemAnalysisSettings`'s doc comment above for why that means the keyword stays off here).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct FemCamera {
     pub json: String,
 }

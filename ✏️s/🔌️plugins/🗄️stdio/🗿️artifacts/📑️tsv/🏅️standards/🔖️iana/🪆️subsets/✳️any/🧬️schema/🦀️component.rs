@@ -2,22 +2,21 @@
 
 use crate::artifacts::tsv::standards::iana::subsets::any::schema::snapshot::{LineEnding, TsvSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv")]
 pub struct TsvArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub records: Vec<Vec<String>>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trailing_newline: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub line_ending: LineEnding,
 }
 

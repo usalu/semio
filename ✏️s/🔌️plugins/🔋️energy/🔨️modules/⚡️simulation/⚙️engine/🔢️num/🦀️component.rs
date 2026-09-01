@@ -1,6 +1,7 @@
 //! 🔢️ Numerical utilities: solvers, interpolation, integration, polynomials, lookup tables.
 
 // #region 🔖️Interpolation
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 /// 📈️ Linear interpolation with clamping.
 pub fn lerp(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
     if (x1 - x0).abs() < 1e-12 {
@@ -132,7 +133,7 @@ pub fn gauss_seidel(a: &[Vec<f64>], b: &[f64], x: &mut [f64], max_iter: usize, t
 
 // #region 🔖️LookupTable
 /// 📊️ Regular-grid lookup table with linear interpolation.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValueDerive, FromValueDerive)]
 pub struct LookupTable2D {
     pub x: Vec<f64>,
     pub y: Vec<f64>,

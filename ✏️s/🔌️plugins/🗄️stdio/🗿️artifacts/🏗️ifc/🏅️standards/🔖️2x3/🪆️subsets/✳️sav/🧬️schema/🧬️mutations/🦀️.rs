@@ -33,7 +33,6 @@ use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2
 use crate::artifacts::step::engine::part21::Part21Value;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
 
@@ -64,8 +63,8 @@ const RELATED_OBJECTS_INDEX: usize = 4;
 const RELATING_GROUP_INDEX: usize = 6;
 
 /// 🏗️ One `IfcStructuralAnalysisModel`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SavAnalysisModel {
     pub global_id: String,
     pub owner_history: Option<u64>,
@@ -74,8 +73,8 @@ pub struct SavAnalysisModel {
 }
 
 /// ⚖️ One `IfcStructuralLoadGroup`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SavLoadGroup {
     pub global_id: String,
     pub owner_history: Option<u64>,
@@ -86,8 +85,8 @@ pub struct SavLoadGroup {
 }
 
 /// 🔗️ One `IfcRelAssignsToGroup` relating structural members to their group.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SavGroupAssignment {
     pub global_id: String,
     pub owner_history: Option<u64>,
@@ -111,7 +110,7 @@ pub mod set_group_assignment;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3SavMutation")]
 pub enum Ifc2x3SavMutation {
     SetSnapshot(set_snapshot::SetSnapshot),

@@ -91,14 +91,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_rows_render_the_empty_message_not_a_zero_row_table() {
-        let json = serde_json::to_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN)).expect("render json");
+        let json = pack::to_json_string(&render_rows(&[], &HomeTableLabels::NATIVE_EN));
         assert!(json.contains("No studios yet."));
         assert!(!json.contains("framework.window.table"), "empty rows must not render the table scene at all: {json}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn a_row_renders_without_the_actions_column() {
-        let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN)).expect("render json");
+        let json = pack::to_json_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN));
         assert!(json.contains("Fabrication"));
         assert!(json.contains("hub"));
         assert!(json.contains("Origin"), "six columns render, the last being Origin: {json}");
@@ -111,14 +111,14 @@ mod tests {
     async fn a_row_stamps_the_space_row_id() {
         let UiNode::ComponentScene(node) = render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_EN) else { panic!("expected ComponentScene") };
         let scene = node.table.expect("table scene");
-        let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows_json parses");
-        assert_eq!(rows[0]["id"], serde_json::json!("space:sp-1"));
+        let rows: Vec<pack::JsonValue> = pack::parse_json(&scene.rows_json).expect("rows_json parses").as_array().expect("rows_json parses").to_vec();
+        assert_eq!(rows[0]["id"], pack::json!("space:sp-1"));
         assert!(rows[0].get("actions").is_none(), "the viewer never carries a row actions cell: {:?}", rows[0]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn german_locale_labels_resolve() {
-        let json = serde_json::to_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_DE)).expect("render json");
+        let json = pack::to_json_string(&render_rows(&[one_hub_row()], &HomeTableLabels::NATIVE_DE));
         assert!(json.contains("Aktualisiert"));
         assert!(json.contains("Herkunft"));
     }
@@ -142,7 +142,7 @@ mod tests {
             recorded_at_ms: 1000,
         };
         let directory = store::os_directory::fold(store::os_directory::DirectoryReadModel::default(), &event);
-        let json = serde_json::to_string(&render(&directory, "en-US")).expect("render json");
+        let json = pack::to_json_string(&render(&directory, "en-US"));
         assert!(json.contains("Fabrication"), "the folded space renders: {json}");
         assert!(json.contains("hub"), "hub-folded spaces render origin=hub: {json}");
     }

@@ -4,12 +4,11 @@
 //! included — those live in `line_ending`/`trailing_newline`, not the content itself).
 
 use crate::artifacts::txt::TxtSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Txt` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct TxtOutline {
     pub line_count: u32,
     pub word_count: u32,

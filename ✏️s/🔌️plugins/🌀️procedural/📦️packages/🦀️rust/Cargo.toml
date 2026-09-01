@@ -64,10 +64,6 @@ semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️m
 serde.workspace = true
 serde_json = { workspace = true, features = ["float_roundtrip"] }
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-semio-framework-async = { workspace = true }
-wasm-bindgen = "0.2.106"
-
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
 

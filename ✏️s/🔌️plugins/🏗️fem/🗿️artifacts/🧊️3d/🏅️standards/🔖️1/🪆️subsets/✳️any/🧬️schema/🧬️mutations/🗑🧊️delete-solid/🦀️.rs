@@ -4,14 +4,14 @@ use crate::artifacts::fem3d::Fem3dSnapshot;
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dSolidsDelta};
 use crate::artifacts::fem3d::mutations::{Fem3dMutation, create_solid};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🗑️ Removes an existing meshed solid by id, capturing nothing itself (the removed payload is
 /// recovered from `base` inside `↩️inverse`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "delete-solid")]
 pub struct DeleteSolid {
     pub id: String,

@@ -5,12 +5,11 @@
 
 use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlNode;
 use crate::artifacts::html::HtmlSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Html` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct HtmlOutline {
     pub element_count: u32,
     pub max_depth: u32,

@@ -6,8 +6,9 @@ use crate::artifacts::mathematical::MathematicalSnapshot;
 use crate::editor::mathematical::config::{MathematicalConfig, MathematicalConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::DslRecord)]
 pub struct SetAlgorithm {
     pub algorithm: String,
     pub seed: Option<String>,
@@ -28,9 +29,10 @@ mod tests {
     use crate::editor::mathematical::commands::{node_graph_edit, node_graph_viewport, set_directed};
     use crate::editor::mathematical::testkit::{dispatch, math_app, MathApp};
     use crate::editor::mathematical::MathematicalCommand;
+    use pack::json::{self, Value};
 
-    async fn node_graph_edit(operation: serde_json::Value) -> MathematicalCommand {
-        MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: serde_json::to_string(&vec![operation]).unwrap() })
+    async fn node_graph_edit(operation: Value) -> MathematicalCommand {
+        MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json::to_string(&json::array([operation])) })
     }
 
     #[semio_framework_async_macros::async_test]
@@ -61,7 +63,7 @@ mod tests {
     async fn node_graph_edit_add_node_appends_a_node() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
-        dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })));
+        dispatch(&mut app, node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(1.0)), ("y".to_string(), Value::from(2.0))])));
         assert_eq!(mathematical_graph(&app.snapshot().expect("projection")).nodes.len(), before + 1);
     }
 
@@ -69,7 +71,7 @@ mod tests {
     async fn node_graph_edit_move_updates_node_position() {
         let mut app = math_app();
         let node_id = mathematical_graph(&app.snapshot().expect("projection")).nodes[0].id.clone();
-        dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "move", "nodeId": node_id, "x": 42.0, "y": 43.0 })));
+        dispatch(&mut app, node_graph_edit(json::object([("operation".to_string(), Value::from("move")), ("nodeId".to_string(), Value::from(node_id.as_str())), ("x".to_string(), Value::from(42.0)), ("y".to_string(), Value::from(43.0))])));
         let moved = mathematical_graph(&app.snapshot().expect("projection")).nodes.iter().find(|node| node.id == node_id).cloned().expect("moved node");
         assert_eq!((moved.x, moved.y), (42.0, 43.0));
     }
@@ -78,7 +80,7 @@ mod tests {
     async fn node_graph_edit_connect_appends_an_edge() {
         let mut app = math_app();
         let before = mathematical_graph(&app.snapshot().expect("projection")).edges.len();
-        dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "connect", "sourceNodeId": "a", "targetNodeId": "d" })));
+        dispatch(&mut app, node_graph_edit(json::object([("operation".to_string(), Value::from("connect")), ("sourceNodeId".to_string(), Value::from("a")), ("targetNodeId".to_string(), Value::from("d"))])));
         let projection = mathematical_graph(&app.snapshot().expect("projection"));
         assert_eq!(projection.edges.len(), before + 1);
         assert!(projection.edges.iter().any(|edge| edge.source == "a" && edge.target == "d"));
@@ -87,7 +89,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_delete_selection_removes_nodes_and_incident_edges() {
         let mut app = math_app();
-        dispatch(&mut app, node_graph_edit(serde_json::json!({ "operation": "deleteSelection", "nodeIds": ["a"] })));
+        dispatch(&mut app, node_graph_edit(json::object([("operation".to_string(), Value::from("deleteSelection")), ("nodeIds".to_string(), json::array([Value::from("a")]))])));
         let projection = mathematical_graph(&app.snapshot().expect("projection"));
         assert!(!projection.nodes.iter().any(|node| node.id == "a"));
         assert!(!projection.edges.iter().any(|edge| edge.source == "a" || edge.target == "a"));
@@ -96,7 +98,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_unknown_operation_and_empty_array_emit_no_operations() {
         let mut app = math_app();
-        let result = app.dispatch_typed(node_graph_edit(serde_json::json!({ "operation": "unknownTag" })), &semio_framework_plugin::testkit::meta("local")).expect("no-op tag");
+        let result = app.dispatch_typed(node_graph_edit(json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::testkit::meta("local")).expect("no-op tag");
         assert!(result.mutations.is_empty());
         let result = app.dispatch_typed(MathematicalCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::testkit::meta("local")).expect("empty array");
         assert!(result.mutations.is_empty());
@@ -108,7 +110,7 @@ mod tests {
         let before = mathematical_graph(&app.snapshot().expect("projection")).nodes.len();
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
-            node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 1.0, "y": 2.0 })),
+            node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(1.0)), ("y".to_string(), Value::from(2.0))])),
             |app| mathematical_graph(&app.snapshot().expect("projection")).nodes.len(),
             before,
             before + 1,
@@ -119,7 +121,7 @@ mod tests {
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(
             "mem://mathematical-convergence",
-            node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 9.0, "y": 9.0 })),
+            node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(9.0)), ("y".to_string(), Value::from(9.0))])),
             MathematicalCommand::SetDirected(set_directed::SetDirected { directed: false }),
             |app| {
                 let projection = mathematical_graph(&app.snapshot().expect("projection"));
@@ -130,7 +132,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_mathematical() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(serde_json::json!({ "operation": "addNode", "x": 3.0, "y": 4.0 })), |app| {
+        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<crate::editor::mathematical::MathematicalPlayApp>, _>(node_graph_edit(json::object([("operation".to_string(), Value::from("addNode")), ("x".to_string(), Value::from(3.0)), ("y".to_string(), Value::from(4.0))])), |app| {
             mathematical_graph(&app.snapshot().expect("projection")).nodes.len()
         });
     }

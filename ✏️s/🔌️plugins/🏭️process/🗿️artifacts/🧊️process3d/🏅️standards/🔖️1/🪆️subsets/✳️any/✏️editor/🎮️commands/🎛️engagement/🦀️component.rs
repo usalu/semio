@@ -6,13 +6,13 @@ use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use crate::editor::process3d::set_active_utility_effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️EngagementSubmit
 pub mod engagement_submit {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-submit")]
     pub struct EngagementSubmit {}
 
@@ -48,7 +48,7 @@ pub mod engagement_submit {
 pub mod engagement_input {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-input")]
     pub struct EngagementInput {
         pub value: String,
@@ -69,7 +69,7 @@ pub mod engagement_input {
 pub mod engagement_abort {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "engagement-abort")]
     pub struct EngagementAbort {}
 

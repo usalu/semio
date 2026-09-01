@@ -1,5 +1,6 @@
 use super::{DagDiff, DagSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "➕️create-node/🦀️.rs"] mod create_node;
 #[path = "🗑️delete-node/🦀️.rs"] mod delete_node;
@@ -31,8 +32,9 @@ pub use replace_node_kind::ReplaceNodeKind;
 pub use replace_node_properties::ReplaceNodeProperties;
 pub use resize_node::ResizeNode;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
+#[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = DagSnapshot, diff = DagDiff, schema = "dag.dag")]
 pub enum DagMutation {
     CreateNode(CreateNode), DeleteNode(DeleteNode), RenameNode(RenameNode), ChangeNodeName(ChangeNodeName), MoveNode(MoveNode), ResizeNode(ResizeNode), ChangeNodeIcon(ChangeNodeIcon), ChangeNodeAbbreviation(ChangeNodeAbbreviation), ChangeNodeOperatorKind(ChangeNodeOperatorKind), ReplaceNodeKind(ReplaceNodeKind), ReplaceNodeProperties(ReplaceNodeProperties), ReorderNodes(ReorderNodes), ConnectNodes(ConnectNodes), DisconnectNodes(DisconnectNodes),

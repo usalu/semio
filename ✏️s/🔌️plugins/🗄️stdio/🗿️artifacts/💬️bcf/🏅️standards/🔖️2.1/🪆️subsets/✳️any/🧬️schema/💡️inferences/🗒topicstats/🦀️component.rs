@@ -9,12 +9,11 @@
 use std::collections::BTreeSet;
 
 use crate::artifacts::bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️TopicStats
 /// 🗒️ Bcf's topic/comment/viewpoint/author counts.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BcfTopicStats {
     pub topic_count: u32,
     pub comment_count: u32,

@@ -5,11 +5,10 @@
 
 use crate::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::{Ifc2x3EdmPreamble, Ifc2x3Snapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.2x3")]
 pub struct Ifc2x3Artifact {
     #[state(artifact)]
@@ -17,10 +16,10 @@ pub struct Ifc2x3Artifact {
     /// 📦️ The full, lossless generic Part-21 graph, wrapped in this standard's own
     /// [`Ifc2x3Snapshot`] type — the actual persisted state.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub document: crate::artifacts::step::engine::part21::Part21Document,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edm_preamble: Option<Ifc2x3EdmPreamble>,
 }
 //#endregion 🔖️Artifact

@@ -4,6 +4,8 @@
 extern crate semio_framework_os_kernel as dsl;
 #[cfg(feature = "os-host-full")]
 extern crate semio_framework_os_kernel as protocol;
+#[cfg(feature = "os-host-full")]
+extern crate semio_framework_value_derive as value_derive;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 

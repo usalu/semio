@@ -1,11 +1,10 @@
 //! 🧬️ Direct delete-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level_collections::{reject, scenes_op, GltfTopLevelFamily, GltfTopLevelMutationRejection};
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.delete-scene.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfDeleteScenePayload {
     pub index: usize,
 }
@@ -28,9 +27,9 @@ pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<Gl
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteSceneMutation {
     Apply(GltfDeleteScenePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

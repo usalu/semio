@@ -28,13 +28,12 @@
 use crate::artifacts::zip::schema::diff::{self, ZipDiff};
 use crate::artifacts::zip::schema::snapshot::ZipEntry;
 use crate::artifacts::zip::ZipSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Model
 /// 🗜️ The two compression methods ISO/IEC 21320-1 §4.4 admits. Every other APPNOTE method is
 /// unrepresentable here, which is precisely the profile this subset stamps.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum ZipIso21320Method {
     #[default]
     Stored,
@@ -71,9 +70,9 @@ pub mod set_entry_data;
 /// 📐️ Typed content mutation for `stdio.zip` 2.0/✳️iso21320. `NoMutation` was dropped:
 /// `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one leaf payload and a unit
 /// variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipIso21320Mutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipIso21320Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// 💬️ Sets the archive-level (EOCD) comment.

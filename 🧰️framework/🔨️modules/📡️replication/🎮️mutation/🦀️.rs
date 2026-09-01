@@ -744,6 +744,55 @@ pub struct MutationMessage {
     pub op_index: Option<u32>,
 }
 
+/// 🌉️ Hand-written, not derived: mirrors the `#[serde(default, skip_serializing_if = "…")]`
+/// sparse-emission on `target`/`op_index` (only emitted when non-default), matching the
+/// pre-existing serde wire shape byte-for-byte in field presence.
+impl crate::value::ToValue for MutationMessage {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![
+            ("level".to_string(), crate::value::ToValue::to_value(&self.level)),
+            ("code".to_string(), crate::value::ToValue::to_value(&self.code)),
+            ("message".to_string(), crate::value::ToValue::to_value(&self.message)),
+        ];
+        if !self.target.is_empty() {
+            entries.push(("target".to_string(), crate::value::ToValue::to_value(&self.target)));
+        }
+        if self.op_index.is_some() {
+            entries.push(("opIndex".to_string(), crate::value::ToValue::to_value(&self.op_index)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for MutationMessage {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationMessage, found {value:?}")));
+        };
+        let mut level = None;
+        let mut code = None;
+        let mut message = None;
+        let mut target = Vec::new();
+        let mut op_index = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "level" => level = Some(<crate::diagnostic::Severity as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("level"))?),
+                "code" => code = Some(<crate::diagnostic::FaultCode as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("code"))?),
+                "message" => message = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("message"))?),
+                "target" => target = <Vec<String> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("target"))?,
+                "opIndex" => op_index = <Option<u32> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("opIndex"))?,
+                _ => {}
+            }
+        }
+        Ok(MutationMessage {
+            level: level.ok_or_else(|| crate::value::ValueError::new("MutationMessage missing level"))?,
+            code: code.ok_or_else(|| crate::value::ValueError::new("MutationMessage missing code"))?,
+            message: message.ok_or_else(|| crate::value::ValueError::new("MutationMessage missing message"))?,
+            target,
+            op_index,
+        })
+    }
+}
+
 impl MutationMessage {
     fn at_level(level: crate::diagnostic::Severity, code: impl Into<crate::diagnostic::FaultCode>, message: impl Into<String>) -> Self {
         Self { level, code: code.into(), message: message.into(), target: Vec::new(), op_index: None }
@@ -973,6 +1022,45 @@ pub struct ForeignTarget {
     pub dialect: Option<String>,
 }
 
+/// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp`/`ids`/`UndoPolicy`
+/// (this crate sits below `os-kernel`). Mirrors `#[serde(rename_all = "camelCase")]` field naming
+/// and the `dialect` sparse-emission by hand.
+impl crate::value::ToValue for ForeignTarget {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![
+            ("artifactId".to_string(), crate::value::ToValue::to_value(&self.artifact_id)),
+            ("artifactKind".to_string(), crate::value::ToValue::to_value(&self.artifact_kind)),
+        ];
+        if self.dialect.is_some() {
+            entries.push(("dialect".to_string(), crate::value::ToValue::to_value(&self.dialect)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for ForeignTarget {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for ForeignTarget, found {value:?}")));
+        };
+        let mut artifact_id = None;
+        let mut artifact_kind = None;
+        let mut dialect = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "artifactId" => artifact_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactId"))?),
+                "artifactKind" => artifact_kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("artifactKind"))?),
+                "dialect" => dialect = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("dialect"))?,
+                _ => {}
+            }
+        }
+        Ok(ForeignTarget {
+            artifact_id: artifact_id.ok_or_else(|| crate::value::ValueError::new("ForeignTarget missing artifactId"))?,
+            artifact_kind: artifact_kind.ok_or_else(|| crate::value::ValueError::new("ForeignTarget missing artifactKind"))?,
+            dialect,
+        })
+    }
+}
+
 /// @emoji 🪜️ One foreign hop of a [`Planner`]'s plan: the target artifact, the mutation/contributed
 /// id it dispatches, its already-encoded payload, and a human label.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1040,6 +1128,90 @@ pub struct MutationMeta {
     pub origin: MutationOrigin,
 }
 
+/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
+/// No `#[serde(rename_all = ...)]` on this struct, so field names stay snake_case (unlike
+/// `ForeignTarget`/`MutationOrigin` above); mirrors every `skip_serializing_if` by hand.
+impl crate::value::ToValue for MutationMeta {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = Vec::new();
+        if self.mutation_id.is_some() {
+            entries.push(("mutation_id".to_string(), crate::value::ToValue::to_value(&self.mutation_id)));
+        }
+        if !self.dependencies.is_empty() {
+            entries.push(("dependencies".to_string(), crate::value::ToValue::to_value(&self.dependencies)));
+        }
+        entries.push(("base_version".to_string(), crate::value::ToValue::to_value(&self.base_version)));
+        if self.author_id.is_some() {
+            entries.push(("author_id".to_string(), crate::value::ToValue::to_value(&self.author_id)));
+        }
+        entries.push(("timestamp".to_string(), crate::value::ToValue::to_value(&self.timestamp)));
+        entries.push(("undo_policy".to_string(), crate::value::ToValue::to_value(&self.undo_policy)));
+        if self.payload_hash.is_some() {
+            entries.push(("payload_hash".to_string(), crate::value::ToValue::to_value(&self.payload_hash)));
+        }
+        if self.semantic_kind.is_some() {
+            entries.push(("semantic_kind".to_string(), crate::value::ToValue::to_value(&self.semantic_kind)));
+        }
+        if self.label.is_some() {
+            entries.push(("label".to_string(), crate::value::ToValue::to_value(&self.label)));
+        }
+        if self.group_id.is_some() {
+            entries.push(("group_id".to_string(), crate::value::ToValue::to_value(&self.group_id)));
+        }
+        if !self.origin.is_owner() {
+            entries.push(("origin".to_string(), crate::value::ToValue::to_value(&self.origin)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl crate::value::FromValue for MutationMeta {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationMeta, found {value:?}")));
+        };
+        let mut mutation_id = None;
+        let mut dependencies = Vec::new();
+        let mut base_version = None;
+        let mut author_id = None;
+        let mut timestamp = None;
+        let mut undo_policy = None;
+        let mut payload_hash = None;
+        let mut semantic_kind = None;
+        let mut label = None;
+        let mut group_id = None;
+        let mut origin = MutationOrigin::Owner;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "mutation_id" => mutation_id = <Option<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutation_id"))?,
+                "dependencies" => dependencies = <Vec<crate::ids::MutationId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("dependencies"))?,
+                "base_version" => base_version = Some(<u64 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("base_version"))?),
+                "author_id" => author_id = <Option<crate::ids::ActorId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("author_id"))?,
+                "timestamp" => timestamp = Some(<crate::ids::HybridLogicalTimestamp as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("timestamp"))?),
+                "undo_policy" => undo_policy = Some(<crate::UndoPolicy as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("undo_policy"))?),
+                "payload_hash" => payload_hash = <Option<crate::ids::PayloadHash> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("payload_hash"))?,
+                "semantic_kind" => semantic_kind = <Option<crate::ids::SchemaId> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("semantic_kind"))?,
+                "label" => label = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("label"))?,
+                "group_id" => group_id = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("group_id"))?,
+                "origin" => origin = <MutationOrigin as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("origin"))?,
+                _ => {}
+            }
+        }
+        Ok(MutationMeta {
+            mutation_id,
+            dependencies,
+            base_version: base_version.ok_or_else(|| crate::value::ValueError::new("MutationMeta missing base_version"))?,
+            author_id,
+            timestamp: timestamp.ok_or_else(|| crate::value::ValueError::new("MutationMeta missing timestamp"))?,
+            undo_policy: undo_policy.ok_or_else(|| crate::value::ValueError::new("MutationMeta missing undo_policy"))?,
+            payload_hash,
+            semantic_kind,
+            label,
+            group_id,
+            origin,
+        })
+    }
+}
+
 /// @emoji 📝️ One coalesced batch of operations, forward and backward, plus their causal metadata.
 /// Moved verbatim from `crate::os_store::Edit` (was `vcs/rs/lib.rs` L73).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -1060,6 +1232,83 @@ pub struct Edit<Op> {
     pub started_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub finished_at: Option<String>,
+}
+
+/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above (and
+/// the actual trigger of the os-kernel cascade: `CursorRevisionAccumulator::edit_digest`/
+/// `reconcile_stack` already bound `Mutation: ToValue` and hash via `to_json_string`, which needs
+/// `Edit<Mutation>: ToValue` itself, not just its generic parameter). Mirrors
+/// `#[serde(rename_all = "camelCase")]` field naming and every `skip_serializing_if`; `Option<T>`
+/// fields with no explicit `#[serde(default)]` (`description`/`finished_at`) still default to
+/// `None` when absent — serde's built-in behavior for `Option<T>` fields, mirrored here too.
+impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
+    fn to_value(&self) -> crate::value::DslValue {
+        let mut entries = vec![("id".to_string(), crate::value::ToValue::to_value(&self.id))];
+        if self.actor.is_some() {
+            entries.push(("actor".to_string(), crate::value::ToValue::to_value(&self.actor)));
+        }
+        entries.push(("forwards".to_string(), crate::value::ToValue::to_value(&self.forwards)));
+        entries.push(("inverse".to_string(), crate::value::ToValue::to_value(&self.inverse)));
+        if !self.mutation_meta.is_empty() {
+            entries.push(("mutationMeta".to_string(), crate::value::ToValue::to_value(&self.mutation_meta)));
+        }
+        if self.description.is_some() {
+            entries.push(("description".to_string(), crate::value::ToValue::to_value(&self.description)));
+        }
+        if self.coalesce_key.is_some() {
+            entries.push(("coalesceKey".to_string(), crate::value::ToValue::to_value(&self.coalesce_key)));
+        }
+        entries.push(("sequenceNumber".to_string(), crate::value::ToValue::to_value(&self.sequence_number)));
+        entries.push(("startedAt".to_string(), crate::value::ToValue::to_value(&self.started_at)));
+        if self.finished_at.is_some() {
+            entries.push(("finishedAt".to_string(), crate::value::ToValue::to_value(&self.finished_at)));
+        }
+        crate::value::DslValue::object(entries)
+    }
+}
+impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for Edit, found {value:?}")));
+        };
+        let mut id = None;
+        let mut actor = None;
+        let mut forwards = None;
+        let mut inverse = None;
+        let mut mutation_meta = Vec::new();
+        let mut description = None;
+        let mut coalesce_key = None;
+        let mut sequence_number = None;
+        let mut started_at = None;
+        let mut finished_at = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("id"))?),
+                "actor" => actor = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
+                "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
+                "inverse" => inverse = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
+                "mutationMeta" => mutation_meta = <Vec<MutationMeta> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationMeta"))?,
+                "description" => description = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("description"))?,
+                "coalesceKey" => coalesce_key = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("coalesceKey"))?,
+                "sequenceNumber" => sequence_number = Some(<i32 as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("sequenceNumber"))?),
+                "startedAt" => started_at = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("startedAt"))?),
+                "finishedAt" => finished_at = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("finishedAt"))?,
+                _ => {}
+            }
+        }
+        Ok(Edit {
+            id: id.ok_or_else(|| crate::value::ValueError::new("Edit missing id"))?,
+            actor,
+            forwards: forwards.ok_or_else(|| crate::value::ValueError::new("Edit missing forwards"))?,
+            inverse: inverse.ok_or_else(|| crate::value::ValueError::new("Edit missing inverse"))?,
+            mutation_meta,
+            description,
+            coalesce_key,
+            sequence_number: sequence_number.ok_or_else(|| crate::value::ValueError::new("Edit missing sequenceNumber"))?,
+            started_at: started_at.ok_or_else(|| crate::value::ValueError::new("Edit missing startedAt"))?,
+            finished_at,
+        })
+    }
 }
 //#endregion 🔖️Meta
 
@@ -1087,6 +1336,63 @@ impl MutationOrigin {
     // call site is sync.
     pub fn is_owner(&self) -> bool {
         matches!(self, Self::Owner)
+    }
+}
+
+/// 🌉️ Hand-written, not derived — same DAG reason as the other replication-crate types above.
+/// `#[serde(tag = "kind")]` internal tagging has no adjacently-tagged (`tag` + `content`) shape the
+/// derive macro supports anyway, so this was always going to be hand-written; mirrors the wire
+/// shape (`kind` sibling to each struct variant's own fields) exactly.
+impl crate::value::ToValue for MutationOrigin {
+    fn to_value(&self) -> crate::value::DslValue {
+        match self {
+            MutationOrigin::Owner => crate::value::DslValue::object([("kind".to_string(), crate::value::DslValue::String("owner".to_string()))]),
+            MutationOrigin::Contributed { plugin_id, mutation_id, payload_hash } => crate::value::DslValue::object([
+                ("kind".to_string(), crate::value::DslValue::String("contributed".to_string())),
+                ("pluginId".to_string(), crate::value::ToValue::to_value(plugin_id)),
+                ("mutationId".to_string(), crate::value::ToValue::to_value(mutation_id)),
+                ("payloadHash".to_string(), crate::value::ToValue::to_value(payload_hash)),
+            ]),
+            MutationOrigin::Transaction { initiator } => crate::value::DslValue::object([
+                ("kind".to_string(), crate::value::DslValue::String("transaction".to_string())),
+                ("initiator".to_string(), crate::value::ToValue::to_value(initiator)),
+            ]),
+        }
+    }
+}
+impl crate::value::FromValue for MutationOrigin {
+    fn from_value(value: crate::value::DslValue) -> Result<Self, crate::value::ValueError> {
+        let crate::value::DslValue::Object(fields) = value else {
+            return Err(crate::value::ValueError::new(format!("expected an object for MutationOrigin, found {value:?}")));
+        };
+        let mut kind = None;
+        let mut plugin_id = None;
+        let mut mutation_id = None;
+        let mut payload_hash = None;
+        let mut initiator = None;
+        for (key, entry) in fields {
+            match key.as_str() {
+                "kind" => kind = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("kind"))?),
+                "pluginId" => plugin_id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("pluginId"))?),
+                "mutationId" => mutation_id = Some(<crate::ids::SchemaId as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("mutationId"))?),
+                "payloadHash" => payload_hash = Some(<crate::ids::PayloadHash as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("payloadHash"))?),
+                "initiator" => initiator = Some(<ForeignTarget as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("initiator"))?),
+                _ => {}
+            }
+        }
+        match kind.as_deref() {
+            Some("owner") => Ok(MutationOrigin::Owner),
+            Some("contributed") => Ok(MutationOrigin::Contributed {
+                plugin_id: plugin_id.ok_or_else(|| crate::value::ValueError::new("MutationOrigin::Contributed missing pluginId"))?,
+                mutation_id: mutation_id.ok_or_else(|| crate::value::ValueError::new("MutationOrigin::Contributed missing mutationId"))?,
+                payload_hash: payload_hash.ok_or_else(|| crate::value::ValueError::new("MutationOrigin::Contributed missing payloadHash"))?,
+            }),
+            Some("transaction") => Ok(MutationOrigin::Transaction {
+                initiator: initiator.ok_or_else(|| crate::value::ValueError::new("MutationOrigin::Transaction missing initiator"))?,
+            }),
+            Some(other) => Err(crate::value::ValueError::new(format!("unknown MutationOrigin kind `{other}`"))),
+            None => Err(crate::value::ValueError::new("MutationOrigin missing kind")),
+        }
     }
 }
 //#endregion 🔖️Origin

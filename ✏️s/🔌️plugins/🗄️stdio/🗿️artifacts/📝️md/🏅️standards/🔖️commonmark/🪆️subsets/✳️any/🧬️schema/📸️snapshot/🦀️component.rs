@@ -12,14 +12,13 @@
 
 use crate::artifacts::md::STDIO_MD_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️CommonMarkModel
 /// 🧩 A real CommonMark inline node. `MdInline` is a WEAK entity (recipe: weak entities are
 /// whole-value replaced, never sub-diffed) -- `MdBlockDiff`'s `inlines`/`text` fields are always
 /// `Option<Vec<MdInline>>`/`Option<String>` whole-value slots, never a nested inline-level triple.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdInline {
     /// 🔤️ Literal text run.
     Text { text: String },
@@ -33,14 +32,14 @@ pub enum MdInline {
     Link {
         text: Vec<MdInline>,
         url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         title: Option<String>,
     },
     /// 🖼️ `![alt](url "title")`.
     Image {
         alt: String,
         url: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         title: Option<String>,
     },
     /// ↩️ A single `\n` inside a paragraph that is NOT a hard break (renders as a space/wrap
@@ -56,8 +55,8 @@ pub enum MdInline {
 /// 🧱 A real CommonMark block. `MdBlock` is a STRONG-like entity: block collections (top-level
 /// `MdSnapshot.blocks`, `List.items[n]`, `BlockQuote.blocks`) are all index-keyed and each gets
 /// its own per-field diff (`MdBlockDiff`) rather than whole-value replacement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum MdBlock {
     Heading {
         level: u8,
@@ -72,7 +71,7 @@ pub enum MdBlock {
     /// `tight` is purely a round-trip/render hint, not a structural difference in `items`' shape.
     List {
         ordered: bool,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         start: Option<u32>,
         tight: bool,
         items: Vec<Vec<MdBlock>>,
@@ -81,7 +80,7 @@ pub enum MdBlock {
     /// `None` for what was originally an indented block -- indented code has no info-string
     /// position in the spec). Re-encoding always emits a fenced block (documented normal form).
     CodeBlock {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         info: Option<String>,
         literal: String,
     },
@@ -98,14 +97,14 @@ pub enum MdBlock {
 }
 
 /// 📸️ Persisted `stdio.md` snapshot: the complete top-level block sequence.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.md")]
 pub struct MdSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<MdBlock>,
 }
 

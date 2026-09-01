@@ -18,13 +18,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️component.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️component.json");
 
 fn before() -> Fem2dSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `create-material` appends concrete `c30` and carries `before` to exactly the committed `after`.
@@ -56,22 +56,22 @@ fn inverse_restores_before() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: Fem2dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
-        let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
+        let decoded: Fem2dSnapshot = dsl::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = dsl::ToValue::to_value(&decoded);
+        let original: dsl::DslValue = dsl::json::from_json_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-material/appends-concrete-c30: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
-    let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
-    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
+    let reencoded = dsl::ToValue::to_value(&decoded_mutation);
+    let original: dsl::DslValue = dsl::json::from_json_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-material/appends-concrete-c30: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
 #[test]
 fn declared_outcome_holds() {
-    let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
-    let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
+    let outcome: dsl::DslValue = dsl::json::from_json_str(OUTCOME).expect("outcome decodes");
+    let status = outcome.get("status").and_then(dsl::DslValue::as_str).expect("outcome carries a status");
     let mut snapshot = before();
     let applied = apply_fem2d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
@@ -91,24 +91,24 @@ fn produces_committed_diff() {
     let outcome = <Fem2dMutation as protocol::Mutation<Fem2dSnapshot>>::diff(&mutation(), &base);
     assert!(outcome.diff().materials.is_some(), "create-material/appends-concrete-c30: the created material must surface in the materials delta");
     assert!(outcome.diff().regions.is_none() && outcome.diff().elements.is_none(), "create-material/appends-concrete-c30: no consumer collection may be touched when a material is coined");
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
-    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let produced = dsl::ToValue::to_value(outcome.diff());
+    let committed: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-material/appends-concrete-c30: produced diff differs from the committed 🔺️diff/🔣️component.json");
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
-    let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = dsl::ToValue::to_value(&decoded);
+    let original: dsl::DslValue = dsl::json::from_json_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-material/appends-concrete-c30: committed diff JSON is not canonical");
 }
 
 /// 🩹 Replaying the committed `materials.added` entry on `before` must reproduce the two-material catalogue.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: crate::artifacts::fem2d::diff::Fem2dDiff = dsl::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem2d::diff::Fem2dDiff as protocol::MutationDiff<Fem2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-material/appends-concrete-c30: committed diff did not carry before to after");
 }

@@ -7,36 +7,35 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use crate::artifacts::semio::standards::v1::subsets::document::schema::diff::{dec_block, dec_image, dec_str, dec_style, enc_block, enc_image, enc_str, enc_style};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️DocumentModel
 /// 🎨️ Character-level formatting for one `DocRun`. Named struct (never a bare tuple) per the f6
 /// §4.3 `DslField`-for-tuples gap this schema style avoids everywhere.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct RunStyle {
-    #[serde(default)]
+    #[value(default)]
     pub bold: bool,
-    #[serde(default)]
+    #[value(default)]
     pub italic: bool,
-    #[serde(default)]
+    #[value(default)]
     pub underline: bool,
-    #[serde(default)]
+    #[value(default)]
     pub size: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub font: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub color: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub link: Option<String>,
 }
 
 /// ✍️ One inline run of literal text plus its formatting.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocRun {
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub style: RunStyle,
 }
 
@@ -52,55 +51,55 @@ impl DocRun {
 /// 🩹 Derives `Default` (empty id/name, no parent) so `DocStyle` satisfies the shared
 /// `engine::triples::NamedTripleDiff<K,D,T>`'s conservative `T: Default` bound (a serde-derive
 /// limitation identical to the one docx's OWN local `NamedTripleDiff` copy works around via an
-/// explicit `#[serde(bound(...))]` override — the shared `engine::triples` copy lacks that
+/// explicit `#[value(bound(...))]` override — the shared `engine::triples` copy lacks that
 /// override; per this ticket's "shared infra gaps → report only" rule, fixed here locally rather
 /// than editing that shared file).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocStyle {
-    #[serde(default)]
+    #[value(default)]
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub name: String,
-    #[serde(default)]
+    #[value(default)]
     pub based_on: Option<String>,
 }
 
 /// 🖼️ One embedded raster/vector image, addressed by id from `DocBlock::Image`. Derives
 /// `Default` for the same shared-`engine::triples`-bound reason as `DocStyle` above.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocImage {
-    #[serde(default)]
+    #[value(default)]
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub mime: String,
-    #[serde(default)]
+    #[value(default)]
     pub bytes: Vec<u8>,
 }
 
 /// 🔲 One list item — recursively holds its own block content (a list item may itself contain
 /// paragraphs, nested lists, tables, …), matching CommonMark/WordprocessingML's own model.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocListItem {
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
 
 /// 🔲️ One table cell — recursively holds block content.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocTableCell {
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
 
 /// ➖️ One table row.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocTableRow {
-    #[serde(default)]
+    #[value(default)]
     pub cells: Vec<DocTableCell>,
 }
 
@@ -111,49 +110,49 @@ pub struct DocTableRow {
 /// 🩹 Derives `Default` (`#[default]` on the fieldless `PageBreak` variant) for the same shared
 /// `engine::triples::IndexedTripleDiff<D,T>` bound reason `DocStyle` documents above — `DocBlock`
 /// is used as `T` in `BlocksDiff = IndexedTripleDiff<DocBlockDiff, DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocBlock {
     Paragraph {
-        #[serde(default)]
+        #[value(default)]
         style_id: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         runs: Vec<DocRun>,
     },
     Heading {
         level: u8,
-        #[serde(default)]
+        #[value(default)]
         style_id: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         runs: Vec<DocRun>,
     },
     List {
-        #[serde(default)]
+        #[value(default)]
         ordered: bool,
-        #[serde(default)]
+        #[value(default)]
         items: Vec<DocListItem>,
     },
     Table {
-        #[serde(default)]
+        #[value(default)]
         rows: Vec<DocTableRow>,
     },
     Code {
-        #[serde(default)]
+        #[value(default)]
         language: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         text: String,
     },
     Quote {
-        #[serde(default)]
+        #[value(default)]
         blocks: Vec<DocBlock>,
     },
     Image {
         image_id: String,
-        #[serde(default)]
+        #[value(default)]
         alt: String,
-        #[serde(default)]
+        #[value(default)]
         width: Option<f64>,
-        #[serde(default)]
+        #[value(default)]
         height: Option<f64>,
     },
     #[default]
@@ -173,23 +172,23 @@ pub const STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA: &str = "s.stdio.semio.document";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.document")]
 pub struct SemioDocumentSnapshot {
     #[state(artifact)]
     pub schema: String,
     /// 🎨️ Named styles, keyed by `DocStyle::id`.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub styles: Vec<DocStyle>,
     /// 🖼️ Embedded images, keyed by `DocImage::id`, referenced from `DocBlock::Image::image_id`.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub images: Vec<DocImage>,
     /// 🧱️ The top-level block tree.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub blocks: Vec<DocBlock>,
 }
 
@@ -565,7 +564,7 @@ fn decode_document_snapshot_binary(bytes: &[u8]) -> Result<SemioDocumentSnapshot
 /// `encode_pack_with`'s old bodies called straight into `serde_json::{to_vec,from_slice}`). The
 /// derive path (`#[derive(dsl::DslArtifact)]`) was tried first per the ticket's brief and hits the
 /// same wall every hand-rolled-tagged-enum semio subset (model/brep) already hit: `DocBlock` is a
-/// `#[serde(tag = "kind")]` data-carrying enum with heterogeneous per-variant field sets — no
+/// `#[value(tag = "kind")]` data-carrying enum with heterogeneous per-variant field sets — no
 /// `dsl::DslField`/`DslEnum` impl exists for it, and `IndexedTripleDiff<DocBlockDiff, DocBlock>`
 /// compounds the gap. Hand-rolled instead, matching `🔺️diff`'s already-hand-rolled convention.
 impl store::ArtifactDsl for SemioDocumentSnapshot {
@@ -639,7 +638,7 @@ pub fn encode_semio_document_pack(snapshot: &SemioDocumentSnapshot) -> Vec<u8> {
     <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(snapshot)
 }
 
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.document` — the shape the `mutate-semio-document` case compares under `ordered-json-v1`. A thin
 /// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
 /// CLAUDE.md's "external libraries behind an interface" rule, never a new one), so a projection is
@@ -647,7 +646,7 @@ pub fn encode_semio_document_pack(snapshot: &SemioDocumentSnapshot) -> Vec<u8> {
 /// where it could drift.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_document_snapshot_json(snapshot: &SemioDocumentSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioDocumentSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
 /// 📥️ The `serde_json` inverse of [`encode_semio_document_snapshot_json`] — decodes the
@@ -657,7 +656,7 @@ pub fn encode_semio_document_snapshot_json(snapshot: &SemioDocumentSnapshot) -> 
 /// drift away from the JSON it claims to mirror.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_document_snapshot_json(text: &str) -> Result<SemioDocumentSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 //#endregion 🌉️ExternalCodecBridge
 

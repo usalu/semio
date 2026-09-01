@@ -13,7 +13,6 @@ use crate::artifacts::ifc::IfcSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexTransport
 /// 📐️ Own local copy (per the recipe's "hand-duplicated, macro-free" convention — never shared
@@ -156,14 +155,14 @@ fn inverse_indexed_collection<T: Clone, D: Clone>(removed: &[usize], modified: &
 //#region 🔖️ArgsDiff
 /// 🔺️ One `args.modified[]`/`added[]` entry — `IfcValue` is a weak/value leaf (per the recipe's
 /// strong/weak split), so the "diff" for a changed argument IS the whole new value.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcArgModified {
     pub index: usize,
     pub value: IfcValue,
 }
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcArgAdded {
     pub index: usize,
     pub value: IfcValue,
@@ -171,14 +170,14 @@ pub struct IfcArgAdded {
 
 /// 🔺️ Index-keyed collection triple for one [`IfcEntity::args`] — positional per the EXPRESS
 /// attribute order, so indices shift on insert/remove exactly like gif's frames.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcArgsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<IfcArgModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<IfcArgAdded>,
 }
 
@@ -247,14 +246,14 @@ impl IfcArgsDiff {
 /// 🔺️ Sparse per-field diff for one [`IfcEntity`] — a strong entity. `id` is identity, never
 /// diffed. `complex` (real IFC4 COMPLEX-instance extra type members) is a weak value-list —
 /// whole-vec replaced, never sub-diffed, matching `complex`'s rarity/edge-case role.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcEntityDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub args: Option<IfcArgsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub complex: Option<Vec<IfcComplexType>>,
 }
 
@@ -311,8 +310,8 @@ impl IfcEntityDiff {
 /// 📦️ One `entities.modified[]` entity — keyed by `id` (stable forever; unlike zip's name-keyed
 /// entries, an IFC entity's `id` is never itself a mutable field, so no rename-transport map is
 /// needed anywhere in this collection's absorb).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcEntityModified {
     pub id: u64,
     pub diff: IfcEntityDiff,
@@ -320,22 +319,22 @@ pub struct IfcEntityModified {
 
 /// 📦️ One `entities.added[]` entity — `index` is the FINAL position (apply semantics: ascending
 /// `insert(min(index, len))`; see the recipe's `## Absorb`/`## Diff` apply-semantics note).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcEntityAdded {
     pub index: usize,
     pub entity: IfcEntity,
 }
 
 /// 📦️ Sparse id-keyed `entities` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IfcEntitiesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<u64>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<IfcEntityModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<IfcEntityAdded>,
 }
 
@@ -497,21 +496,21 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
 /// `DslField` has no impl for `IfcValue` (only `DslRecord`-derived structs and `DslScalar`-derived
 /// UNIT-only enums implement `DslField`), so nothing downstream of it can derive either. `DiffCodec`
 /// is hand-rolled below (`#[derive(dsl::DslDiff)]` intentionally NOT present on this struct).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc.diff")]
 pub struct IfcDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_description: Option<Vec<IfcValue>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_name: Option<Vec<IfcValue>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub file_schema: Option<Vec<IfcValue>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub entities: Option<IfcEntitiesDiff>,
 }
 
@@ -853,7 +852,7 @@ pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
         IfcValue::Enum(s) => format!("E[{}]", enc_str(s)),
         IfcValue::Reference(id) => format!("F[{id}]"),
         IfcValue::Aggregate(items) => format!("A[{}]", items.iter().map(enc_ifc_value).collect::<Vec<_>>().join(",")),
-        IfcValue::TypedValue(name, items) => {
+        IfcValue::TypedValue { name, items } => {
             format!("T[{},[{}]]", enc_str(name), items.iter().map(enc_ifc_value).collect::<Vec<_>>().join(","))
         }
     }
@@ -885,7 +884,7 @@ pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
             let parts = split_top_level(inner, ',');
             let [name, items_s] = parts.as_slice() else { return Err(format!("typed value: expected 2 fields, got {}", parts.len())) };
             let items = split_top_level(strip_brackets(items_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ifc_value).collect::<Result<Vec<_>, String>>()?;
-            Ok(IfcValue::TypedValue(dec_str(name)?, items))
+            Ok(IfcValue::TypedValue { name: dec_str(name)?, items })
         }
         other => Err(format!("ifc value: unknown tag {other:?}")),
     }
@@ -936,7 +935,7 @@ pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
             out.push(7);
             enc_ifc_value_list_bin(items, out);
         }
-        IfcValue::TypedValue(name, items) => {
+        IfcValue::TypedValue { name, items } => {
             out.push(8);
             write_str_bin(out, name);
             enc_ifc_value_list_bin(items, out);
@@ -958,7 +957,7 @@ pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<If
         8 => {
             let name = read_str_bin(reader)?;
             let items = dec_ifc_value_list_bin(reader)?;
-            Ok(IfcValue::TypedValue(name, items))
+            Ok(IfcValue::TypedValue { name, items })
         }
         other => Err(format!("ifc value binary: unknown tag {other}")),
     }
@@ -1373,7 +1372,7 @@ pub(crate) fn demo_diff_cases() -> Vec<IfcDiff> {
     b.header.file_name = vec![IfcValue::String("changed.ifc".into())];
     if let Some(first) = b.entities.first_mut() {
         first.name = "IFCQUANTITYVOLUME".into();
-        first.args = vec![IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)])];
+        first.args = vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }];
         first.complex = vec![];
     }
     b.entities.push(IfcEntity { id: 300, name: "IFCBUILDINGSTOREY".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])], complex: vec![] });
@@ -1423,7 +1422,7 @@ mod handcrafted_diff_codec_tests {
         b.header.file_name = vec![IfcValue::String("changed".into())];
         b.entities.remove(0); // remove id 1
         b.entities[0].name = "IFCQUANTITYVOLUME".into(); // modify id 2
-        b.entities[0].args = vec![IfcValue::TypedValue("IFCLENGTHMEASURE".into(), vec![IfcValue::Real(3000.0)])];
+        b.entities[0].args = vec![IfcValue::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] }];
         b.entities[0].complex = vec![];
         b.entities.push(entity(300, "IFCBUILDINGSTOREY", vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])]));
 

@@ -21,7 +21,7 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes the internally tagged JSON projection.
 pub fn decode_rewrite_mutation_json(text: &str) -> Result<RewriteRuleMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.

@@ -4,6 +4,7 @@ use crate::material::{R_FILM_EXTERIOR_M2K_W, R_FILM_INTERIOR_M2K_W};
 use crate::num::newton_raphson;
 use crate::units::STEFAN_BOLTZMANN;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️ConvectionModels
 /// 🌬️ Exterior convection correlation (wind-adaptive McAdams-type).
@@ -51,7 +52,7 @@ impl InteriorConvectionModel {
 
 // #region 🔖️ConductionState
 /// 🌡️ Simplified first-order CTF conduction state (one history state per surface).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct ConductionState {
     pub ctf_c0_w_m2k: f64,
     pub ctf_c1_w_m2k: f64,

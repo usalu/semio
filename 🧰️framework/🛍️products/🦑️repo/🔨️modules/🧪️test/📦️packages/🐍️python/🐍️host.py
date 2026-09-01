@@ -115,6 +115,14 @@ class Context:
         with open(self.fixture(uri), "rb") as handle:
             return handle.read()
 
+    def subject_raw_bytes(self, implementation: str) -> bytes:
+        """📥️ Bytes a subject host produced for an oracle that declares ``@oracle-input-subject-raw``."""
+        path = self.plan.get("subjectRawInputs", {}).get(implementation)
+        if not path:
+            raise AssertionError("scenario %s has no raw subject output from %s; run its subject phase before this byte-decoding oracle" % (self.scenario["id"], implementation))
+        with open(path, "rb") as handle:
+            return handle.read()
+
     def copy_fixture(self, uri: str, as_name: Optional[str] = None) -> str:
         """🧫️ Copies an immutable fixture into the work directory and returns the mutable copy."""
         source = self.fixture(uri)

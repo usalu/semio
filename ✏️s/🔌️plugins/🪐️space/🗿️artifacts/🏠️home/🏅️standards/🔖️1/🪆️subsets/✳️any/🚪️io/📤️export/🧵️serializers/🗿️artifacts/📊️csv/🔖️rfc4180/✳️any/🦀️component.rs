@@ -10,7 +10,7 @@ pub async fn register() {}
 /// `has_header`/`records` (stdio's own RFC4180 rework). Preserved verbatim under the new shape
 /// rather than inventing table content this snapshot was never able to carry.
 pub async fn serialize(snapshot: &SHomeSnapshot) -> Result<CsvSnapshot, store::TextError> {
-    let _ = serde_json::to_value(snapshot).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let _ = dsl::ToValue::to_value(snapshot);
     Ok(CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records: Vec::new() })
 }
 

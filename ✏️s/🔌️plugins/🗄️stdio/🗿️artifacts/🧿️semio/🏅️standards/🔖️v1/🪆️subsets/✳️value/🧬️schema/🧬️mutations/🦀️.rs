@@ -17,14 +17,13 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{d
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️SemioValuePath
 /// 🧭️ One step of a [`SemioValuePath`] — a map key or a list position. Struct (named-field)
 /// variants throughout, never bare tuple variants — same internally-tagged runtime-serialization
 /// hazard `SemioValue`'s own doc comment cites.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioValuePathSegment {
     Key { key: String },
     Index { index: usize },
@@ -86,9 +85,9 @@ pub mod remove_node;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioValueSnapshot, diff = SemioValueTreeDiff, schema = "SemioValueMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioValueMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// 🔁️ Replaces the whole node found at `path` (root, if empty) with `value`, regardless of

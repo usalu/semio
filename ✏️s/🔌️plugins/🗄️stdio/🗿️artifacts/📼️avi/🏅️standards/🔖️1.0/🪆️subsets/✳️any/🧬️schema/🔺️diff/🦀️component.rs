@@ -9,17 +9,16 @@
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader, RiffChunk};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedTriple
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexedDiff<T, D> {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<IndexedModified<D>>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<IndexedAdded<T>>,
 }
 
@@ -30,15 +29,15 @@ impl<T, D> IndexedDiff<T, D> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexedModified<D> {
     pub index: usize,
     pub diff: D,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct IndexedAdded<T> {
     pub index: usize,
     pub item: T,
@@ -215,12 +214,12 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️Chunk
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviChunkDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub data: Option<Vec<u8>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub keyframe: Option<bool>,
 }
 
@@ -254,19 +253,19 @@ fn absorb_chunk_diff(a: &mut AviChunkDiff, b: AviChunkDiff) {
 //#region 🔖️Stream
 pub type AviChunksDiff = IndexedDiff<AviChunk, AviChunkDiff>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviStreamDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub strh: Option<AviStreamHeader>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub strf: Option<AviStreamFormat>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub chunks: Option<AviChunksDiff>,
     /// 📦️ Whole-value replace, same treatment as `strh`/`strf` — this stream's retained `strl`
     /// auxiliaries (`vprp`, `JUNK`, ...) have no addressable per-item mutation surface (see
     /// `AviMutation`'s module doc comment), so they only ever change as a unit.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub strl_extra: Option<Vec<RiffChunk>>,
 }
 
@@ -321,21 +320,21 @@ fn absorb_stream_diff(a: &mut AviStreamDiff, b: AviStreamDiff) {
 pub type AviStreamsDiff = IndexedDiff<AviStream, AviStreamDiff>;
 pub type AviUnknownChunksDiff = IndexedDiff<RiffChunk, RiffChunk>;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub main_header: Option<AviMainHeader>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub streams: Option<AviStreamsDiff>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub idx1_present: Option<bool>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub unknown_chunks: Option<AviUnknownChunksDiff>,
     /// 📦️ Whole-value replace, same treatment as `main_header` — the retained `hdrl` auxiliaries
     /// (`JUNK`, ...) have no addressable per-item mutation surface (see `AviMutation`'s module doc
     /// comment), so they only ever change as a unit.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub hdrl_extra: Option<Vec<RiffChunk>>,
 }
 

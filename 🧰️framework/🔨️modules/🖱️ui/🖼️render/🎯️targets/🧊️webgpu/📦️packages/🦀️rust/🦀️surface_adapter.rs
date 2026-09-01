@@ -811,7 +811,7 @@ fn decode_identity_with(decoder: &mut Decoder<'_>) -> Result<(SurfaceId, Surface
 
 //#region 🧠️LinearMemory
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[link(wasm_import_module = "semio_webgpu_surface")]
 extern "C" {
     fn send(pointer: *const u8, length: usize) -> u32;
@@ -819,10 +819,10 @@ extern "C" {
 }
 
 /// 🧠 Generated-import implementation translating only linear-memory pointer/length pairs.
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub struct LinearMemoryWebGpuSurfacePort;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl AbiPort for LinearMemoryWebGpuSurfacePort {
     fn try_send(&mut self, message: AbiMessage, budget: AbiWorkBudget) -> Result<(), crate::abi::AbiPortRejection> {
         if let Err(code) = callback_permit(budget) {
@@ -865,7 +865,7 @@ impl AbiPort for LinearMemoryWebGpuSurfacePort {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 fn decode_import_error(value: u32) -> AbiErrorCode {
     match value {
         5 => AbiErrorCode::LimitExceeded,

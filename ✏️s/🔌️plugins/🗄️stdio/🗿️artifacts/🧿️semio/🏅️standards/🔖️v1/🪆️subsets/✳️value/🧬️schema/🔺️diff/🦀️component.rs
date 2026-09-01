@@ -17,7 +17,6 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{S
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️NamedAdded
 /// 🧷 Position-carrying "added" wrapper for name/id-keyed collections — the recipe's own
@@ -34,8 +33,8 @@ use serde::{Deserialize, Serialize};
 /// identical reason — this is this subset's local instantiation of that same normative shape,
 /// supplied as `T` for `Map`/`nodes`' own `NamedTripleDiff<K,D,T>` rather than editing the
 /// shared engine file (out of scope — see this subset's own report's "shared infra gaps").
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct NamedAdded<T> {
     pub index: usize,
     pub item: T,
@@ -52,8 +51,8 @@ pub struct NamedAdded<T> {
 /// (f6-recon-report.md §3a, this file's own informing source's doc comment): this is a genuine
 /// data-carrying enum, and `DslField` has no impl for any data-carrying enum. `DiffCodec` is
 /// hand-rolled below (§🔖️HandcraftedDiffCodec), grammar template copied from `JsonDiff`'s.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum SemioValueDiff {
     /// 🔁️ Whole-node replace — the node's KIND changed, or a mutation explicitly overwrites it.
     Replace {
@@ -88,7 +87,7 @@ pub enum SemioValueDiff {
 /// 🩹 Never constructed as a "real" empty diff (there is no meaningful empty `SemioValueDiff` —
 /// `SemioValueTreeDiff.root` is `Option<SemioValueDiff>` precisely so `None` carries that meaning).
 /// Required ONLY because the shared `engine::triples::{IndexedTripleDiff,NamedTripleDiff}`'s
-/// `Deserialize` derive needs `D: Default` — a `#[serde(default)]`-triggered bound-inference
+/// `Deserialize` derive needs `D: Default` — a `#[value(default)]`-triggered bound-inference
 /// quirk on their OWN generic fields (`removed`/`modified`/`added`), confirmed independently by
 /// the sibling `presentation` subset hitting the identical `SlideShapeDiff: Default` requirement
 /// for the same reason. No enum variant here is fieldless, so `#[derive(Default)]` (which requires
@@ -105,15 +104,15 @@ impl Default for SemioValueDiff {
 /// is the id-keyed value-GRAPH triple (see the snapshot module's doc comment) — a second,
 /// top-level collection sibling to `root`'s own recursive tree, per the recipe's "strong-like
 /// entities in ordered collections" rule.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value.diff")]
 pub struct SemioValueTreeDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub root: Option<SemioValueDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub nodes: Option<NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>>,
 }
 

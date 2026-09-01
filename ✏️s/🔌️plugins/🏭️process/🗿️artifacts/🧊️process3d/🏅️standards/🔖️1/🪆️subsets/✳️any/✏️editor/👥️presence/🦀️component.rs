@@ -1,13 +1,13 @@
 //! 👥️ Process 3d presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
 
 //#region 🔖️Presence
 /// 👥️ Shareable live subset of process3d view state (selection, hover, face pick, camera, active utility).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "process3d.presence")]
 #[dsl(layout = "lines")]
 pub struct Process3dPresence {
@@ -82,8 +82,8 @@ impl ArtifactPack for Process3dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
+#[value(rename_all = "camelCase")]
 pub enum Process3dPresenceMutation {
     #[dsl(key = "snapshot")]
     Snapshot {

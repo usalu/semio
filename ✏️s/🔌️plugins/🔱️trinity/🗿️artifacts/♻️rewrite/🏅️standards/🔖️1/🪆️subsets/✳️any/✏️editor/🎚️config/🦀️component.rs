@@ -1,15 +1,14 @@
 //! 🧮️ Trinity Rewrite app — view-state config + config operations.
 
 use crate::artifacts::jack::Camera;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// 🧮️ Rewrite's `ArtifactApp::Config` — node selection, the Before pane's live viewport camera
 /// (seeded once from the initial before-fixture's seed-only `camera` field, then only ever written by
 /// `nodeGraphViewport`), the reorganize epoch, the hover/select var focus + their epochs, the
 /// per-window LOD mode, and the BCP-47 locale tag.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.rewritecfg")]
 #[dsl(layout = "lines")]
 pub struct RewriteConfig {
@@ -75,7 +74,7 @@ store::impl_whole_record_config!(RewriteConfig);
 /// @emoji 🧮️ Rewrite's `RewriteConfig` operation enum — one variant per settled interaction, plus a
 /// generic `Snapshot` every variant's `backwards()` returns. See `JackConfigMutation`'s doc comment
 /// for why `Snapshot`'s size is allowed rather than boxed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
 #[allow(clippy::large_enum_variant)]
 pub enum RewriteConfigMutation {
     #[dsl(key = "snapshot")]

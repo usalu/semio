@@ -8,14 +8,13 @@
 use crate::artifacts::svg::schema::snapshot::{svg_element_from_xml_node, SvgElement};
 use crate::artifacts::svg::SvgSnapshot;
 use crate::artifacts::xml::schema::snapshot::XmlNode;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ Root `<svg>` intrinsic size. `width`/`height` prefer the element's own `width`/`height`
 /// attributes (SVG 1.1 §7.10's "intrinsic size"), falling back to `viewBox`'s width/height (§7.11)
 /// when the attribute is absent or unparseable; `0.0` when neither is present.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SvgDimensions {
     pub width: f64,
     pub height: f64,

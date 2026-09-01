@@ -264,7 +264,6 @@ pub mod app {
     use semio_framework_ui_contract::*;
     pub use semio_framework_ui_runtime::{ComponentTree, TreeNode};
     use semio_framework_ui_runtime::{Present, PresentCx};
-    use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -390,23 +389,23 @@ pub mod app {
     //#region 🔖️InteractionArgs
     /// 🕹️ Reads the required `domainId` text arg every interaction verb except `clearSelection`/
     /// `selectAll` carries (see `interaction_action_definitions`'s arg declarations).
-    async fn interaction_domain_id_arg(args: Option<&Value>, action: &str) -> Result<String, Fault> {
-        args.and_then(|value| value.get("domainId")).and_then(Value::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
+    async fn interaction_domain_id_arg(args: Option<&DslValue>, action: &str) -> Result<String, Fault> {
+        args.and_then(|value| value.get("domainId")).and_then(DslValue::as_str).map(str::to_string).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg domainId")))
     }
 
     /// 🕹️ Decodes the required `targets` arg — a JSON-encoded `Vec<InteractionTarget>`, matching the
     /// `ActionArgDef::text` declaration `interaction_action_definitions` gives both `interactionSelect`
     /// and `interactionHover` (a renderer JSON-serializes its gathered pick/marquee/hover batch into
     /// this one string arg, the same convention other JSON-blob action args in this codebase already use).
-    async fn parse_interaction_targets(args: Option<&Value>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
-        let raw = args.and_then(|value| value.get("targets")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
+    async fn parse_interaction_targets(args: Option<&DslValue>, action: &str) -> Result<Vec<protocol::InteractionTarget>, Fault> {
+        let raw = args.and_then(|value| value.get("targets")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing required arg targets")))?;
         serde_json::from_str(raw).map_err(|error| plugin_sdk_fault(format!("{action}: malformed targets ({error})")))
     }
 
     /// 🕹️ Decodes `interactionSelect`'s `merge` select-arg — defaults to `Replace` (a plain pick) when
     /// absent, matching the un-modified-click case every renderer's modifier→merge policy falls back to.
-    async fn parse_merge_mode(args: Option<&Value>) -> Result<protocol::MergeMode, Fault> {
-        let raw = args.and_then(|value| value.get("merge")).and_then(Value::as_str).unwrap_or("replace");
+    async fn parse_merge_mode(args: Option<&DslValue>) -> Result<protocol::MergeMode, Fault> {
+        let raw = args.and_then(|value| value.get("merge")).and_then(DslValue::as_str).unwrap_or("replace");
         match raw {
             "replace" => Ok(protocol::MergeMode::Replace),
             "additive" => Ok(protocol::MergeMode::Additive),
@@ -3237,16 +3236,16 @@ pub mod app {
         /// to the same plural codec capability set as `.document_codec::<A>()`.
         pub fn document_codec_bare<Snapshot, Mutation>(self, schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
+            Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             resolve_ready(self.document_codec_bare_async::<Snapshot, Mutation>(schema))
         }
 
         async fn document_codec_bare_async<Snapshot, Mutation>(mut self, schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
+            Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             let codec = DocumentCodecSpec::bare::<Snapshot, Mutation>(schema);
             let namespace_codec = ArtifactIdentityNamespace::codec();
@@ -3349,13 +3348,13 @@ pub mod app {
         /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
         fn bare<Snapshot, Mutation>(schema: impl Into<String>) -> Self
         where
-            Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
+            Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
         {
             fn codec<Snapshot, Mutation>(schema: String) -> store::ArtifactCodec
             where
-                Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-                Mutation: ::protocol::Mutation<Snapshot> + PartialEq + Serialize + DeserializeOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
+                Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+                Mutation: ::protocol::Mutation<Snapshot> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static,
             {
                 store::ArtifactCodec::of::<Snapshot, Mutation>(schema)
             }
@@ -4520,14 +4519,17 @@ pub mod app {
         pub foreign: Vec<::protocol::ForeignStep>,
     }
 
+    // 🌱️ `K: CompositeMutationKind<..>` now bounds on `protocol::ToValue`/`protocol::FromValue`
+    // (see that trait's own doc), so this wire bridge speaks the first-party codec directly —
+    // no more `to_dsl_value`/`from_dsl_value` serde bridge, no `serde_json` in the loop.
     #[cfg(test)]
-    pub(crate) async fn encode_contributed_wire<T: Serialize>(value: &T) -> Vec<u8> {
-        store::pack_rt::encode_wire_value(&to_dsl_value(value).unwrap_or(DslValue::Null))
+    pub(crate) async fn encode_contributed_wire<T: protocol::ToValue>(value: &T) -> Vec<u8> {
+        store::pack_rt::encode_wire_value(&protocol::ToValue::to_value(value))
     }
 
-    async fn decode_contributed_wire<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
+    async fn decode_contributed_wire<T: protocol::FromValue>(bytes: &[u8]) -> Result<T, String> {
         let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
-        dsl::from_dsl_value(value)
+        protocol::FromValue::from_value(value).map_err(|error| error.to_string())
     }
 
     static OWNER_MUTATION_ROSTER_REGISTRY: std::sync::OnceLock<std::sync::RwLock<BTreeMap<String, WireMutationRosterEntry>>> = std::sync::OnceLock::new();
@@ -5793,8 +5795,11 @@ pub mod app {
     /// majority of duplicate copies (`layout`, `gis`, `presentation`, …). A handful of apps additionally
     /// fall back to a singular `id`/`nodeId`/`nodeIds` key (`puzzle`, `sequence`, `trinity`, `procedural`,
     /// `mindmap`); those apps keep their own fallback wrapper around this shared core for now.
-    pub fn selection_ids(args: Option<&Value>) -> Vec<String> {
-        args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
+    pub fn selection_ids(args: Option<&DslValue>) -> Vec<String> {
+        args.and_then(|value| value.get("ids"))
+            .and_then(DslValue::as_array)
+            .and_then(|items| items.iter().map(|item| item.as_str().map(str::to_string)).collect::<Option<Vec<String>>>())
+            .unwrap_or_default()
     }
 
     /// 🌳️ Fluent builder for the `build_document_tree`/`build_inspector_tree`/`build_catalogue_tree`
@@ -5931,7 +5936,7 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn selection_ids_reads_the_ids_array_arg() {
-            let args = serde_json::json!({ "ids": ["a", "b"] });
+            let args = DslValue::from(&serde_json::json!({ "ids": ["a", "b"] }));
             assert_eq!(selection_ids(Some(&args)), vec!["a".to_string(), "b".to_string()]);
             assert!(selection_ids(None).is_empty());
         }
@@ -6292,8 +6297,18 @@ pub mod app {
     pub const UI_COMMAND_VALUE_ITEMS: usize = 256;
 
     enum UiCommandJsonFrame {
-        List { cursor: ui::UiListCursor, output: Vec<Value> },
-        Map { cursor: ui::UiMapCursor, output: serde_json::Map<String, Value>, key: Option<String> },
+        List { cursor: ui::UiListCursor, output: Vec<DslValue> },
+        Map { cursor: ui::UiMapCursor, output: Vec<(String, DslValue)>, key: Option<String> },
+    }
+
+    /// 🔀️ Map-insert semantics (replace-if-present, else append) on `DslValue::Object`'s
+    /// insertion-ordered `Vec<(String, DslValue)>` — mirrors what `serde_json::Map::insert` gave the
+    /// old JSON-backed producer for free.
+    fn dsl_object_insert(entries: &mut Vec<(String, DslValue)>, key: String, value: DslValue) {
+        match entries.iter_mut().find(|(existing, _)| *existing == key) {
+            Some(entry) => entry.1 = value,
+            None => entries.push((key, value)),
+        }
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -6307,7 +6322,7 @@ pub mod app {
     struct UiCommandJsonProducer {
         stack: UiFixedList<UiCommandJsonFrame, UI_COMMAND_VALUE_DEPTH>,
         pending: Option<UiValue>,
-        ready: Option<Value>,
+        ready: Option<DslValue>,
         fault: Option<Fault>,
         items: usize,
     }
@@ -6325,7 +6340,7 @@ pub mod app {
             UiCommandJsonStep::Fault
         }
 
-        fn accept(&mut self, value: Value) -> UiCommandJsonStep {
+        fn accept(&mut self, value: DslValue) -> UiCommandJsonStep {
             let Some(items) = self.items.checked_add(1).filter(|items| *items <= UI_COMMAND_VALUE_ITEMS) else {
                 return self.reject("app.intent.bridge-items", "typed intent value exceeds the fixed command item census");
             };
@@ -6345,7 +6360,7 @@ pub mod app {
                     let Some(key) = key.take() else {
                         return self.reject("app.intent.bridge-map-key", "typed intent map child lost its retained key");
                     };
-                    output.insert(key, value);
+                    dsl_object_insert(output, key, value);
                 }
             }
             UiCommandJsonStep::MoreWork
@@ -6369,10 +6384,10 @@ pub mod app {
             }
             if let Some(value) = self.pending.take() {
                 return match value {
-                    UiValue::Null => self.accept(Value::Null),
-                    UiValue::Bool(value) => self.accept(Value::Bool(value)),
-                    UiValue::Number(value) => self.accept(serde_json::Number::from_f64(value).map(Value::Number).unwrap_or(Value::Null)),
-                    UiValue::Text(value) => self.accept(Value::String(value.to_string())),
+                    UiValue::Null => self.accept(DslValue::Null),
+                    UiValue::Bool(value) => self.accept(DslValue::Bool(value)),
+                    UiValue::Number(value) => self.accept(if value.is_finite() { DslValue::Number(value) } else { DslValue::Null }),
+                    UiValue::Text(value) => self.accept(DslValue::String(value.to_string())),
                     UiValue::List(values) => {
                         let frame = UiCommandJsonFrame::List { cursor: values.cursor(), output: Vec::new() };
                         match self.stack.try_push(frame) {
@@ -6381,7 +6396,7 @@ pub mod app {
                         }
                     }
                     UiValue::Map(values) => {
-                        let frame = UiCommandJsonFrame::Map { cursor: values.cursor(), output: serde_json::Map::new(), key: None };
+                        let frame = UiCommandJsonFrame::Map { cursor: values.cursor(), output: Vec::new(), key: None };
                         match self.stack.try_push(frame) {
                             Ok(()) => UiCommandJsonStep::MoreWork,
                             Err(_) => self.reject("app.intent.bridge-depth", "typed intent map exceeds the fixed command depth"),
@@ -6398,7 +6413,7 @@ pub mod app {
                         self.pending = Some(value);
                         return UiCommandJsonStep::MoreWork;
                     }
-                    None => Value::Array(std::mem::take(output)),
+                    None => DslValue::Array(std::mem::take(output)),
                 },
                 UiCommandJsonFrame::Map { cursor, output, key } => match cursor.next() {
                     Some((next_key, value)) => {
@@ -6406,14 +6421,14 @@ pub mod app {
                         self.pending = Some(value);
                         return UiCommandJsonStep::MoreWork;
                     }
-                    None => Value::Object(std::mem::take(output)),
+                    None => DslValue::Object(std::mem::take(output)),
                 },
             };
             let _ = self.stack.pop();
             self.accept(completed)
         }
 
-        fn take_ready(mut self) -> Result<Value, Self> {
+        fn take_ready(mut self) -> Result<DslValue, Self> {
             self.ready.take().ok_or(self)
         }
 
@@ -6422,7 +6437,7 @@ pub mod app {
         }
     }
 
-    async fn ui_value_to_json_retained(value: &UiValue) -> Result<Value, Fault> {
+    async fn ui_value_to_dsl_retained(value: &UiValue) -> Result<DslValue, Fault> {
         let mut producer = UiCommandJsonProducer::try_new(value)?;
         loop {
             match producer.drive_one(false, false) {
@@ -6436,29 +6451,31 @@ pub mod app {
     }
 
     /// 🔀️ M1: advances a firing `ActionBinding`'s echoed `args` and trigger `input` through
-    /// retained fixed-depth cursors into one complete typed-command JSON candidate.
-    /// `serde_json::Value` for `ArtifactApp::command_from_action`'s `Option<&Value>` — `input` wins on
-    /// key collision when both are JSON objects (the trigger-specific payload is the more specific,
+    /// retained fixed-depth cursors into one complete typed-command `DslValue` candidate — the
+    /// `DslValue` `ArtifactApp::command_from_action` takes as `Option<&DslValue>` — `input` wins on
+    /// key collision when both are objects (the trigger-specific payload is the more specific,
     /// more recent datum); otherwise a present `input` replaces `args` wholesale (a scalar `input`,
     /// e.g. `Trigger::Delta`'s signed step count, has no field to merge INTO). `None` when neither is
     /// set, matching `command_from_action`'s existing `None` (no-args) call shape.
     // 🚫️async: E1-adjacent pure structural transform consumed by typed intent dispatch.
-    async fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Result<Option<Value>, Fault> {
+    async fn merge_ui_values(args: Option<&UiValue>, input: Option<&UiValue>) -> Result<Option<DslValue>, Fault> {
         let args = match args {
-            Some(value) => Some(ui_value_to_json_retained(value).await?),
+            Some(value) => Some(ui_value_to_dsl_retained(value).await?),
             None => None,
         };
         let input = match input {
-            Some(value) => Some(ui_value_to_json_retained(value).await?),
+            Some(value) => Some(ui_value_to_dsl_retained(value).await?),
             None => None,
         };
         Ok(match (args, input) {
             (None, None) => None,
             (Some(args), None) => Some(args),
             (None, Some(input)) => Some(input),
-            (Some(Value::Object(mut args)), Some(Value::Object(input))) => {
-                args.extend(input);
-                Some(Value::Object(args))
+            (Some(DslValue::Object(mut args)), Some(DslValue::Object(input))) => {
+                for (key, value) in input {
+                    dsl_object_insert(&mut args, key, value);
+                }
+                Some(DslValue::Object(args))
             }
             (Some(_), Some(input)) => Some(input),
         })
@@ -6518,14 +6535,14 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn retained_ui_value_bridge_advances_every_shape_to_the_matching_json_candidate() {
-            assert_eq!(ui_value_to_json_retained(&UiValue::Null).await.expect("retained null"), Value::Null);
-            assert_eq!(ui_value_to_json_retained(&UiValue::Bool(true)).await.expect("retained bool"), Value::Bool(true));
-            assert_eq!(ui_value_to_json_retained(&UiValue::Number(-2.5)).await.expect("retained number"), serde_json::json!(-2.5));
-            assert_eq!(ui_value_to_json_retained(&UiValue::Text(ui_text("hi"))).await.expect("retained text"), Value::String("hi".into()));
-            assert_eq!(ui_value_to_json_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), serde_json::json!([1.0, false]));
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::Null).await.expect("retained null"), DslValue::Null);
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::Bool(true)).await.expect("retained bool"), DslValue::Bool(true));
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::Number(-2.5)).await.expect("retained number"), serde_json::json!(-2.5));
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::Text(ui_text("hi"))).await.expect("retained text"), DslValue::String("hi".into()));
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::List(ui_list([UiValue::Number(1.0), UiValue::Bool(false)]))).await.expect("retained list"), serde_json::json!([1.0, false]));
             let mut map = std::collections::BTreeMap::new();
             map.insert("id".to_string(), UiValue::Text(ui_text("w1")));
-            assert_eq!(ui_value_to_json_retained(&UiValue::Map(ui_map(map))).await.expect("retained map"), serde_json::json!({ "id": "w1" }));
+            assert_eq!(ui_value_to_dsl_retained(&UiValue::Map(ui_map(map))).await.expect("retained map"), serde_json::json!({ "id": "w1" }));
         }
 
         #[semio_framework_async_macros::async_test]
@@ -6535,8 +6552,8 @@ pub mod app {
 
         #[semio_framework_async_macros::async_test]
         async fn merge_ui_values_falls_back_to_whichever_single_side_is_set() {
-            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None).await.expect("args merge"), Some(serde_json::json!("a")));
-            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(serde_json::json!(3.0)));
+            assert_eq!(merge_ui_values(Some(&UiValue::Text(ui_text("a"))), None).await.expect("args merge"), Some(DslValue::from(&serde_json::json!("a"))));
+            assert_eq!(merge_ui_values(None, Some(&UiValue::Number(3.0))).await.expect("input merge"), Some(DslValue::from(&serde_json::json!(3.0))));
         }
 
         /// 🔀️ The decided merge rule: `input` wins on key collision when both are objects.
@@ -6556,7 +6573,7 @@ pub mod app {
         #[semio_framework_async_macros::async_test]
         async fn merge_ui_values_replaces_a_non_object_args_wholesale_when_input_is_also_set() {
             let merged = merge_ui_values(Some(&UiValue::Text(ui_text("stale"))), Some(&UiValue::Number(-2.0))).await.expect("retained merge");
-            assert_eq!(merged, Some(serde_json::json!(-2.0)));
+            assert_eq!(merged, Some(DslValue::from(&serde_json::json!(-2.0))));
         }
 
         #[test]
@@ -6715,7 +6732,6 @@ pub mod app {
         /// 🧪️ Every declared app action must bridge through `command_from_action` and round-trip `command_id`.
         pub async fn assert_declared_actions_bridge_to_commands<A: ArtifactApp + Default>(manifest: fn() -> App) {
             use semio_framework::{effective_action_args, DslValue};
-            use store::pack_rt::dsl_value_to_json;
             let definition = manifest().definition;
             let _app = A::default();
             let skip = [
@@ -6749,8 +6765,7 @@ pub mod app {
                 }
                 let empty_args = DslValue::Object(Vec::new());
                 let staged = effective_action_args(&action.args, &empty_args, None);
-                let args_json = dsl_value_to_json(staged);
-                let command = A::command_from_action(&action.id, Some(&args_json)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
+                let command = A::command_from_action(&action.id, Some(&staged)).await.unwrap_or_else(|error| panic!("action {} failed to bridge: {}", action.id, error.message));
                 assert_eq!(A::command_id(&command).await, action.id.as_str(), "command_id mismatch for action {}", action.id);
             }
         }
@@ -9483,8 +9498,9 @@ pub mod app {
 
     //#region 🔖️NoConfig
     /// @emoji 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct NoConfig {}
 
     impl store::ArtifactDsl for NoConfig {
@@ -9518,7 +9534,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoConfigMutation {}
 
     impl ::protocol::Mutation<NoConfig> for NoConfigMutation {
@@ -9566,8 +9582,9 @@ pub mod app {
 
     //#region 🔖️NoPresence
     /// @emoji 👥️ Default `ArtifactApp::Presence` for apps with no shareable live state yet.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct NoPresence {}
 
     impl store::ArtifactDsl for NoPresence {
@@ -9599,7 +9616,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoPresenceMutation {}
 
     impl ::protocol::Mutation<NoPresence> for NoPresenceMutation {
@@ -9652,8 +9669,9 @@ pub mod app {
     /// content that simply has not been committed. TRANSIENT is UI state that is never document
     /// content at all (which pane is focused, what is hovered, an in-flight gesture). They differ in
     /// what the state IS, not in how long it lives.
-    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct NoTransient {}
 
     impl store::ArtifactDsl for NoTransient {
@@ -9685,7 +9703,7 @@ pub mod app {
         fn absorb(&mut self, _other: Self) {}
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
     pub enum NoTransientMutation {}
 
     impl ::protocol::Mutation<NoTransient> for NoTransientMutation {
@@ -9741,6 +9759,27 @@ pub mod app {
     #[serde(rename_all = "camelCase")]
     pub enum InteractionConfigMutation {
         SetState(SetInteractionState),
+    }
+
+    /// 🌱️ Hand-written, not derived — `#[derive(ToValue, FromValue)]` only supports internally-
+    /// tagged enums (`#[value(tag = "…")]`) or plain unit enums; this single-variant enum is
+    /// externally tagged (serde's own default with no `tag` attribute above), so its wire shape
+    /// (`{"setState": …}`, matching `#[serde(rename_all = "camelCase")]`'s variant renaming) is
+    /// reproduced by hand instead.
+    impl protocol::ToValue for InteractionConfigMutation {
+        fn to_value(&self) -> protocol::DslValue {
+            let InteractionConfigMutation::SetState(state) = self;
+            protocol::DslValue::object([("setState".to_string(), protocol::ToValue::to_value(state))])
+        }
+    }
+    impl protocol::FromValue for InteractionConfigMutation {
+        fn from_value(value: protocol::DslValue) -> Result<Self, protocol::ValueError> {
+            let entries = protocol::DslValue::into_object(value)?;
+            match entries.iter().find(|(k, _)| k == "setState") {
+                Some((_, v)) => Ok(InteractionConfigMutation::SetState(protocol::FromValue::from_value(v.clone()).map_err(|error: protocol::ValueError| error.under("setState"))?)),
+                None => Err(protocol::ValueError::new("missing `setState` variant payload")),
+            }
+        }
     }
 
     impl InteractionConfigMutation {
@@ -9825,7 +9864,7 @@ pub mod app {
     #[derive(Clone, Debug, PartialEq)]
     pub struct InverseAction {
         pub action_id: String,
-        pub args: Option<Value>,
+        pub args: Option<DslValue>,
     }
 
     /// @emoji 🧾️ One appended session-command record — runtime-only, never persisted (the VCS envelope
@@ -11063,7 +11102,7 @@ pub mod app {
         /// keeps its existing full-mutation behavior untouched; `EditorApp<E>`/`ViewerApp<V>` override
         /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
         const ROLE: AppRole = AppRole::Editor;
-        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
         // three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
         // owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
@@ -11072,20 +11111,20 @@ pub mod app {
         // the synchronous `dispatch_emit` call that spawns it, which needs `M/C/D: 'static` provable
         // from `A: ArtifactApp` alone — the associated type itself, not merely `A`.
         type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+        type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
-        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Draft: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 📝️ Draft-lane operations applied to {@link store::DraftStore}.
         type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Presence: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 👥️ Presence-lane operations applied to the app's typed presence snapshot.
         type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// @emoji 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
         /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
         /// draft (which is ephemeral *artifact* content, not UI state).
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Transient: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// @emoji 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
         type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
 
@@ -11117,7 +11156,7 @@ pub mod app {
         /// 🧭️ Resolves a host-owned control-plane action directly to one event-sourced
         /// configuration mutation. App interaction commands remain on the retained tool-operation
         /// path; hidden host catalogue publication does not impersonate an interactive reducer.
-        fn host_configuration_mutation(_action: &str, _args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             Ok(None)
         }
         async fn initial_draft() -> Self::Draft {
@@ -11148,7 +11187,7 @@ pub mod app {
         /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
         /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
         /// that the shells drive must override this so chrome actions reach `handle`.
-        async fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -11539,7 +11578,7 @@ pub mod app {
         /// fallback this used to carry (`ArtifactApp::handle_action` no longer exists; an app's own
         /// behavior is reached exclusively through `handle_command_frame`'s typed `Self::Command` decode).
         /// An unrecognized `action` id is a hard error pointing at the typed channel.
-        async fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
+        async fn handle_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 📍️ Validates and dispatches a window-instance-owned action invocation.
         async fn handle_action_invocation(&mut self, invocation: &ManifestActionInvocation, active_mode_id: Option<&str>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
         /// @emoji 🎯️ Dispatches the manifest protocol's structurally addressed app- or mode-owned
@@ -13194,7 +13233,7 @@ pub mod app {
     /// 🧭️ Owned input for an app-defined implementation of a framework-reserved route. The runtime
     /// selects the exact owner/factory/tool/schema proof before constructing this value.
     pub enum ArtifactReservedToolInput {
-        Action { args: Option<Value>, interaction: protocol::InteractionState, hover: InteractionHoverState },
+        Action { args: Option<DslValue>, interaction: protocol::InteractionState, hover: InteractionHoverState },
         Media { port: String, media: Media },
     }
 
@@ -13277,8 +13316,8 @@ pub mod app {
     /// 🎛️ Exact one-page retirement catalog for explicitly bounded app configuration stores.
     pub fn bounded_config_store_owners<C, M>() -> store::MemberStoreOwners<C, M>
     where
-        C: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<C> + OpBinary + OpText + Send + 'static,
+        C: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<C> + OpBinary + OpText + Send + 'static,
     {
         store::MemberStoreOwners::new(
             std::sync::Arc::new(BoundedConfigRetirementFactory::<C>::new()),
@@ -13291,8 +13330,8 @@ pub mod app {
     /// 🧹️ Explicit close adapter paired with [`bounded_config_store_owners`].
     pub fn bounded_config_store_disposer<C, M>() -> Box<dyn ArtifactOwnedDisposer<ConfigStore<C, M>>>
     where
-        C: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<C> + OpBinary + OpText + Send + 'static,
+        C: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<C> + OpBinary + OpText + Send + 'static,
     {
         Box::new(ArtifactDocumentStoreDisposer::<C, M>::new())
     }
@@ -13300,8 +13339,8 @@ pub mod app {
     /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
     pub fn bounded_document_store_owners<P, M>() -> store::MemberStoreOwners<P, M>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         bounded_config_store_owners::<P, M>()
     }
@@ -13309,8 +13348,8 @@ pub mod app {
     /// 🧽️ Explicit close adapter paired with [`bounded_document_store_owners`].
     pub fn bounded_document_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, M>>>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        M: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        M: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         Box::new(ArtifactDocumentStoreDisposer::<P, M>::new())
     }
@@ -13329,8 +13368,8 @@ pub mod app {
 
     impl<P, Mutation> ArtifactOwnedDisposer<ArtifactStore<P, Mutation>> for ArtifactDocumentStoreDisposer<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         fn close_step(&mut self, owner: &mut ArtifactStore<P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             match store::SpaceMember::close_owned_step(owner, maximum_items.min(1), maximum_bytes).map_err(plugin_sdk_fault)? {
@@ -13351,8 +13390,8 @@ pub mod app {
     /// become terminal only after the envelope and every partial owner have been cursor-retired.
     pub trait ArtifactStoreInitializationAuthority<P, Mutation>: Send
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
     {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome;
         fn request_cancel(&mut self);
@@ -13364,8 +13403,8 @@ pub mod app {
 
     pub struct ArtifactStoreInitializationJob<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
     {
         authority: std::mem::ManuallyDrop<Option<Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>>>,
         cancel_requested: std::sync::Arc<std::sync::atomic::AtomicBool>,
@@ -13374,8 +13413,8 @@ pub mod app {
 
     impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
     {
         pub fn new(authority: Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>) -> Self {
             Self { authority: std::mem::ManuallyDrop::new(Some(authority)), cancel_requested: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), terminal_handoff: false }
@@ -13414,8 +13453,8 @@ pub mod app {
 
     impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactStoreInitializationJob<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + Send,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + Send,
+        P: Clone + protocol::ToValue + protocol::FromValue + Send,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + Send,
     {
         fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
             match self.authority.as_mut() {
@@ -13467,8 +13506,8 @@ pub mod app {
 
     impl<P, Mutation> Drop for ArtifactStoreInitializationJob<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P>,
+        P: Clone + protocol::ToValue + protocol::FromValue,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P>,
     {
         fn drop(&mut self) {
             assert!(self.authority.is_none() && self.terminal_handoff, "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close");
@@ -16202,7 +16241,7 @@ pub mod app {
         }
     }
 
-    fn bounded_json_items(value: Option<&Value>, maximum: usize) -> Result<usize, Fault> {
+    fn bounded_json_items(value: Option<&DslValue>, maximum: usize) -> Result<usize, Fault> {
         let mut count = 1usize;
         let mut pending = value.into_iter().collect::<Vec<_>>();
         while let Some(value) = pending.pop() {
@@ -16211,13 +16250,13 @@ pub mod app {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), format!("decoded command contains {count} items; maximum is {maximum}")));
             }
             match value {
-                Value::Array(values) => pending.extend(values),
-                Value::Object(values) => {
+                DslValue::Array(values) => pending.extend(values),
+                DslValue::Object(values) => {
                     count = count.checked_add(values.len()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), "decoded item count overflowed"))?;
                     if count > maximum {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.decoded-limit"), format!("decoded command contains {count} items; maximum is {maximum}")));
                     }
-                    pending.extend(values.values());
+                    pending.extend(values.iter().map(|(_, value)| value));
                 }
                 _ => {}
             }
@@ -18126,8 +18165,8 @@ pub mod app {
         validate: impl FnOnce() -> Result<(), Fault>,
     ) -> Result<ArtifactStore<P, Mutation>, (Fault, ArtifactStore<P, Mutation>)>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         if let Err(fault) = validate() {
             return Err((fault, candidate));
@@ -18146,8 +18185,8 @@ pub mod app {
 
     struct ActiveArtifactStoreReplacement<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -18166,8 +18205,8 @@ pub mod app {
 
     impl<P, Mutation> ActiveArtifactStoreReplacement<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, job: ArtifactStoreInitializationJob<P, Mutation>) -> Self {
             let cancel = semio_framework_job::CancelToken::root_now();
@@ -18325,8 +18364,8 @@ pub mod app {
 
     impl<P, Mutation> Drop for ActiveArtifactStoreReplacement<P, Mutation>
     where
-        P: Clone + Serialize + serde::de::DeserializeOwned + ArtifactPack + Send + Sync + 'static,
-        Mutation: Clone + Serialize + serde::de::DeserializeOwned + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + Send + Sync + 'static,
+        Mutation: Clone + protocol::ToValue + protocol::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
     {
         fn drop(&mut self) {
             assert!(
@@ -18924,7 +18963,7 @@ pub mod app {
             self.admit_command_wire_with_proof(proof, verb, payload, decoded_items).await
         }
 
-        async fn admit_command_json_with_proof(&self, proof: QualifiedToolProof, verb: &str, args: Option<&Value>) -> Result<AdmittedToolCommand, Fault> {
+        async fn admit_command_json_with_proof(&self, proof: QualifiedToolProof, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
             let definition = match self.registry.get(verb).await {
                 Some(definition) => definition.semantics.execution.interactive_job,
                 None => self
@@ -18941,7 +18980,8 @@ pub mod app {
                 .begin_exact_wire(key.controller_id, key.tool_id, proof.schema_id(), proof.contract().max_raw_wire_bytes)
                 .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
             let mut writer = TypedCommandWireWriter { input, page: [0; semio_framework::action_bus::TOOL_WIRE_PAGE_BYTES], len: 0 };
-            serde_json::to_writer(&mut writer, &(verb, args)).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-wire-limit"), "typed command raw JSON exceeds its registered retained-page admission"))?;
+            let wire_args = args.map(serde_json::Value::from);
+            serde_json::to_writer(&mut writer, &(verb, wire_args)).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.raw-wire-limit"), "typed command raw JSON exceeds its registered retained-page admission"))?;
             let raw_wire = writer.finish_admitted_prefix()?;
             if !proof.admits::<A>(&admission) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.factory-identity"), format!("typed command '{verb}' resolved outside its exact controller/owner/factory/tool/schema proof")));
@@ -18949,12 +18989,12 @@ pub mod app {
             Ok(AdmittedToolCommand { verb: verb.to_string(), proof, wire_admission: admission, decoded_items: 0, raw_wire })
         }
 
-        async fn admit_command_json(&self, verb: &str, args: Option<&Value>) -> Result<AdmittedToolCommand, Fault> {
+        async fn admit_command_json(&self, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
             let proof = self.qualified_tool_proof(verb)?;
             self.admit_command_json_with_proof(proof, verb, args).await
         }
 
-        async fn admit_host_configuration_json(&self, verb: &str, args: Option<&Value>) -> Result<AdmittedToolCommand, Fault> {
+        async fn admit_host_configuration_json(&self, verb: &str, args: Option<&DslValue>) -> Result<AdmittedToolCommand, Fault> {
             let proof = self.qualified_host_configuration_tool_proof(verb)?;
             self.admit_command_json_with_proof(proof, verb, args).await
         }
@@ -20198,13 +20238,13 @@ pub mod app {
         /// @emoji 🖋️ Decodes `args.authors` (`[{id, name, avatar?}]`, both shells' wire shape for a
         /// checkpoint dispatch) into `vcs::Author`s — empty when absent or malformed, never a hard
         /// error: an authorless checkpoint stays valid, it just can't say who checked in.
-        async fn history_command_authors(args: Option<&Value>) -> Vec<vcs::Author> {
-            args.and_then(|value| value.get("authors")).and_then(|value| serde_json::from_value::<Vec<vcs::Author>>(value.clone()).ok()).unwrap_or_default()
+        async fn history_command_authors(args: Option<&DslValue>) -> Vec<vcs::Author> {
+            args.and_then(|value| value.get("authors")).and_then(|value| serde_json::from_value::<Vec<vcs::Author>>(serde_json::Value::from(value)).ok()).unwrap_or_default()
         }
 
         /// @emoji 🕰️ Maps one of the six injected history action ids to its `ArtifactCommand`.
-        async fn history_command(action: &str, args: Option<&Value>) -> Option<ArtifactCommand<A::Mutation>> {
-            let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
+        async fn history_command(action: &str, args: Option<&DslValue>) -> Option<ArtifactCommand<A::Mutation>> {
+            let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(DslValue::as_str).map(str::to_string);
             match action {
                 "undo" => Some(ArtifactCommand::Undo),
                 "redo" => Some(ArtifactCommand::Redo),
@@ -20975,7 +21015,7 @@ pub mod app {
         /// change can affect the interacted tree/viewport plus every peer's presence overlay across
         /// multiple window kinds — narrower scoping would need per-window interaction-domain bookkeeping
         /// this wave doesn't build).
-        async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        async fn dispatch_interaction_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             self.validate_framework_reserved_commit(action, permit).await?;
             self.refresh_cache().await?;
             let mut state = self.interaction_store.snapshot().unwrap_or_default();
@@ -20997,7 +21037,7 @@ pub mod app {
                 _ if action == INTERACTION_HOVER_ACTION_ID => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
-                    let channel = args.and_then(|value| value.get("channel")).and_then(Value::as_str).unwrap_or("pointer").to_string();
+                    let channel = args.and_then(|value| value.get("channel")).and_then(DslValue::as_str).unwrap_or("pointer").to_string();
                     let targets = parse_interaction_targets(args, action).await?;
                     let current = self.interaction_hover.get(&domain_id).cloned().unwrap_or_default();
                     let known_ids = current.ids.iter().cloned().chain(targets.iter().map(|target| target.id.clone()));
@@ -21033,7 +21073,7 @@ pub mod app {
                 _ if action == SET_SELECTION_MODE_ACTION_ID => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
-                    let raw = args.and_then(|value| value.get("mode")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing mode")))?;
+                    let raw = args.and_then(|value| value.get("mode")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing mode")))?;
                     let mode = parse_selection_mode(raw).await?;
                     if !def.selection.modes.contains(&mode) {
                         return Err(plugin_sdk_fault(format!("{action}: domain {domain_id} does not declare mode {raw}")));
@@ -21043,7 +21083,7 @@ pub mod app {
                 _ if action == SET_INTERACTION_GRANULARITY_ACTION_ID => {
                     let domain_id = interaction_domain_id_arg(args, action).await?;
                     let def = self.registry.interaction(&domain_id).await.cloned().ok_or_else(|| plugin_sdk_fault(format!("{action}: undeclared interaction domain {domain_id}")))?;
-                    let granularity_id = args.and_then(|value| value.get("granularityId")).and_then(Value::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing granularityId")))?.to_string();
+                    let granularity_id = args.and_then(|value| value.get("granularityId")).and_then(DslValue::as_str).ok_or_else(|| plugin_sdk_fault(format!("{action} missing granularityId")))?.to_string();
                     if !def.granularities.iter().any(|granularity| granularity.id == granularity_id) {
                         return Err(plugin_sdk_fault(format!("{action}: domain {domain_id} does not declare granularity {granularity_id}")));
                     }
@@ -21166,7 +21206,7 @@ pub mod app {
         }
         //#endregion 🔖️InteractionDispatch
 
-        async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&Value>, raw_wire: Vec<u8>, meta: &ActionMeta) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
+        async fn build_artifact_reserved_action_job(&mut self, action: &str, args: Option<&DslValue>, raw_wire: Vec<u8>, meta: &ActionMeta) -> Result<Option<(ArtifactReservedToolJob, ArtifactToolCompletion<A>)>, Fault> {
             self.refresh_cache().await?;
             let (snapshot, config, history) = self.command_cache_inputs();
             let parent_document_id = self.store.envelope().id.clone();
@@ -21457,12 +21497,12 @@ pub mod app {
             Ok(())
         }
 
-        async fn framework_reserved_work_items(&mut self, action: &str, args: Option<&Value>) -> Result<usize, Fault> {
+        async fn framework_reserved_work_items(&mut self, action: &str, args: Option<&DslValue>) -> Result<usize, Fault> {
             match action {
                 "commitCheckpoint" | "checkoutCheckpoint" => Ok(self.children.len().saturating_add(1)),
                 REVERT_TO_COMMAND_ACTION_ID => {
                     self.refresh_cache().await?;
-                    let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
+                    let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
                     let target =
                         entry_seq.and_then(|seq| self.cache.as_ref().and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible)).map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone())));
                     match target {
@@ -21484,7 +21524,7 @@ pub mod app {
                 "paste" => {
                     let fragment_bytes = args
                         .and_then(|value| value.get("fragment"))
-                        .and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok())
+                        .and_then(|value| serde_json::from_value::<ClipboardFragment>(serde_json::Value::from(value)).ok())
                         .map(|fragment| fragment.pack_bytes.map_or(fragment.dsl_text.len(), |bytes| bytes.len()))
                         .unwrap_or_default();
                     Ok(fragment_bytes.div_ceil(4_096).max(1))
@@ -21493,10 +21533,11 @@ pub mod app {
             }
         }
 
-        async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn dispatch_framework_reserved_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let contract = self.qualified_tool_proof(action)?.contract();
             let decoded_items = bounded_json_items(args, contract.max_decoded_items)?;
-            let raw = serde_json::to_vec(&(action, args)).map_err(|error| Fault::from(error.to_string()))?;
+            let wire_args = args.map(serde_json::Value::from);
+            let raw = serde_json::to_vec(&(action, wire_args)).map_err(|error| Fault::from(error.to_string()))?;
             let work_items = self.framework_reserved_work_items(action, args).await?;
             let mut app_completion = None;
             let permit = match action {
@@ -21544,7 +21585,7 @@ pub mod app {
             result
         }
 
-        async fn commit_framework_history_route(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             if permit.is_cancelled().await {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
             }
@@ -21575,10 +21616,10 @@ pub mod app {
             }
         }
 
-        async fn commit_framework_revert_route(&mut self, args: Option<&Value>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        async fn commit_framework_revert_route(&mut self, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             let action = REVERT_TO_COMMAND_ACTION_ID;
             self.refresh_cache().await?;
-            let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
+            let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(DslValue::as_f64).map(|seq| seq as u64);
             let target = entry_seq.and_then(|seq| {
                 self.cache.as_ref().and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible)).map(|entry| (entry.edit_id.clone(), entry.config_edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
@@ -21628,7 +21669,7 @@ pub mod app {
                 Some((None, None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
                     action,
                     meta,
-                    vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args.as_ref().map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)) }],
+                    vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }],
                     Vec::new(),
                     semio_framework::kernel::UiDirtyScope::None,
                 )
@@ -21697,13 +21738,13 @@ pub mod app {
             self.dispatch_emit(action, emit, meta).await
         }
 
-        async fn commit_framework_shared_host_route(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
+        async fn commit_framework_shared_host_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit) -> Result<InvocationResult, Fault> {
             self.validate_framework_reserved_commit(action, permit).await?;
             if INTERACTION_ACTION_IDS.contains(&action) {
                 return self.dispatch_interaction_action(action, args, meta, permit).await;
             }
             if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
-                let filter = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or("all");
+                let filter = args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or("all");
                 self.history_filter = match filter {
                     "withoutMutations" => HistoryCommandFilter::WithoutMutations,
                     "onlyMutations" => HistoryCommandFilter::OnlyMutations,
@@ -21721,12 +21762,12 @@ pub mod app {
                 .await);
             }
             if action == NOTE_SHELL_COMMAND_ACTION_ID {
-                let command_id = args.and_then(|value| value.get("commandId")).and_then(Value::as_str).ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
-                let label = args.and_then(|value| value.get("label")).and_then(Value::as_str).unwrap_or(command_id);
-                let detail = args.and_then(|value| value.get("detail")).and_then(Value::as_str);
+                let command_id = args.and_then(|value| value.get("commandId")).and_then(DslValue::as_str).ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
+                let label = args.and_then(|value| value.get("label")).and_then(DslValue::as_str).unwrap_or(command_id);
+                let detail = args.and_then(|value| value.get("detail")).and_then(DslValue::as_str);
                 let label = detail.map_or_else(|| label.to_string(), |detail| format!("{label} - {detail}"));
                 let inverse =
-                    args.and_then(|value| value.get("inverseCommandId")).and_then(Value::as_str).map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned() });
+                    args.and_then(|value| value.get("inverseCommandId")).and_then(DslValue::as_str).map(|inverse_command_id| InverseAction { action_id: inverse_command_id.to_string(), args: args.and_then(|value| value.get("inverseArgs")).cloned() });
                 self.validate_framework_reserved_commit(action, permit).await?;
                 self.record_command(command_id, ActionKind::Shell, Some(label), None, None, inverse).await;
                 return Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None).await);
@@ -21741,7 +21782,7 @@ pub mod app {
         /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖️CommandLog`). B1:
         /// FRAMEWORK-reserved verbs only (history/revert/filter/noteShellCommand/clipboard/interaction) —
         /// an app's own behavior is dispatched exclusively through `dispatch_typed_command` now.
-        pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        pub(crate) async fn dispatch_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             if A::ROLE == AppRole::Viewer && VIEWER_REJECTED_ACTION_IDS.contains(&action) {
                 return Err(viewer_read_only_fault(action));
             }
@@ -21796,7 +21837,7 @@ pub mod app {
             };
             validate_ui_dispatch_classification(&owner, command_id, definition.semantics.execution.interactive_job)?;
             let kind = definition.kind;
-            let args = Value::Object(invocation.arguments.iter().map(|(key, value)| (key.clone(), value.clone())).collect());
+            let args = DslValue::Object(invocation.arguments.iter().map(|(key, value)| (key.clone(), DslValue::from(value))).collect());
             if let Some(config_mutation) = A::host_configuration_mutation(command_id, Some(&args))? {
                 let admission = self.admit_host_configuration_json(command_id, Some(&args)).await?;
                 self.require_tool_operation_authority(&admission)?;
@@ -24036,7 +24077,7 @@ pub mod app {
             self.current_open_conflicts().await
         }
 
-        async fn handle_action(&mut self, action: &str, args: Option<&Value>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+        async fn handle_action(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let log_generation_before = self.log_generation;
             let result = self.dispatch_action(action, args, meta).await?;
             Ok(self.finish_recorded(log_generation_before, action, result).await)
@@ -24065,7 +24106,7 @@ pub mod app {
                 .ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?;
             let mut arguments = invocation.arguments.clone();
             arguments.insert("windowId".into(), Value::String(address.window_instance_id.clone()));
-            let args = Value::Object(arguments.into_iter().collect());
+            let args = DslValue::Object(arguments.into_iter().map(|(key, value)| (key, DslValue::from(&value))).collect());
             let log_generation_before = self.log_generation;
             let previous_kind = self.invocation_kind.replace(kind);
             let result = self.dispatch_action(&address.action_id, Some(&args), meta).await;
@@ -24481,7 +24522,7 @@ pub mod app {
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
             let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
             if let Some(json) = snapshot_override_json {
-                let snapshot: A::Snapshot = serde_json::from_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
+                let snapshot: A::Snapshot = dsl::json::from_json_str(json).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 let history = self.build_history_view().await;
                 let doc = ArtifactView::new(&snapshot, &history);
                 let config = self.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
@@ -25771,15 +25812,15 @@ pub mod app {
         const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
         /// @emoji 📜️ Stable document schema id — prefer this over `document_schema(&self)`.
         const DOCUMENT_SCHEMA: &'static str;
-        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+        type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Draft: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Draft: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type DraftMutation: ::protocol::Mutation<Self::Draft> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Presence: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Transient: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
@@ -25948,7 +25989,7 @@ pub mod app {
         }
         /// 🧭️ Resolves a host-owned control-plane action to one configuration mutation.
         /// `EditorApp<E>` forwards this exact owner hook to the runtime adapter.
-        fn host_configuration_mutation(_action: &str, _args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             Ok(None)
         }
         fn initial_draft() -> Self::Draft {
@@ -25966,7 +26007,7 @@ pub mod app {
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -26114,15 +26155,15 @@ pub mod app {
         const ROLE: AppRole = AppRole::Viewer;
         const DIALECT: Dialect;
         const DOCUMENT_SCHEMA: &'static str;
-        type Snapshot: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
         /// past edits made by an `ArtifactEditor` sharing this dialect.
         type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
+        type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Presence: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Presence: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-        type Transient: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
+        type Transient: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
         type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Command: ::protocol::OpBinary + Send + Sync + 'static;
 
@@ -26191,7 +26232,7 @@ pub mod app {
         fn command_id(_command: &Self::Command) -> &'static str {
             "typed-command"
         }
-        fn command_from_action(action: &str, _args: Option<&Value>) -> Result<Self::Command, Fault> {
+        fn command_from_action(action: &str, _args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             Err(Fault::new(
                 FaultOrigin::App,
                 FaultCode::new("app.command.unsupported"),
@@ -26461,7 +26502,7 @@ pub mod app {
         async fn initial_config() -> Self::Config {
             E::initial_config()
         }
-        fn host_configuration_mutation(action: &str, args: Option<&Value>) -> Result<Option<Self::ConfigMutation>, Fault> {
+        fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             E::host_configuration_mutation(action, args)
         }
         async fn initial_draft() -> Self::Draft {
@@ -26480,7 +26521,7 @@ pub mod app {
         async fn command_id(command: &Self::Command) -> &'static str {
             E::command_id(command)
         }
-        async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             E::command_from_action(action, args)
         }
         async fn command_from_intent(intent: &UiIntent) -> Result<Self::Command, Fault> {
@@ -26670,7 +26711,7 @@ pub mod app {
         async fn command_id(command: &Self::Command) -> &'static str {
             V::command_id(command)
         }
-        async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+        async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
             V::command_from_action(action, args)
         }
         async fn config_spec() -> ConfigSpec {
@@ -27293,7 +27334,6 @@ pub mod app {
                 InteractionView, Label, LocalizedLabel, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, TextProps, TreeNode, ViewEmit, Viewer,
             };
             use super::*;
-            use serde::de::DeserializeOwned;
             use serde::{Deserialize, Serialize};
             use super::super::super::declaration_fixture_mutations::{
                 std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations,
@@ -27317,7 +27357,7 @@ pub mod app {
             /// stay `LanguagePair { text: None, binary: None }`, which the type itself documents as legal.
             macro_rules! fixture_channel {
                 ($snapshot:ident, $diff:ident, $mutation:ident, $leaf_owner:ident, $command:ident, $editor:ident, $viewer:ident, $dialect:expr, $schema:literal) => {
-                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
                     pub(crate) struct $snapshot {
                         pub value: i32,
                     }
@@ -27345,7 +27385,7 @@ pub mod app {
                         }
                     }
 
-                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+                    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
                     pub(crate) struct $diff {
                         pub value: Option<i32>,
                     }
@@ -27515,8 +27555,8 @@ pub mod app {
 
             fn native_codecs<S, M>(schema: &str) -> NativeCodecs
             where
-                S: Clone + PartialEq + Serialize + DeserializeOwned + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
-                M: Mutation<S> + PartialEq + Serialize + DeserializeOwned + Send + Sync + OpText + protocol::OpBinary + 'static,
+                S: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static,
+                M: Mutation<S> + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + OpText + protocol::OpBinary + 'static,
             {
                 NativeCodecs {
                     snapshot: LanguagePair { text: None, binary: None },
@@ -27697,7 +27737,7 @@ pub mod app {
 
     impl<S, M> ArtifactBuilder for SnapshotBuilder<S, M>
     where
-        S: Default + Clone + PartialEq + Serialize + DeserializeOwned + Send + store::ArtifactDsl + ArtifactPack,
+        S: Default + Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + store::ArtifactDsl + ArtifactPack,
         M: Mutation<S>,
         M::Diff: MutationDiff<S>,
     {
@@ -27746,7 +27786,7 @@ pub mod plugin_runtime {
         PresenceRosterAdmission, TransactionProposalDraft, TypedOperationResultPage, TypedOperationResultToken,
     };
     use crate::ArtifactApp;
-    use dsl::{from_dsl_value, to_dsl_value};
+    use dsl::{from_dsl_value, to_dsl_value, DslValue};
     use semio_framework::manifest::{ActionInvocation as ManifestActionInvocation, CommandInvocation as ManifestCommandInvocation, CommandOwnerAddress as ManifestCommandOwnerAddress};
     use semio_framework::{
         kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, Effect, InvocationResult, QuotaSchema},
@@ -31009,7 +31049,7 @@ pub mod plugin_runtime {
                 protocol::AppCommand::ArtifactCommand { seq, command } => {
                     let envelope: Value = decode_wire_serialized_or(&command, Value::Null).await;
                     let action = envelope.get("action").and_then(Value::as_str).unwrap_or("").to_string();
-                    let args = envelope.get("args").cloned();
+                    let args = envelope.get("args").map(DslValue::from);
                     if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
                         push_os_fault(&mut frames, Some(seq), "unsupported", format!("ArtifactCommand action {action:?} not supported (Wave 1: history verbs only)")).await;
                     } else {
@@ -31757,7 +31797,7 @@ pub mod plugin_runtime {
 
         /// 🗂️ Adds an open topic contribution to the extension manifest; `topic` reuses this crate's
         /// own `contributes`/`consumes` metadata vocabulary (e.g. `"cad.computer"`).
-        pub async fn contributes_topic(mut self, topic: impl Into<String>, payload: Value) -> Self {
+        pub async fn contributes_topic(mut self, topic: impl Into<String>, payload: DslValue) -> Self {
             self.manifest.topic_contributions.push(TopicContribution::new(topic, payload));
             self
         }
@@ -32040,6 +32080,15 @@ pub mod plugin_runtime {
         //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
         //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
         use ui_wgpu::wgpu::{Label, LocalizedLabel};
+        use dsl::DslValue;
+
+        /// 🌉️ Test-only convenience: builds a `serde_json::json!` literal, then bridges it to the
+        /// `DslValue` `handle_action`/`dispatch_action`/`command_from_action` speak at the trait
+        /// boundary — the fixtures below stay readable as JSON literals without keeping a
+        /// `serde_json::Value` alive past this one conversion.
+        fn dv(value: serde_json::Value) -> DslValue {
+            DslValue::from(&value)
+        }
 
         use super::ContextMenuWireRequest;
         use crate::app::{deserializer_entry_of, resolve_ready, serializer_entry_of, ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId};
@@ -32806,14 +32855,14 @@ pub mod plugin_runtime {
                 }
             }
 
-            async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+            async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {
                 match action {
                     "incrementViaCommand" | "mode.increment" => Ok(TestCommand::IncrementViaCommand),
-                    "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
-                    "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+                    "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
+                    "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(DslValue::as_str).unwrap_or_default().to_string() }),
                     "probeChild" => Ok(TestCommand::ProbeChild {
-                        slot: args.and_then(|value| value.get("slot")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string(),
-                        child_id: args.and_then(|value| value.get("childId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string(),
+                        slot: args.and_then(|value| value.get("slot")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
+                        child_id: args.and_then(|value| value.get("childId")).and_then(DslValue::as_str).unwrap_or_default().to_string(),
                     }),
                     // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): reachable ONLY through the
                     // `command_from_intent` bridge (this string is never dispatched by any other
@@ -34008,10 +34057,13 @@ pub mod plugin_runtime {
         /// 🧪️ Builds the JSON `args` an `interactionSelect`/`interactionHover` dispatch carries — the
         /// `targets` arg is itself a JSON-encoded string (an `ActionArgDef::text`, matching
         /// `interaction_action_definitions`'s declaration), not a nested JSON array.
-        fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+        fn interaction_target_args(extra: serde_json::Value, id: &str) -> DslValue {
             let targets = serde_json::to_string(&vec![protocol::InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
-            let mut object = extra;
-            object["targets"] = json!(targets);
+            let mut object = DslValue::from(&extra);
+            if let DslValue::Object(entries) = &mut object {
+                entries.retain(|(key, _)| key != "targets");
+                entries.push(("targets".to_string(), DslValue::String(targets)));
+            }
             object
         }
 
@@ -34576,7 +34628,7 @@ pub mod plugin_runtime {
 
             // 📌️ Checkpoint the parent: the cascade must commit the dirty child first, then pin the
             // child checkpoint that commit produced.
-            app.dispatch_action("commitCheckpoint", Some(&serde_json::json!({ "message": "v1" })), &meta()).await.expect("checkpoint");
+            app.dispatch_action("commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta()).await.expect("checkpoint");
             let pinned_checkpoint = app.test_store().await.current_checkpoint_id().map(str::to_string).expect("parent checkpoint exists");
             let pins = app.test_store().await.envelope().vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == pinned_checkpoint).map(|checkpoint| checkpoint.composition_pins.clone()).expect("checkpoint found");
             assert_eq!(pins.len(), 1, "a composing document's checkpoint must pin its children");
@@ -34589,7 +34641,7 @@ pub mod plugin_runtime {
 
             // ⏮️ Checking the parent out to the pinned checkpoint must drag the child back with it —
             // otherwise a restored composition silently mixes an old parent with a new child.
-            app.dispatch_action("checkoutCheckpoint", Some(&serde_json::json!({ "checkpointId": pinned_checkpoint })), &meta()).await.expect("checkout");
+            app.dispatch_action("checkoutCheckpoint", Some(&dv(serde_json::json!({ "checkpointId": pinned_checkpoint }))), &meta()).await.expect("checkout");
             assert_eq!(reads_child_count(&app).await, 7, "checkout did not cascade to the pinned child");
         }
 
@@ -34673,7 +34725,7 @@ pub mod plugin_runtime {
             MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
             let started = std::time::Instant::now();
-            let result = app.dispatch_action("probeChild", Some(&serde_json::json!({ "slot": "slot", "childId": "child-maximum" })), &meta()).await.expect("public maximum-child probe");
+            let result = app.dispatch_action("probeChild", Some(&dv(serde_json::json!({ "slot": "slot", "childId": "child-maximum" }))), &meta()).await.expect("public maximum-child probe");
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum child public dispatch exceeded 8 ms before its first continuation");
             assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "probeChildContinuation")));
             assert_eq!(MAXIMUM_CHILD_CLONES.load(std::sync::atomic::Ordering::Acquire), 0, "ChildContentView must clone only the existing Arc, never the maximum snapshot graph");
@@ -34770,7 +34822,7 @@ pub mod plugin_runtime {
             let seq = select_a.seq;
             let log_len_before = history.commands.len();
 
-            app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &meta()).await.expect("revertToCommand on a config-edit row");
+            app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a config-edit row");
 
             assert_eq!(app.test_config().await.selected, Some("a".to_string()), "reverting to the select-a row must leave it applied and undo select-b");
             let after = app.test_history().await;
@@ -34784,7 +34836,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
             let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })), &meta())
+            app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &meta())
                 .await
                 .expect("noteShellCommand with inverse");
 
@@ -34794,7 +34846,7 @@ pub mod plugin_runtime {
             assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
             let seq = entry.seq;
 
-            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &meta()).await.expect("revertToCommand on a Shell row");
+            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &meta()).await.expect("revertToCommand on a Shell row");
 
             // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
             // instead of replaying anything locally, and does NOT append a new log entry on its own.
@@ -34848,7 +34900,7 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
             let fragment =
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::<false>::APP_ID.into(), label: "pasted".into() };
-            let args = json!({ "fragment": fragment, "anchor": "original" });
+            let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
             app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
             assert_eq!(app.test_snapshot().await.label, "pasted");
         }
@@ -34858,7 +34910,7 @@ pub mod plugin_runtime {
             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
             let fragment =
                 ClipboardFragment { schema: "semio.test/v1".into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, dsl_text: "pasted".into(), pack_bytes: None, source_app: TestApp::<false>::APP_ID.into(), label: "pasted".into() };
-            let args = json!({ "fragment": fragment, "anchor": "centroid" });
+            let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
             app.handle_action("paste", Some(&args), &meta()).await.expect("paste");
             assert_eq!(app.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
         }
@@ -34964,7 +35016,7 @@ pub mod plugin_runtime {
             let first_increment_seq = app.test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
             let before_len = app.test_history().await.commands.len();
 
-            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &meta()).await.expect("revertToCommand");
+            let result = app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &meta()).await.expect("revertToCommand");
             assert!(result.events.iter().any(|event| event.kind == "history-changed"));
             assert_eq!(app.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
             let history = app.test_history().await;
@@ -35000,7 +35052,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
             let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).await.expect("setHistoryCommandFilter");
+            let result = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
             assert!(result.mutations.is_empty());
             assert_eq!(app.test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
         }
@@ -35113,7 +35165,7 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
-            let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
+            let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
             app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta()).await.expect("noteShellCommand");
             assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
             let history = app.test_history().await;
@@ -35166,7 +35218,7 @@ pub mod plugin_runtime {
         async fn set_history_command_filter_is_never_logged() {
             let mut app: VcsArtifactApp<TestApp> = VcsArtifactApp::<TestApp>::new(TestApp::<false>::default()).await;
             let before_len = app.test_history().await.commands.len();
-            app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyMutations" })), &meta()).await.expect("setHistoryCommandFilter");
+            app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &meta()).await.expect("setHistoryCommandFilter");
             assert_eq!(app.test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
         }
 
@@ -35660,7 +35712,7 @@ pub mod plugin_runtime {
             assert_eq!(app.interaction_state().await.hover.get("items").map(|hover| hover.ids.clone()), Some(vec!["item-1".to_string()]));
 
             // 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
-            app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })), &meta()).await.expect("clear hover");
+            app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&dv(json!({ "domainId": "items", "channel": "pointer", "targets": "[]" }))), &meta()).await.expect("clear hover");
             assert!(app.interaction_state().await.hover.get("items").is_none(), "an emptied hover channel is removed, not left as an empty entry");
         }
 
@@ -35681,14 +35733,14 @@ pub mod plugin_runtime {
         #[semio_framework_async_macros::async_test]
         async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
             let mut app = interaction_app_under_test().await;
-            app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &meta()).await.expect("setSelectionMode");
+            app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&dv(json!({ "domainId": "items", "mode": "single" }))), &meta()).await.expect("setSelectionMode");
             assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(protocol::SelectionMode::Single));
 
-            app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "item" })), &meta()).await.expect("setInteractionGranularity");
+            app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "item" }))), &meta()).await.expect("setInteractionGranularity");
             assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
             // 🛂️ An undeclared granularity is rejected, not silently accepted.
-            let error = app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "bogus" })), &meta()).await.expect_err("undeclared granularity must be rejected");
+            let error = app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta()).await.expect_err("undeclared granularity must be rejected");
             assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
         }
 

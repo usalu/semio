@@ -2,13 +2,12 @@
 
 use crate::artifacts::gltf::schema::modules::mutation_support::create_scene::{insert_empty_scene, insertion_position, GltfCreateSceneRejection};
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub const ID: &str = "s.stdio.gltf.mutation.create-scene.v1";
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfCreateScenePayload {
     pub position: u32,
 }
@@ -27,9 +26,9 @@ pub fn apply(payload: &GltfCreateScenePayload, base: &GltfSnapshot) -> Result<Gl
 }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateSceneMutation {
     Apply(GltfCreateScenePayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

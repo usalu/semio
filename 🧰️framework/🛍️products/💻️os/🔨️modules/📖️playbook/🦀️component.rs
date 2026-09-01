@@ -6,6 +6,8 @@
 //! (see the `"playbook.blockKind"` topic contribution in `semio-framework-manifest`).
 
 use dsl::DslValue;
+use dsl::{FromValue, ToValue};
+use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -26,75 +28,120 @@ pub use generation_forms::{
 };
 
 //#region 🔖️Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookStep {
     pub id: String,
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub blocks: Vec<PlaybookBlock>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookBlock {
     pub id: String,
     pub label: String,
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub required: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub default: Option<DslValue>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub max: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub step: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub options: Option<Vec<PlaybookBlockOption>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub fields: Option<Vec<PlaybookVectorField>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub schema: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub src: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub accept: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub fixture_slug: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub params: Option<DslValue>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     #[dsl(statements, block)]
     pub condition: Option<PlaybookExpr>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookVectorField {
     pub key: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookBlockOption {
     #[serde(alias = "id")]
     pub value: String,
     pub label: String,
+}
+
+/// 🔀️ Hand-written, not derived: `value` accepts either wire key `"value"` or the legacy `"id"`
+/// alias on decode (mirrors `#[serde(alias = "id")]` above, which `#[derive(FromValue)]` does not
+/// support — see the fan-out playbook's attribute-coverage table).
+impl ToValue for PlaybookBlockOption {
+    fn to_value(&self) -> DslValue {
+        DslValue::object([("value".to_string(), ToValue::to_value(&self.value)), ("label".to_string(), ToValue::to_value(&self.label))])
+    }
+}
+impl FromValue for PlaybookBlockOption {
+    fn from_value(value: DslValue) -> Result<Self, ::semio_framework_os_kernel::ValueError> {
+        let entries = value.into_object()?;
+        let value_field = entries
+            .iter()
+            .find(|(k, _)| k == "value" || k == "id")
+            .ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("missing field `value`"))
+            .and_then(|(_, v)| FromValue::from_value(v.clone()))?;
+        let label = entries.iter().find(|(k, _)| k == "label").ok_or_else(|| ::semio_framework_os_kernel::ValueError::new("missing field `label`")).and_then(|(_, v)| FromValue::from_value(v.clone()))?;
+        Ok(Self { value: value_field, label })
+    }
 }
 
 /// 🧮️ Recursive boolean/comparison expression tree, self-referential via `Box` (`Eq`/`Truthy`) and
@@ -103,8 +150,9 @@ pub struct PlaybookBlockOption {
 /// `DslField` impl (only named `DslRecord`/`DslScalar`/`DslEnum` types do), so every `Box`/`Vec<Self>`
 /// field routes through `#[dsl(statements, block)]` (tagged-variant dispatch, wrapped in its own
 /// `{ }` so `Eq`'s two boxed fields don't collide as two bare "the record's one Statements field").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PlaybookExpr {
     Const {
         value: DslValue,
@@ -134,6 +182,7 @@ pub enum PlaybookExpr {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct PlaybookValidationError {
     pub block_id: String,
     pub message: String,
@@ -147,12 +196,14 @@ pub fn is_extension_block_kind(kind: &str) -> bool {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(extension = "playbook", layout = "lines")]
 pub struct PlaybookSpec {
     pub schema: String,
     pub id: String,
     pub version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     pub steps: Vec<PlaybookStep>,
 }
@@ -342,6 +393,7 @@ pub mod generation_forms {
     //#region 🔖️Types
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct FormGeneration {
         pub id: String,
         pub name: String,
@@ -350,12 +402,16 @@ pub mod generation_forms {
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
+    #[value(rename_all = "camelCase")]
     pub struct GenerationPlayState {
         #[serde(default)]
+        #[value(default)]
         pub generations: Vec<FormGeneration>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub selected_generation_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         pub preview_text: Option<String>,
     }
     //#endregion 🔖️Types
@@ -467,6 +523,7 @@ pub mod generation_forms {
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
+    #[value(tag = "kind", rename_all = "camelCase")]
     pub enum GenerationMutation {
         Add { generation: FormGeneration },
         Remove { id: String },
@@ -921,8 +978,8 @@ pub mod builder_kit {
     /// 🗂️ Payload shape decoded from an open `topic_contributions` entry tagged `"playbook.blockKind"` —
     /// carries the `block_kind`/`label`/`icon_id` fields [`build_palette`]'s `extensions` parameter
     /// expects (see `semio-framework-manifest`'s `component.rs`).
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(FromValue)]
+    #[value(rename_all = "camelCase")]
     struct BlockKindPayload {
         block_kind: String,
         label: String,
@@ -1017,7 +1074,15 @@ pub mod builder_kit {
                 plugin_id: "playbook-module-procedural".into(),
                 topic_contribution: Some(semio_framework::TopicContribution::new(
                     "playbook.blockKind",
-                    serde_json::json!({ "appId": "playbook-module-procedural", "blockKind": "buildingComponent", "label": "Building Component", "iconId": "building", "defaultValueJson": "{}", "paramsBodyKey": "params", "previewBodyKey": "preview" }),
+                    dsl::DslValue::object([
+                        ("appId".to_string(), dsl::DslValue::String("playbook-module-procedural".to_string())),
+                        ("blockKind".to_string(), dsl::DslValue::String("buildingComponent".to_string())),
+                        ("label".to_string(), dsl::DslValue::String("Building Component".to_string())),
+                        ("iconId".to_string(), dsl::DslValue::String("building".to_string())),
+                        ("defaultValueJson".to_string(), dsl::DslValue::String("{}".to_string())),
+                        ("paramsBodyKey".to_string(), dsl::DslValue::String("params".to_string())),
+                        ("previewBodyKey".to_string(), dsl::DslValue::String("preview".to_string())),
+                    ]),
                 )),
             }
         }
@@ -1031,7 +1096,7 @@ pub mod builder_kit {
         #[test]
         fn resolve_block_kind_extensions_ignores_unrelated_topics() {
             let mut entry = open_topic_entry();
-            entry.topic_contribution = Some(semio_framework::TopicContribution::new("cad.computer", serde_json::json!({ "unrelated": true })));
+            entry.topic_contribution = Some(semio_framework::TopicContribution::new("cad.computer", dsl::DslValue::object([("unrelated".to_string(), dsl::DslValue::Bool(true))])));
             let extensions = resolve_block_kind_extensions(&[entry]);
             assert!(extensions.is_empty());
         }

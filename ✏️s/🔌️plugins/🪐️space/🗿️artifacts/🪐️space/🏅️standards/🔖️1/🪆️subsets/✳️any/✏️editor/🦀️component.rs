@@ -20,7 +20,6 @@ use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionFactory, ActionRef, ArtifactEditor, ArtifactView, ConfigView, DialogDefinition, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, LocalizedLabel, NoDraft, NoDraftMutation, NoPresence,
     NoPresenceMutation, NoTransient, NoTransientMutation, UiNode,
 };
-use serde_json::Value;
 use store::EngineHandles;
 
 //#region 🔖️KnownArtifactKinds
@@ -389,7 +388,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SpaceIndexConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let json = serde_json::to_string(&<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg)).expect("json");
+        let json = pack::to_json_string(&<SpaceIndexEditor as ArtifactEditor>::render("nope", &doc, &cfg));
         assert!(json.contains("Unknown body"));
     }
 
@@ -401,7 +400,7 @@ mod tests {
         let doc = ArtifactView::new(&snapshot, &history);
         let cfg_snapshot = SpaceIndexConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
-        let json = serde_json::to_string(&<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg)).expect("json");
+        let json = pack::to_json_string(&<SpaceIndexEditor as ArtifactEditor>::render(members_panel::SPACE_INDEX_BODY_MEMBERS, &doc, &cfg));
         assert!(json.contains("s-space-invite"));
     }
 
@@ -413,20 +412,20 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
         let cases: Vec<(&str, Value)> = vec![
-            ("createArtifact", serde_json::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
-            ("deleteArtifact", serde_json::json!({ "id": "artifact-1" })),
-            ("renameArtifact", serde_json::json!({ "id": "artifact-1", "newName": "Renamed" })),
-            ("touchArtifact", serde_json::json!({ "id": "artifact-1", "nowMs": 2, "actor": "user:1" })),
-            ("requestDeleteArtifact", serde_json::json!({ "id": "artifact-1" })),
-            ("openArtifact", serde_json::json!({ "id": "artifact-1" })),
-            ("openArtifactWith", serde_json::json!({ "id": "artifact-1", "role": "editor", "pluginId": "writer", "appId": "writer.editor" })),
-            ("foldDirectoryEvents", serde_json::json!({ "eventsJson": "[]" })),
-            ("presenceHeartbeat", serde_json::json!({ "artifactId": "artifact-1", "actorsCsv": "user:1" })),
-            ("inviteMember", serde_json::json!({ "email": "a@example.com", "role": "author" })),
-            ("removeMember", serde_json::json!({ "userId": "user:1" })),
-            ("setVisibility", serde_json::json!({ "visibility": "public" })),
-            ("copyInviteLink", serde_json::json!({ "role": "spectator", "ttlSecs": 604800u64 })),
-            ("requestInviteMember", serde_json::json!({})),
+            ("createArtifact", pack::json!({ "name": "First", "kindId": "draw", "nowMs": 1, "actor": "user:1" })),
+            ("deleteArtifact", pack::json!({ "id": "artifact-1" })),
+            ("renameArtifact", pack::json!({ "id": "artifact-1", "newName": "Renamed" })),
+            ("touchArtifact", pack::json!({ "id": "artifact-1", "nowMs": 2, "actor": "user:1" })),
+            ("requestDeleteArtifact", pack::json!({ "id": "artifact-1" })),
+            ("openArtifact", pack::json!({ "id": "artifact-1" })),
+            ("openArtifactWith", pack::json!({ "id": "artifact-1", "role": "editor", "pluginId": "writer", "appId": "writer.editor" })),
+            ("foldDirectoryEvents", pack::json!({ "eventsJson": "[]" })),
+            ("presenceHeartbeat", pack::json!({ "artifactId": "artifact-1", "actorsCsv": "user:1" })),
+            ("inviteMember", pack::json!({ "email": "a@example.com", "role": "author" })),
+            ("removeMember", pack::json!({ "userId": "user:1" })),
+            ("setVisibility", pack::json!({ "visibility": "public" })),
+            ("copyInviteLink", pack::json!({ "role": "spectator", "ttlSecs": 604800u64 })),
+            ("requestInviteMember", pack::json!({})),
         ];
         for (action, args) in cases {
             let command = SpaceIndexEditor::command_from_action(action, Some(&args)).unwrap_or_else(|error| panic!("{action} must bridge: {error:?}"));

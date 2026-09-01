@@ -3,7 +3,6 @@
 //! holds only the value type + its pure `compute` fn (no `InferredField`).
 
 use crate::artifacts::bmp::BmpSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Dimensions
 /// 📐️ BMP BITMAPINFOHEADER-derived raster geometry. `has_alpha` is a documented heuristic, not
@@ -12,8 +11,8 @@ use serde::{Deserialize, Serialize};
 /// honest proxy this snapshot's own persisted fields support (this codec's own `BI_RGB` default
 /// for 32bpp carries no alpha, `⚙️engine`'s own doc comment; a real `BI_BITFIELDS` alpha mask would
 /// flip this true, but that bit isn't retained on the snapshot to check).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BmpDimensions {
     pub width: u32,
     pub height: u32,

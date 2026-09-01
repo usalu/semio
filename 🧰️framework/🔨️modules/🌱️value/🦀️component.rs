@@ -126,6 +126,30 @@ impl From<DslValue> for serde_json::Value {
     }
 }
 
+/// 🌉️ The reverse bridge: a plugin decoding `ArtifactEditor::command_from_action`/
+/// `host_configuration_mutation`'s trait-mandated `Option<&serde_json::Value>` args into a
+/// `ToValue`/`FromValue` domain type routes through here — widens every JSON number to `f64` on
+/// the way in, matching `DslValue::Number`'s own single-`f64` contract (same convention
+/// `pack::json`'s `to_dsl_value` bridge uses for its sibling `Value` type).
+impl From<&serde_json::Value> for DslValue {
+    fn from(val: &serde_json::Value) -> Self {
+        match val {
+            serde_json::Value::Null => DslValue::Null,
+            serde_json::Value::Bool(b) => DslValue::Bool(*b),
+            serde_json::Value::Number(n) => DslValue::Number(n.as_f64().unwrap_or(f64::NAN)),
+            serde_json::Value::String(s) => DslValue::String(s.clone()),
+            serde_json::Value::Array(items) => DslValue::Array(items.iter().map(DslValue::from).collect()),
+            serde_json::Value::Object(obj) => DslValue::object(obj.iter().map(|(k, v)| (k.clone(), DslValue::from(v)))),
+        }
+    }
+}
+
+impl From<serde_json::Value> for DslValue {
+    fn from(val: serde_json::Value) -> Self {
+        DslValue::from(&val)
+    }
+}
+
 impl PartialEq<serde_json::Value> for DslValue {
     fn eq(&self, other: &serde_json::Value) -> bool {
         &serde_json::Value::from(self) == other
@@ -152,3 +176,22 @@ pub fn from_dsl_value<T: serde::de::DeserializeOwned>(value: DslValue) -> Result
     T::deserialize(&mut dsl_value_serde::ValueDeserializer::new(value)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️SerDe
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serde_json_value_round_trips_through_dsl_value() {
+        let original = serde_json::json!({"name": "saw", "count": 3, "tags": ["a", "b"], "active": true, "note": null});
+        let dsl: DslValue = DslValue::from(&original);
+        let back = serde_json::Value::from(&dsl);
+        assert_eq!(back, original);
+    }
+
+    #[test]
+    fn serde_json_number_widens_to_f64_like_pack_json() {
+        let dsl: DslValue = DslValue::from(&serde_json::json!(7));
+        assert_eq!(dsl.as_f64(), Some(7.0));
+    }
+}

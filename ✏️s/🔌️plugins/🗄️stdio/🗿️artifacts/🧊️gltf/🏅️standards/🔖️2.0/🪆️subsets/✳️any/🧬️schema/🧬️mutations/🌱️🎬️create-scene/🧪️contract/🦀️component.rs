@@ -5,18 +5,16 @@ mod tests {
     use crate::artifacts::gltf::schema::mutations::create_scene::{diff, inverse, mutation, DESCRIPTOR};
     use crate::artifacts::gltf::schema::snapshot::GltfScene;
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
-    use serde_json::Value;
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Contract {
         id: String,
         vectors: Vec<Vector>,
     }
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Vector {
         base: SceneState,
         payload: mutation::GltfCreateScenePayload,
@@ -28,21 +26,21 @@ mod tests {
         rejections: Rejections,
     }
 
-    #[derive(Debug, Deserialize, PartialEq)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Debug, value_derive::FromValue, PartialEq)]
+    #[value(rename_all = "camelCase")]
     struct SceneState {
         scene: Option<usize>,
         scenes: Vec<GltfScene>,
     }
 
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct EncodedRejection {
         encoded: String,
         code: String,
     }
 
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Rejection {
         code: String,
         payload: Option<mutation::GltfCreateScenePayload>,
@@ -52,32 +50,32 @@ mod tests {
         position: Option<u32>,
     }
 
-    #[derive(Default, Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(Default, value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct Rejections {
-        #[serde(default)]
+        #[value(default)]
         out_of_range_position: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         invalid_default_reference: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_diff_replay: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_default_scene: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_insertion_anchor: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         forged_diff_touched_paths: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         inverse_index: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_inverse: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_inverse_anchor: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         forged_inverse_touched_paths: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_distant_diff: Option<Rejection>,
-        #[serde(default)]
+        #[value(default)]
         stale_distant_inverse: Option<Rejection>,
     }
 

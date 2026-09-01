@@ -2,11 +2,10 @@
 
 use crate::artifacts::gltf::schema::snapshot::GltfScene;
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Rejection
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GltfCreateSceneRejection {
     pub code: String,
     pub path: String,

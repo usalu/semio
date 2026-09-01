@@ -6,12 +6,11 @@
 //! honoring this subset's own opaque-payload boundary.
 
 use crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ Semio video container duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioVideoDuration {
     pub duration_seconds: f64,
     pub stream_count: u32,

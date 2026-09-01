@@ -5,12 +5,11 @@
 //! scalar read — no `InferredField` needed.
 
 use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Duration
 /// ⏱️ avi's `avih` MainAVIHeader-derived playback duration.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AviDuration {
     pub duration_seconds: f64,
     pub stream_count: u32,

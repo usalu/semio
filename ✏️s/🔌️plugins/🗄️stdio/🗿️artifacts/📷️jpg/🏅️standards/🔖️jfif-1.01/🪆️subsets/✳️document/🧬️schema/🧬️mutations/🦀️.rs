@@ -1,7 +1,6 @@
 //! 🧬️ Transparent JpgMutation aggregate.
 use crate::artifacts::jpg::schema::diff::JpgDiff;
 use crate::artifacts::jpg::JpgSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::jpg::schema::operations::{apply_jpg_mutation, inverse_jpg_mutation};
 
@@ -19,8 +18,8 @@ pub use super::replace_quant_table::ReplaceQuantTableMutation;
 //#endregion Owners
 
 //#region Aggregate
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
-#[serde(tag = "mutation", content = "payload", rename_all = "kebab-case")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 #[mutations(snapshot = JpgSnapshot, diff = JpgDiff, schema = "s.stdio.jpg")]
 pub enum JpgMutation {
     ChangeJfifHeader(ChangeJfifHeaderMutation),

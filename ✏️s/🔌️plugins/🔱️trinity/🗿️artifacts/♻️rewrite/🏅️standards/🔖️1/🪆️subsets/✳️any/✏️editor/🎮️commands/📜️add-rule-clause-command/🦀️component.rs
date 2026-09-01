@@ -9,10 +9,10 @@ use crate::editor::rewrite::config::RewriteConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = serde_json::from_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<crate::artifacts::rewrite::schema::Lhs>(&state.lhs_json) else {
         return false;
     };
-    let Ok(mut rhs) = serde_json::from_str::<Rhs>(&state.rhs_json) else {
+    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return false;
     };
     let left_var = lhs.pattern.left_var.clone();
@@ -50,8 +50,8 @@ fn add_rule_clause(state: &mut RewriteSnapshot, clause_kind: &str) -> bool {
         _ => false,
     };
     if changed {
-        state.lhs_json = serde_json::to_string(&lhs).unwrap_or_default();
-        state.rhs_json = serde_json::to_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
+        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
     }
     changed
 }

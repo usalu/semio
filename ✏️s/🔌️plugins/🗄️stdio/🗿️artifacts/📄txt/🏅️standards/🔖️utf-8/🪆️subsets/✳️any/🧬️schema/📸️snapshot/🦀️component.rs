@@ -2,7 +2,6 @@
 
 use crate::artifacts::txt::STDIO_TXT_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️LineEnding
 /// ⏎️ Which newline sequence terminates each line of a `stdio.txt` document.
@@ -11,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// `f6-recon-report.md`: `DslScalar` is one of the two derive sources for `DslField`, unit
 /// variants only), letting `Option<LineEnding>`/`LineEnding` fields embed in `TxtDiff`/
 /// `TxtSnapshot`/`TxtMutation` below without hand-rolling.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum LineEnding {
     #[default]
     Lf,
@@ -40,20 +39,20 @@ impl LineEnding {
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be carried by direct mutation payloads and storage surfaces), it
 /// does not touch the artifact's own honest line-joined-by-line-ending envelope format.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.txt")]
 pub struct TxtSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub lines: Vec<String>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trailing_newline: bool,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub line_ending: LineEnding,
 }
 

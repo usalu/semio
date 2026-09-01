@@ -17,7 +17,6 @@ use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit::windo
 use semio_framework_plugin::{
     ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
-use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
 //#region 🔖️Dialect
@@ -88,7 +87,7 @@ pub(crate) fn parse_xlsx_cell_value(text: &str) -> XlsxCellValue {
 /// ✏️ The editor's typed command channel — exactly the one edit `🪟️main`'s `editable_window_kind()`
 /// action (`set-cell`, contract §2.6) can trigger. `row` indexes `xlsx_flat_cells`'s own output;
 /// `value` is the edited cell's raw display text, parsed back by `parse_xlsx_cell_value`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum XlsxEditorCommand {
     SetCell { row: u32, value: String },
 }

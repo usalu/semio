@@ -24,13 +24,12 @@ use protocol::Mutation;
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
 use protocol::{OpBinary, OpText};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️PathAddressing
 /// 🧭️ One step down into a nested block container: `Quote` (own `blocks`), a `List` item's own
 /// `blocks`, or a `Table` cell's own `blocks`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DocPathSegment {
     Quote { block_index: usize },
     ListItem { block_index: usize, item: usize },
@@ -39,10 +38,10 @@ pub enum DocPathSegment {
 
 /// 🧭️ Addresses one block-list slot: `segments` navigate through nested containers, `index` is
 /// the slot within the innermost `Vec<DocBlock>`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DocBlockPath {
-    #[serde(default)]
+    #[value(default)]
     pub segments: Vec<DocPathSegment>,
     pub index: usize,
 }
@@ -174,9 +173,9 @@ pub mod set_image_bytes;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioDocumentSnapshot, diff = SemioDocumentDiff, schema = "SemioDocumentMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum SemioDocumentMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `block` at `path` (`path.index` = insertion index, FINAL state).

@@ -22,7 +22,6 @@
 
 use dsl::TextSpan;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use store::TextError;
 
 //#region 🔖️Ids
@@ -32,11 +31,11 @@ pub const STDIO_HTML_DOCUMENT_SCHEMA: &str = "stdio.html";
 //#region 🔖️Model
 /// 🏷️ One element attribute. `value: None` is a valueless boolean attribute (`<p disabled>`),
 /// distinct from an attribute that isn't present at all.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct HtmlAttr {
     pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<String>,
 }
 
@@ -55,8 +54,8 @@ impl HtmlAttr {
 /// `<style>` are the only two RAWTEXT-content-model elements this subset models (HTML5 also gives
 /// `<textarea>`/`<title>` a related-but-distinct RCDATA content model, out of scope here: their
 /// content is parsed as plain `Text`, entity-decoded like everywhere else).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum RawTextKind {
     Script,
     Style,
@@ -90,14 +89,14 @@ impl RawTextKind {
 // `stdio.json`'s `JsonValue` (see that file's identical NOTE) -- `Text`/`Comment` are therefore
 // `{ text: String }` struct variants, not the bare-tuple `Text(String)`/`Comment(String)` shorthand
 // used in the ticket brief's conceptual shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum HtmlNode {
     Element {
         name: String,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         attributes: Vec<HtmlAttr>,
-        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[value(default, skip_serializing_if = "Vec::is_empty")]
         children: Vec<HtmlNode>,
     },
     Text {
@@ -126,14 +125,14 @@ pub type NodePath = Vec<usize>;
 /// 📸️ Persisted `stdio.html` snapshot: `doctype` (raw content between `<!` and `>`, e.g.
 /// `"DOCTYPE html"`, `None` if the document has no doctype declaration) + the recursive `root`
 /// element tree.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html")]
 pub struct HtmlSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub doctype: Option<String>,
     #[state(artifact)]
     pub root: HtmlNode,

@@ -18,7 +18,6 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::MutationDiff;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️IndexedCollectionAlgebra
 /// 📐️ Shared rank/unrank arithmetic for index-keyed collection diffs — see `🧬️schema-design.md`
@@ -395,12 +394,12 @@ pub(crate) fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
 //#endregion 🔖️ValueCodecs
 
 //#region 🔖️KeyframeDiff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimKeyframeDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub t: Option<f64>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub value: Option<AnimValue>,
 }
 
@@ -470,14 +469,14 @@ fn dec_keyframe_diff(s: &str) -> Result<AnimKeyframeDiff, String> {
 //#endregion 🔖️KeyframeDiff
 
 //#region 🔖️ChannelDiff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimChannelDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub target: Option<AnimTarget>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub interpolation: Option<AnimInterpolation>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub keyframes: Option<IndexedTripleDiff<AnimKeyframeDiff, AnimKeyframe>>,
 }
 
@@ -560,13 +559,13 @@ fn dec_channel_diff(s: &str) -> Result<AnimChannelDiff, String> {
 //#endregion 🔖️ChannelDiff
 
 //#region 🔖️TimelineDiff
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct AnimTimelineDiff {
     /// 🏷️ Tri-state: `None` = unchanged, `Some(None)` = name cleared, `Some(Some(v))` = renamed.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<Option<String>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub channels: Option<IndexedTripleDiff<AnimChannelDiff, AnimChannel>>,
 }
 
@@ -641,12 +640,12 @@ fn dec_timeline_diff(s: &str) -> Result<AnimTimelineDiff, String> {
 //#region 🔖️Diff
 /// 🔺️ Diff for `s.stdio.semio.animation`. No `replacement: Option<SemioAnimationSnapshot>`
 /// full-replace slot anywhere — a single sparse `timelines` collection-triple field.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.animation.diff")]
 pub struct SemioAnimationDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub timelines: Option<IndexedTripleDiff<AnimTimelineDiff, AnimTimeline>>,
 }
 

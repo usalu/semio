@@ -21,23 +21,22 @@ use crate::artifacts::pdf::standards::v1_7::subsets::base::schema::snapshot::{Ob
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️PageDiff
 /// 📄️ Sparse per-field patch for one `PdfPage` (a WEAK entity per the recipe -- a value struct,
 /// never sub-diffed beyond its own flat fields). `crop_box` is tri-state: `None` = unchanged,
 /// `Some(None)` = cleared, `Some(Some(b))` = set.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub media_box: Option<[f64; 4]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub crop_box: Option<Option<[f64; 4]>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rotate: Option<i32>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
 }
 
@@ -85,29 +84,29 @@ fn absorb_page_diff(base: &mut PdfPageDiff, other: PdfPageDiff) {
 //#endregion 🔖️PageDiff
 
 //#region 🔖️PagesTriple
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageModified {
     pub index: usize,
     pub diff: PdfPageDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPageAdded {
     pub index: usize,
     pub page: PdfPage,
 }
 
 /// 📦️ Index-keyed `pages` triple (positional -- the recipe's "index usize" key kind).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPagesDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PdfPageModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PdfPageAdded>,
 }
 
@@ -285,15 +284,15 @@ fn absorb_law_pages_diff(d1: PdfPagesDiff, d2: PdfPagesDiff) -> PdfPagesDiff {
 //#endregion 🔖️PagesTriple
 
 //#region 🔖️DictDiff (reused for nested Dict/Stream.dict AND top-level trailer)
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfDictModified {
     pub key: String,
     pub diff: PdfValueDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfDictAdded {
     pub index: usize,
     pub key: String,
@@ -303,14 +302,14 @@ pub struct PdfDictAdded {
 /// 📦️ Name-keyed `Dict`/`Stream.dict`/`trailer` triple (order-preserving `Vec`, per-entry
 /// identity is the key NAME -- first occurrence wins on duplicate keys, matching real PDF
 /// dictionaries which practically never repeat a key; documented simplification).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfDictDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PdfDictModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PdfDictAdded>,
 }
 
@@ -414,29 +413,29 @@ fn absorb_dict_diff(d1: PdfDictDiff, d2: PdfDictDiff) -> PdfDictDiff {
 //#endregion 🔖️DictDiff
 
 //#region 🔖️ArrayDiff (nested inside PdfValueDiff::Array only)
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfArrayModified {
     pub index: usize,
     pub diff: PdfValueDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfArrayAdded {
     pub index: usize,
     pub item: PdfObject,
 }
 
 /// 📦️ Index-keyed `Array` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfArrayDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PdfArrayModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PdfArrayAdded>,
 }
 
@@ -606,8 +605,8 @@ fn absorb_array_diff(d1: PdfArrayDiff, d2: PdfArrayDiff) -> PdfArrayDiff {
 /// 🔺️ Recursive diff mirroring [`PdfObject`]'s shape. `Replace` is the fallback used whenever a
 /// node's KIND changes between base and next (e.g. `Int` -> `Name`); the other variants are
 /// direct/structural diffs used whenever the kind is stable.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PdfValueDiff {
     /// 🔁️ Whole-node replace -- the node's KIND changed, or a mutation explicitly overwrites it.
     Replace {
@@ -639,11 +638,11 @@ pub enum PdfValueDiff {
     },
     /// 🌊️ `dict` and decoded logical `data` are independently sparse.
     Stream {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         dict: Option<PdfDictDiff>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         data: Option<Vec<u8>>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
         filters: Option<Vec<PdfStreamFilter>>,
     },
 }
@@ -791,15 +790,15 @@ fn absorb_value_diff(d1: PdfValueDiff, d2: PdfValueDiff) -> PdfValueDiff {
 //#endregion 🔖️ValueDiff
 
 //#region 🔖️ObjectsTriple
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfObjectModified {
     pub id: ObjRef,
     pub diff: PdfValueDiff,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfObjectAdded {
     pub index: usize,
     pub id: ObjRef,
@@ -809,14 +808,14 @@ pub struct PdfObjectAdded {
 /// 📦️ `(id,gen)`-keyed `objects` triple (the recipe's "numeric id" key kind; `ObjRef` -- the
 /// `PdfIndirectObject`'s own real key -- is used whole rather than splitting to bare `id`, since
 /// a distinct `gen` genuinely identifies a distinct indirect object per spec).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfObjectsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<ObjRef>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PdfObjectModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PdfObjectAdded>,
 }
 
@@ -924,8 +923,8 @@ fn absorb_law_objects_diff(d1: PdfObjectsDiff, d2: PdfObjectsDiff) -> PdfObjects
 /// `Stream` can only ever be an indirect object's OWN top-level value (never nested inside an
 /// Array/Dict as a value -- that requires an indirect `Ref`), so only `path == []` can possibly
 /// address a `Stream`'s dict; every deeper step is guaranteed `Array`/`Dict`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PdfPathSegment {
     ArrayIndex { index: usize },
     DictKey { key: String },
@@ -976,24 +975,24 @@ pub fn diff_at_object_path(id: ObjRef, path: &[PdfPathSegment], is_root_stream: 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.pdf.1.7`. `schema` is an identity field and is never diffed. `info` is a
 /// WEAK value struct (recipe: whole-value replaced, never sub-diffed).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7.diff")]
 pub struct PdfDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub declared_version: Option<String>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub info: Option<PdfInfo>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub pages: Option<PdfPagesDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub objects: Option<PdfObjectsDiff>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub trailer: Option<PdfDictDiff>,
 }
 

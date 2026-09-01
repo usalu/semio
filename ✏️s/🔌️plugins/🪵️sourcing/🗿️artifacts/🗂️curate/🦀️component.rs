@@ -2,6 +2,7 @@
 //! object kinds (parametric geometry + typology + availability) and a curated selection.
 
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 use serde::{Deserialize, Serialize};
 
@@ -23,8 +24,9 @@ pub const SOURCING_DIALECT: Dialect = Dialect { artifact_kind: "s.sourcing.curat
 
 //#region 🔖️Geometry
 /// 📦️ A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRecipe {
     Box {
         #[dsl(unit = "m")]
@@ -66,8 +68,9 @@ pub enum GeometryRecipe {
 /// `geometry` is `Box<GeometryRecipe>` (not a bare `GeometryRecipe`) because `#[dsl(statements)]`'s
 /// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
 /// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ObjectKind {
     #[dsl(defines = "object")]
     pub id: String,

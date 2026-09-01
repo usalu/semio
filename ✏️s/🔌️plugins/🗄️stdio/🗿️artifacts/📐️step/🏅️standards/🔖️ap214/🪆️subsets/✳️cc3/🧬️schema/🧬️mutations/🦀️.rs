@@ -42,7 +42,6 @@ use crate::artifacts::step::standards::v_ap214::subsets::cc3::schema::MAX_RUNG;
 use crate::artifacts::step::StepSnapshot;
 use protocol::command::DiffAlgebra;
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::step::standards::v_ap214::subsets::any::schema::mutations::{apply_step_mutation, StepMutation};
 
@@ -69,7 +68,7 @@ pub mod demote_shape_representation;
 /// leaf payload and a unit variant wraps none. Its only role was `inverse()`'s "nothing to undo" arm,
 /// now the empty vector. `SetSnapshot` is KEPT: the derive checks `SEMANTICS.verb`, not the kind, and
 /// `set` is approved — so this class's whole-document restore survives intact.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc3")]
 pub enum StepCc3Mutation {
     SetSnapshot(set_snapshot::SetSnapshot),

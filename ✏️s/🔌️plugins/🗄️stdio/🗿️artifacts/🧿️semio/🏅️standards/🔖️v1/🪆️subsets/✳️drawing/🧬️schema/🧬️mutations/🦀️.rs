@@ -16,7 +16,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
 use crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::change_stroke_color;
@@ -39,7 +38,7 @@ use super::ungroup_node;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioDrawingSnapshot, diff = SemioDrawingDiff, schema = "s.stdio.semio.drawing")]
 pub enum SemioDrawingMutation {
     CreateLayer(create_layer::CreateLayer),
@@ -109,7 +108,7 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
-/// JSON projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioDrawingMutation`]. Node-addressed payloads carry a `NodePath`
 /// (`{"layer": 0, "path": [0]}`) rather than a node id, because `DrawNode` is an anonymous

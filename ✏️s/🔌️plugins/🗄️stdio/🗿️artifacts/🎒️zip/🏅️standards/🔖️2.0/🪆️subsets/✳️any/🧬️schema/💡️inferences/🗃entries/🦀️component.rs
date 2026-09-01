@@ -5,14 +5,13 @@
 //! equivalent over the already-decoded `ZipSnapshot`, not a re-parse of the wire format.
 
 use crate::artifacts::zip::standards::v2_0::subsets::any::schema::snapshot::ZipSnapshot;
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
 //#region 🔖️Entries
 /// 🗃️ Real central-directory-style census over `entries`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ZipEntries {
     pub entry_count: u32,
     pub total_uncompressed_size: u64,

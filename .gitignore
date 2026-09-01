@@ -18,6 +18,7 @@ target*
 🎯️target-*/
 .tmp*
 🗑️generated
+**/🧾️runs/
 🗑️temp
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/

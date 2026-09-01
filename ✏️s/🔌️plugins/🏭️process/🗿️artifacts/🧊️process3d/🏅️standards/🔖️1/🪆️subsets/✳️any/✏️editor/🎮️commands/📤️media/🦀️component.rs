@@ -5,14 +5,14 @@ use crate::artifacts::process3d::{op::Process3dMutation, Process3dSnapshot};
 use crate::editor::process3d::config::{Process3dConfig, Process3dConfigMutation};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework::DslValue;
 
 //#region 🔖️ExportModel
 pub mod export_model {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "export-model")]
     pub struct ExportModel {
         pub format: String,
@@ -33,8 +33,8 @@ pub mod export_model {
                 filename: export.filename,
                 mime_type: export.mime_type,
                 data: match export.data {
-                    Value::String(text) => text,
-                    other => serde_json::to_string(&other).unwrap_or_default(),
+                    DslValue::String(text) => text,
+                    other => semio_framework_os_kernel::json::to_json_string(&other),
                 },
                 encoding: export.encoding,
             })),
@@ -48,7 +48,7 @@ pub mod export_model {
 pub mod load_model_request {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "load-model-request")]
     pub struct LoadModelRequest {}
 
@@ -67,7 +67,7 @@ pub mod load_model_request {
 pub mod import_model_file {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "import-model-file")]
     pub struct ImportModelFile {
         pub name: String,

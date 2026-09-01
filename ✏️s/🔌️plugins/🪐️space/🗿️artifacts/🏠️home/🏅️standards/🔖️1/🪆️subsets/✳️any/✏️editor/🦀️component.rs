@@ -21,7 +21,6 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::{app_commands, create_tab_stack_layout, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, FaultOrigin, Label, LocalizedLabel, NoDraft, NoDraftMutation, UiNode};
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
-use serde_json::Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -203,9 +202,11 @@ impl std::io::Write for HomeConfigByteCounter {
 }
 
 fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<usize, String> {
-    let mut counter = HomeConfigByteCounter { bytes: 0 };
-    serde_json::to_writer(&mut counter, edit).map_err(|_| "Space Home config edit exceeds its serialized byte envelope".to_string())?;
-    Ok(counter.bytes)
+    let bytes = pack::to_json_string(&dsl::ToValue::to_value(edit)).len();
+    if bytes > HOME_CONFIG_STEP_BYTES {
+        return Err("Space Home config edit exceeds its serialized byte envelope".to_string());
+    }
+    Ok(bytes)
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<HomeConfig, HomeConfigMutation> for HomeConfigPreparationFactory {
@@ -622,7 +623,7 @@ mod tests {
     #[test]
     fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
+        let fixture: pack::JsonValue = pack::parse_json(include_str!("🧪️fixtures/🎯️retained-command-limits.json")).expect("language-neutral retained fixture");
         let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, HOME_RETAINED_TOOL_IDS);
         assert_eq!(HOME_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
@@ -710,7 +711,7 @@ mod tests {
     /// locale-correct COLUMN HEADERS instead — the real thing "labels resolve to the right locale" means
     /// for a table.
     async fn config_with_one_folded_space(locale: &str) -> HomeConfig {
-        let event_json = serde_json::json!({
+        let event_json = pack::json!({
             "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
             "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
             "recordedAtMs": 1000
@@ -728,7 +729,7 @@ mod tests {
         let config = config_with_one_folded_space("en-US");
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
-        let json = serde_json::to_string(&home_node).unwrap();
+        let json = pack::to_json_string(&home_node);
         assert!(json.contains("Updated"), "English column header must resolve: {json}");
         assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
     }
@@ -741,7 +742,7 @@ mod tests {
         let config = config_with_one_folded_space("de");
         let cfg = ConfigView { snapshot: &config };
         let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg);
-        let json = serde_json::to_string(&home_node).unwrap();
+        let json = pack::to_json_string(&home_node);
         assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
         assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
     }

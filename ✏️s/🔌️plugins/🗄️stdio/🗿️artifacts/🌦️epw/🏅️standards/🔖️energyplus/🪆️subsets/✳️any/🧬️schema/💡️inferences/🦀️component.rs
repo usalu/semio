@@ -9,15 +9,14 @@
 
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 use super::climate::{compute_epw_climate_summary, EpwClimateSummary};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an epw snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `climate`, backed by the `🌡climate/` slug dir).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.inference")]
 pub struct EpwInference {
     #[derived]

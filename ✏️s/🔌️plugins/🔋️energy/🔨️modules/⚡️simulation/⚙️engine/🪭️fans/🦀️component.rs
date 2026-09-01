@@ -2,10 +2,11 @@
 
 use crate::curves::PerformanceCurve;
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️Fan
 /// 🌀️ Fan type and performance specification.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct Fan {
     pub fan_type: FanType,
     pub max_flow_m3_s: f64,
@@ -17,7 +18,7 @@ pub struct Fan {
 }
 
 /// 🔧️ Fan arrangement.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum FanType {
     ConstantVolume,
     VariableVolume,
@@ -25,7 +26,7 @@ pub enum FanType {
 }
 
 /// 📊️ Fan operating point.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct FanOperatingPoint {
     pub volume_flow_m3_s: f64,
     pub pressure_rise_pa: f64,

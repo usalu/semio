@@ -23,24 +23,23 @@ use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️RowFieldDiff
 /// 🔣️ One changed cell inside a row's sparse patch, keyed by the owning element's property
 /// NAME (stable per-element schema — see module doc; positions can shift if `properties`
 /// itself is replaced, names don't).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRowFieldChange {
     pub name: String,
     pub value: PlyValue,
 }
 
 /// 🔺️ Sparse per-property patch for one [`PlyRow`] — only changed cells appear.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRowDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub fields: Vec<PlyRowFieldChange>,
 }
 
@@ -94,16 +93,16 @@ fn row_between(properties: &[PlyProperty], a: &PlyRow, b: &PlyRow) -> PlyRowDiff
 
 //#region 🔖️RowsTriple
 /// 📦️ One `rows.modified[]` entity — `index` is the row's position in BASE.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRowModified {
     pub index: usize,
     pub diff: PlyRowDiff,
 }
 
 /// 📦️ One `rows.added[]` entity — `index` is the row's position in the FINAL sequence.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRowAdded {
     pub index: usize,
     pub row: PlyRow,
@@ -111,14 +110,14 @@ pub struct PlyRowAdded {
 
 /// 🔺️ Index-keyed removed/modified/added triple over one element's `rows` (PLY rows have no
 /// stable identity beyond position, same rationale as csv's `records` triple).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRowsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<usize>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PlyRowModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PlyRowAdded>,
 }
 
@@ -325,12 +324,12 @@ fn apply_row_field_changes_by_position_fallback(row: &mut PlyRow, diff: &PlyRowD
 /// (`properties: Option<Vec<PlyProperty>>` — `PlyProperty: DslField` unsatisfied); it needs no
 /// `dsl` derive at all, it's a plain leaf type consumed by the hand-rolled `print_diff`/
 /// `parse_diff`/`encode_diff`/`decode_diff` below.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyElementDiff {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Vec<PlyProperty>>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub rows: Option<PlyRowsDiff>,
 }
 
@@ -387,30 +386,30 @@ fn element_between(a: &PlyElement, b: &PlyElement) -> PlyElementDiff {
 
 //#region 🔖️ElementsTriple
 /// 📦️ One `elements.modified[]` entity — `name` is the element's identity.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyElementModified {
     pub name: String,
     pub diff: PlyElementDiff,
 }
 
 /// 📦️ One `elements.added[]` entity — `index` is the element's position in the FINAL sequence.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyElementAdded {
     pub index: usize,
     pub element: PlyElement,
 }
 
 /// 🔺️ Sparse name-keyed `elements` triple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PlyElementsDiff {
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub removed: Vec<String>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<PlyElementModified>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub added: Vec<PlyElementAdded>,
 }
 
@@ -491,18 +490,18 @@ fn absorb_elements(d1: Option<PlyElementsDiff>, d2: Option<PlyElementsDiff>) -> 
 
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply.diff")]
 pub struct PlyDiff {
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub format: Option<PlyFormat>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub comments: Option<Vec<String>>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub elements: Option<PlyElementsDiff>,
 }
 

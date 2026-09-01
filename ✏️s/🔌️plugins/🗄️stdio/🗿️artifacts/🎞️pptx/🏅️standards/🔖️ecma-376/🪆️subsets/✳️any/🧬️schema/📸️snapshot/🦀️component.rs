@@ -13,29 +13,28 @@ use crate::artifacts::pptx::STDIO_PPTX_DOCUMENT_SCHEMA;
 use crate::artifacts::xml::schema::snapshot::{XmlDocument, XmlNode};
 use crate::artifacts::zip::opc::OpcPackage;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️PptxModel
 /// ✍️ One `a:r` run — same shape as `docx::DocxRun` (shared text-model convention), plus
 /// `font_size` (`a:rPr@sz`, hundredths of a point in the XML, stored here already-converted to
 /// whole points).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxRun {
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub bold: bool,
-    #[serde(default)]
+    #[value(default)]
     pub italic: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub font_size: Option<u32>,
 }
 
 /// 📄️ One `a:p` paragraph.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxParagraph {
-    #[serde(default)]
+    #[value(default)]
     pub runs: Vec<PptxRun>,
 }
 
@@ -48,8 +47,8 @@ impl PptxParagraph {
 
 /// 📐️ A shape's `a:xfrm` position/size, in EMUs (`a:off@x/y`, `a:ext@cx/cy`) -- a weak (value)
 /// entity per the recipe: whole-value replaced in diffs, never sub-diffed.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxTransform {
     pub x: i64,
     pub y: i64,
@@ -63,21 +62,21 @@ pub struct PptxTransform {
 // 🩹 The internal tag is `shapeKind` (NOT `kind`) -- `Placeholder`'s own field is itself named
 // `kind` (the placeholder TYPE, per the brief's field naming), which would collide with an
 // internal tag literally named `kind`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "shapeKind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "shapeKind", rename_all = "camelCase")]
 pub enum PptxShape {
     /// 📝️ `p:sp` with no `p:nvSpPr/p:nvPr/p:ph` (a plain autoshape/text box).
     TextBox {
-        #[serde(default)]
+        #[value(default)]
         text_frame: Vec<PptxParagraph>,
-        #[serde(default)]
+        #[value(default)]
         position: PptxTransform,
     },
     /// 🖼️ `p:pic` -- `blip_rel_id` is the `p:blipFill/a:blip@r:embed` relationship id (resolves
     /// through the slide part's own `.rels` to the actual `ppt/media/*` part in `opc`).
     Picture {
         blip_rel_id: String,
-        #[serde(default)]
+        #[value(default)]
         position: PptxTransform,
     },
     /// 🏷️ `p:sp` WITH `p:nvSpPr/p:nvPr/p:ph` -- `kind` is the placeholder's `type` attribute
@@ -85,9 +84,9 @@ pub enum PptxShape {
     /// absent is `"body"`).
     Placeholder {
         kind: String,
-        #[serde(default)]
+        #[value(default)]
         text_frame: Vec<PptxParagraph>,
-        #[serde(default)]
+        #[value(default)]
         position: PptxTransform,
     },
     /// 🗄️ Logical XML retention for every shape kind this layer doesn't specially type.
@@ -95,28 +94,28 @@ pub enum PptxShape {
 }
 
 /// 🖼️ One slide: its shape tree, in document order (`p:spTree`'s direct children).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxSlide {
-    #[serde(default)]
+    #[value(default)]
     pub shapes: Vec<PptxShape>,
 }
 
 /// 🎞️ Typed semantic view of the slide list (`ppt/presentation.xml`'s `p:sldIdLst`, resolved
 /// through `ppt/_rels/presentation.xml.rels` to each `ppt/slides/slideN.xml`) -- index-keyed:
 /// presentations are ORDERED, slide order matters and is part of the model.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxPresentation {
-    #[serde(default)]
+    #[value(default)]
     pub slides: Vec<PptxSlide>,
 }
 //#endregion 🔖️PptxModel
 
 //#region 🔖️XmlParts
 /// 📄 One authoritative OPC XML part retained as a logical XML document.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PptxXmlPart {
     pub path: String,
     pub content_type: String,
@@ -170,20 +169,20 @@ fn content_type_override_key(path: &str) -> (u8, u32, &str) {
 //#endregion 🔖️XmlParts
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pptx")]
 pub struct PptxSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub opc: OpcPackage,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub xml_parts: Vec<PptxXmlPart>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub presentation: PptxPresentation,
 }
 

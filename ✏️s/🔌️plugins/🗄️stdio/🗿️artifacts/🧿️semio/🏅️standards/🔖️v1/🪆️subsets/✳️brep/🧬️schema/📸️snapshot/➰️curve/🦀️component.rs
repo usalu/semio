@@ -30,7 +30,7 @@ use bspline::{de_boor, KnotVector};
 /// 🌀️ A 3D curve. Each variant's *natural* domain is documented on the variant; a curve's actual
 /// used range (e.g. an edge's `(t0, t1)`) is stored by the topology layer, not here — this keeps
 /// geometry shareable between edges that trim the same underlying curve differently.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Curve3 {
     /// 🌀️ `origin + t·dir`. Natural domain `(-∞, ∞)`. `dir` need not be unit.
     Line { origin: Pnt3, dir: Vec3 },
@@ -45,7 +45,7 @@ pub enum Curve3 {
 
 /// 🌀️ An explicit rational-NURBS representation, returned by [`Curve3::to_nurbs`] /
 /// [`Curve2::to_nurbs`] — every curve kind's common denominator.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub struct NurbsCurve3 {
     pub knots: KnotVector,
     pub controls: Vec<Pnt3>,
@@ -215,7 +215,7 @@ fn arc_to_nurbs(frame: &Frame3, radius_x: f64, radius_y: f64, domain: (f64, f64)
 // #region 🔖️Curve2
 
 /// 🌀️ A 2D curve, used as the pcurve type: a curve living in a face's `(u, v)` parameter domain.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Curve2 {
     Line { origin: Pnt2, dir: Vec2 },
     Circle { center: Pnt2, radius: f64 },

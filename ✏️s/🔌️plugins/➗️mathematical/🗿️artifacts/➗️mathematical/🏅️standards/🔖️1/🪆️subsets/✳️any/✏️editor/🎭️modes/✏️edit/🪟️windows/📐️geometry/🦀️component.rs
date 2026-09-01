@@ -46,8 +46,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
-        let json = serde_json::to_string(&render(&MathematicalGeometry::default())).unwrap();
-        assert!(json.contains("canvas-2d"));
+        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
+        // `Debug` gives the same "the scene populated its canvas_2d slot" check the old JSON
+        // substring check made, without needing `serde_json` for a framework type.
+        let debug = format!("{:?}", render(&MathematicalGeometry::default()));
+        assert!(debug.contains("canvas_2d: Some"), "expected a populated canvas_2d slot: {debug}");
     }
 
     #[semio_framework_async_macros::async_test]

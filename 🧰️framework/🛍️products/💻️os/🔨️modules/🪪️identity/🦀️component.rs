@@ -64,8 +64,9 @@ pub fn fill_entropy(bytes: &mut [u8]) -> Result<(), EntropyError> {
 }
 
 /// 🎲️ Browser-hosted IDs call the platform `crypto.getRandomValues` boundary without exposing a JS
-/// type through the owned interface.
-#[cfg(target_arch = "wasm32")]
+/// type through the owned interface. `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, so
+/// this is narrowed to the browser only — `js_sys`/`wasm_bindgen` have no meaning under WASI.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub fn fill_entropy(bytes: &mut [u8]) -> Result<(), EntropyError> {
     use wasm_bindgen::JsCast;
     let global = js_sys::global();
@@ -77,7 +78,15 @@ pub fn fill_entropy(bytes: &mut [u8]) -> Result<(), EntropyError> {
     Ok(())
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows", target_arch = "wasm32")))]
+/// 🚧️ `wasm32-wasip2` has no arm of its own here: a correct `wasi:random/random` component import
+/// needs a hand-rolled canonical-ABI binding (the same shape as `semio_browser_host` in
+/// `ui-host`'s `🦀️window.rs`, but for the component model rather than a core-wasm import), which
+/// is real implementation work beyond this slice — left unimplemented rather than stubbed with a
+/// false success. wasip2 therefore falls into this catch-all `Err(EntropyError)` path deliberately
+/// (widened from the pre-existing "every other platform" arm, not a new stub), which
+/// `time_ordered_id` below already degrades from gracefully via a clock/pid-seeded `splitmix64` —
+/// so nothing here panics or fabricates cryptographic strength it doesn't have.
+#[cfg(any(not(any(target_os = "macos", target_os = "ios", target_os = "linux", target_os = "android", target_os = "windows", target_arch = "wasm32")), target_env = "p2"))]
 pub fn fill_entropy(_bytes: &mut [u8]) -> Result<(), EntropyError> {
     Err(EntropyError)
 }

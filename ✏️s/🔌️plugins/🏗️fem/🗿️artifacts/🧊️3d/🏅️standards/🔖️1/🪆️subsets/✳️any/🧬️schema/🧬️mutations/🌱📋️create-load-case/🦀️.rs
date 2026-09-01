@@ -4,14 +4,14 @@ use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoad, FemLoadCase, element_id};
 use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
 use crate::artifacts::fem3d::mutations::{Fem3dMutation, delete_load_case};
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🌱️ Brings a new [`FemLoadCase`] into existence (empty or pre-seeded with one load — the
 /// resolve-or-create gesture in `🎮️commands/🏋️add-nodal-load` builds this when no matching case exists yet).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-load-case")]
 pub struct CreateLoadCase {
     pub load_case: FemLoadCase,

@@ -7,12 +7,11 @@
 //! `connections`) plus a plain count/presence read of the four handle slots.
 
 use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Entries
 /// 🗃️ Semio kit catalog census.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKitEntries {
     pub type_count: u32,
     pub design_count: u32,

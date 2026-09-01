@@ -3,11 +3,13 @@
 use super::MergePolicyConfigMutation;
 use protocol::{Mutation, MutationDiff, MutationKind, MutationOutcome, SemanticDescriptor};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Schema
 /// 🛡️ `os.config.merge-policy` — the authority-local policy choice.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct MergePolicySetting {
     pub policy: protocol::MergePolicy,
 }
@@ -28,9 +30,10 @@ impl MutationDiff<MergePolicySetting> for MergePolicySetting {
 
 //#region 🔖️Mutation
 /// 🛡️ Replaces the active OS-wide merge policy.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct ChangeMergePolicy {
     pub policy: protocol::MergePolicy,
 }

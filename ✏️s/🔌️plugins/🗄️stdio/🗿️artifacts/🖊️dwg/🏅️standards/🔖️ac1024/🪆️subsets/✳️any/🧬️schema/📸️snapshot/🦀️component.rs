@@ -7,12 +7,11 @@
 use crate::artifacts::dwg::standards::v_ac1024::engine as dwg_engine;
 use crate::artifacts::dwg::STDIO_DWG_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
 //#region 🔖️DrawingModel
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgLogicalGeometryKind {
     #[default]
     Point,
@@ -28,37 +27,37 @@ pub enum DwgLogicalGeometryKind {
     PolyfaceMesh,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLogicalGeometry {
     pub kind: DwgLogicalGeometryKind,
-    #[serde(default)]
+    #[value(default)]
     pub values: Vec<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub indices: Vec<i32>,
-    #[serde(default)]
+    #[value(default)]
     pub text: String,
-    #[serde(default)]
+    #[value(default)]
     pub closed: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLogicalLayer {
     pub name: String,
     pub color: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLogicalEntity {
     pub layer: usize,
     pub color: i16,
     pub geometry: DwgLogicalGeometry,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgObjectCategory {
     Entity,
     TableControl,
@@ -69,15 +68,15 @@ pub enum DwgObjectCategory {
     Custom,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgNamedReference {
     pub name: String,
     pub handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DwgXRecordValue {
     String { group_code: i16, value: String },
     Real { group_code: i16, value: f64 },
@@ -305,21 +304,21 @@ impl DwgXRecordValue {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDictionaryBody {
-    #[serde(default)]
+    #[value(default)]
     pub entries: Vec<DwgNamedReference>,
     pub cloning_flag: u16,
     pub hard_owner: bool,
-    #[serde(default)]
+    #[value(default)]
     pub default_entry_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTableControlEntry {
-    #[serde(default)]
+    #[value(default)]
     pub handle: Option<u64>,
 }
 
@@ -352,44 +351,44 @@ impl dsl::DslField for DwgTableControlEntry {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTableControlEntries {
-    #[serde(default)]
+    #[value(default)]
     pub entry_handles: Vec<DwgTableControlEntry>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockTableControl {
-    #[serde(default)]
+    #[value(default)]
     pub entry_handles: Vec<DwgTableControlEntry>,
-    #[serde(default)]
+    #[value(default)]
     pub model_space_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub paper_space_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLinetypeTableControl {
-    #[serde(default)]
+    #[value(default)]
     pub entry_handles: Vec<DwgTableControlEntry>,
     pub by_block_handle: u64,
     pub by_layer_handle: u64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionStyleTableControl {
-    #[serde(default)]
+    #[value(default)]
     pub entry_handles: Vec<DwgTableControlEntry>,
-    #[serde(default)]
+    #[value(default)]
     pub additional_handles: Vec<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgTableControlBody {
     Block(DwgBlockTableControl),
     Layer(DwgTableControlEntries),
@@ -489,24 +488,24 @@ impl dsl::DslField for DwgTableControlBody {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTableRecordCommon {
     pub name: String,
     pub xref_resolution: u16,
-    #[serde(default)]
+    #[value(default)]
     pub xref_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgRegisteredApplicationTableRecord {
     pub common: DwgTableRecordCommon,
     pub group_71: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTextStyleTableRecord {
     pub common: DwgTableRecordCommon,
     pub is_shape: bool,
@@ -520,8 +519,8 @@ pub struct DwgTextStyleTableRecord {
     pub big_font_file: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum DwgComplexColorValue {
     #[default]
     None,
@@ -615,19 +614,19 @@ impl dsl::DslField for DwgComplexColorValue {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgComplexColor {
     pub index: u16,
     pub value: DwgComplexColorValue,
-    #[serde(default)]
+    #[value(default)]
     pub name: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub book_name: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLayerTableRecord {
     pub common: DwgTableRecordCommon,
     pub frozen: bool,
@@ -637,43 +636,43 @@ pub struct DwgLayerTableRecord {
     pub plottable: bool,
     pub lineweight: u8,
     pub color: DwgComplexColor,
-    #[serde(default)]
+    #[value(default)]
     pub plot_style_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub material_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub linetype_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLinetypeDash {
     pub length: f64,
     pub complex_shape_code: u16,
-    #[serde(default)]
+    #[value(default)]
     pub style_handle: Option<u64>,
     pub x_offset: f64,
     pub y_offset: f64,
     pub scale: f64,
     pub rotation: f64,
     pub shape_flags: u16,
-    #[serde(default)]
+    #[value(default)]
     pub text: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLinetypeTableRecord {
     pub common: DwgTableRecordCommon,
     pub description: String,
     pub pattern_length: f64,
     pub alignment: u8,
-    #[serde(default)]
+    #[value(default)]
     pub dashes: Vec<DwgLinetypeDash>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockHeaderTableRecord {
     pub common: DwgTableRecordCommon,
     pub anonymous: bool,
@@ -681,11 +680,11 @@ pub struct DwgBlockHeaderTableRecord {
     pub is_xref: bool,
     pub xref_overlaid: bool,
     pub xref_loaded: bool,
-    #[serde(default)]
+    #[value(default)]
     pub owned_entity_handles: Vec<u64>,
     pub base_point: [f64; 3],
     pub xref_path: String,
-    #[serde(default)]
+    #[value(default)]
     pub insert_backreference_handles: Vec<u64>,
     pub description: String,
     pub insert_units: u16,
@@ -693,12 +692,12 @@ pub struct DwgBlockHeaderTableRecord {
     pub block_scaling: u8,
     pub block_entity_handle: u64,
     pub end_block_entity_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub layout_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgViewportTableRecord {
     pub common: DwgTableRecordCommon,
     pub view_height: f64,
@@ -740,20 +739,20 @@ pub struct DwgViewportTableRecord {
     pub ucs_orthographic_view: u16,
     pub grid_flags: u16,
     pub grid_major: u16,
-    #[serde(default)]
+    #[value(default)]
     pub background_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub visual_style_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub sun_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub named_ucs_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub base_ucs_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionGeometry {
     pub scale: f64,
     pub arrow_size: f64,
@@ -768,8 +767,8 @@ pub struct DwgDimensionGeometry {
     pub jog_angle: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionBehavior {
     pub tolerance: bool,
     pub limits: bool,
@@ -783,8 +782,8 @@ pub struct DwgDimensionBehavior {
     pub arc_symbol: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionText {
     pub height: f64,
     pub center_mark_size: f64,
@@ -806,8 +805,8 @@ pub struct DwgDimensionText {
     pub text_color: DwgComplexColor,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionUnits {
     pub alternate_decimal_places: u16,
     pub decimal_places: u16,
@@ -830,8 +829,8 @@ pub struct DwgDimensionUnits {
     pub arrow_text_fit: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionR2010 {
     pub fixed_extension_enabled: bool,
     pub text_direction: bool,
@@ -844,8 +843,8 @@ pub struct DwgDimensionR2010 {
     pub flag: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionStyleTableRecord {
     pub common: DwgTableRecordCommon,
     pub dimension_postfix: String,
@@ -867,8 +866,8 @@ pub struct DwgDimensionStyleTableRecord {
     pub extension_2_linetype_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgTableRecordBody {
     RegisteredApplication(DwgRegisteredApplicationTableRecord),
     TextStyle(DwgTextStyleTableRecord),
@@ -964,26 +963,26 @@ impl dsl::DslField for DwgTableRecordBody {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgXRecordBody {
-    #[serde(default)]
+    #[value(default)]
     pub values: Vec<DwgXRecordValue>,
-    #[serde(default)]
+    #[value(default)]
     pub object_id_handles: Vec<u64>,
     pub cloning_flag: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgExtendedEntityData {
     pub application_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub values: Vec<DwgXRecordValue>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgEntityMode {
     ExplicitOwner,
     PaperSpace,
@@ -992,8 +991,8 @@ pub enum DwgEntityMode {
     Reserved,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgEntityReferenceMode {
     #[default]
     ByLayer,
@@ -1002,8 +1001,8 @@ pub enum DwgEntityReferenceMode {
     Explicit,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgEntityColorKind {
     #[default]
     ByLayer,
@@ -1012,24 +1011,24 @@ pub enum DwgEntityColorKind {
     TrueColor,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEntityColor {
     pub kind: DwgEntityColorKind,
     pub index: u16,
     pub rgb: u32,
-    #[serde(default)]
+    #[value(default)]
     pub transparency: Option<u32>,
-    #[serde(default)]
+    #[value(default)]
     pub name: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub book_name: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub color_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEntityCommon {
     pub mode: DwgEntityMode,
     pub color: DwgEntityColor,
@@ -1041,24 +1040,24 @@ pub struct DwgEntityCommon {
     pub invisible: u16,
     pub lineweight: u8,
     pub layer_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub linetype_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub material_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub shadow_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub plot_style_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub full_visual_style_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub face_visual_style_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub edge_visual_style_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLineEntity {
     pub common: DwgEntityCommon,
     pub start: Vec<f64>,
@@ -1067,8 +1066,8 @@ pub struct DwgLineEntity {
     pub extrusion: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgArcEntity {
     pub common: DwgEntityCommon,
     pub center: Vec<f64>,
@@ -1079,47 +1078,47 @@ pub struct DwgArcEntity {
     pub end_angle: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLwPolylineVertex {
     pub point: Vec<f64>,
     pub bulge: f64,
-    #[serde(default)]
+    #[value(default)]
     pub vertex_id: Option<u32>,
-    #[serde(default)]
+    #[value(default)]
     pub start_width: Option<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub end_width: Option<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLwPolylineEntity {
     pub common: DwgEntityCommon,
     pub closed: bool,
-    #[serde(default)]
+    #[value(default)]
     pub constant_width: Option<f64>,
     pub elevation: f64,
     pub thickness: f64,
     pub extrusion: Vec<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub vertices: Vec<DwgLwPolylineVertex>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockBeginEntity {
     pub common: DwgEntityCommon,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockEndEntity {
     pub common: DwgEntityCommon,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgInsertEntity {
     pub common: DwgEntityCommon,
     pub insertion: Vec<f64>,
@@ -1127,14 +1126,14 @@ pub struct DwgInsertEntity {
     pub rotation: f64,
     pub extrusion: Vec<f64>,
     pub block_header_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub attribute_handles: Vec<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub sequence_end_handle: Option<u64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgDimensionTextAttachment {
     #[default]
     TopCenter,
@@ -1148,23 +1147,23 @@ pub enum DwgDimensionTextAttachment {
     BottomRight,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgDimensionLineSpacingStyle {
     #[default]
     AtLeast,
     Exact,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionStatus {
     pub block_reference_is_exclusive: bool,
     pub user_positioned_text: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionEntityCommon {
     pub common: DwgEntityCommon,
     pub extrusion: Vec<f64>,
@@ -1184,12 +1183,12 @@ pub struct DwgDimensionEntityCommon {
     pub flip_arrow_2: bool,
     pub clone_insertion_point: Vec<f64>,
     pub dimension_style_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub dimension_block_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLinearDimensionEntity {
     pub dimension: DwgDimensionEntityCommon,
     pub extension_line_1: Vec<f64>,
@@ -1199,8 +1198,8 @@ pub struct DwgLinearDimensionEntity {
     pub dimension_rotation: f64,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgViewportStatusFlag {
     Perspective,
     FrontClipping,
@@ -1226,8 +1225,8 @@ pub enum DwgViewportStatusFlag {
     GridFollowsWorkplane,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgViewportRenderMode {
     #[default]
     Optimized2d,
@@ -1239,8 +1238,8 @@ pub enum DwgViewportRenderMode {
     GouraudShadedWithWireframe,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgOrthographicView {
     #[default]
     None,
@@ -1252,8 +1251,8 @@ pub enum DwgOrthographicView {
     Right,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgShadePlotMode {
     #[default]
     AsDisplayed,
@@ -1262,16 +1261,16 @@ pub enum DwgShadePlotMode {
     Rendered,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgDefaultLightingType {
     OneDistantLight,
     #[default]
     TwoDistantLights,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgViewportEntity {
     pub common: DwgEntityCommon,
     pub center: Vec<f64>,
@@ -1317,15 +1316,15 @@ pub struct DwgViewportEntity {
     pub sun_handle: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgGeometryEntity {
     pub common: DwgEntityCommon,
     pub geometry: DwgLogicalGeometry,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgEntityBody {
     Line(DwgLineEntity),
     Arc(DwgArcEntity),
@@ -1338,15 +1337,15 @@ pub enum DwgEntityBody {
     Geometry(DwgGeometryEntity),
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgAssociativeDependencyStatus {
     #[default]
     UpToDate,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeDependency {
     pub status: DwgAssociativeDependencyStatus,
     pub is_read_dependency: bool,
@@ -1355,19 +1354,19 @@ pub struct DwgAssociativeDependency {
     pub is_delegating_to_owning_action: bool,
     pub order: i32,
     pub dependent_on_object_handle: u64,
-    #[serde(default)]
+    #[value(default)]
     pub name: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub read_dependency_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub dependency_node_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub dependency_body_handle: Option<u64>,
     pub dependency_body_id: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgEvaluationVariant {
     Integer32(i32),
 }
@@ -1402,16 +1401,16 @@ impl dsl::DslField for DwgEvaluationVariant {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeValueDependency {
     pub dependency: DwgAssociativeDependency,
     pub cached_value: DwgEvaluationVariant,
     pub value_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeGeometryDependency {
     pub dependency: DwgAssociativeDependency,
     pub enabled: bool,
@@ -1419,8 +1418,8 @@ pub struct DwgAssociativeGeometryDependency {
     pub dependent_on_compound_object: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgEvaluationExpressionValue {
     Empty,
     Double(f64),
@@ -1499,8 +1498,8 @@ impl dsl::DslField for DwgEvaluationExpressionValue {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEvaluationExpression {
     pub parent_id: i32,
     pub major_version: u32,
@@ -1509,49 +1508,49 @@ pub struct DwgEvaluationExpression {
     pub node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockGripLocationComponent {
     pub evaluation_expression: DwgEvaluationExpression,
     pub grip_type: u32,
     pub grip_expression: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDynamicBlockProxyNode {
     pub evaluation_expression: DwgEvaluationExpression,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgAssociativeActionStatus {
     #[default]
     UpToDate,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeActionDependency {
     pub owned: bool,
     pub dependency_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeAction {
     pub status: DwgAssociativeActionStatus,
-    #[serde(default)]
+    #[value(default)]
     pub owning_network_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub action_body_handle: Option<u64>,
     pub action_index: i32,
     pub maximum_dependency_index: i32,
     pub dependencies: Vec<DwgAssociativeActionDependency>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeVariable {
     pub action: DwgAssociativeAction,
     pub name: String,
@@ -1560,20 +1559,20 @@ pub struct DwgAssociativeVariable {
     pub description: String,
     pub evaluated_value: DwgEvaluationVariant,
     pub mergeable: bool,
-    #[serde(default)]
+    #[value(default)]
     pub mergeable_variable_name: Option<String>,
     pub must_merge: bool,
     pub referenced_value_dependency_handles: Vec<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssociativeDimensionDependencyBody {
     pub name: String,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgVisualStylePropertyOperation {
     Inherit,
     #[default]
@@ -1582,8 +1581,8 @@ pub enum DwgVisualStylePropertyOperation {
     Enable,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct DwgVisualStyleProperty<T> {
     pub value: T,
     pub operation: DwgVisualStylePropertyOperation,
@@ -1610,8 +1609,8 @@ impl<T: dsl::DslField> dsl::DslField for DwgVisualStyleProperty<T> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgVisualStyleProperties {
     pub face_lighting_model: DwgVisualStyleProperty<u32>,
     pub face_lighting_quality: DwgVisualStyleProperty<u32>,
@@ -1643,8 +1642,8 @@ pub struct DwgVisualStyleProperties {
     pub display_shadow_type: DwgVisualStyleProperty<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgVisualStyle {
     pub description: String,
     pub style_type: u32,
@@ -1653,33 +1652,33 @@ pub struct DwgVisualStyle {
     pub properties: DwgVisualStyleProperties,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterDependencyBody {
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockRepresentationData {
     pub represented_block_header_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDynamicBlockPurgePreventer {
     pub protected_block_header_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraphNode {
     pub id: u32,
     pub expression_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraphEdge {
     pub from_node_id: u32,
     pub to_node_id: u32,
@@ -1688,50 +1687,50 @@ pub struct DwgEvaluationGraphEdge {
     pub suppressed: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgEvaluationGraph {
     pub nodes: Vec<DwgEvaluationGraphNode>,
     pub edges: Vec<DwgEvaluationGraphEdge>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterConnection {
     pub code: u32,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterProperty {
     pub connections: Vec<DwgBlockParameterConnection>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgBlockParameterBaseLocation {
     #[default]
     StartPoint,
     Midpoint,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipValueSet {
     pub base_label: String,
     pub flipped_label: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgNamedEvaluationNodeReference {
     pub node_id: u32,
     pub expression_name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipParameter {
     pub evaluation_expression: DwgEvaluationExpression,
     pub name: String,
@@ -1748,24 +1747,24 @@ pub struct DwgBlockFlipParameter {
     pub updated_flip: DwgNamedEvaluationNodeReference,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgVisibilityEvaluationHistory {
     #[default]
     Stateless,
     Required,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgVisibilityState {
     pub name: String,
     pub visible_entity_handles: Vec<u64>,
     pub controlled_expression_handles: Vec<u64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockVisibilityParameter {
     pub evaluation_expression: DwgEvaluationExpression,
     pub element_name: String,
@@ -1782,15 +1781,15 @@ pub struct DwgBlockVisibilityParameter {
     pub states: Vec<DwgVisibilityState>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockElement {
     pub evaluation_expression: DwgEvaluationExpression,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockGrip {
     pub element: DwgBlockElement,
     pub location: Vec<f64>,
@@ -1800,15 +1799,15 @@ pub struct DwgBlockGrip {
     pub updated_y: DwgNamedEvaluationNodeReference,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgPropertyExpressionReference {
     pub property_index: u32,
     pub node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockTwoPointParameter {
     pub element: DwgBlockElement,
     pub show_properties: bool,
@@ -1820,8 +1819,8 @@ pub struct DwgBlockTwoPointParameter {
     pub base_location: DwgBlockParameterBaseLocation,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearParameter {
     pub parameter: DwgBlockTwoPointParameter,
     pub distance_name: String,
@@ -1830,39 +1829,39 @@ pub struct DwgBlockLinearParameter {
     pub allowed_values: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearGrip {
     pub grip: DwgBlockGrip,
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipGrip {
     pub grip: DwgBlockGrip,
     pub updated_flip: DwgNamedEvaluationNodeReference,
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockVisibilityGrip {
     pub grip: DwgBlockGrip,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgPlaceholder {}
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDictionaryVariable {
     pub value: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAnnotationScale {
     pub name: String,
     pub paper_units: f64,
@@ -1870,22 +1869,22 @@ pub struct DwgAnnotationScale {
     pub is_unit_scale: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDrawOrderEntry {
     pub entity_handle: u64,
     pub sort_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgSortEntitiesTable {
     pub block_header_handle: u64,
     pub entries: Vec<DwgDrawOrderEntry>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCellContentFormat {
     pub property_override_flags: u32,
     pub property_flags: u32,
@@ -1900,8 +1899,8 @@ pub struct DwgCellContentFormat {
     pub text_height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCellMargins {
     pub vertical: f64,
     pub horizontal: f64,
@@ -1911,8 +1910,8 @@ pub struct DwgCellMargins {
     pub vertical_spacing: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCellBorder {
     pub override_flags: u32,
     pub border_type: u32,
@@ -1923,8 +1922,8 @@ pub struct DwgCellBorder {
     pub double_line_spacing: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCellBorders {
     pub top: Option<DwgCellBorder>,
     pub horizontal_inside: Option<DwgCellBorder>,
@@ -1934,8 +1933,8 @@ pub struct DwgCellBorders {
     pub right: Option<DwgCellBorder>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCellStyle {
     pub property_override_flags: u32,
     pub merge_flags: u32,
@@ -1946,8 +1945,8 @@ pub struct DwgCellStyle {
     pub borders: DwgCellBorders,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTableStyle {
     pub description: String,
     pub bit_flags: u32,
@@ -1958,8 +1957,8 @@ pub struct DwgTableStyle {
     pub data: DwgCellStyle,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMlineLinetype {
     #[default]
     ByLayer,
@@ -1967,24 +1966,24 @@ pub enum DwgMlineLinetype {
     Continuous,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMlineCaps {
     pub square: bool,
     pub inner_arcs: bool,
     pub round_outer_arcs: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMlineStyleElement {
     pub offset: f64,
     pub color: DwgComplexColor,
     pub linetype: DwgMlineLinetype,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMlineStyle {
     pub name: String,
     pub description: String,
@@ -1998,38 +1997,38 @@ pub struct DwgMlineStyle {
     pub elements: Vec<DwgMlineStyleElement>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderContentType {
     None,
     Block,
     #[default]
     MText,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderDrawOrder {
     #[default]
     LeaderFirst,
     ContentFirst,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderLeaderOrder {
     #[default]
     HeadFirst,
     TailFirst,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderKind {
     Invisible,
     #[default]
     Straight,
     Spline,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAttachment {
     TopOfTop,
     #[default]
@@ -2043,65 +2042,65 @@ pub enum DwgMLeaderTextAttachment {
     BottomOfTopNoUnderline,
     Center,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAngle {
     #[default]
     Horizontal,
     Aligned,
     AlwaysRightReading,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderTextAlignment {
     #[default]
     Left,
     Center,
     Right,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderAttachmentDirection {
     #[default]
     Horizontal,
     Vertical,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMLeaderBlockConnection {
     #[default]
     Extents,
     BasePoint,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderLeaderStyle {
     pub kind: DwgMLeaderKind,
     pub color: DwgComplexColor,
     pub linetype_style_handle: u64,
     pub lineweight: i32,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderLanding {
     pub enabled: bool,
     pub gap: f64,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderDogleg {
     pub enabled: bool,
     pub length: f64,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderArrow {
     pub symbol_handle: Option<u64>,
     pub size: f64,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderTextStyle {
     pub default_content: String,
     pub style_handle: u64,
@@ -2118,8 +2117,8 @@ pub struct DwgMLeaderTextStyle {
     pub top_attachment: DwgMLeaderTextAttachment,
     pub bottom_attachment: DwgMLeaderTextAttachment,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderBlockStyle {
     pub content_handle: Option<u64>,
     pub color: DwgComplexColor,
@@ -2129,8 +2128,8 @@ pub struct DwgMLeaderBlockStyle {
     pub use_rotation: bool,
     pub connection: DwgMLeaderBlockConnection,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMLeaderStyle {
     pub content_type: DwgMLeaderContentType,
     pub draw_order: DwgMLeaderDrawOrder,
@@ -2151,8 +2150,8 @@ pub struct DwgMLeaderStyle {
     pub break_size: f64,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMaterialProjection {
     Inherit,
     Planar,
@@ -2161,8 +2160,8 @@ pub enum DwgMaterialProjection {
     Cylinder,
     Sphere,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMaterialTiling {
     Inherit,
     #[default]
@@ -2171,21 +2170,21 @@ pub enum DwgMaterialTiling {
     Clamp,
     Mirror,
 }
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMaterialMapSource {
     #[default]
     None,
     CurrentScene,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMaterialColor {
     pub factor: f64,
     pub override_rgb: Option<u32>,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMaterialMap {
     pub blend_factor: f64,
     pub projection: DwgMaterialProjection,
@@ -2195,8 +2194,8 @@ pub struct DwgMaterialMap {
     pub transform: Vec<f64>,
     pub source: DwgMaterialMapSource,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMaterialChannels {
     pub diffuse: bool,
     pub specular: bool,
@@ -2205,8 +2204,8 @@ pub struct DwgMaterialChannels {
     pub bump: bool,
     pub refraction: bool,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgMaterial {
     pub name: String,
     pub description: String,
@@ -2228,21 +2227,21 @@ pub struct DwgMaterial {
     pub enabled_channels: DwgMaterialChannels,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockActionConnection {
     pub node_id: u32,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockActionDependency {
     pub object_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockAction {
     pub evaluation_expression: DwgEvaluationExpression,
     pub name: String,
@@ -2251,15 +2250,15 @@ pub struct DwgBlockAction {
     pub action_node_ids: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgBlockMoveCoordinateMode {
     #[default]
     CartesianXy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockMoveAction {
     pub action: DwgBlockAction,
     pub x_connection: DwgBlockActionConnection,
@@ -2269,16 +2268,16 @@ pub struct DwgBlockMoveAction {
     pub coordinate_mode: DwgBlockMoveCoordinateMode,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockAlignmentParameter {
     pub parameter: DwgBlockTwoPointParameter,
     pub updated_grip_node_id: u32,
     pub align_perpendicular: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockAlignmentGrip {
     pub grip: DwgBlockGrip,
     pub first_location_node_id: u32,
@@ -2286,29 +2285,29 @@ pub struct DwgBlockAlignmentGrip {
     pub orientation: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgStretchSelection {
     pub object_handle: u64,
     pub vertex_indices: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgStretchSelector {
     pub node_id: u32,
     pub point_indices: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgBlockActionCoordinateMode {
     #[default]
     CartesianXy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockStretchAction {
     pub action: DwgBlockAction,
     pub x_connection: DwgBlockActionConnection,
@@ -2321,8 +2320,8 @@ pub struct DwgBlockStretchAction {
     pub coordinate_mode: DwgBlockActionCoordinateMode,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockActionWithBasePoint {
     pub action: DwgBlockAction,
     pub offset: Vec<f64>,
@@ -2332,15 +2331,15 @@ pub struct DwgBlockActionWithBasePoint {
     pub base_point: Vec<f64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgBlockScaleMode {
     #[default]
     Xy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockScaleAction {
     pub base: DwgBlockActionWithBasePoint,
     pub uniform_scale_connection: DwgBlockActionConnection,
@@ -2349,8 +2348,8 @@ pub struct DwgBlockScaleAction {
     pub mode: DwgBlockScaleMode,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockFlipAction {
     pub action: DwgBlockAction,
     pub flip_connection: DwgBlockActionConnection,
@@ -2359,8 +2358,8 @@ pub struct DwgBlockFlipAction {
     pub updated_end_connection: DwgBlockActionConnection,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockOnePointParameter {
     pub element: DwgBlockElement,
     pub show_properties: bool,
@@ -2369,22 +2368,22 @@ pub struct DwgBlockOnePointParameter {
     pub properties: Vec<DwgBlockParameterProperty>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockBasePointParameter {
     pub parameter: DwgBlockOnePointParameter,
     pub point: Vec<f64>,
     pub base_point: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockParameterAllowedValues {
     pub values: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgBlockLinearConstraintParameter {
     pub parameter: DwgBlockTwoPointParameter,
     pub displacement_grip_node_id: u32,
@@ -2395,8 +2394,8 @@ pub struct DwgBlockLinearConstraintParameter {
     pub allowed_values: DwgBlockParameterAllowedValues,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgPlotOptions {
     pub use_standard_scale: bool,
     pub plot_viewport_borders: bool,
@@ -2407,58 +2406,58 @@ pub struct DwgPlotOptions {
     pub initializing: bool,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgPlotPaperUnit {
     #[default]
     Inches,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgPlotRotation {
     #[default]
     QuarterTurn,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgPlotArea {
     #[default]
     Display,
     Layout,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgStandardScale {
     #[default]
     Custom,
     OneToOne,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgShadePlot {
     #[default]
     AsDisplayed,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgShadePlotResolution {
     #[default]
     Normal,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLayoutOptions {
     pub paper_space_linetype_scaling: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLayout {
     pub page_setup_name: String,
     pub printer_configuration: String,
@@ -2503,38 +2502,38 @@ pub struct DwgLayout {
     pub viewport_handles: Vec<u64>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgAssocNetworkMemberKind {
     Network,
     #[default]
     Action,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssocNetworkMember {
     pub handle: u64,
     pub kind: DwgAssocNetworkMemberKind,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssocNetwork {
     pub action: DwgAssociativeAction,
     pub network_action_index: i32,
     pub actions: Vec<DwgAssocNetworkMember>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgConstraintNodeCore {
     pub id: i32,
     pub connected_node_ids: Vec<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgGeometricConstraint {
     pub node: DwgConstraintNodeCore,
     pub owner_node_id: u32,
@@ -2542,24 +2541,24 @@ pub struct DwgGeometricConstraint {
     pub active: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgConstraintGeometry {
     pub node: DwgConstraintNodeCore,
     pub geometry_dependency_handle: Option<u64>,
     pub geometry_node_id: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgExplicitConstraint {
     pub geometric: DwgGeometricConstraint,
     pub value_dependency_handle: u64,
     pub dimension_dependency_handle: u64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgConstrainedImplicitPoint {
     pub geometry: DwgConstraintGeometry,
     pub point: Option<Vec<f64>>,
@@ -2568,8 +2567,8 @@ pub struct DwgConstrainedImplicitPoint {
     pub curve_node_id: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgConstrainedBoundedLine {
     pub geometry: DwgConstraintGeometry,
     pub origin: Vec<f64>,
@@ -2580,31 +2579,31 @@ pub struct DwgConstrainedBoundedLine {
     pub end_point: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDistanceConstraint {
     pub explicit: DwgExplicitConstraint,
     pub direction_kind: u8,
     pub direction: Option<Vec<f64>>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAxisConstraint {
     pub geometric: DwgGeometricConstraint,
     pub datum_line_index: i32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgConstrainedDatumLine {
     pub geometry: DwgConstraintGeometry,
     pub origin: Vec<f64>,
     pub direction: Vec<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgConstraintNode {
     ConstrainedImplicitPoint(DwgConstrainedImplicitPoint),
     PointCurveConstraint(DwgGeometricConstraint),
@@ -2712,8 +2711,8 @@ impl dsl::DslField for DwgConstraintNode {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAssoc2dConstraintGroup {
     pub action: DwgAssociativeAction,
     pub do_not_check_newly_added_constraints: bool,
@@ -2821,8 +2820,8 @@ impl dsl::DslField for DwgEntityBody {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum DwgLogicalObjectBody {
     Dictionary(DwgDictionaryBody),
     TableControl(DwgTableControlBody),
@@ -3084,38 +3083,38 @@ impl dsl::DslField for DwgLogicalObjectBody {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLogicalObject {
     pub handle: u64,
     pub type_code: u16,
     pub class_name: String,
     pub category: DwgObjectCategory,
-    #[serde(default)]
+    #[value(default)]
     pub owner_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub reactor_handles: Vec<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub extension_dictionary_handle: Option<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub referenced_handles: Vec<u64>,
-    #[serde(default)]
+    #[value(default)]
     pub extended_data: Vec<DwgExtendedEntityData>,
-    #[serde(default)]
+    #[value(default)]
     pub body: Option<DwgLogicalObjectBody>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgLogicalDrawing {
     /// 🧭 Handle-keyed objects are the sole persisted entity authority; use `entities()` for a derived view.
-    #[serde(default)]
+    #[value(default)]
     pub layers: Vec<DwgLogicalLayer>,
-    #[serde(default)]
+    #[value(default)]
     pub objects: Vec<DwgLogicalObject>,
-    #[serde(default)]
+    #[value(default)]
     pub extmin: Vec<f64>,
-    #[serde(default)]
+    #[value(default)]
     pub extmax: Vec<f64>,
 }
 
@@ -3352,8 +3351,8 @@ impl DwgLogicalGeometry {
 //#endregion 🔖️DrawingModel
 
 //#region 🔖️DocumentModel
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderUnits {
     pub unit1_conversion: f64,
     pub unit2_conversion: f64,
@@ -3365,8 +3364,8 @@ pub struct DwgHeaderUnits {
     pub unit4_name: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderModes {
     pub dimension_associative: bool,
     pub dimension_show: bool,
@@ -3390,8 +3389,8 @@ pub struct DwgHeaderModes {
     pub polyline_ellipse: bool,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderIntegerSettings {
     pub proxy_graphics: u16,
     pub tree_depth: i16,
@@ -3422,8 +3421,8 @@ pub struct DwgHeaderIntegerSettings {
     pub text_quality: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderScalars {
     pub linetype_scale: f64,
     pub text_size: f64,
@@ -3450,8 +3449,8 @@ pub struct DwgHeaderScalars {
     pub paper_space_viewport_scale: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderTimeState {
     pub created_at: DwgJulianDate,
     pub updated_at: DwgJulianDate,
@@ -3459,8 +3458,8 @@ pub struct DwgHeaderTimeState {
     pub user_timer_duration: DwgJulianDate,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderSpaceGeometry {
     pub insertion_base: Vec<f64>,
     pub extents_minimum: Vec<f64>,
@@ -3480,8 +3479,8 @@ pub struct DwgHeaderSpaceGeometry {
     pub ucs_origin_back: Vec<f64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDimensionSettings {
     pub scale: f64,
     pub arrow_size: f64,
@@ -3551,8 +3550,8 @@ pub struct DwgDimensionSettings {
     pub extension_line_weight: i16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDrawingPolicy {
     pub text_stack_alignment: u16,
     pub text_stack_size: u16,
@@ -3606,8 +3605,8 @@ pub struct DwgDrawingPolicy {
     pub shadow_plane_location: f64,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderStrings {
     pub menu: String,
     pub dimension_postfix: String,
@@ -3621,8 +3620,8 @@ pub struct DwgHeaderStrings {
     pub project_name: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderRelations {
     pub handle_seed: u64,
     pub current_layer: u64,
@@ -3673,8 +3672,8 @@ pub struct DwgHeaderRelations {
     pub drag_visual_style: Option<u64>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgHeaderVariables {
     pub units: DwgHeaderUnits,
     pub modes: DwgHeaderModes,
@@ -3689,69 +3688,69 @@ pub struct DwgHeaderVariables {
     pub relations: DwgHeaderRelations,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgClass {
     pub number: u16,
     pub proxy_flags: u32,
     pub application_name: String,
     pub cpp_class_name: String,
     pub dxf_name: String,
-    #[serde(default)]
+    #[value(default)]
     pub was_zombie: bool,
-    #[serde(default)]
+    #[value(default)]
     pub item_class_id: u16,
-    #[serde(default)]
+    #[value(default)]
     pub object_count: u32,
-    #[serde(default)]
+    #[value(default)]
     pub dwg_version: u32,
-    #[serde(default)]
+    #[value(default)]
     pub maintenance_version: u32,
-    #[serde(default)]
+    #[value(default)]
     pub reserved_values: Vec<u32>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgDependency {
     pub feature: String,
     pub full_path: String,
     pub relative_path: String,
     pub fingerprint: String,
     pub version: String,
-    #[serde(default)]
+    #[value(default)]
     pub timestamp: u32,
-    #[serde(default)]
+    #[value(default)]
     pub file_size: u32,
-    #[serde(default)]
+    #[value(default)]
     pub affects_graphics: bool,
-    #[serde(default)]
+    #[value(default)]
     pub reference_count: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgJulianDate {
     pub days: u32,
     pub milliseconds: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgVersionStamp {
     pub version: u16,
     pub maintenance: u16,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgCompatibilityProfile {
     #[default]
     Autocad2009,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgAuxiliaryHeader {
     pub total_saves: u32,
     pub save_partition_one: u16,
@@ -3766,24 +3765,24 @@ pub struct DwgAuxiliaryHeader {
     pub terminal_save_generation: u16,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgRevisionHistory {
     pub format_major: u32,
     pub format_minor: u32,
-    #[serde(default)]
+    #[value(default)]
     pub revisions: Vec<u32>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgPreviewOrigin {
     #[default]
     BottomUp,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgRgba {
     pub red: u8,
     pub green: u8,
@@ -3791,37 +3790,37 @@ pub struct DwgRgba {
     pub alpha: u8,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgIndexedPreview {
     pub width: u32,
     pub height: u32,
     pub origin: DwgPreviewOrigin,
-    #[serde(default)]
+    #[value(default)]
     pub palette: Vec<DwgRgba>,
-    #[serde(default)]
+    #[value(default)]
     pub pixel_indices: Vec<u8>,
     pub background_palette_index: u8,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgApplicationPropertyKind {
     #[default]
     String,
     DateTime,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgApplicationProperty {
     pub id: u32,
     pub kind: DwgApplicationPropertyKind,
     pub value: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgProductInformation {
     pub name: String,
     pub build_version: String,
@@ -3830,8 +3829,8 @@ pub struct DwgProductInformation {
     pub locale_id: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgApplicationHistory {
     pub history_identifier_one: String,
     pub history_identifier_two: String,
@@ -3842,21 +3841,21 @@ pub struct DwgApplicationHistory {
     pub trust_comment: String,
     pub property_set_digest: String,
     pub property_format_identifier: String,
-    #[serde(default)]
+    #[value(default)]
     pub properties: Vec<DwgApplicationProperty>,
     pub product_digest: String,
     pub product: DwgProductInformation,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgCustomProperty {
     pub key: String,
     pub value: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgSummaryInfo {
     pub title: String,
     pub subject: String,
@@ -3866,18 +3865,18 @@ pub struct DwgSummaryInfo {
     pub last_saved_by: String,
     pub revision_number: String,
     pub hyperlink_base: String,
-    #[serde(default)]
+    #[value(default)]
     pub total_editing_time: u64,
-    #[serde(default)]
+    #[value(default)]
     pub created_at: DwgJulianDate,
-    #[serde(default)]
+    #[value(default)]
     pub modified_at: DwgJulianDate,
-    #[serde(default)]
+    #[value(default)]
     pub custom_properties: Vec<DwgCustomProperty>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgApplicationInfo {
     pub name: String,
     pub version_checksum: String,
@@ -3889,16 +3888,16 @@ pub struct DwgApplicationInfo {
     pub application_version: String,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum DwgMeasurement {
     #[default]
     English,
     Metric,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct DwgTemplate {
     pub description: String,
     pub measurement: DwgMeasurement,
@@ -3907,8 +3906,8 @@ pub struct DwgTemplate {
 
 //#region 🔖️Snapshot
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.dwg")]
 pub struct DwgSnapshot {
     #[state(artifact)]
@@ -3919,46 +3918,46 @@ pub struct DwgSnapshot {
     /// `header.spec` (`FIELD_RC (maint_version, 0);` right after `dwg_version` at 0x11) and
     /// verified on the real `architectural.dwg` fixture (byte 0x12 == 0x02).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub maintenance_version: u8,
     /// 🌐 `codepage` (RS, plain preamble bytes 0x13-0x14, little-endian) — LibreDWG's
     /// `header.spec` documents this exact offset with `//@0x13: 29/30 for ANSI_1252`; the real
     /// `architectural.dwg` fixture reads `30` there, an exact match.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub codepage: u16,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub drawing: DwgLogicalDrawing,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub header: DwgHeaderVariables,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub classes: Vec<DwgClass>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub dependencies: Vec<DwgDependency>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub summary: DwgSummaryInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub application: DwgApplicationInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub template: DwgTemplate,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub auxiliary_header: DwgAuxiliaryHeader,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub revision_history: DwgRevisionHistory,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub preview: DwgIndexedPreview,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub application_history: DwgApplicationHistory,
 }
 

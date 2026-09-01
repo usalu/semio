@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::ops::{Deref, DerefMut};
 use std::sync::Mutex;
 use std::time::Instant;
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️RetainedWire
 const ENERGY_WIRE_MAGIC: [u8; 8] = *b"SMENERGY";
@@ -355,7 +356,7 @@ fn energy_wire_header(kind: EnergyWireKind, identity: EnergyWireIdentity, census
 // #region 🔖️EnergyJob
 /// ⚡️ Fidelity label carried by every preview so provisional fields cannot be mistaken for a
 /// validated final simulation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum EnergyQualityTier {
     SteadyStateEstimate,
     DesignDay,
@@ -364,7 +365,7 @@ pub enum EnergyQualityTier {
 }
 
 /// 🧭️ Persistent stage of [`EnergyJob`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum EnergyJobStage {
     Validate,
     ResolveWeather,
@@ -391,7 +392,7 @@ pub enum EnergyJobStage {
 }
 
 /// 📸️ Typed view of the latest replaceable energy preview.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EnergyJobPreview {
     pub sequence: u64,
     pub tier: EnergyQualityTier,
@@ -404,7 +405,7 @@ pub struct EnergyJobPreview {
 
 // #region 🔖️NumericalAdmission
 /// 📏️ Schema-first simultaneous working-set census for an Energy numerical job.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct EnergyNumericalCensus {
     pub zones: usize,
     pub surfaces: usize,
@@ -1429,7 +1430,7 @@ fn observed_vector_bytes<T>(owners: &Vec<T>) -> Option<usize> {
 }
 // #endregion 🔖️NumericalAdmission
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum WarmupConvergenceStage {
     TemperatureCheck,
     LoadCheck,
@@ -1442,7 +1443,7 @@ enum WarmupConvergenceStage {
 const P7C1_WARMUP_CONVERGENCE_STAGES: [WarmupConvergenceStage; 5] =
     [WarmupConvergenceStage::TemperatureCheck, WarmupConvergenceStage::LoadCheck, WarmupConvergenceStage::TemperatureHistory, WarmupConvergenceStage::LoadHistory, WarmupConvergenceStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct WarmupConvergenceWork {
     stage: WarmupConvergenceStage,
     cursor: usize,
@@ -1451,7 +1452,7 @@ struct WarmupConvergenceWork {
     evaluate: bool,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum ValidationStage {
     ReserveZones,
     ReserveMaterials,
@@ -1491,7 +1492,7 @@ const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
     ValidationStage::Complete,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct ValidationWork {
     stage: ValidationStage,
     cursor: usize,
@@ -1504,7 +1505,7 @@ struct ValidationWork {
     fatal_code: u8,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum FinalizationStage {
     MeterTotals,
     FloorArea,
@@ -1538,7 +1539,7 @@ const P7C1_FINALIZATION_STAGES: [FinalizationStage; 13] = [
     FinalizationStage::Complete,
 ];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct FinalizationWork {
     stage: FinalizationStage,
     cursor: usize,
@@ -1577,7 +1578,7 @@ impl Default for FinalizationWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum ResultBuildStage {
     ModelName,
     ModelVersion,
@@ -1589,7 +1590,7 @@ enum ResultBuildStage {
 #[cfg(test)]
 const P7C1_RESULT_BUILD_STAGES: [ResultBuildStage; 5] = [ResultBuildStage::ModelName, ResultBuildStage::ModelVersion, ResultBuildStage::WeatherLocation, ResultBuildStage::Assemble, ResultBuildStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct ResultBuildWork {
     stage: ResultBuildStage,
     cursor: usize,
@@ -1605,7 +1606,7 @@ impl Default for ResultBuildWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum AggregateZoneStage {
     Temperature,
     Heating,
@@ -1617,7 +1618,7 @@ enum AggregateZoneStage {
 #[cfg(test)]
 const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 5] = [AggregateZoneStage::Temperature, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct AggregateZoneWork {
     stage: AggregateZoneStage,
     phase: u8,
@@ -1650,7 +1651,7 @@ impl AggregateZoneWork {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 struct EnergyAdmittedResultBacking {
     series_slots: usize,
     meter_slots: usize,
@@ -1659,7 +1660,7 @@ struct EnergyAdmittedResultBacking {
     summary_slots: usize,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum OutputFault {
     MissingResult,
     BackingRejected,
@@ -1737,7 +1738,7 @@ impl EnergyCommitReservation {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 enum WeatherFault {
     SlotRejected,
 }
@@ -5853,7 +5854,7 @@ mod tests {
     #[test]
     fn p7c1_language_agnostic_law_fixture_matches_reference_parser() {
         let source = include_str!("../../../../../🪨️tests/p7c1-energy-numerical-laws.json");
-        let reference: serde_json::Value = serde_json::from_str(source).expect("reference JSON parser");
+        let reference: pack::json::Value = pack::json::parse(source).expect("reference JSON parser");
         let marker = "\"schema\": \"";
         let start = source.find(marker).expect("schema field") + marker.len();
         let end = start + source[start..].find('"').expect("schema terminator");

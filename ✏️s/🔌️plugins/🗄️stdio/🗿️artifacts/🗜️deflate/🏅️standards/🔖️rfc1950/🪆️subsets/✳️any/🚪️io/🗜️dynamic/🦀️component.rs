@@ -3,7 +3,7 @@ use super::{build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths,
 const BL_ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 const HEAP_SIZE: usize = 573;
 
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, value_derive::ToValue, value_derive::FromValue)]
 pub(super) struct Policy {
     pub window_bits: usize,
     pub memory_level: usize,
@@ -14,14 +14,14 @@ pub(super) struct Policy {
     pub finish: Finish,
 }
 
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, value_derive::ToValue, value_derive::FromValue)]
 pub(super) enum Finish {
     Raw,
     Sync,
     Partial,
 }
 
-#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Copy, value_derive::ToValue, value_derive::FromValue)]
 enum Token {
     Literal(u8),
     Match { length: usize, distance: usize },
@@ -41,7 +41,7 @@ struct Tree {
     max_code: usize,
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 pub(super) struct Encoder {
     input: Vec<u8>,
     policy: Policy,
@@ -519,7 +519,7 @@ fn send_runs(writer: &mut BitWriter, runs: &[LengthRun], codes: &[(u32, u8)]) {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 pub(super) struct MinizEncoder {
     input: Vec<u8>,
     previous: Vec<isize>,
@@ -603,7 +603,7 @@ impl MinizEncoder {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(value_derive::ToValue, value_derive::FromValue)]
 pub(super) enum Job {
     Classic(Encoder),
     Miniz(MinizEncoder),

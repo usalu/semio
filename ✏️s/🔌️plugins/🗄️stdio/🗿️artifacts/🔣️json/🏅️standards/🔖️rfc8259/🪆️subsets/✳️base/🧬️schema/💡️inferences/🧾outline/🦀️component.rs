@@ -6,12 +6,11 @@
 
 use crate::artifacts::json::schema::snapshot::JsonValue;
 use crate::artifacts::json::JsonSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Outline
 /// 🧾️ `Json` document outline.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JsonOutline {
     pub node_count: u32,
     pub max_depth: u32,

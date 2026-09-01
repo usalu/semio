@@ -1,26 +1,25 @@
-//! 🔍️ The READER: projects a committed fem3d JSON carrier through `serde_json` and compares two of
+//! 🔍️ The READER: projects a committed fem3d JSON carrier through the first-party JSON value tree and compares two of
 //! them. Nothing here applies a mutation or predicts what one should produce.
 //!
 //! usage: reader project <file.json> | reader compare <expected.json> <actual.json>
 use std::process::exit;
 
 use fem3d_json::project;
-use serde_json::json;
+use pack::json;
 
-fn report(probe: &str, status: &str, measurements: serde_json::Value) -> String {
-    json!({
+fn report(probe: &str, status: &str, measurements: pack::json::Value) -> String {
+    pack::json::to_string(&json!({
         "schema": "semio.repository-test.probe-report/v2",
         "probe": probe,
-        "probeVersion": "serde_json@1",
-        "engine": {"family": "serde-json", "implementation": "serde_json 1 value tree", "version": "1"},
+        "probeVersion": "pack-json@1",
+        "engine": {"family": "pack-json", "implementation": "semio pack JSON value tree", "version": "1"},
         "status": status,
         "durationMs": 0,
         "measurements": measurements,
-    })
-    .to_string()
+    }))
 }
 
-fn read(path: &str) -> Result<serde_json::Value, String> {
+fn read(path: &str) -> Result<pack::json::Value, String> {
     project(&std::fs::read(path).map_err(|error| error.to_string())?)
 }
 

@@ -41,7 +41,10 @@
         "procedural",
         "3d"
       ],
-      "port": 6018
+      "port": 6019,
+      "env": {
+        "PROCEDURAL_3D_PLAY_PORT": "6019"
+      }
     },
     {
       "name": "dag-react",
@@ -128,6 +131,28 @@
         "@semio-tech/mit-bestand-demonstrator:dev"
       ],
       "port": 6029
+    },
+    {
+      "name": "storybook-static",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "storybook-static"
+      ],
+      "port": 6010
+    },
+    {
+      "name": "storybook-framework-os",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "storybook",
+        "framework",
+        "os"
+      ],
+      "port": 6011
     }
   ]
 }

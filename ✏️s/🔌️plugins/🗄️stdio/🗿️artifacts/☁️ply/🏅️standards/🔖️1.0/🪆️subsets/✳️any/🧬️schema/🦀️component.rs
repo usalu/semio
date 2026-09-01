@@ -3,24 +3,23 @@
 use crate::artifacts::ply::schema::snapshot::{PlyElement, PlyFormat};
 use crate::artifacts::ply::PlySnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Artifact
 /// 🧬️ Full `stdio.ply` artifact state — mirrors `PlySnapshot`'s persistent fields exactly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply")]
 pub struct PlyArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub format: PlyFormat,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments: Vec<String>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub elements: Vec<PlyElement>,
 }
 //#endregion 🔖️Artifact

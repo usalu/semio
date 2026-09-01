@@ -9,12 +9,11 @@
 
 use crate::artifacts::ply::STDIO_PLY_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Format
 /// 📦 The three `format` lines a PLY header may declare.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum PlyFormat {
     #[default]
     Ascii,
@@ -26,8 +25,8 @@ pub enum PlyFormat {
 //#region 🔖️ScalarType
 /// 🔢 The eight PLY scalar property types (long spelling is canonical on output; both long and
 /// short — `int8`, `uint32`, … — spellings are accepted on input, see the engine's parser).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub enum PlyScalarType {
     Char,
     UChar,
@@ -45,8 +44,8 @@ pub enum PlyScalarType {
 /// variable-length list column (e.g. `property list uchar int vertex_indices` for face indices).
 /// `form` (the serde tag) distinguishes the two shapes; it is a separate key from `kind`
 /// (the scalar type of a `Scalar` property) to avoid a tag/field name collision.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "form", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "form", rename_all = "camelCase")]
 pub enum PlyProperty {
     Scalar { name: String, kind: PlyScalarType },
     List { name: String, count_kind: PlyScalarType, value_kind: PlyScalarType },
@@ -68,8 +67,8 @@ impl PlyProperty {
 /// 🔣 One typed cell value. `List` holds a variable-length run of same-`value_kind` scalars
 /// (e.g. a face's vertex-index list) — adjacently tagged (`kind`/`value`) rather than internally
 /// tagged so newtype variants (all of these) serialize cleanly.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum PlyValue {
     Char(i8),
     UChar(u8),
@@ -86,8 +85,8 @@ pub enum PlyValue {
 //#region 🔖️Row
 /// 📏 One element instance's data — one [`PlyValue`] per declared property, in the same order
 /// as the owning [`PlyElement::properties`].
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PlyRow {
     pub values: Vec<PlyValue>,
 }
@@ -98,8 +97,8 @@ pub struct PlyRow {
 /// row. `count` mirrors `rows.len()` for a well-formed document (codecs keep it in sync — see
 /// `apply_element_diff`); it is not independently diffable, matching the recipe's rule that
 /// collection sizes are never their own diff field (c.f. zip's `entries` — no `entryCount`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct PlyElement {
     pub name: String,
     pub count: usize,
@@ -112,20 +111,20 @@ pub struct PlyElement {
 /// 📸️ Persisted `stdio.ply` snapshot — complete per the PLY spec: wire `format`, in-order
 /// `comments` (position matters, see `POLICY_GRAMMAR_HONESTY`'s retention rule), and the
 /// name-keyed `elements` list (each a strong-like entity with its own per-field diff).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ply")]
 pub struct PlySnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub format: PlyFormat,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments: Vec<String>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub elements: Vec<PlyElement>,
 }
 

@@ -9,13 +9,12 @@
 
 use crate::artifacts::jpg::STDIO_JPG_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Jfif
 /// 📏️ JFIF APP0 `units` byte (ITU-T T.871 / JFIF 1.02 §). `Aspect` means `x_density`/
 /// `y_density` are merely a pixel aspect ratio, not an absolute resolution.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum JfifDensityUnits {
     #[default]
     Aspect,
@@ -45,12 +44,12 @@ impl JfifDensityUnits {
 
 /// 🖼️ JFIF APP0's optional embedded thumbnail — uncompressed 24-bit RGB, `width * height * 3`
 /// bytes, row-major. A weak value (whole-value replaced in diffs, never sub-diffed).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct JfifThumbnail {
     pub width: u8,
     pub height: u8,
-    #[serde(default)]
+    #[value(default)]
     pub rgb_data: Vec<u8>,
 }
 //#endregion Jfif
@@ -58,8 +57,8 @@ pub struct JfifThumbnail {
 //#region FrameScanModel
 /// 🧩 One SOF0 frame component descriptor: id, H/V sampling factors, and which of the (up to 4)
 /// DQT tables it dequantizes against. Id-keyed within `JpgFrameHeader.components`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgFrameComponent {
     pub id: u8,
     pub h_sampling: u8,
@@ -69,8 +68,8 @@ pub struct JpgFrameComponent {
 
 /// 🖼️ Baseline (SOF0) frame header — sample precision, dimensions, and the per-component
 /// sampling/quant-table layout the entropy-coded scan follows.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgFrameHeader {
     pub precision: u8,
     pub width: u16,
@@ -93,36 +92,18 @@ pub struct JpgScanComponent {
 /// 📊️ One `DQT` table (id-keyed within `JpgSnapshot.quant_tables`). `values` is retained in the
 /// EXACT zigzag scan order the DQT segment stores on disk (T.81 Annex B §B.2.4.1) — never
 /// reindexed to natural/row-major order, so a decoded table round-trips byte-for-byte.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgQuantTable {
     pub id: u8,
     /// 🔢️ DQT `Pq` nibble: `0` = 8-bit values, `1` = 16-bit values.
     pub precision: u8,
-    #[serde(with = "quant_values")]
     pub values: [u16; 64],
 }
 
-/// 🧮️ Serde's manual array impls only cover sizes `0..=32` (no const-generics support) — a
-/// 64-element quantization table needs this small wire-shape shim (serialize as a `Vec<u16>`,
-/// deserialize back into the fixed array) rather than pulling in an external crate for one field
-/// (`## Rules`: no external libraries for runtime purposes).
-pub mod quant_values {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn serialize<S: Serializer>(v: &[u16; 64], s: S) -> Result<S::Ok, S::Error> {
-        v.as_slice().serialize(s)
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<[u16; 64], D::Error> {
-        let v = <Vec<u16>>::deserialize(d)?;
-        <[u16; 64]>::try_from(v).map_err(|v: Vec<u16>| serde::de::Error::custom(format!("expected 64 values, got {}", v.len())))
-    }
-}
-
 /// 🌳️ `DHT` table class — DC (differential prediction) or AC (run-length coefficients).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum JpgHuffmanClass {
     #[default]
     Dc,
@@ -150,13 +131,13 @@ impl JpgHuffmanClass {
 /// 🌳️ One `DHT` table, keyed by `(class, id)` within `JpgSnapshot.huffman_tables` (DC id=0 and
 /// AC id=0 are DIFFERENT tables — the compound key is load-bearing). `bits`/`values` are the raw
 /// canonical-code counts-per-length and symbol-value bytes exactly as the DHT segment stores them.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgHuffmanTable {
     pub id: u8,
     pub class: JpgHuffmanClass,
     pub bits: [u8; 16],
-    #[serde(default)]
+    #[value(default)]
     pub values: Vec<u8>,
 }
 //#endregion QuantHuffmanTables
@@ -166,11 +147,11 @@ pub struct JpgHuffmanTable {
 /// model, retained VERBATIM (typed raw-retention — "nothing real on disk silently dropped").
 /// Index-keyed (not marker-keyed): duplicate COM/APPn markers are legal, so position is the only
 /// safe stable identity within one decode (mirrors png's `PngTextChunk` reasoning).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct JpgSegment {
     pub marker: u8,
-    #[serde(default)]
+    #[value(default)]
     pub data: Vec<u8>,
 }
 //#endregion OtherSegments
@@ -182,8 +163,8 @@ pub struct JpgSegment {
 /// JPEG byte stream) — retained under those exact names/shapes because
 /// `✳️baseline::analyzer::check_baseline_conformance` depends on them (ticket
 /// 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.jpg")]
 pub struct JpgSnapshot {
     #[state(artifact)]
@@ -196,18 +177,18 @@ pub struct JpgSnapshot {
     // decode/encode); the two agree for any engine-produced snapshot but a freshly hand-authored
     // one (via `SetPixels`) has no `frame` yet and still needs its own dimensions.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub width: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixels: Vec<u8>,
     /// 🎚️ Quality parameter `engine::encode_jpg` scales the Annex K quantization tables by
     /// (IJG convention, `1..=100`). `None` = the engine's own default (90).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub re_encode_quality: Option<u8>,
 
     // JFIF APP0 (ITU-T T.871 / JFIF 1.02). Always first-class (non-optional): every JFIF file
@@ -215,49 +196,49 @@ pub struct JpgSnapshot {
     // (version 1.01, aspect-ratio units, 1x1 density, no thumbnail) — `engine::encode_jpg`
     // writes them out unconditionally, matching every real JFIF encoder.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub jfif_version: (u8, u8),
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub jfif_density_units: JfifDensityUnits,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub jfif_x_density: u16,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub jfif_y_density: u16,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub jfif_thumbnail: Option<JfifThumbnail>,
 
     // SOF (T.81 §B.2.2) — see the struct doc for why `frame`/`sof_marker`/`arithmetic` keep
     // their pre-existing shapes/names.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frame: Option<JpgFrameHeader>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub sof_marker: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub arithmetic: bool,
 
     // DQT (T.81 §B.2.4.1) / DHT (T.81 §B.2.4.2) — id-keyed (DHT compound-keyed by class+id).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub quant_tables: Vec<JpgQuantTable>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub huffman_tables: Vec<JpgHuffmanTable>,
 
     // DRI (T.81 §B.2.4.4) — `None` = no restart interval segment was present.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub restart_interval: Option<u16>,
 
     // Verbatim-retained other APPn/COM segments, in encounter order (§`JpgSegment` doc).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub other_segments: Vec<JpgSegment>,
 }
 

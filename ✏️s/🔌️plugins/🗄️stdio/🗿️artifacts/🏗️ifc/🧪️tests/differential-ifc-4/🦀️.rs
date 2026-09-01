@@ -145,7 +145,7 @@ mod subject {
             "enum" => Ok(IfcValue::Enum(str_field(value, "v")?)),
             "reference" => Ok(IfcValue::Reference(u64_field(value, "v")?)),
             "aggregate" => Ok(IfcValue::Aggregate(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
-            "typed" => Ok(IfcValue::TypedValue(str_field(value, "name")?, vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?])),
+            "typed" => Ok(IfcValue::TypedValue { name: str_field(value, "name")?, items: vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?] }),
             other => Err(format!("unknown value type {other:?}")),
         }
     }

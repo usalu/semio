@@ -19,9 +19,7 @@ start document
 # comment calls out the OLD `dsl::` derive-engine grammar as gone, replaced by this hand-rolled
 # codec) and its 14-field round trip test coverage.
 artifact-mark = "semio layout.layout.dsl v1"
-document = artifact-mark schema-line name-line grid-line paragraph-styles-line character-styles-line
-     stories-line links-line parent-pages-line spreads-line pages-line print-target-line
-     data-fields-json-line background-drawing-line referenced-model-line
+document = artifact-mark schema-line name-line grid-line paragraph-styles-line character-styles-line stories-line links-line parent-pages-line spreads-line pages-line print-target-line data-fields-json-line background-drawing-line referenced-model-line
 
 schema-line = "schema" "=" hex
 name-line = "name" "=" hex

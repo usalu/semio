@@ -139,12 +139,12 @@ use semio_framework_plugin::{MeshExporter, MeshImporter};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{
     Brep, BrepError, GeometryHandle, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter,
 };
-use serde_json::Value;
+use semio_framework::DslValue;
 
 /// 📤️ A pending native-geometry export ready to become a `Effect::DownloadMediaExport`.
 pub struct Process3dModelExport {
     pub filename: String,
-    pub data: Value,
+    pub data: DslValue,
     pub mime_type: String,
     pub encoding: Option<String>,
 }
@@ -230,7 +230,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
         let descriptor = semio_framework::format_descriptor("glb").map_err(|error| error.to_string())?.ok_or_else(|| "unknown process export format kind `glb`".to_string())?;
         let extension = descriptor.extensions.first().ok_or_else(|| "process export format kind `glb` has no extension claim".to_string())?;
         let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| "process export format kind `glb` has no MIME claim".to_string())?;
-        return Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data: Value::String(base64_codec::base64_standard_encode(bytes)), mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }));
+        return Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data: DslValue::String(base64_codec::base64_standard_encode(bytes)), mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }));
     }
     let exporter: ProcessSolidExporter = match format {
         "obj" => ProcessSolidExporter::Obj(ObjSolidExporter),
@@ -246,7 +246,7 @@ pub fn export_process3d_model(scene: &ProcessWorkingScene, resolved_up_to: Optio
     let descriptor = semio_framework::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown process export format kind `{format_kind}`"))?;
     let extension = descriptor.extensions.first().ok_or_else(|| format!("process export format kind `{format_kind}` has no extension claim"))?;
     let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("process export format kind `{format_kind}` has no MIME claim"))?;
-    let data = if descriptor.is_binary { Value::String(base64_codec::base64_standard_encode(&bytes)) } else { Value::String(String::from_utf8(bytes).map_err(|error| error.to_string())?) };
+    let data = if descriptor.is_binary { DslValue::String(base64_codec::base64_standard_encode(&bytes)) } else { DslValue::String(String::from_utf8(bytes).map_err(|error| error.to_string())?) };
     Ok(Some(Process3dModelExport { filename: format!("process3d{extension}"), data, mime_type, encoding: descriptor.is_binary.then(|| "base64".into()) }))
 }
 

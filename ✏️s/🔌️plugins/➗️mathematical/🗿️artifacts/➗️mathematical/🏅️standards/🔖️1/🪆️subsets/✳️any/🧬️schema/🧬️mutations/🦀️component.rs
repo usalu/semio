@@ -17,13 +17,19 @@
 
 use crate::artifacts::mathematical::{MathematicalDiff, MathematicalSnapshot};
 use serde::{Deserialize, Serialize};
+// 🌱️ Additive `ToValue`/`FromValue` — see `🦀️component.rs`'s own docstring note on this crate's
+// interim (not-yet-serde-free) state. No `#[value(tag = …)]`: this enum is externally-tagged (the
+// derive's default representation when `tag` is absent), matching the committed
+// `🦠️mutation/🔣️component.json` fixtures' `{"VariantName": {...}}` shape one-for-one.
+use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 use super::{
     change_coefficient, change_graph_directed, change_node_label, connect_nodes, create_node, delete_node, delete_nodes, disconnect_nodes, insert_point, move_node, move_point, remove_point, replace_graph, replace_points, update_graph_algorithm,
 };
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, dsl::Mutations)]
 #[mutations(snapshot = MathematicalSnapshot, diff = MathematicalDiff, schema = "s.mathematical.mathematical")]
 pub enum MathematicalMutation {
     ChangeGraphDirected(change_graph_directed::ChangeGraphDirected),
@@ -399,13 +405,10 @@ pub const KINDS: &[&str] = &[
 ///
 /// @see ../../🧪️oracle/🔣️.json — the catalog and the recorded no-oracle decision.
 pub fn mathematical_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<MathematicalSnapshot, String> {
-        let decoded: MathematicalSnapshot = serde_json::from_str(text).map_err(|error| error.to_string())?;
-        Ok(decoded)
-    };
+    let decode_snapshot = |text: &str| -> Result<MathematicalSnapshot, String> { pack::json::from_json_str::<MathematicalSnapshot>(text).map_err(|error| error.to_string()) };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
-    let mutation: MathematicalMutation = serde_json::from_str(mutation_json).map_err(|error| error.to_string())?;
+    let mutation: MathematicalMutation = pack::json::from_json_str(mutation_json).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
     let forward = <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
     let inverse = <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::inverse(&mutation, &base);
@@ -415,17 +418,24 @@ pub fn mathematical_mutation_report_json(base_json: &str, mutation_json: &str, a
         let outcome = <MathematicalMutation as protocol::Mutation<MathematicalSnapshot>>::diff(step, &undone).apply_to(&mut undone);
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
-    let report = serde_json::json!({
-        "base": serde_json::to_value(&base).map_err(|error| error.to_string())?,
-        "expectedSnapshot": serde_json::to_value(&expected).map_err(|error| error.to_string())?,
-        "snapshot": serde_json::to_value(&applied).map_err(|error| error.to_string())?,
-        "diff": serde_json::to_value(forward.diff()).map_err(|error| error.to_string())?,
-        "messages": serde_json::to_value(forward.messages()).map_err(|error| error.to_string())?,
-        "inverseSteps": serde_json::to_value(&inverse).map_err(|error| error.to_string())?,
-        "inverseSnapshot": serde_json::to_value(&undone).map_err(|error| error.to_string())?,
-        "inverseMessages": serde_json::to_value(&inverse_messages).map_err(|error| error.to_string())?,
-    });
-    Ok(report.to_string())
+    // 🌉️ `MutationMessage` (`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🦀️.rs`) is a
+    // framework-owned type that has not itself gained `ToValue`/`FromValue` (out of this batch's
+    // scope) — its two call sites here go through the PRE-EXISTING `protocol::to_dsl_value` serde
+    // bridge (framework-internal, exempt) and land in `pack::json::Value` via `pack::json::from_dsl_value`,
+    // same as every other field below.
+    let messages_json = protocol::to_dsl_value(forward.messages()).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let inverse_messages_json = protocol::to_dsl_value(&inverse_messages).map(|value| pack::json::from_dsl_value(&value)).map_err(|error| error.to_string())?;
+    let report = pack::json::object([
+        ("base".to_string(), pack::json::from_dsl_value(&base.to_value())),
+        ("expectedSnapshot".to_string(), pack::json::from_dsl_value(&expected.to_value())),
+        ("snapshot".to_string(), pack::json::from_dsl_value(&applied.to_value())),
+        ("diff".to_string(), pack::json::from_dsl_value(&forward.diff().to_value())),
+        ("messages".to_string(), messages_json),
+        ("inverseSteps".to_string(), pack::json::from_dsl_value(&inverse.to_value())),
+        ("inverseSnapshot".to_string(), pack::json::from_dsl_value(&undone.to_value())),
+        ("inverseMessages".to_string(), inverse_messages_json),
+    ]);
+    Ok(pack::json::to_string(&report))
 }
 //#endregion 🌉️TestBridge
 

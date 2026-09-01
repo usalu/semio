@@ -5,9 +5,9 @@ use crate::artifacts::fem2d::op::Fem2dMutation;
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot};
 use crate::editor::fem2d::config::{Fem2dConfig, Fem2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[dsl(keyword = "remove-selection")]
 pub struct RemoveSelection {
     pub ids: Vec<String>,

@@ -215,8 +215,8 @@ pub fn install_flow_extension(spec: FlowExtensionSpec) -> Result<(), &'static st
 }
 
 /// 🗂️ `flow.extension` topic payload shape carried by the open `TopicContribution`.
-#[derive(Clone, Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 struct FlowExtensionTopicPayload {
     manifest_json: String,
 }

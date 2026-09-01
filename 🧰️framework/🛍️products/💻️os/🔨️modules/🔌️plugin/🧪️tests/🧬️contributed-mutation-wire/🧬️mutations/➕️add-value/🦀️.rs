@@ -3,10 +3,15 @@
 
 use super::super::{WireTestDiff, WireTestMutation, WireTestSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+// 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound below;
+// `ToValue`/`FromValue` are the newer `CompositeMutationKind` supertrait bound (see that trait's
+// own doc) — this fixture implements both traits, so both derive pairs coexist here.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 pub(crate) struct AddValue {
     pub(crate) delta: i32,
 }

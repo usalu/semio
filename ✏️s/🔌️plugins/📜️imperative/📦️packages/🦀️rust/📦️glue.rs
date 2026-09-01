@@ -482,8 +482,8 @@ pub mod extensions {
 //#endregion 🧩️Extensions
 
 //#region 🕸️Wasm
-#[cfg(target_arch = "wasm32")]
-pub use editor::imperative::wasm::ImperativeSession;
+// 🌉️ The wasm-bindgen `ImperativeSession` bridge that used to be re-exported here was deleted along
+// with `editor::imperative::wasm`'s content — nothing ever built it for `wasm32-unknown-unknown`.
 //#endregion 🕸️Wasm
 
 //#region 🔖️Plugin

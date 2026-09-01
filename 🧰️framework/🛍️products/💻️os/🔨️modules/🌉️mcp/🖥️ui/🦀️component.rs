@@ -755,6 +755,7 @@ pub fn read_ui_resource(uri: &str, bridge: Option<&BridgeSlot>, _workspace: Opti
 #[cfg(test)]
 mod quick {
     use super::*;
+    use crate::protocol::ToolRegistry;
 
     fn full_registry() -> InMemoryToolRegistry {
         let mut registry = InMemoryToolRegistry::new();
@@ -766,7 +767,7 @@ mod quick {
     /// tier, which every `Option<BridgeSlot>` entry point now takes instead of a bare handle.
     fn filled_slot() -> BridgeSlot {
         let slot: BridgeSlot = Arc::new(std::sync::OnceLock::new());
-        slot.set(Arc::new(BridgeHandle::new())).expect("a fresh slot is empty");
+        assert!(slot.set(Arc::new(BridgeHandle::new())).is_ok(), "a fresh slot is empty");
         slot
     }
 

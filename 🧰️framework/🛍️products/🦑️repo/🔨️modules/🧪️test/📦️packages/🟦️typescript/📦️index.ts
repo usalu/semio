@@ -217,6 +217,8 @@ export type ParsedFeature = Readonly<{
   oracle: string | null;
   noOracleDecision: string | null;
   comparison: ComparisonProfile | null;
+  /** 📥️ The produced subject artifact an oracle must consume, if it validates bytes rather than re-producing them. */
+  oracleInput: "subject-raw" | null;
   /** 🦠️ The mutation catalog this feature claims to cover exhaustively, from `@mutations-<id>`. */
   mutationCatalog: string | null;
   background: readonly FeatureStep[];
@@ -396,6 +398,7 @@ export function parseFeature(source: string): ParsedFeature {
   const oracle = tagValue(featureTags, "@oracle-");
   const noOracleDecision = tagValue(featureTags, "@no-oracle-");
   const comparisonRaw = tagValue(featureTags, "@comparison-");
+  const oracleInput = tagValue(featureTags, "@oracle-input-");
   const mutationCatalog = tagValue(featureTags, "@mutations-");
   // 🧭️The parser records the declared profile; whether that profile EXISTS is registry knowledge and
   // is checked in the contract phase, so the Gherkin profile stays independent of which formats the
@@ -408,7 +411,8 @@ export function parseFeature(source: string): ParsedFeature {
     seen.add(scenario.id);
   }
 
-  return { name: featureName, description: descriptionLines.join("\n").trim(), tags: featureTags, capability, oracle, noOracleDecision, comparison, mutationCatalog, background, scenarios, errors };
+  if (oracleInput !== null && oracleInput !== "subject-raw") errors.push(`Unknown oracle input @oracle-input-${oracleInput}`);
+  return { name: featureName, description: descriptionLines.join("\n").trim(), tags: featureTags, capability, oracle, noOracleDecision, comparison, oracleInput: oracleInput === "subject-raw" ? oracleInput : null, mutationCatalog, background, scenarios, errors };
 }
 
 function dedent(body: readonly string[]): string {
@@ -1013,6 +1017,10 @@ export type TestCasePlan = Readonly<{
   oracle: string | null;
   noOracleDecision: string | null;
   comparison: ComparisonProfile;
+  /** 📥️ The subject artifact an oracle consumes when the feature declares an external byte decoder. */
+  oracleInput: "subject-raw" | null;
+  /** 📦️ Raw outputs produced by subject hosts before this oracle host starts. */
+  subjectRawInputs?: Readonly<Partial<Record<Implementation, string>>>;
   /** ⚖️ The multi-artifact, externally-probed pipeline this case compares under, when it produces more than a projection. */
   comparisonPipeline: string | null;
   toleranceProfile: string | null;
@@ -1075,6 +1083,7 @@ export function buildCasePlan(repoRoot: string, discovered: DiscoveredCase, leve
       oracle: feature.oracle,
       noOracleDecision: feature.noOracleDecision,
       comparison: feature.comparison ?? "ordered-json-v1",
+      oracleInput: feature.oracleInput,
       comparisonPipeline: pipeline,
       toleranceProfile,
       background: feature.background,
@@ -1554,6 +1563,9 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   else if (!knownProfiles.has(feature.comparison)) breaches.push(breach("testing/contract", "unknown-comparison", discovered.featurePath, `Unknown comparison profile @comparison-${feature.comparison}`, "A profile is either one of the framework's domain-neutral profiles or one an owner contributes through its 🧪️oracle manifest.", `Add it to this owner's 🧪️oracle/🔣️.json, or use one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
   if (feature.oracle === null && feature.noOracleDecision === null) {
     breaches.push(breach("testing/oracle", "missing-oracle", discovered.featurePath, "Feature declares neither @oracle-<id> nor @no-oracle-<decision-id>", "A test without a reference implementation or an explicitly recorded no-oracle decision proves only that the code agrees with itself.", "Register an oracle in the oracle registry, or record an approved no-oracle decision."));
+  }
+  if (feature.oracleInput !== null && feature.oracle === null) {
+    breaches.push(breach("testing/oracle", "oracle-input-without-oracle", discovered.featurePath, `@oracle-input-${feature.oracleInput} needs an @oracle-<id>`, "A subject artifact is evidence for an external decoder, never a substitute for one.", "Register the external oracle that consumes the subject artifact."));
   }
   if (feature.oracle !== null && !registry.oracles.some((entry) => entry.id === feature.oracle)) {
     breaches.push(breach("testing/oracle", "unknown-oracle", discovered.featurePath, `Unknown oracle id @oracle-${feature.oracle}`, "Oracles must be centrally registered so their license, test-only status and capabilities are auditable.", "Add the oracle to the registry, or reference an existing id."));

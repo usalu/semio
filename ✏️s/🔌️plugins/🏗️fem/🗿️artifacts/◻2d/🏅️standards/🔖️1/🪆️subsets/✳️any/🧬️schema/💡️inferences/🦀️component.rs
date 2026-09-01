@@ -7,15 +7,15 @@
 use crate::artifacts::fem2d::Fem2dSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::bounds::{compute_fem2d_bounds, Fem2dBounds};
 
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a fem2d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `bounds`, backed by the `📦bounds/` slug dir).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d.inference")]
 pub struct Fem2dInference {
     #[derived]

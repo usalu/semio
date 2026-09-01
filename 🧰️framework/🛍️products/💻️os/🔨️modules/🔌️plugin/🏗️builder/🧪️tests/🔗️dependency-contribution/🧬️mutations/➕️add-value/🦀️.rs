@@ -2,10 +2,14 @@
 //! ➕️ One real value addition shared by direct history and contribution planning.
 use super::super::{DependencyTestDiff, DependencyTestOp, DependencyTestSnapshot};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+// 🌱️ `Serialize`/`Deserialize` stay for `MutationKind`'s own (untouched) supertrait bound;
+// `ToValue`/`FromValue` are `CompositeMutationKind`'s (see that trait's own doc) — both coexist.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
+#[value(deny_unknown_fields)]
 #[dsl(keyword = "add-value")]
 pub struct AddValue { pub delta: i32 }
 

@@ -36,13 +36,12 @@ mod tests {
 }
 #[cfg(test)]
 mod canonical_vectors {
-    use serde::Deserialize;
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         value: Option<f64>,
         availability: String,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

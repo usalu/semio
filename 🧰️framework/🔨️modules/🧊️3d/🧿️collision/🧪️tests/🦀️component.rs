@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::rigid::{Quaternion, UnitQuaternion, Vector3};
+use parry3d::query::PointQuery;
 
 //#region 🔖️Lcg
 /// 🎲️ A constant-seeded LCG (Numerical Recipes constants) — deterministic, no `rand` crate.

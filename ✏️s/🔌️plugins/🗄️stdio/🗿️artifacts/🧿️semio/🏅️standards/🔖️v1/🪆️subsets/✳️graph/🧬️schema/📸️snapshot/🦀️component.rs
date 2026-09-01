@@ -22,7 +22,6 @@ use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{spli
 use crate::artifacts::semio::standards::v1::subsets::value::schema::diff::{dec_semio_value_bin, dec_semio_value_entry, enc_semio_value_bin, enc_semio_value_entry};
 use crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id AND `ArtifactSchema` descriptor id — same literal for
@@ -35,8 +34,8 @@ pub const STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA: &str = "s.stdio.semio.graph";
 /// 🪪 Stable identity for a graph node — a NAMED single-field struct, never a bare tuple newtype
 /// (`dsl` has no blanket `DslField` impl for tuples of any arity — see `✳️value`'s `ValueId` for
 /// the precedent this follows).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GraphNodeId {
     pub value: String,
 }
@@ -51,8 +50,8 @@ impl GraphNodeId {
 
 //#region 🔖️EdgeId
 /// 🪪 Stable identity for a graph edge — same named-single-field convention as [`GraphNodeId`].
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct GraphEdgeId {
     pub value: String,
 }
@@ -67,8 +66,8 @@ impl GraphEdgeId {
 
 //#region 🔖️PortKind
 /// 🔌️ The direction a node port carries data in.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub enum SemioGraphPortKind {
     #[default]
     In,
@@ -81,8 +80,8 @@ pub enum SemioGraphPortKind {
 /// 🔌️ One named port on a node. Intrinsically ordered, anonymous, nested inside its owning node's
 /// `ports` — the same shape `✳️text`'s marks-inside-run pattern uses one level up
 /// (`➕add-node-port`/`🔚remove-node-port`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioGraphPort {
     pub name: String,
     pub kind: SemioGraphPortKind,
@@ -92,20 +91,20 @@ pub struct SemioGraphPort {
 //#region 🔖️Node
 /// 🔵 One id-keyed graph node, carrying its own ordered `ports` and `properties` (the latter REUSES
 /// `✳️value`'s `SemioValueEntry`, never a redefined parallel key/value type).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioGraphNode {
     pub id: GraphNodeId,
     /// 🏷️ Freeform node-type tag, mirrors `flow`'s `FlowNode.kind`.
-    #[serde(default)]
+    #[value(default)]
     pub kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub label: String,
-    #[serde(default)]
+    #[value(default)]
     pub position: SemioPoint2,
-    #[serde(default)]
+    #[value(default)]
     pub ports: Vec<SemioGraphPort>,
-    #[serde(default)]
+    #[value(default)]
     pub properties: Vec<SemioValueEntry>,
 }
 //#endregion 🔖️Node
@@ -114,15 +113,15 @@ pub struct SemioGraphNode {
 /// ➡️ One id-keyed graph edge. `source`/`target` are ordinary data fields on this entity, not an
 /// attach/detach relationship — see this file's module doc comment for the `create`/`delete` (not
 /// `connect`/`disconnect`) ruling.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioGraphEdge {
     pub id: GraphEdgeId,
     pub source: GraphNodeId,
     pub target: GraphNodeId,
-    #[serde(default)]
+    #[value(default)]
     pub kind: String,
-    #[serde(default)]
+    #[value(default)]
     pub label: String,
 }
 //#endregion 🔖️Edge
@@ -131,17 +130,17 @@ pub struct SemioGraphEdge {
 /// 🕸️ `nodes`/`edges` are both id-keyed sets with no user-meaningful display order, so there is no
 /// `reorder-nodes`/`reorder-edges` mutation (`SEMANTIC-MUTATIONS-OVERHAUL`'s
 /// `📓️derivation-rules.md` rule 2: "drop reorder for id-keyed sets with no display order").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph")]
 pub struct SemioGraphSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub nodes: Vec<SemioGraphNode>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<SemioGraphEdge>,
 }
 
@@ -529,7 +528,7 @@ impl store::ArtifactPack for SemioGraphSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.graph` — the shape `mutate-semio-graph` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
 /// away from the type it claims to project. Node and edge identity travels as a NEWTYPE (`{"value": "b"}`), not as a bare string, so a

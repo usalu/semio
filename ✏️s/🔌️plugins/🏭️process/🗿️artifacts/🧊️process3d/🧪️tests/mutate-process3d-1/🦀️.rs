@@ -10,12 +10,12 @@
 //! what changes — pose, label, or the large BREP child handle — and `change-cursor` is the one
 //! document-level scalar.
 //!
-//! ⚠️ Seven of the sixteen kinds — every step-scoped verb — are implemented TODAY as documented no-ops:
-//! their diff builders take `_payload`/`_base` by underscore and return
-//! `MutationOutcome::empty().warn("mutation.no-op", …)` because the timeline is a composed
-//! `s.stdio.semio.flow` child and no link resolver exists yet. Their committed vectors record exactly
-//! that, so this case asserts the declared no-op precisely and lists all seven by name in
-//! `UNOBSERVABLE` below rather than letting them read as observed.
+//! ✅ Ticket `26/09/01/PROCESS-END-TO-END`: all sixteen kinds are real, observable mutations —
+//! the seven step-scoped verbs above used to be documented no-ops (the timeline read through an
+//! unresolved composed `s.stdio.semio.flow` child), but `step_payloads` is the durable, inline
+//! timeline record since `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4, so every verb now
+//! mutates it directly and re-mints `steps`/`tool_solids` to match (`process3d_step_timeline_diff`,
+//! reusing `process_working_scene_to_snapshot`'s own minting). `UNOBSERVABLE` below is empty.
 //!
 //! **Where the assertions live.** A recorded no-oracle case runs NO oracle role — the runner resolves an
 //! oracle implementation from the feature's `@oracle-` tag and this feature has none — so every law this
@@ -52,21 +52,10 @@ const KINDS: &[&str] = &[
 ];
 
 /// 👁️ Kinds whose COMMITTED specification vector cannot exhibit a forward effect, so
-/// [`law::mutation_is_observable`] must not demand one of them.
-/// The seven step-scoped verbs. Each one's `diff` leaf takes `_payload`/`_base` by underscore and returns
-/// `MutationOutcome::empty().warn("mutation.no-op", …)` because the timeline is a composed
-/// `s.stdio.semio.flow` child with no link resolver yet, and each one's committed vector records `before ==
-/// after`, an empty diff and that warning. Their forward semantics are UNCOVERED until the resolver lands;
-/// the nine machine-, stock- and cursor-scoped kinds are unaffected and are asserted observable.
-const UNOBSERVABLE: &[&str] = &[
-    "create-step",
-    "delete-step",
-    "rename-step",
-    "change-step-enabled",
-    "change-step-origin",
-    "replace-step-measure",
-    "reorder-steps",
-];
+/// [`law::mutation_is_observable`] must not demand one of them. Empty: every one of the sixteen
+/// kinds — the seven step-scoped verbs included, since `26/09/01/PROCESS-END-TO-END` gave them a
+/// real diff against `step_payloads` — has a committed vector that moves the document.
+const UNOBSERVABLE: &[&str] = &[];
 
 /// 🗣️ The real committed document this artifact ships as its own example.
 #[cfg(feature = "sut")]

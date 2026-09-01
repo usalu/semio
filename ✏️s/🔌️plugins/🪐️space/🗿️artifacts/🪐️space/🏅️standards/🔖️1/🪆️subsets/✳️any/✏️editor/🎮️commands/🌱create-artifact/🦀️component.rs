@@ -9,10 +9,8 @@ use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutat
 use crate::editor::space_index::known_artifact_kind;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[dsl(keyword = "create-artifact")]
 pub struct CreateArtifact {
     pub name: String,
@@ -43,7 +41,7 @@ pub async fn handle(payload: &CreateArtifact, doc: &ArtifactView<'_, SSpaceSnaps
         updated_by: payload.actor.clone(),
     };
     let artifact_ref = format!("{}@{}/{}", known.dialect_artifact_kind, known.standard, known.subset);
-    let relay = Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id }))) };
+    let relay = Effect::ReplayShellCommand { action_id: "os.open-artifact".into(), args: Some(pack::json_to_dsl_value(&pack::json!({ "artifactRef": artifact_ref, "role": "editor", "documentId": id, "spaceId": doc.snapshot.space_id }))) };
     Ok(Emit { artifact_mutations: vec![create_artifact(row)], effects: vec![relay], ..Default::default() })
 }
 
@@ -67,7 +65,7 @@ mod tests {
         match &result.requested_effects[0] {
             Effect::ReplayShellCommand { action_id, args } => {
                 assert_eq!(action_id, "os.open-artifact");
-                let args = semio_framework_os_kernel::pack_rt::dsl_value_to_json(args.clone().expect("args"));
+                let args = pack::json_from_dsl_value(&args.clone().expect("args"));
                 assert_eq!(args.get("documentId").and_then(|v| v.as_str()), Some(row.id.as_str()));
                 assert_eq!(args.get("spaceId").and_then(|v| v.as_str()), Some(""));
             }

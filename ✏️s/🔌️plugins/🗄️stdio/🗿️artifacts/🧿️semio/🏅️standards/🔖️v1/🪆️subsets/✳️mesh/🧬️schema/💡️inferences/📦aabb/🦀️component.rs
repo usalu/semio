@@ -31,14 +31,13 @@
 
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Value
 /// 📦 One primitive's axis-aligned bounding box. `SemioAabb::default()` (`min`/`max` both the
 /// origin) is the honest "no geometry" value for a primitive with an empty `positions` buffer —
 /// same convention brep's `validationReport` uses an empty `Vec` for "nothing to report".
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct SemioAabb {
     pub min: SemioPoint3,
     pub max: SemioPoint3,

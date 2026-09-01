@@ -28,8 +28,8 @@ pub const STDIO_SEMIOKIT_DOCUMENT_SCHEMA: &str = "stdio.semio.kit";
 /// 🏷️ One TYPE in the kit's catalog — a name/category, its representations living in the sibling
 /// `representations` LINK pool (joined by `role == id`, see module doc comment). Id-keyed (no
 /// positional meaning — `add-type`/`remove-type`/`rename-type` all address by `id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKitType {
     pub id: String,
     pub name: String,
@@ -40,8 +40,8 @@ pub struct SemioKitType {
 //#region 🔖️Design
 /// 📐️ One PIECE inside a design: an instance of a TYPE (`type_id`, joins `SemioKitType.id`) at a
 /// local `transform`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKitPiece {
     pub id: String,
     pub type_id: String,
@@ -49,8 +49,8 @@ pub struct SemioKitPiece {
 }
 
 /// 🔌️ One CONNECTION between two pieces' named ports.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKitConnection {
     pub id: String,
     pub connecting_piece_id: String,
@@ -60,8 +60,8 @@ pub struct SemioKitConnection {
 }
 
 /// 📋️ One DESIGN — a named arrangement of pieces and their connections. Id-keyed.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default)]
+#[value(rename_all = "camelCase")]
 pub struct SemioKitDesign {
     pub id: String,
     pub name: String,
@@ -107,6 +107,43 @@ impl Default for SemioKitSnapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+//#region 🔖️ValueCodec
+/// 🔀️ Hand-written, not derived: `objects`/`models`/`properties` are `store::ArtifactChild<S>`
+/// composed-artifact CHILD handles and `representations` is a `Vec<store::ArtifactLink>` LINK
+/// slot — both bridged per-field through `to_dsl_value`/`from_dsl_value` (`🌱️value/🔀️serde`)
+/// rather than widening the derive macro. Same pattern as `✳️object`'s `SemioObjectSnapshot` and
+/// the fan-out playbook's `PlaybookArtifact` reference.
+impl dsl::ToValue for SemioKitSnapshot {
+    fn to_value(&self) -> dsl::DslValue {
+        dsl::DslValue::object([
+            ("schema".to_string(), dsl::ToValue::to_value(&self.schema)),
+            ("types".to_string(), dsl::ToValue::to_value(&self.types)),
+            ("designs".to_string(), dsl::ToValue::to_value(&self.designs)),
+            ("objects".to_string(), dsl::to_dsl_value(&self.objects).expect("ArtifactChild serializes")),
+            ("models".to_string(), dsl::to_dsl_value(&self.models).expect("ArtifactChild serializes")),
+            ("properties".to_string(), dsl::to_dsl_value(&self.properties).expect("ArtifactChild serializes")),
+            ("representations".to_string(), dsl::to_dsl_value(&self.representations).expect("ArtifactLink serializes")),
+        ])
+    }
+}
+impl dsl::FromValue for SemioKitSnapshot {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let entries = dsl::DslValue::into_object(value)?;
+        let get = |key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+        let field = |key: &str| get(key).ok_or_else(|| dsl::ValueError::new(format!("missing field `{key}`")));
+        Ok(Self {
+            schema: dsl::FromValue::from_value(field("schema")?)?,
+            types: dsl::FromValue::from_value(field("types")?)?,
+            designs: dsl::FromValue::from_value(field("designs")?)?,
+            objects: dsl::from_dsl_value(field("objects")?).map_err(dsl::ValueError::new)?,
+            models: dsl::from_dsl_value(field("models")?).map_err(dsl::ValueError::new)?,
+            properties: dsl::from_dsl_value(field("properties")?).map_err(dsl::ValueError::new)?,
+            representations: dsl::from_dsl_value(field("representations")?).map_err(dsl::ValueError::new)?,
+        })
+    }
+}
+//#endregion 🔖️ValueCodec
 
 //#region 🔖️CodecPrimitives
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -634,23 +671,22 @@ impl store::ArtifactPack for SemioKitSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🔖️JsonBridge
-/// 📥️ Decodes this subset's own `#[serde(rename_all = "camelCase")]` JSON projection — the exact
-/// shape the committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/
-/// 🔣️component.json` specification-vector fixtures carry — into a real `SemioKitSnapshot`. A thin
-/// `serde_json` wrapper (already a direct dependency of this crate, used behind this interface per
-/// CLAUDE.md's "external libraries behind an interface" rule, never a new one) so external Rust
-/// callers that cannot name this crate's private `store`/`serde_json` extern-crate items (e.g.
-/// `mutate-semio-kit`'s test adapter — see its own doc comment for why) can still decode a snapshot
-/// from committed fixture text without hand-transcribing one field at a time, which is both
-/// laborious and a place for the transcription to silently drift away from the fixture it claims to
-/// mirror.
+/// 📥️ Decodes this subset's own `#[value(rename_all = "camelCase")]`-shaped JSON projection — the
+/// exact shape the committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/
+/// 🔣️component.json` specification-vector fixtures carry — into a real `SemioKitSnapshot`, using
+/// the snapshot's own hand-written `ToValue`/`FromValue` (§ValueCodec above). A thin
+/// `pack::from_json_str` wrapper (first-party, over `ToValue`/`DslValue`) so external Rust callers
+/// that cannot name this crate's private `store` extern-crate item (e.g. `mutate-semio-kit`'s test
+/// adapter — see its own doc comment for why) can still decode a snapshot from committed fixture
+/// text without hand-transcribing one field at a time, which is both laborious and a place for the
+/// transcription to silently drift away from the fixture it claims to mirror.
 pub fn decode_kit_snapshot_json(text: &str) -> Result<SemioKitSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `serde_json` inverse of `decode_kit_snapshot_json` — same rationale.
+/// 📤️ The `pack::to_json_string` inverse of `decode_kit_snapshot_json` — same rationale.
 pub fn encode_kit_snapshot_json(snapshot: &SemioKitSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioKitSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 //#endregion 🔖️JsonBridge
 

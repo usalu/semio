@@ -53,10 +53,12 @@ mod tests {
         let document = MathematicalSnapshot::default();
         let points = mathematical_geometry(&document).points;
         assert!(!points.is_empty());
-        let json = serde_json::to_string(&render(&document)).unwrap();
-        assert!(json.contains("table"));
+        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
+        // `Debug` gives the same "does the render mention X" substring check.
+        let debug = format!("{:?}", render(&document));
+        assert!(debug.to_lowercase().contains("table"));
         for point in &points {
-            assert!(json.contains(&format!("{}", point.x)), "row for x={} missing from rendered table: {json}", point.x);
+            assert!(debug.contains(&format!("{}", point.x)), "row for x={} missing from rendered table: {debug}", point.x);
         }
     }
 }

@@ -3,15 +3,14 @@
 mod tests {
     use crate::artifacts::gltf::schema::mutations::change_material_double_sided::{diff, inverse, mutation};
     use crate::artifacts::gltf::GltfSnapshot;
-    use serde::Deserialize;
     use std::collections::BTreeMap;
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
+    #[derive(value_derive::FromValue)]
+    #[value(rename_all = "camelCase")]
     struct State {
         material: usize,
         double_sided: bool,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Vector {
         base: State,
         mutation: mutation::GltfChangeMaterialDoubleSidedPayload,
@@ -21,7 +20,7 @@ mod tests {
         undo: State,
         rejections: BTreeMap<String, String>,
     }
-    #[derive(Deserialize)]
+    #[derive(value_derive::FromValue)]
     struct Contract {
         vectors: Vec<Vector>,
     }

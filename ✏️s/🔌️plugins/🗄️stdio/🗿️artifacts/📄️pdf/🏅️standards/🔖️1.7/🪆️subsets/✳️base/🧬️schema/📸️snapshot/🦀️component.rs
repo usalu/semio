@@ -8,7 +8,6 @@
 //! model. Native lexical choices and encoded stream representations never enter the snapshot.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
 /// 🏷️ Document schema id for `stdio.pdf` (1.7) -- deliberately distinct from 1.4's flat
@@ -21,8 +20,8 @@ pub const STDIO_PDF17_DOCUMENT_SCHEMA: &str = "stdio.pdf.1.7";
 /// 🔗️ An indirect-object reference `N G R` — also the `objects` collection's diff KEY (the
 /// `(id,gen)` pair per the recipe's "numeric id" key kind; `Hash` is needed by the diff module's
 /// key-transport absorb maps).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct ObjRef {
     pub num: u32,
     pub gen: u16,
@@ -30,16 +29,16 @@ pub struct ObjRef {
 
 /// 🧩 One `key`/`value` pair of a PDF dictionary. A `Vec` (not a map) so parse order survives
 /// losslessly -- PDF dictionaries have no canonical key order and real files vary widely.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfDictEntry {
     pub key: String,
     pub value: PdfObject,
 }
 
 /// 🎛️ Logical predictor parameters attached to a PDF stream filter.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPredictor {
     pub predictor: u32,
     pub colors: u32,
@@ -48,8 +47,8 @@ pub struct PdfPredictor {
 }
 
 /// 🗜️ Supported logical stream-filter pipeline concepts.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PdfStreamFilter {
     Flate { predictor: Option<PdfPredictor> },
     AsciiHex,
@@ -58,8 +57,8 @@ pub enum PdfStreamFilter {
 }
 
 /// 🔢️ Exact logical PDF real number represented as decimal coefficient and scale.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfDecimal {
     pub negative: bool,
     pub coefficient: String,
@@ -135,8 +134,8 @@ impl fmt::Display for PdfDecimal {
 /// 🎯 A parsed PDF object -- the full COS object grammar (ISO 32000-1 §7.3), including
 /// streams. Stream `data` is the logical byte sequence after applying the stream filter chain;
 /// `/Filter`, `/F`, `/DecodeParms`, and `/DP` are removed during native deserialization.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum PdfObject {
     Null,
     Bool(bool),
@@ -209,8 +208,8 @@ impl PdfObject {
 }
 
 /// 🗄️ One `N G obj ... endobj` indirect object, keyed by its `id`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfIndirectObject {
     pub id: ObjRef,
     pub value: PdfObject,
@@ -222,15 +221,15 @@ pub struct PdfIndirectObject {
 /// applied (ISO 32000-1 §7.7.3.4 inheritance), text already extracted from its content stream(s).
 /// `text` doubles as the builder's authoring surface: the writer regenerates a fresh content
 /// stream from it on encode (see `AppendPageContent`'s doc comment for why one field suffices).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfPage {
     pub media_box: [f64; 4],
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub crop_box: Option<[f64; 4]>,
-    #[serde(default)]
+    #[value(default)]
     pub rotate: i32,
-    #[serde(default)]
+    #[value(default)]
     pub text: String,
 }
 
@@ -248,20 +247,20 @@ impl PdfPage {
 }
 
 /// 📇️ Document `/Info` dictionary -- the fields `SetInfo` actually exposes.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct PdfInfo {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub subject: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub keywords: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub creator: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
     pub producer: Option<String>,
 }
 //#endregion 🔖️PageModel
@@ -272,26 +271,26 @@ pub struct PdfInfo {
 /// is the resolved, editable view the analyzer/builder/mutations actually work with; `trailer` is
 /// the trailer dictionary (`/Root`/`/Info`/`/Size`/… key-value pairs, same shape as a `Dict` --
 /// the diff module's `PdfDictDiff` triple is reused verbatim for it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.pdf.1.7")]
 pub struct PdfSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub declared_version: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pages: Vec<PdfPage>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub info: PdfInfo,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub objects: Vec<PdfIndirectObject>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub trailer: Vec<PdfDictEntry>,
 }
 

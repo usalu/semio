@@ -66,7 +66,7 @@ mod tests {
         use semio_framework_plugin::{PluginApp, VcsArtifactApp, ViewModel};
         let mut app = VcsArtifactApp::new(crate::engine::space::SpaceApp::default());
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).expect("render");
-        assert!(serde_json::to_string(&node).unwrap().contains("text-editor"));
+        assert!(pack::to_json_string(&node).contains("text-editor"));
         let wire = compiled_dag_wire_literal(&demo_space_projection());
         assert!(wire.contains("appInstance") || wire.contains("draw"));
     }

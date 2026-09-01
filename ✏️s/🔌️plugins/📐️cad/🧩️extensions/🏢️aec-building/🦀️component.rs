@@ -4,12 +4,14 @@
 //! extensibility tier: an extension registering mutations/inferences on an artifact it does not own,
 //! gated by a declared `.depends_on("cad", …)` runtime dependency (contract freeze §3/§4).
 
+use pack::json::{self, Value as JsonValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
+use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
+use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::mutation::ChangeActiveModelDefinition;
 use semio_s_plugin_cad::artifacts::cad::mutations::create_node::mutation::CreateNode;
 use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadNode, CadSnapshot, CAD_DOCUMENT_SCHEMA};
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
@@ -29,31 +31,24 @@ const CAD_ARTIFACT_KIND: &str = "s.cad.cad";
 /// inference's `inference_schema` MUST start with `s.<contributor-plugin-id>.`.
 const AEC_BUILDING_INFERENCE_SCHEMA: &str = "s.cad-extension-aec-building.building-structure-summary";
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CadImportProfileManifest {
-    model_definition_id: &'static str,
-    layer_typology: BTreeMap<&'static str, &'static str>,
-    fallback_typology: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    prefer_presentation_layers: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    presentation_geometry: Option<&'static str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    namespaced_domain: Option<&'static str>,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CadComputersManifest {
-    model_definition_ids: Vec<&'static str>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    stat_computers: Vec<&'static str>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    property_computers: Vec<&'static str>,
-    import_profiles: Vec<CadImportProfileManifest>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    transformation_appliers: Vec<&'static str>,
+// 🌱️ `computers_manifest`/`building_import_profile` below build a `pack::json::Value` directly
+// (first-party `serde_json::Value` replacement) instead of a `#[derive(Serialize)]` DTO;
+// `contributes_topic` now also speaks `DslValue` end to end, so `serde`/`serde_json` are fully
+// gone from this crate.
+/// 🗂️ `pack::json` analog of the former `CadImportProfileManifest`.
+fn building_import_profile(model_definition_id: &'static str, prefer_presentation_layers: bool, presentation_geometry: Option<&'static str>) -> JsonValue {
+    let mut entries: Vec<(String, JsonValue)> = vec![
+        ("modelDefinitionId".to_string(), JsonValue::from(model_definition_id)),
+        ("layerTypology".to_string(), json::object(building_layer_typology().into_iter().map(|(key, value)| (key.to_string(), JsonValue::from(value))))),
+        ("fallbackTypology".to_string(), JsonValue::from("building.building.slab")),
+    ];
+    if prefer_presentation_layers {
+        entries.push(("preferPresentationLayers".to_string(), JsonValue::from(true)));
+    }
+    if let Some(geometry) = presentation_geometry {
+        entries.push(("presentationGeometry".to_string(), JsonValue::from(geometry)));
+    }
+    json::object(entries)
 }
 
 // 🚫️async: E1 pure — `BTreeMap::from` literal, zero suspension points — see R9.
@@ -86,21 +81,11 @@ fn building_layer_typology() -> BTreeMap<&'static str, &'static str> {
 
 // 🚫️async: E1 pure — struct literal over `building_layer_typology` (sync), zero suspension points —
 // see R9.
-fn computers_manifest() -> CadComputersManifest {
-    CadComputersManifest {
-        model_definition_ids: vec!["aec.building"],
-        stat_computers: Vec::new(),
-        property_computers: Vec::new(),
-        import_profiles: vec![CadImportProfileManifest {
-            model_definition_id: "aec.building",
-            layer_typology: building_layer_typology(),
-            fallback_typology: "building.building.slab",
-            prefer_presentation_layers: None,
-            presentation_geometry: None,
-            namespaced_domain: None,
-        }],
-        transformation_appliers: Vec::new(),
-    }
+fn computers_manifest() -> JsonValue {
+    json::object([
+        ("modelDefinitionIds".to_string(), json::array([JsonValue::from("aec.building")])),
+        ("importProfiles".to_string(), json::array([building_import_profile("aec.building", false, None)])),
+    ])
 }
 
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
@@ -120,13 +105,13 @@ fn bundle() -> ExtensionBundle {
     let bundle = semio_framework::io::resolve_ready(bundle.mode(ExecutionMode::Declarative));
     let bundle = semio_framework::io::resolve_ready(bundle.contributes_topic(
         "cad.computer",
-        serde_json::json!({
-            "appId": HOST_APP_ID,
-            "moduleId": MODULE_ID,
-            "label": "AEC Building",
-            "iconId": "building",
-            "computersJson": serde_json::to_string(&computers_manifest()).unwrap_or_default(),
-        }),
+        DslValue::object([
+            ("appId".to_string(), DslValue::String(HOST_APP_ID.to_string())),
+            ("moduleId".to_string(), DslValue::String(MODULE_ID.to_string())),
+            ("label".to_string(), DslValue::String("AEC Building".to_string())),
+            ("iconId".to_string(), DslValue::String("building".to_string())),
+            ("computersJson".to_string(), DslValue::String(json::to_string(&computers_manifest()))),
+        ]),
     ));
     semio_framework::io::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
@@ -141,8 +126,10 @@ semio_framework_plugin::extension_exports!(bundle);
 /// through `protocol::Planner::call`. Frozen id grammar (contract freeze §3):
 /// `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` — assembled by
 /// `ArtifactContribution::resolve`, never hand-formatted here.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🌱️ `CompositeMutationKind`'s supertrait bound is `ToValue`/`FromValue` (see that trait's own
+// doc) — no `serde` derive needed here at all.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct CreateBuildingStorey {
     pub storey_id: String,
     pub level_index: i32,
@@ -179,8 +166,11 @@ impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildin
 /// document have a building model attached, how many storeys has this extension's own composite
 /// mutation created) that a generic CAD plugin has no reason to compute itself. `owner` MUST equal
 /// this extension's own plugin id (contract freeze §4 rule 4, enforced by `register_contributions`).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+// 🌱️ Never bound by a trait that requires serde — encoded/decoded directly through the
+// first-party wire codec (`pack_rt::encode_wire_value`/`decode_wire_value` over `DslValue`) below,
+// not JSON at all.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
 struct BuildingStructureSummary {
     building_model_present: bool,
     storey_count: u32,
@@ -212,7 +202,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
 fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError> {
     let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
-    let canonical_payload = serde_json::to_vec(&summary).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.encode", error.to_string()))?;
+    let canonical_payload = pack_rt::encode_wire_value(&ToValue::to_value(&summary));
     Ok(ArtifactInferenceExecution { canonical_payload, diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
 }
 
@@ -244,10 +234,11 @@ mod tests {
         let manifest = bundle().manifest;
         let topic_contribution = &manifest.topic_contributions[0];
         assert_eq!(topic_contribution.topic, "cad.computer");
-        assert_eq!(topic_contribution.payload["moduleId"], MODULE_ID);
+        assert_eq!(topic_contribution.payload["moduleId"].as_str(), Some(MODULE_ID));
         let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
-        let parsed: serde_json::Value = serde_json::from_str(computers_json).expect("parse");
-        assert!(parsed["importProfiles"][0]["layerTypology"]["beam"].as_str().is_some());
+        let parsed = json::parse(computers_json).expect("parse");
+        let beam_typology = parsed.get("importProfiles").and_then(JsonValue::as_array).and_then(|profiles| profiles.first()).and_then(|profile| profile.get("layerTypology")).and_then(|typology| typology.get("beam"));
+        assert!(beam_typology.and_then(JsonValue::as_str).is_some());
     }
 
     /// ✅️ Task requirement: "the contribution registers successfully against the declared
@@ -348,7 +339,8 @@ mod tests {
         };
 
         let execution = infer_building_structure_summary(&request).expect("inference succeeds");
-        let summary: BuildingStructureSummary = serde_json::from_slice(&execution.canonical_payload).expect("summary decodes");
+        let decoded_value = pack_rt::decode_wire_value(&execution.canonical_payload).expect("summary decodes");
+        let summary = BuildingStructureSummary::from_value(decoded_value).expect("summary decodes");
         assert_eq!(summary.storey_count, 1);
         assert!(!summary.building_model_present);
 

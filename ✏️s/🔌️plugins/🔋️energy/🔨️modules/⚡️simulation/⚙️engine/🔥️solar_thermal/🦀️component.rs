@@ -2,10 +2,11 @@
 
 use crate::units::{CP_DRY_AIR, RHO_AIR_REF, STEFAN_BOLTZMANN};
 use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 // #region 🔖️CollectorKind
 /// ☀️ Solar thermal collector technology.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub enum CollectorKind {
     FlatPlate,
     IntegralCollectorStorage,
@@ -16,7 +17,7 @@ pub enum CollectorKind {
 
 // #region 🔖️FlatPlate
 /// ☀️ Glazed flat-plate collector (Hottel-Whillier-Bliss).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct FlatPlateCollector {
     pub area_m2: f64,
     pub tau_alpha: f64,
@@ -34,7 +35,7 @@ impl FlatPlateCollector {
 
 // #region 🔖️Ics
 /// 🫙️ Integral collector-storage (ICS) batch heater.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct IntegralCollectorStorage {
     pub area_m2: f64,
     pub storage_volume_l: f64,
@@ -56,7 +57,7 @@ impl IntegralCollectorStorage {
 
 // #region 🔖️Unglazed
 /// 🌀️ Unglazed transpired solar collector (solar wall).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct UnglazedTranspiredCollector {
     pub area_m2: f64,
     pub porosity: f64,
@@ -90,7 +91,7 @@ impl UnglazedTranspiredCollector {
 
 // #region 🔖️Pvt
 /// ⚡️☀️ Photovoltaic-thermal hybrid collector.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
 pub struct PvtCollector {
     pub area_m2: f64,
     pub pv_efficiency: f64,

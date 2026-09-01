@@ -160,3 +160,127 @@ instance slot from the catalog up front, or the first call of every mutation wou
 composed into a regression that only shows up at real installation scale. Fixture-sized test data
 (note + cad = 2 plugins) hides it perfectly — a one-plugin catalog and a two-plugin catalog both
 "work" under a resolver that only accepts exactly one.
+
+---
+
+## Verification state — read this before trusting anything above
+
+**The MCP work is written, integrated and internally consistent. It has NOT been proven by a build.**
+
+The whole `ToValue`/`FromValue` mutation migration (peer ticket
+`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`) is **in flight across the
+entire framework** and lands in the shared tree crate by crate. Cargo never reaches
+`semio-framework-os-mcp`, so no compile signal about our code exists yet.
+
+Chronology of the blocker, each step verified by a real build:
+
+| crate | errors found | outcome |
+|---|---|---|
+| `semio-framework-plugin-host` | 38 | fixed → 8 → later green |
+| `semio-framework-os-kernel` (`🏪️store`) | 75 | fixed → 0 |
+| `semio-framework` (`🔁️workflow`/`🏃️run`) | 166 | fixed → 0, 54/54 tests pass |
+| `semio-framework-plugin-host` (`🎚️config`) | 57 | **the peer is re-migrating it right now** |
+
+### Why we stopped fixing it
+
+A peer session is **actively working the same migration concurrently**. Our agent had to revert a
+live regression in `🏪️store` **twice** — the peer re-adding a derive that duplicated the
+already-landed hand-written `ToValue`/`FromValue`, producing `E0119`. Each crate we fixed revealed
+the next, and `🎚️config` — fixed by our own first agent hours earlier — came back with 57 fresh
+errors because the peer reached it.
+
+Continuing would mean racing a session that owns the migration, in their files, causing regressions
+in both directions. So: **poll, do not chase** — a watcher rebuilds periodically and runs the full
+suite (Rust lib tests + the four vitest suites against the real binary) the moment the tree goes
+green.
+
+### What remains unverified, precisely
+
+- the ~2,900 new lines across `📇️registry`/`🗿️artifact`/`💡️inference`/`🖥️ui`/`💬️prompts`
+- the root wiring, the `BridgeSlot` plumbing, the composed resource registry
+- every test in those facets, and `🧪️end-to-end.test.ts` in full
+
+Verified by reading only. **No claim above that something "works" should be read as "was run".**
+
+## Known remaining limitation (deliberately not fixed)
+
+**One fixed session id.** `🦀️component.rs`'s `DEFAULT_SESSION_ID = "sess_default"` means every
+mutation-protocol call runs as the same session regardless of which client connected. The handle
+table already enforces a real cross-session authorization boundary
+(`cross_session_resolve_is_permission_denied_not_a_leak`), so this is not a leak today — but it does
+mean two concurrent agent clients share one session's prepared handles and undo tokens, which the
+repo's multi-user requirement will eventually not tolerate.
+
+Fixing it is a `🧭️protocol`-layer change: `McpServer` must become connection-aware so a session id
+can be derived per transport connection. That was **not** attempted here, deliberately: with the
+tree uncompilable there is no way to verify a change at that layer, and adding unverifiable code to
+the protocol core is a worse outcome than a documented limitation.
+
+### Peer migration is converging (observed, not assumed)
+
+A watcher rebuilding `semio-os-mcp` every ~4 minutes recorded the blocker shrinking as the peer
+worked through it:
+
+```
+15:11  51 errors  semio-framework-plugin-host
+15:24  80 errors  semio-framework          ← briefly worse, mid-edit
+15:41  51 errors  semio-framework-plugin-host
+15:45  44 errors  semio-framework-os-kernel
+15:50  19 errors  semio-framework-os-kernel
+15:54  15 errors  semio-framework-os-kernel
+15:58  13 errors  semio-framework-os-kernel
+```
+
+The residue is one bounded family — generic `P` needing `ToValue`/`FromValue` bounds in
+`🏪️store/🔄️sync/🦀️component.rs` (~873-891) — in the **last crate before ours**. Small enough to fix,
+but it sits in the file the peer is actively editing, and the `E0119` collisions earlier in this
+ticket are what that costs. So the watcher stays armed instead.
+
+**This trend is the evidence for waiting.** Monotonic convergence in someone else's migration is a
+reason to poll; a flat or rising count would have been a reason to reassess.
+
+---
+
+## ✅ VERIFIED — the gateway builds and the end-to-end suite passes against the real binary
+
+The `🗑️generated/target` build dir was being **swept by repo tooling mid-build** (1.3G → 139M, zero
+writes for minutes) — that, not compilation, is what made every earlier run look stuck, and what made
+an earlier agent report the directory had "vanished". Moving `CARGO_TARGET_DIR` to a session-private
+scratch path fixed it immediately.
+
+```
+Finished `dev` profile [unoptimized] target(s) in 3m 27s
+BINARY BUILT: 46790880 bytes
+```
+
+`bun nx run @semio-tech/framework-os-mcp:test` — **5 files, 33 tests, all passed**, every one driving
+the real compiled binary over stdio JSON-RPC. The 12 new end-to-end tests all *ran* (not skipped):
+
+| assertion | result |
+|---|---|
+| `tools/list` is the full 22-tool gateway surface | ✅ |
+| no tool describes itself as unimplemented — the stub era is over | ✅ |
+| every tool has an object-typed input schema (and output schema when present) | ✅ |
+| `prompts/list` serves the real bilingual prompt set | ✅ |
+| `prompts/get` answers differently in English and German | ✅ |
+| resources advertise the workspace, artifact, inference, UI and job families regardless of tier | ✅ |
+| **tier 1**: workspace-backed tools degrade to a retryable `PLUGIN_UNAVAILABLE` naming the binding | ✅ |
+| **tier 2**: UI tools report the missing *shell*, not a missing workspace | ✅ |
+| **binding a folder actually changes behaviour** | ✅ |
+| unknown resource is a well-formed `NOT_FOUND`, never a crash | ✅ |
+| the catalog is compiled from the installed plugin registry, not a note/cad fixture | ✅ |
+| `capabilities_search` answers structurally for an unsatisfiable goal | ✅ |
+
+Plus the three pre-existing suites (legacy SDK conformance, modern stateless era, stdio hygiene) all
+still pass — no regression from any of this ticket's changes.
+
+### A stale test name found while reading the passing output
+
+`🧪️legacy-conformance.test.ts` had a test *named* "prompts/list is empty (no registrations yet)"
+that only ever asserted `Array.isArray(...)`. It passed both before and after prompts were
+registered — the name asserted something the body never checked. Renamed, and it now actually pins
+the registered set. Same for a stale "(NullBackend/empty registry today)" parenthetical.
+
+**Worth noting as a pattern:** this is the second gate in this ticket that read green while measuring
+less than its name claimed (the first being the binary-path drift that made all three suites skip
+themselves). Both were only findable by reading the *passing* output, not the failing kind.

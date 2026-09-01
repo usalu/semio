@@ -4,10 +4,9 @@
 // its own standard-local snapshot type directly rather than the shared root re-export.
 use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::{GifColorTable, GifImage, GifSnapshot};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif")]
 pub struct GifArtifact {
     #[state(artifact)]
@@ -17,16 +16,16 @@ pub struct GifArtifact {
     #[state(artifact)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub gct: Option<GifColorTable>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub background_color_index: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixel_aspect_ratio: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub images: Vec<GifImage>,
 }
 

@@ -17,7 +17,6 @@
 
 use crate::artifacts::semio::standards::v1::subsets::text::schema::diff::SemioTextDiff;
 use crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Leaves
 use super::add_mark;
@@ -36,7 +35,7 @@ use super::reorder_runs;
 /// (`extern crate semio_framework_os_kernel as dsl;`), the same spelling every other stdio subset's
 /// eventual `dsl::Mutations` derive uses (confirmed against `din4108`'s already-compiling facet,
 /// this ticket's binding reference).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SemioTextSnapshot, diff = SemioTextDiff, schema = "s.stdio.semio.text")]
 pub enum SemioTextMutation {
     InsertRun(insert_run::InsertRun),
@@ -78,7 +77,7 @@ pub fn inverse_semio_text_mutation(mutation: &SemioTextMutation, base: &SemioTex
 }
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`) JSON
-/// projection — no `#[serde(rename_all)]` sits on this enum or its payload structs, which is
+/// projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️component.json` vectors
 /// carry — into a real [`SemioTextMutation`]. Same rationale as
 /// `../📸️snapshot/🦀️component.rs`'s `decode_semio_text_snapshot_json`.

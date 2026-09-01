@@ -2,13 +2,17 @@
 
 use crate::framework_surface_terrain::TerrainSessionCore;
 use base64::Engine;
+// 🧩️ Every name below is target-neutral (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS's
+// wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
+// (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
+// itself `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`-gated instead.
 use ui_wgpu::wgpu::{
-    aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, gizmo, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh_content_version,
     paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, widgets::gizmo, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
+    vec3_from_f64, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
     Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode,
-    Vec3, WidgetContext, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
+    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
 };
 
 //#region 📦️PreparedWorldResources
@@ -9278,7 +9282,14 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
     }
 }
 
-pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut World3dBuildContext) {
+// 🖥️ Native/browser rendering-host entry point only (called from `📺️renderer`'s engine, never from
+// wasip2 plugin guest logic — confirmed by grepping every `render_world_3d` call site in the repo).
+// `WidgetContext` bundles the font/icon atlases, which are genuinely GPU-adjacent (real `wgpu`
+// crate reachable through `wgpu-engine`), so this one function stays excluded from
+// `wasm32-wasip2`: `target_arch = "wasm32"` is TRUE for wasip2 too, hence `not(target_env = "p2")`.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut World3dBuildContext) {
+    use ui_wgpu::wgpu::widgets::{draw_text, gizmo as gpu_gizmo};
     let theme = ctx.theme;
     step_world_placeholder_mesh(state);
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
@@ -9447,7 +9458,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         let crossing = marquee_is_crossing_from_path(&state.marquee_points, state.selection_method == "lasso");
         paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
     }
-    gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
+    gpu_gizmo::paint_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
     for (index, status) in state.prepared_status.iter().flatten().enumerate() {
         if let Some(text) = status.text() {
             let y = inner.y + 20.0 + index as f32 * (theme.font_size_small + 6.0);

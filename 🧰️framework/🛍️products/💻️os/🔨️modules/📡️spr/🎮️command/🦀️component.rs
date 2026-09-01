@@ -23,7 +23,12 @@ pub use protocol::mutation::*;
 /// serializations of the result), total (never panics, never fails — an inference with error
 /// states models them as data, not as a `Result`). `infer` is THE single semantics source: every
 /// cache path in `crate::os_inference` must be observationally identical to calling this directly.
-pub trait Inference<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
+/// 🌱️ Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not `serde::Serialize`/
+/// `serde::de::DeserializeOwned` — the same move [`CompositeMutationKind`] below and
+/// `protocol::Mutation` itself already made. Every `#[derive(ToValue, FromValue)]` inference type in
+/// the plugin tree implements these and no longer implements serde's, so the serde bound left every
+/// one of them failing to satisfy this trait.
+pub trait Inference<P>: Clone + Default + protocol::value::ToValue + protocol::value::FromValue {
     fn infer(snapshot: &P) -> Self;
 }
 
@@ -202,7 +207,10 @@ pub use protocol::mutation::{
 
 /// 🦠️ One direct mutation leaf with mandatory source-derived metadata and handcrafted behavior.
 /// `Op` wraps the owner's concrete leaves; inverses may select a different leaf from that roster.
-pub trait MutationKind<P, Op>: MutationLeaf + Clone + serde::Serialize + serde::de::DeserializeOwned
+/// 🌱️ Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not serde's — the same
+/// move [`Inference`] above, [`CompositeMutationKind`] below and `protocol::Mutation` itself already
+/// made. Every mutation-leaf payload derives `ToValue`/`FromValue` and no longer derives serde's.
+pub trait MutationKind<P, Op>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue
 where
     Op: Mutation<P>,
 {
@@ -751,7 +759,13 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
 /// exclusively through `call`/`call_foreign` — the free helpers below are the ONLY supported way to
 /// fold a plan into a diff/inverse/foreign-step list, so every composite kind observes identical
 /// semantics regardless of who calls it.
-pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + serde::Serialize + serde::de::DeserializeOwned {
+///
+/// Bound on [`protocol::value::ToValue`]/[`protocol::value::FromValue`], not `serde::Serialize`/
+/// `serde::de::DeserializeOwned` — mirrors `MutationDiff`'s own supertrait migration (see
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/
+/// 🔍️research/`), so a plugin/extension implementing this trait never needs `serde` just to
+/// satisfy it.
+pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + Clone + protocol::value::ToValue + protocol::value::FromValue {
     const SEMANTICS: SemanticDescriptor;
     fn plan(&self, base: &P, planner: &mut Planner<P, Op>) -> Result<(), PlanError>;
     fn label(&self) -> String;

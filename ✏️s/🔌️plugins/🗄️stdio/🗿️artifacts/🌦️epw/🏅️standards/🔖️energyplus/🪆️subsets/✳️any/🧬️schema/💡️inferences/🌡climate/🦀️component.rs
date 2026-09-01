@@ -10,12 +10,11 @@
 //! empty-`records` case) is the fold's identity: all three temperature fields default to `0.0`.
 
 use crate::artifacts::epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️ClimateSummary
 /// 🌡️ Epw's hourly dry-bulb temperature min/max/avg.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct EpwClimateSummary {
     pub record_count: u32,
     pub parsed_temp_count: u32,

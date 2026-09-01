@@ -11,7 +11,6 @@
 //! (snapshot-type-changing) evolution pilot rather than a same-type dialect move.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from 87a's `"stdio.gif"` so the two
@@ -28,8 +27,8 @@ pub const GIF89A_ARTIFACT_SCHEMA_ID: &str = "s.stdio.gif.89a";
 /// 🧪️ F6-PILOT: `dsl::DslRecord` throughout this file — gives every nested snapshot/strong-entity
 /// type `DslField` so `#[derive(dsl::DslOps)]` (on `GifMutation`) and `#[derive(dsl::DslDiff)]`
 /// (on `GifDiff`, `GifFrameDiff`, ...) can embed them as variant/field payloads.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifRgb {
     pub r: u8,
     pub g: u8,
@@ -38,12 +37,12 @@ pub struct GifRgb {
 
 /// 🎨️ A Global or Local Color Table. `colors.len()` must be a power of two in `2..=256` on encode.
 /// `sorted` mirrors the packed byte's sort flag (decreasing importance ordering).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifColorTable {
-    #[serde(default)]
+    #[value(default)]
     pub sorted: bool,
-    #[serde(default)]
+    #[value(default)]
     pub colors: Vec<GifRgb>,
 }
 //#endregion ColorTable
@@ -53,8 +52,8 @@ pub struct GifColorTable {
 /// before rendering the next one.
 /// 🧪️ F6-PILOT: `dsl::DslScalar` — a plain unit-variant enum binds as `DslField` directly (no
 /// `DslVariants`/`Statements` needed; this is the "enum but not a mutation-shaped one" case).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default, dsl::DslScalar)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslScalar)]
+#[value(rename_all = "camelCase")]
 pub enum GifDisposal {
     #[default]
     Unspecified,
@@ -93,8 +92,8 @@ impl GifDisposal {
 /// `plain_text` is `Some` and `width == 0` IS a plain-text-only block (no image data); a frame with
 /// both real image data and `plain_text` is a rare-but-legal combo the codec does not encode (a
 /// documented deviation — see `engine::encode_gif`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifPlainText {
     pub left: u32,
     pub top: u32,
@@ -104,7 +103,7 @@ pub struct GifPlainText {
     pub cell_height: u8,
     pub fg_color_index: u8,
     pub bg_color_index: u8,
-    #[serde(default)]
+    #[value(default)]
     pub text: String,
 }
 //#endregion PlainText
@@ -113,12 +112,12 @@ pub struct GifPlainText {
 /// 🧩️ Any application extension OTHER than NETSCAPE2.0 (which is modeled separately via
 /// `GifSnapshot::loop_count`, to avoid representing the same on-disk bytes twice), retained
 /// verbatim — typed raw-retention for a spec-real-but-semantically-opaque region.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifAppExtension {
     pub identifier: [u8; 8],
     pub auth_code: [u8; 3],
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub data: Vec<u8>,
 }
@@ -135,35 +134,35 @@ impl Default for GifAppExtension {
 /// the changed sub-rectangle per frame, confirmed against the `dancing.gif` fixture), an optional
 /// Local Color Table, interlace flag, losslessly-retained palette indices (NOT decoded RGBA — the
 /// lossless-payload exception), and the Graphic Control Extension fields that preceded it.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct GifFrame {
     pub left: u32,
     pub top: u32,
     pub width: u32,
     pub height: u32,
-    #[serde(default)]
+    #[value(default)]
     pub interlace: bool,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub lct: Option<GifColorTable>,
     /// 🎞️ Palette indices, row-major, natural (non-interlaced) order — length must equal
     /// `width * height` for a real-image frame (empty for a plain-text-only frame).
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub indices: Vec<u8>,
     /// ⏱️ GCE delay time in 1/100s units.
-    #[serde(default)]
+    #[value(default)]
     pub delay_cs: u16,
-    #[serde(default)]
+    #[value(default)]
     pub disposal: GifDisposal,
     /// 👁️ GCE transparent color index — `None` when the transparent-color flag is clear.
-    #[serde(default)]
+    #[value(default)]
     pub transparent_index: Option<u8>,
     /// ⌨️ GCE user-input flag.
-    #[serde(default)]
+    #[value(default)]
     pub user_input: bool,
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub plain_text: Option<GifPlainText>,
 }
@@ -189,8 +188,8 @@ impl GifFrame {
 //#endregion FrameModel
 
 //#region Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.gif.89a")]
 pub struct GifSnapshot {
     #[state(artifact)]
@@ -200,31 +199,31 @@ pub struct GifSnapshot {
     #[state(artifact)]
     pub height: u32,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     #[dsl(block)]
     pub gct: Option<GifColorTable>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub background_color_index: u8,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub pixel_aspect_ratio: u8,
     /// 🔁️ NETSCAPE2.0 application extension loop count: `None` = no looping extension present
     /// (plays once); `Some(0)` = loop forever; `Some(n)` = loop `n` additional times.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub loop_count: Option<u16>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub frames: Vec<GifFrame>,
     /// 💬️ Comment Extension bodies, in file order (positionally normalized to appear right after
     /// the screen descriptor on re-encode — see `engine::encode_gif`'s documented normal form).
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub comments: Vec<String>,
     /// 🧩️ Every application extension OTHER than NETSCAPE2.0, verbatim.
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub app_extensions: Vec<GifAppExtension>,
 }
 

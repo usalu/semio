@@ -3,14 +3,13 @@ use crate::artifacts::gltf::schema::modules::mutation_support::structure_geometr
 use crate::artifacts::gltf::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::artifacts::gltf::schema::snapshot::GltfJson;
 use crate::artifacts::gltf::GltfSnapshot;
-use serde::{Deserialize, Serialize};
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-extra-data.v1";
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "state", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "state", rename_all = "camelCase")]
 pub enum GltfDataPresence { Absent, Present { value: GltfJson } }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct GltfChangeNodeExtraDataPayload { pub node: usize, pub data: GltfDataPresence }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> { checked_index(payload.node, base.document.nodes.len(), "document/nodes")?; let unchanged = match &payload.data { GltfDataPresence::Absent => base.document.nodes[payload.node].extras.is_none(), GltfDataPresence::Present { value } => base.document.nodes[payload.node].extras.as_ref() == Some(value) }; if unchanged { return Err(reject("gltf.mutation.no-observable-change", format!("document/nodes/{}/extras", payload.node), "extras already has the requested presence and value")); } Ok(()) }
@@ -18,9 +17,9 @@ pub fn validate(payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot) -
 pub fn apply(payload: &GltfChangeNodeExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> { validate(payload, base)?; let mut next = base.clone(); next.document.nodes[payload.node].extras = match &payload.data { GltfDataPresence::Absent => None, GltfDataPresence::Present { value } => Some(value.clone()) }; Ok(next) }
 
 //#region 🧬️DirectMutation
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(tag = "phase", content = "value", rename_all = "camelCase")]
+#[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeNodeExtraDataMutation {
     Apply(GltfChangeNodeExtraDataPayload),
     Restore(crate::artifacts::gltf::schema::diff::GltfDiff),

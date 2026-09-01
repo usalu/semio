@@ -101,8 +101,9 @@ fn resolve_labels<L: AppLabels>() -> &'static L {
 //#endregion 🔖️Terminology
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procmodule")]
 struct ModuleRenderPayload {
     #[serde(default)]
@@ -195,8 +196,9 @@ fn params_as_json(params: &dsl::DslValue) -> Value {
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
 /// store still records the pre-operation payload as a true inverse, so undo works.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 enum ModulePayloadMutation {
     SetPayload {
         #[dsl(block)]
@@ -259,8 +261,9 @@ impl protocol::OpBinary for ModulePayloadMutation {
 
 //#endregion 🔖️OpCodec
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 struct ModulePayloadDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     payload: Option<ModuleRenderPayload>,
@@ -728,12 +731,12 @@ impl ArtifactApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    fn command_from_action(action: &str, args: Option<&Value>) -> Result<Command, Fault> {
-        let format = args.and_then(|value| value.get("format")).and_then(Value::as_str).unwrap_or("obj").to_string();
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Command, Fault> {
+        let format = args.and_then(|value| value.get("format")).and_then(dsl::DslValue::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
             ACTION_IMPORT_SOLID => {
-                let data = args.and_then(|value| value.get("data")).and_then(Value::as_str).unwrap_or("").to_string();
+                let data = args.and_then(|value| value.get("data")).and_then(dsl::DslValue::as_str).unwrap_or("").to_string();
                 Ok(Command::ImportSolid { format, data })
             }
             other => Err(Fault::from(format!("action '{other}' is not supported by {MODULE_APP_ID}"))),
@@ -812,15 +815,15 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, semio_framewor
 fn module_extension_bundle() -> ExtensionBundle {
     ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").mode(ExecutionMode::Declarative).contributes_topic(
         "playbook.blockKind",
-        serde_json::json!({
-            "appId": "playbook-play",
-            "blockKind": "buildingComponent",
-            "label": "Building Component",
-            "iconId": "building",
-            "defaultValueJson": r#"{"height":6,"radius":0.5,"sides":6}"#,
-            "paramsBodyKey": BODY_PARAMS,
-            "previewBodyKey": BODY_PREVIEW,
-        }),
+        semio_framework_os_kernel::DslValue::object([
+            ("appId".to_string(), semio_framework_os_kernel::DslValue::String("playbook-play".to_string())),
+            ("blockKind".to_string(), semio_framework_os_kernel::DslValue::String("buildingComponent".to_string())),
+            ("label".to_string(), semio_framework_os_kernel::DslValue::String("Building Component".to_string())),
+            ("iconId".to_string(), semio_framework_os_kernel::DslValue::String("building".to_string())),
+            ("defaultValueJson".to_string(), semio_framework_os_kernel::DslValue::String(r#"{"height":6,"radius":0.5,"sides":6}"#.to_string())),
+            ("paramsBodyKey".to_string(), semio_framework_os_kernel::DslValue::String(BODY_PARAMS.to_string())),
+            ("previewBodyKey".to_string(), semio_framework_os_kernel::DslValue::String(BODY_PREVIEW.to_string())),
+        ]),
     )
 }
 
@@ -982,6 +985,22 @@ mod tests {
     async fn module_render_payload_dsl_round_trips() {
         store::os_store::test_support::assert_dsl_round_trip(&default_payload());
         store::os_store::test_support::assert_dsl_pack_equivalence(&default_payload());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn module_payload_value_codec_matches_serde_json() {
+        use semio_framework_os_kernel::{FromValue, ToValue};
+
+        let payload = default_payload();
+        let mutation = ModulePayloadMutation::SetPayload { payload: payload.clone() };
+        let diff = ModulePayloadDiff { payload: Some(payload.clone()) };
+
+        assert_eq!(payload.to_value(), dsl::DslValue::from(&serde_json::to_value(&payload).expect("serde payload")));
+        assert_eq!(ModuleRenderPayload::from_value(payload.to_value()).expect("first-party payload"), payload);
+        assert_eq!(mutation.to_value(), dsl::DslValue::from(&serde_json::to_value(&mutation).expect("serde mutation")));
+        assert_eq!(ModulePayloadMutation::from_value(mutation.to_value()).expect("first-party mutation"), mutation);
+        assert_eq!(diff.to_value(), dsl::DslValue::from(&serde_json::to_value(&diff).expect("serde diff")));
+        assert_eq!(ModulePayloadDiff::from_value(diff.to_value()).expect("first-party diff"), diff);
     }
 
     #[semio_framework_async_macros::async_test]

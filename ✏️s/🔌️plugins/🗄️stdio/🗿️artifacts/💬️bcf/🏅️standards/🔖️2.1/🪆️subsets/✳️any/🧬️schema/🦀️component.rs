@@ -3,24 +3,23 @@
 use crate::artifacts::bcf::schema::snapshot::{BcfRawPart, BcfTopic};
 use crate::artifacts::bcf::BcfSnapshot;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region Artifact
 /// 🧬️ Full `stdio.bcf` artifact state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfArtifact {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub version: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub topics: Vec<BcfTopic>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub parts: Vec<BcfRawPart>,
 }
 //#endregion Artifact

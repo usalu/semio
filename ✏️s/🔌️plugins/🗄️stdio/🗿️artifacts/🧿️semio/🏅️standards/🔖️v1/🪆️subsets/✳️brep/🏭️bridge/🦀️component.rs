@@ -148,23 +148,23 @@ fn protocol_outcomes(classes: &[protocol::MutationOutcomeClass]) -> Vec<&'static
 
 fn main() {
     let descriptors = <SemioBrepMutation as Mutation<_>>::DESCRIPTORS;
-    let rows: Vec<serde_json::Value> = descriptors
+    let rows: Vec<pack::JsonValue> = descriptors
         .iter()
         .map(|d| {
-            serde_json::json!({
-                "id": d.semantic_kind,
-                "variant": d.aggregate_variant,
-                "outcomes": protocol_outcomes(d.outcome_classes),
-            })
+            pack::json_object([
+                ("id".to_string(), pack::JsonValue::from(d.semantic_kind)),
+                ("variant".to_string(), pack::JsonValue::from(d.aggregate_variant)),
+                ("outcomes".to_string(), pack::json_array(protocol_outcomes(d.outcome_classes).into_iter().map(pack::JsonValue::from))),
+            ])
         })
         .collect();
-    let out = serde_json::json!({
-        "schema": "semio.repository-test.runtime-inventory/v2",
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "brep",
-        "bridgeVersion": 1,
-        "mutations": rows,
-    });
-    println!("{}", serde_json::to_string_pretty(&out).expect("inventory serialises"));
+    let out = pack::json_object([
+        ("schema".to_string(), pack::JsonValue::from("semio.repository-test.runtime-inventory/v2")),
+        ("artifact".to_string(), pack::JsonValue::from("s.stdio.semio")),
+        ("standard".to_string(), pack::JsonValue::from("v1")),
+        ("subset".to_string(), pack::JsonValue::from("brep")),
+        ("bridgeVersion".to_string(), pack::JsonValue::from(1_i64)),
+        ("mutations".to_string(), pack::json_array(rows)),
+    ]);
+    println!("{}", pack::json_to_string(&out));
 }

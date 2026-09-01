@@ -4,7 +4,6 @@
 //! the ordinary ISO-BMFF writer.
 
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_MP4_DOCUMENT_SCHEMA: &str = "stdio.mp4";
@@ -12,37 +11,37 @@ pub const STDIO_MP4_DOCUMENT_SCHEMA: &str = "stdio.mp4";
 
 //#region 🔖️Ftyp
 /// 🏷️ File-type box: brand + compatible-brand list. <https://www.iso.org/standard/74428.html> §4.3
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Ftyp {
     pub major_brand: String,
     pub minor_version: u32,
-    #[serde(default)]
+    #[value(default)]
     pub compatible_brands: Vec<String>,
 }
 //#endregion 🔖️Ftyp
 
 //#region 🔖️Codec
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4AvcExtension {
     pub chroma_format: u8,
     pub bit_depth_luma_minus8: u8,
     pub bit_depth_chroma_minus8: u8,
-    #[serde(default)]
+    #[value(default)]
     pub sps_ext: Vec<Vec<u8>>,
 }
 
 /// 🎥️ A track's typed AVC sample description. Unsupported codecs are rejected on import.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Codec {
-    #[serde(default)]
+    #[value(default)]
     pub sps: Vec<Vec<u8>>,
-    #[serde(default)]
+    #[value(default)]
     pub pps: Vec<Vec<u8>>,
     pub nal_length_size: u8,
-    #[serde(default)]
+    #[value(default)]
     pub extension: Option<Mp4AvcExtension>,
 }
 
@@ -58,22 +57,22 @@ impl Default for Mp4Codec {
 /// payload-opaque, matching the master plan's "video is container-typed, payload-opaque" call),
 /// its `stts` duration in the track's timescale, its `ctts` composition-time offset, and whether
 /// `stss` marks it a sync (random-access) sample (absent `stss` ⇒ every sample is sync, per spec).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Sample {
-    #[serde(default)]
+    #[value(default)]
     #[dsl(base64)]
     pub data: Vec<u8>,
     pub duration: u32,
-    #[serde(default)]
+    #[value(default)]
     pub cts_offset: i32,
     pub sync: bool,
 }
 //#endregion 🔖️Sample
 
 //#region 🎬️Movie
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Movie {
     pub creation_time: u64,
     pub modification_time: u64,
@@ -83,9 +82,9 @@ pub struct Mp4Movie {
     pub volume: i16,
     pub matrix: [i32; 9],
     pub next_track_id: u32,
-    #[serde(default)]
+    #[value(default)]
     pub title: Option<String>,
-    #[serde(default)]
+    #[value(default)]
     pub encoder: Option<String>,
 }
 
@@ -95,8 +94,8 @@ impl Default for Mp4Movie {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Edit {
     pub segment_duration: u64,
     pub media_time: i64,
@@ -104,8 +103,8 @@ pub struct Mp4Edit {
     pub media_rate_fraction: i16,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4VisualSampleEntry {
     pub data_reference_index: u16,
     pub version: u16,
@@ -140,34 +139,34 @@ impl Default for Mp4VisualSampleEntry {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Color {
     pub color_type: String,
     pub primaries: u16,
     pub transfer: u16,
     pub matrix: u16,
-    #[serde(default)]
+    #[value(default)]
     pub full_range: Option<bool>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4PixelAspectRatio {
     pub horizontal_spacing: u32,
     pub vertical_spacing: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Bitrate {
     pub buffer_size: u32,
     pub maximum: u32,
     pub average: u32,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4TrackMetadata {
     pub creation_time: u64,
     pub modification_time: u64,
@@ -183,14 +182,14 @@ pub struct Mp4TrackMetadata {
     pub language: String,
     pub quality: u16,
     pub handler_name: String,
-    #[serde(default)]
+    #[value(default)]
     pub edits: Vec<Mp4Edit>,
     pub visual: Mp4VisualSampleEntry,
-    #[serde(default)]
+    #[value(default)]
     pub color: Option<Mp4Color>,
-    #[serde(default)]
+    #[value(default)]
     pub pixel_aspect_ratio: Option<Mp4PixelAspectRatio>,
-    #[serde(default)]
+    #[value(default)]
     pub bitrate: Option<Mp4Bitrate>,
 }
 
@@ -223,8 +222,8 @@ impl Default for Mp4TrackMetadata {
 
 //#region 🔖️Track
 /// 🛤️ One typed video `trak`; unsupported handler types are rejected on import.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 pub struct Mp4Track {
     pub track_id: u32,
     pub timescale: u32,
@@ -233,27 +232,27 @@ pub struct Mp4Track {
     pub height: u32,
     pub metadata: Mp4TrackMetadata,
     /// 🧱️ Logical sample grouping per media chunk, in `stco`/`co64` order.
-    #[serde(default)]
+    #[value(default)]
     pub chunk_sample_counts: Vec<u32>,
-    #[serde(default)]
+    #[value(default)]
     pub samples: Vec<Mp4Sample>,
 }
 //#endregion 🔖️Track
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.mp4")]
 pub struct Mp4Snapshot {
     #[state(artifact)]
-    #[serde(default = "default_schema")]
+    #[value(default = "default_schema")]
     pub schema: String,
     #[state(artifact)]
     pub ftyp: Mp4Ftyp,
     #[state(artifact)]
     pub movie: Mp4Movie,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub tracks: Vec<Mp4Track>,
 }
 

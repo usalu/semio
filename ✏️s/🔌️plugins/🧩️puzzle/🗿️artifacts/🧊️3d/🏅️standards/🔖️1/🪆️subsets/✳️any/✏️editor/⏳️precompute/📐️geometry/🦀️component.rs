@@ -1,11 +1,17 @@
-//! 📐️ Puzzle 3d play app — the precompute geometry layer: the `nalgebra`/`parry3d` adapter (the ONE
-//! interface boundary this module depends on), the plain `[f64; 3]`/`[f64; 4]` vector and
-//! quaternion math the placement solver builds on, the brush placement pose solver itself, and the
-//! collision-body/AABB/overlap primitives the brush and fill lanes gate placements with. Rehomed from
-//! the former `⚙️engine/📐️geometry` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this
-//! is interactive brush/fill tool behaviour, so it lives with the app, not the artifact.
+//! 📐️ Puzzle 3d play app — the precompute geometry layer: the `semio_framework_3d::{rigid,
+//! collision}` adapter (the ONE interface boundary this module depends on), the plain
+//! `[f64; 3]`/`[f64; 4]` vector and quaternion math the placement solver builds on, the brush
+//! placement pose solver itself, and the collision-body/AABB/overlap primitives the brush and
+//! fill lanes gate placements with. Rehomed from the former `⚙️engine/📐️geometry` (ticket
+//! 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): this is interactive brush/fill tool
+//! behaviour, so it lives with the app, not the artifact. The `nalgebra`/`parry3d` third-party
+//! surface this adapter used to wrap moved into the framework (ticket
+//! 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS) — see
+//! `semio_framework_3d::rigid` (vectors/points/quaternions/isometries) and
+//! `semio_framework_3d::collision` (BVH triangle-mesh intersection + winding-number containment).
 
 use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
+use semio_framework_3d::{collision, rigid};
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 
@@ -325,13 +331,14 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
 }
 
 //#region 🔒️GeometryAdapter
-/// 🔒️ Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this artifact depends on.
+/// 🔒️ Thin wrappers over `semio_framework_3d::{rigid, collision}` — the one interface boundary
+/// this artifact depends on.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Vec3d(parry3d::na::Vector3<f32>);
+pub(crate) struct Vec3d(rigid::Vector3);
 
 impl Vec3d {
     pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
-        Self(parry3d::na::Vector3::new(x, y, z))
+        Self(rigid::Vector3::new(x, y, z))
     }
     pub(crate) fn x(&self) -> f32 {
         self.0.x
@@ -362,11 +369,11 @@ impl std::ops::Mul<f32> for Vec3d {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Point3d(parry3d::na::Point3<f32>);
+pub(crate) struct Point3d(rigid::Point3);
 
 impl Point3d {
     pub(crate) fn new(x: f32, y: f32, z: f32) -> Self {
-        Self(parry3d::na::Point3::new(x, y, z))
+        Self(rigid::Point3::new(x, y, z))
     }
     pub(crate) fn x(&self) -> f32 {
         self.0.x
@@ -378,16 +385,16 @@ impl Point3d {
         self.0.z
     }
     pub(crate) fn inf(&self, other: &Self) -> Self {
-        Self(self.0.inf(&other.0))
+        Self(self.0.inf(other.0))
     }
     pub(crate) fn sup(&self, other: &Self) -> Self {
-        Self(self.0.sup(&other.0))
+        Self(self.0.sup(other.0))
     }
     pub(crate) fn coords(&self) -> Vec3d {
-        Vec3d(self.0.coords)
+        Vec3d(self.0.coords())
     }
     pub(crate) fn from_coords(v: Vec3d) -> Self {
-        Self(parry3d::na::Point3::from(v.0))
+        Self(rigid::Point3::from_coords(v.0))
     }
 }
 
@@ -399,52 +406,52 @@ impl std::ops::Sub for Point3d {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Rotation3d(parry3d::na::UnitQuaternion<f32>);
+pub(crate) struct Rotation3d(rigid::UnitQuaternion);
 
 impl Rotation3d {
     pub(crate) fn identity() -> Self {
-        Self(parry3d::na::UnitQuaternion::identity())
+        Self(rigid::UnitQuaternion::identity())
     }
     /// 🔓️ Builds from CAD's `[i, j, k, w]` quaternion convention.
     pub(crate) fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
-        Self(parry3d::na::UnitQuaternion::from_quaternion(parry3d::na::Quaternion::new(w, i, j, k)))
+        Self(rigid::UnitQuaternion::from_quaternion(rigid::Quaternion::new(w, i, j, k)))
     }
     pub(crate) fn to_ijkw(self) -> (f32, f32, f32, f32) {
         let q = self.0.quaternion();
         (q.i, q.j, q.k, q.w)
     }
     pub(crate) fn rotation_between(from: Vec3d, to: Vec3d) -> Option<Self> {
-        parry3d::na::UnitQuaternion::rotation_between(&from.0, &to.0).map(Self)
+        rigid::UnitQuaternion::rotation_between(from.0, to.0).map(Self)
     }
     pub(crate) fn apply(&self, v: Vec3d) -> Vec3d {
-        Vec3d(self.0 * v.0)
+        Vec3d(self.0.apply(v.0))
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Pose3d(parry3d::na::Isometry3<f32>);
+pub(crate) struct Pose3d(rigid::Isometry3);
 
 impl Pose3d {
     pub(crate) fn identity() -> Self {
-        Self(parry3d::na::Isometry3::identity())
+        Self(rigid::Isometry3::identity())
     }
     pub(crate) fn from_parts(translation: Vec3d, rotation: Rotation3d) -> Self {
-        Self(parry3d::na::Isometry3::from_parts(translation.0.into(), rotation.0))
+        Self(rigid::Isometry3::from_parts(translation.0, rotation.0))
     }
     pub(crate) fn inverse(&self) -> Self {
         Self(self.0.inverse())
     }
     pub(crate) fn transform_point(&self, point: &Point3d) -> Point3d {
-        Point3d(self.0 * point.0)
+        Point3d(self.0.transform_point(point.0))
     }
     pub(crate) fn semio_compose_rs(&self, other: &Self) -> Self {
-        Self(self.0 * other.0)
+        Self(self.0.compose(other.0))
     }
 }
 
 #[derive(Clone)]
 pub(crate) struct CollisionShape {
-    shape: parry3d::shape::SharedShape,
+    shape: std::sync::Arc<collision::TriMesh>,
     retained_items: usize,
     retained_bytes: usize,
     page_bounded: bool,
@@ -452,22 +459,22 @@ pub(crate) struct CollisionShape {
 
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
-        let verts: Vec<parry3d::na::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
-        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<parry3d::na::Point3<f32>>());
+        let verts: Vec<rigid::Point3> = vertices.iter().map(|p| p.0).collect();
+        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<rigid::Point3>());
         let index_bytes = indices.capacity().saturating_mul(std::mem::size_of::<[u32; 3]>());
         let retained_items = usize::from(vertex_bytes != 0) + usize::from(index_bytes != 0);
         let retained_bytes = vertex_bytes.saturating_add(index_bytes);
         let page_bounded = vertex_bytes <= 16 * 1024 && index_bytes <= 16 * 1024;
-        let mesh = parry3d::shape::TriMesh::with_flags(verts, indices, parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES);
-        Self { shape: parry3d::shape::SharedShape::new(mesh), retained_items, retained_bytes, page_bounded }
+        let mesh = collision::TriMesh::new(verts, indices);
+        Self { shape: std::sync::Arc::new(mesh), retained_items, retained_bytes, page_bounded }
     }
     pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
-        self.shape.contains_point(&pose.0, &point.0)
+        collision::contains_point(pose.0, &self.shape, point.0)
     }
 }
 
 fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &CollisionShape) -> bool {
-    parry3d::query::intersection_test(&pose_a.0, &*a.shape, &pose_b.0, &*b.shape).unwrap_or(false)
+    collision::intersection_test(pose_a.0, &a.shape, pose_b.0, &b.shape)
 }
 //#endregion 🔒️GeometryAdapter
 

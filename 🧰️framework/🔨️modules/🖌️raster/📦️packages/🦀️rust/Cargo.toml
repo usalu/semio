@@ -17,6 +17,13 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+
+# 🎯️ `SceneRasterizer` (device/queue/pipeline, headless GPU frame capture) is the only consumer of
+# either crate — gated `not(all(target_arch = "wasm32", target_env = "p2"))` in `../../🦀️.rs`.
+# `target_arch = "wasm32"` alone is TRUE for `wasm32-wasip2`, so this table (not a bare
+# `cfg(not(target_arch = "wasm32"))`) is what actually keeps both crates, and their
+# `wasm-bindgen`/`js-sys`/`web-sys` transitive edge, out of the shipped wasip2 component.
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 wgpu = "27.0.1"
 

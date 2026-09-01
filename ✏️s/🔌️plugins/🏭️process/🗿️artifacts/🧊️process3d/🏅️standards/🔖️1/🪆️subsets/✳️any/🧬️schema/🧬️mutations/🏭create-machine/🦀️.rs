@@ -8,15 +8,15 @@ use crate::artifacts::process3d::mutations::create_machine::CreateMachine;
 use crate::artifacts::process3d::mutations::delete_machine::DeleteMachine;
 use crate::artifacts::process3d::mutations::Process3dMutation;
 use crate::artifacts::process3d::{Process3dSnapshot, Workshop, WorkshopMachine};
-use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CreateMachine
 /// 🛠️ Full initial payload for a new [`WorkshopMachine`] installed into the document's workshop.
 /// `index` is carried for label/provenance purposes only — the workshop's `machines` list has no
 /// user-meaningful order, so the diff always appends.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
-#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct CreateMachine {
     pub index: usize,
     pub machine: WorkshopMachine,

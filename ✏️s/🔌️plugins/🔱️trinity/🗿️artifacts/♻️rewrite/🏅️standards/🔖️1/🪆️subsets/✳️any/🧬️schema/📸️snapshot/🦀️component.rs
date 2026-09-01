@@ -3,13 +3,12 @@
 use crate::artifacts::jack::PropertyValue;
 use crate::artifacts::rewrite::LayoutPoint;
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted rewrite-rule document snapshot (persistent fields of the artifact).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[dsl(extension = "rewrite", layout = "lines")]
 #[artifact_schema(id = "s.trinity.rewrite")]
 pub struct RewriteSnapshot {
@@ -21,10 +20,10 @@ pub struct RewriteSnapshot {
     #[dsl(lang = "json")]
     pub rhs_json: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub parameter_bindings: BTreeMap<String, PropertyValue>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub rule_layout: BTreeMap<String, LayoutPoint>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
@@ -81,7 +80,7 @@ impl store::ArtifactPack for RewriteSnapshot {
 /// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
 /// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
 pub fn encode_rewrite_snapshot_json(snapshot: &RewriteSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("RewriteSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
 /// 📥️ The inverse of [`encode_rewrite_snapshot_json`] — decodes those committed specification
@@ -89,7 +88,7 @@ pub fn encode_rewrite_snapshot_json(snapshot: &RewriteSnapshot) -> String {
 /// fixture rather than re-declaring it as a Rust literal beside it. Reaching `serde_json` from that
 /// adapter is impossible: the generated test host links only this crate and `semio-repo-test-host`.
 pub fn decode_rewrite_snapshot_json(text: &str) -> Result<RewriteSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Parses `.rewrite.dsl.semio` text into a [`RewriteSnapshot`] — a named, non-async pass-through

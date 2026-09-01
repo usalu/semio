@@ -10,7 +10,6 @@
 use crate::artifacts::semio::standards::v1::subsets::any::schema::geometry::SemioPoint3;
 use crate::artifacts::semio::standards::v1::subsets::any::schema::triples::{split_top_level, strip_brackets};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Ids
 pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
@@ -19,13 +18,12 @@ pub const STDIO_SEMIOBREP_DOCUMENT_SCHEMA: &str = "stdio.semio.brep";
 //#region 🔖️Curve
 /// 📈️ A b-rep edge's underlying 3D curve. Owned by `brep` (`w1b-type-ownership.md`).
 ///
-/// 🔣️ `rename_all_fields` is load-bearing and NOT redundant beside `rename_all`: on an enum serde's
-/// `rename_all` renames the VARIANTS only, so without it the struct-variant members would go out as
-/// `radius_major`/`control_points` while this subset's own committed schema
-/// (`📸️snapshot/🔣️component.json`) declares them `radiusMajor`/`controlPoints`. The four
-/// single-word arms hid the mismatch until a cross-language differential reached `ellipse`/`nurbs`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+/// 🔣️ Unlike `serde`, this derive's own `rename_all` already applies to BOTH the variant name AND
+/// every struct-variant member name (see `🌱️value/✨️derive`'s module docs) — no separate
+/// `rename_all_fields` needed; `radiusMajor`/`controlPoints` etc. come out correctly from
+/// `rename_all = "camelCase"` alone.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum BrepCurve {
     Line {
         origin: SemioPoint3,
@@ -54,7 +52,7 @@ pub enum BrepCurve {
 }
 
 /// 🩹️ Needed ONLY so `BrepEdge`/entity structs can derive `Default` (in turn needed only because
-/// `serde_derive`'s `#[serde(default)]` on a `Vec<T>` field spuriously infers `T: Default` for the
+/// `serde_derive`'s `#[value(default)]` on a `Vec<T>` field spuriously infers `T: Default` for the
 /// SHARED `🧰️triples::NamedTripleDiff<K,D,T>`'s `added: Vec<T>` — see the "shared infra gaps" note
 /// in the wave report; never constructed as a meaningful default in real code paths.
 impl Default for BrepCurve {
@@ -67,12 +65,10 @@ impl Default for BrepCurve {
 //#region 🔖️Surface
 /// 🗺️ A b-rep face's underlying surface. Owned by `brep`.
 ///
-/// 🔣️ `rename_all_fields` is load-bearing for the same reason `BrepCurve`'s is: without it
-/// `half_angle`/`major_radius`/`minor_radius`/`control_points`/`u_count`/`v_count`/`degree_u`/
-/// `degree_v`/`knots_u`/`knots_v` would contradict the committed schema's camelCase spelling of
-/// every one of them.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+/// 🔣️ Same story as `BrepCurve` above — this derive's `rename_all` already covers struct-variant
+/// member names, so a bare `rename_all = "camelCase"` is enough.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(tag = "kind", rename_all = "camelCase")]
 pub enum BrepSurface {
     Plane {
         origin: SemioPoint3,
@@ -124,16 +120,16 @@ impl Default for BrepSurface {
 //#region 🔖️Topology
 /// 📍️ A b-rep vertex — corresponds to STEP's `VERTEX_POINT`/`CARTESIAN_POINT` pair collapsed
 /// into one id-keyed entity.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepVertex {
     pub id: String,
     pub point: SemioPoint3,
 }
 
 /// ➡️ A b-rep edge — corresponds to STEP's `EDGE_CURVE`, always resolved between two vertices.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepEdge {
     pub id: String,
     pub start_vertex: String,
@@ -143,95 +139,95 @@ pub struct BrepEdge {
 
 /// 🔁️ A loop-member reference to an edge, carrying the traversal orientation — STEP's
 /// `ORIENTED_EDGE.orientation`. A named weak struct, never a bare `(String, bool)` tuple.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepLoopEdge {
     pub edge: String,
     pub orientation: bool,
 }
 
 /// ⭕️ A closed edge loop — corresponds to STEP's `EDGE_LOOP`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepLoop {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<BrepLoopEdge>,
 }
 
 /// 🔺️ A b-rep face — corresponds to STEP's `ADVANCED_FACE`, bounded by one outer loop and zero
 /// or more inner (hole) loops, over a typed surface.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepFace {
     pub id: String,
     pub outer_loop: String,
-    #[serde(default)]
+    #[value(default)]
     pub inner_loops: Vec<String>,
     pub surface: BrepSurface,
     pub orientation: bool,
 }
 
 /// 🔁️ A shell-member reference to a face, carrying orientation — STEP's face-in-shell sense.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepShellFace {
     pub face: String,
     pub orientation: bool,
 }
 
 /// 🐚️ A closed (or open) shell — corresponds to STEP's `CLOSED_SHELL`/`OPEN_SHELL`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepShell {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<BrepShellFace>,
 }
 
 /// 🔁️ A solid-member reference to a shell, flagging whether it bounds a void (an internal
 /// cavity) rather than the solid's outer boundary — STEP's `MANIFOLD_SOLID_BREP.voids`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepSolidShell {
     pub shell: String,
     pub is_void: bool,
 }
 
 /// 🧊️ A manifold solid — corresponds to STEP's `MANIFOLD_SOLID_BREP`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct BrepSolid {
     pub id: String,
-    #[serde(default)]
+    #[value(default)]
     pub shells: Vec<BrepSolidShell>,
 }
 //#endregion 🔖️Topology
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.brep")]
 pub struct SemioBrepSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub vertices: Vec<BrepVertex>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub edges: Vec<BrepEdge>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub loops: Vec<BrepLoop>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub faces: Vec<BrepFace>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub shells: Vec<BrepShell>,
     #[state(artifact)]
-    #[serde(default)]
+    #[value(default)]
     pub solids: Vec<BrepSolid>,
 }
 
@@ -1021,29 +1017,26 @@ impl store::ArtifactPack for SemioBrepSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🌉️ExternalCodecBridge
-/// 📤️ This subset's own `#[serde(rename_all = "camelCase")]` structural JSON projection of
+/// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
 /// `s.stdio.semio.brep` — the shape `mutate-semio-brep` compares under `ordered-json-v1`, derived from the
 /// snapshot type itself rather than hand-written a second time in the adapter, where it could drift
-/// away from the type it claims to project. The projection is not flat: `BrepCurve` and `BrepSurface` are `#[serde(tag = "kind",
+/// away from the type it claims to project. The projection is not flat: `BrepCurve` and `BrepSurface` are `#[value(tag = "kind",
 /// rename_all = "camelCase")]` enums, so every edge carries a discriminated `curve` object and every
 /// face a discriminated `surface` one — a shape no hand-written adapter projection would reproduce
 /// reliably by eye.
-/// A thin `serde_json` wrapper (already a direct dependency of this crate, used behind this
-/// interface per CLAUDE.md's "external libraries behind an interface" rule, never a new one).
+/// A thin `pack::to_json_string` wrapper (first-party, over `ToValue`/`DslValue`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_brep_snapshot_json(snapshot: &SemioBrepSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("SemioBrepSnapshot serialization is infallible")
+    pack::to_json_string(snapshot)
 }
 
-/// 📥️ The `serde_json` inverse of [`encode_semio_brep_snapshot_json`] — decodes the committed
-/// `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
+/// 📥️ The `pack::from_json_str` inverse of [`encode_semio_brep_snapshot_json`] — decodes the
+/// committed `../🧬️mutations/<kind>/🧪️tests/<fixture>/📸️snapshot/{⬅️before,➡️after}/🔣️component.json`
 /// specification vectors into real [`SemioBrepSnapshot`] values, so `mutate-semio-brep`'s adapter reads the
-/// committed fixture instead of re-declaring it as a Rust literal beside it. Reaching `serde_json`
-/// from that adapter is impossible — the generated test host links only this crate — which is why
-/// the bridge belongs here rather than there.
+/// committed fixture instead of re-declaring it as a Rust literal beside it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioBrepSnapshot`] — a

@@ -15,7 +15,6 @@ use crate::artifacts::zip::opc::{OpcContentTypes, OpcPackage, OpcRelationship};
 use crate::artifacts::zip::opc::{OpcTargetMode, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔖️Mutations
@@ -60,9 +59,9 @@ pub mod set_shared_string;
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = XlsxSnapshot, diff = XlsxDiff, schema = "XlsxMutation")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
+#[value(tag = "mutation", rename_all = "camelCase")]
 pub enum XlsxMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts a brand-new sheet (possibly pre-populated with cells).

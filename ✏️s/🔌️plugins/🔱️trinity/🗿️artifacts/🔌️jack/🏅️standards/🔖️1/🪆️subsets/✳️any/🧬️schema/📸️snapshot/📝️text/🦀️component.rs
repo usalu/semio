@@ -127,9 +127,9 @@ fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
 
 fn print_jack_snapshot_body(s: &JackSnapshot) -> String {
     let scene = crate::artifacts::jack::jack_working_scene(s);
-    let camera_json = serde_json::to_string(&s.camera).unwrap_or_default();
-    let nodes_json = serde_json::to_string(&scene.nodes).unwrap_or_default();
-    let edges_json = serde_json::to_string(&scene.edges).unwrap_or_default();
+    let camera_json = pack::to_json_string(&s.camera).unwrap_or_default();
+    let nodes_json = pack::to_json_string(&scene.nodes).unwrap_or_default();
+    let edges_json = pack::to_json_string(&scene.edges).unwrap_or_default();
     format!(
         "schema={}\nname={}\nmanifestId={}\ncamera={}\nnodes={}\nedges={}\nrootNodeId={}",
         enc_str(&s.schema),
@@ -162,11 +162,11 @@ fn parse_jack_snapshot_body(body: &str) -> Result<JackSnapshot, String> {
         } else if let Some(rest) = line.strip_prefix("manifestId=") {
             manifest_id = Some(dec_opt_str(rest)?);
         } else if let Some(rest) = line.strip_prefix("camera=") {
-            camera = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+            camera = Some(pack::from_json_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = line.strip_prefix("nodes=") {
-            nodes = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+            nodes = Some(pack::from_json_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = line.strip_prefix("edges=") {
-            edges = Some(serde_json::from_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
+            edges = Some(pack::from_json_str(&dec_str(rest)?).map_err(|e| e.to_string())?);
         } else if let Some(rest) = line.strip_prefix("rootNodeId=") {
             root_node_id = Some(dec_opt_str(rest)?);
         } else {
@@ -239,9 +239,9 @@ impl store::ArtifactPack for JackSnapshot {
         write_str_lp(&mut out, &self.name);
         write_str_lp(&mut out, self.manifest_id.as_deref().unwrap_or(""));
         write_str_lp(&mut out, &self.manifest_id.is_some().to_string());
-        write_str_lp(&mut out, &serde_json::to_string(&self.camera).unwrap_or_default());
-        write_str_lp(&mut out, &serde_json::to_string(&scene.nodes).unwrap_or_default());
-        write_str_lp(&mut out, &serde_json::to_string(&scene.edges).unwrap_or_default());
+        write_str_lp(&mut out, &pack::to_json_string(&self.camera).unwrap_or_default());
+        write_str_lp(&mut out, &pack::to_json_string(&scene.nodes).unwrap_or_default());
+        write_str_lp(&mut out, &pack::to_json_string(&scene.edges).unwrap_or_default());
         write_str_lp(&mut out, self.root_node_id.as_deref().unwrap_or(""));
         write_str_lp(&mut out, &self.root_node_id.is_some().to_string());
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| PackError::Schema(e.to_string()))?;
@@ -266,11 +266,11 @@ impl store::ArtifactPack for JackSnapshot {
         let manifest_id_present: bool = read_str_lp(&mut reader).map_err(PackError::Schema)?.parse().unwrap_or(false);
         let manifest_id = manifest_id_present.then_some(manifest_id_raw);
         let camera_json = read_str_lp(&mut reader).map_err(PackError::Schema)?;
-        let camera = serde_json::from_str(&camera_json).map_err(|e| PackError::Schema(e.to_string()))?;
+        let camera = pack::from_json_str(&camera_json).map_err(|e| PackError::Schema(e.to_string()))?;
         let nodes_json = read_str_lp(&mut reader).map_err(PackError::Schema)?;
-        let nodes: Vec<Node> = serde_json::from_str(&nodes_json).map_err(|e| PackError::Schema(e.to_string()))?;
+        let nodes: Vec<Node> = pack::from_json_str(&nodes_json).map_err(|e| PackError::Schema(e.to_string()))?;
         let edges_json = read_str_lp(&mut reader).map_err(PackError::Schema)?;
-        let edges: Vec<Edge> = serde_json::from_str(&edges_json).map_err(|e| PackError::Schema(e.to_string()))?;
+        let edges: Vec<Edge> = pack::from_json_str(&edges_json).map_err(|e| PackError::Schema(e.to_string()))?;
         let root_node_id_raw = read_str_lp(&mut reader).map_err(PackError::Schema)?;
         let root_node_id_present: bool = read_str_lp(&mut reader).map_err(PackError::Schema)?.parse().unwrap_or(false);
         let root_node_id = root_node_id_present.then_some(root_node_id_raw);

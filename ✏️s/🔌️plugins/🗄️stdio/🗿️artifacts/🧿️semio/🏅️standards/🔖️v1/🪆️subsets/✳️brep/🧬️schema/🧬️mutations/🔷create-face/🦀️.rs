@@ -2,15 +2,14 @@
 
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation, delete_face};
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::{BrepFace, BrepSurface, SemioBrepSnapshot};
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateFace {
     pub id: String,
     pub outer_loop: String,
-    #[serde(default)]
+    #[value(default)]
     pub inner_loops: Vec<String>,
     pub surface: BrepSurface,
     pub orientation: bool,
