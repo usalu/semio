@@ -852,11 +852,11 @@
       }
     },
     {
-      "name": "🛠️dev🎬manim",
+      "name": "🛠️dev🎬manim heating vs cooling",
       "type": "node-terminal",
       "request": "launch",
-      "command": "uv run manim -pql tutorial/energy/demand/Cooling/heating_vs_cooling/heating_vs_cooling.py HeatingVsCooling",
-      "cwd": "${workspaceFolder}",
+      "command": "uv run manim -pql scene_1.py Beat1_WinterGains",
+      "cwd": "${workspaceFolder}/tutorial/energy/demand/Cooling/1_heating_vs_cooling",
       "presentation": {
         "group": "3_dev",
         "order": 200
@@ -959,6 +959,50 @@
       "presentation": {
         "group": "3_dev",
         "order": 209
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim heating conduction",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql scene_2.py Beat1_MakroUndMikro",
+      "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/2_conduction",
+      "presentation": {
+        "group": "3_dev",
+        "order": 211
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim heating introduction",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql scene_1.py Beat1_DreiWegeDerWaerme",
+      "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/1_introduction",
+      "presentation": {
+        "group": "3_dev",
+        "order": 212
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim heating final calculation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql merged_scenes.py UltimateEnergyBalance",
+      "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/final_calculation",
+      "presentation": {
+        "group": "3_dev",
+        "order": 214
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim intro physical fundamentals",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/intro/intro_scene.py Demo_Intro_PhysikalischeGrundlagen",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 215
       }
     },
     // #endregion

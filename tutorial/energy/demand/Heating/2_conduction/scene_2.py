@@ -34,6 +34,26 @@ from manim_visuals import (
 TITLE_DE = "Modul 2: Wärmeleitung"
 
 
+#region Beat helpers
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Part 2 rests on the same norms Module 1's conduction beats cite, so this
+    mirrors ``_din_ref`` in ``1_introduction/scene_1.py`` exactly (same size,
+    colour, opacity, corner): DIN EN ISO 6946 for the R- and U-value of a
+    building component, DIN EN ISO 13789 for the envelope-wide transmission
+    coefficient, DIN 4108-2 for the envelope insulation requirement the
+    air-pocket beat is really about. Dim so it reads as a footnote, never
+    competing with the diagram. The formula panel sits on the bottom edge, so
+    this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
 class Beat1_MakroUndMikro(Scene):
     NARRATION = [
         ("macro",
@@ -59,7 +79,8 @@ class Beat1_MakroUndMikro(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Makroskopisch und mikroskopisch", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "macro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -221,7 +242,8 @@ class Beat2_RWert(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmedurchlasswiderstand R", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -326,7 +348,8 @@ class Beat3_UWertUndGradient(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("U-Wert und Temperaturgradient", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "u_intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -394,7 +417,9 @@ class Beat3_UWertUndGradient(Scene):
         dot_out = Dot(p_out_m5, color=P_BLUE, radius=0.07)
         self.play(Create(VGroup(temp_line1, temp_line_wall, temp_line_out)), FadeIn(dot_in), FadeIn(dot_out), run_time=1.0)
 
-        brace = BraceBetweenPoints(axes.c2p(2.7, 20), axes.c2p(2.7, -5), direction=RIGHT, color=P_YELLOW)
+        brace = BraceBetweenPoints(
+            axes.c2p(2.7, 20), axes.c2p(2.7, -5), direction=RIGHT, color=P_YELLOW
+        ).shift(RIGHT * 0.3)
         brace_label = Text("Δθ = 25 K", font_size=BODY_FONT_SIZE, color=P_YELLOW).next_to(brace, RIGHT, buff=0.15)
         self.play(Create(brace), FadeIn(brace_label), run_time=0.8)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "profile"))
@@ -402,7 +427,9 @@ class Beat3_UWertUndGradient(Scene):
 
         p_w2_m15, p_out_m15 = axes.c2p(2.0, -15), axes.c2p(2.5, -15)
         y_label_m15 = Text("−15 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE).next_to(axes.c2p(0, -15), LEFT, buff=0.12)
-        brace_new = BraceBetweenPoints(axes.c2p(2.7, 20), axes.c2p(2.7, -15), direction=RIGHT, color=P_YELLOW)
+        brace_new = BraceBetweenPoints(
+            axes.c2p(2.7, 20), axes.c2p(2.7, -15), direction=RIGHT, color=P_YELLOW
+        ).shift(RIGHT * 0.3)
         brace_label_new = Text("Δθ = 35 K", font_size=BODY_FONT_SIZE, color=P_YELLOW).next_to(brace_new, RIGHT, buff=0.15)
         self.play(
             Transform(y_label_m5, y_label_m15),
@@ -442,7 +469,8 @@ class Beat4_Gebaeudehuelle(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Die thermische Gebäudehülle", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 13789")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -465,7 +493,13 @@ class Beat4_Gebaeudehuelle(Scene):
         hold_for(self, self.NARRATION, "formula", used=0.4 + 0.35)
         self.play(FadeOut(ring), run_time=0.2)
 
-        house_center = UP * 0.35
+        # Dropped from UP*0.35: the roof arrow and its "Dach" label reached y ≈ 2.9
+        # and ran into the "Die thermische Gebäudehülle" beat subtitle. Every house
+        # point and pathway arrow/label below is placed relative to house_center,
+        # so lowering it shifts the whole group down together; the shorter roof
+        # arrow keeps "Dach" clear of the subtitle at the top without pushing
+        # "Boden" onto the formula panel (SAFE_BOTTOM_FORMULA) at the bottom.
+        house_center = DOWN * 0.1
         w_width, w_height = 3.0, 1.7
         bl = house_center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
         br = house_center + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
@@ -487,7 +521,7 @@ class Beat4_Gebaeudehuelle(Scene):
         self.play(Create(floor_line), Create(walls), Create(roof), run_time=1.4)
         self.play(Create(VGroup(window, window_cross)), Create(VGroup(door, door_knob)), run_time=1.0)
 
-        roof_arrow = Arrow(roof_peak + UP * 0.05, roof_peak + UP * 0.5, color=P_ORANGE, buff=0, stroke_width=3)
+        roof_arrow = Arrow(roof_peak + UP * 0.05, roof_peak + UP * 0.34, color=P_ORANGE, buff=0, stroke_width=3)
         roof_label = Text("Dach", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(roof_arrow, UP, buff=0.08)
         win_arrow = Arrow(window.get_left(), house_center + LEFT * 2.1 + UP * 0.2, color=P_ORANGE, buff=0.05, stroke_width=3)
         win_label = Text("Fenster", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(win_arrow, LEFT, buff=0.08)
@@ -495,8 +529,8 @@ class Beat4_Gebaeudehuelle(Scene):
         wall_label = Text("Wände", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(wall_arrow, LEFT, buff=0.08)
         door_arrow = Arrow(door.get_right(), house_center + RIGHT * 2.1 + DOWN * 0.4, color=P_ORANGE, buff=0.05, stroke_width=3)
         door_label = Text("Türen", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(door_arrow, RIGHT, buff=0.08)
-        floor_arrow = Arrow(house_center + DOWN * 0.85, house_center + DOWN * 1.25, color=P_ORANGE, buff=0, stroke_width=3)
-        floor_label = Text("Boden", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(floor_arrow, DOWN, buff=0.08)
+        floor_arrow = Arrow(house_center + DOWN * 0.9, house_center + DOWN * 1.1, color=P_ORANGE, buff=0, stroke_width=3)
+        floor_label = Text("Boden", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(floor_arrow, DOWN, buff=0.06)
 
         pathways = [
             (roof_arrow, roof_label), (win_arrow, win_label), (wall_arrow, wall_label),

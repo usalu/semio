@@ -2,13 +2,24 @@
   "title": "Add Physical Fundamentals Intro",
   "slug": "ADD-PHYSICAL-FUNDAMENTALS-INTRO",
   "emoji": "🏛️",
-  "status": "open",
+  "status": "closed",
   "description": "Add an NGS intro card for the Physical Fundamentals video, matching the Heating and Cooling series intros, and prepend it in the compose pipeline.",
   "goal": "🎯r2602🎯updateddocs🎯updateduserdocs🎯updatedtutorials",
   "dates": {
     "due": "2026-08-28",
-    "started": "2026-08-28"
+    "started": "2026-08-28",
+    "completed": "2026-08-28"
   },
   "client": "cursor-chat",
-  "llm": "grok-4-6"
+  "llm": "grok-4-6",
+  "summary": "Added Demo_Intro_PhysikalischeGrundlagen to the NGS intro template and prepended it in both Physical Fundamentals compose scripts. Smoke-rendered at 480p15 (~15 s).",
+  "files": {
+    "updated": [
+      "tutorial/intro/intro_scene.py",
+      "tutorial/intro/generate_audio.py",
+      "tutorial/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py",
+      "tutorial/energy/demand/1_physical_fundamentals/build_full_video.py",
+      ".vscode/launch.json"
+    ]
+  }
 }

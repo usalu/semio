@@ -88,6 +88,21 @@ def _person_heat_waves():
         return wave
 
     return VGroup(create_wave(-0.2), create_wave(0.1), create_wave(0.4))
+
+
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
+    modules. Internal gains are tabulated in DIN V 18599-10, so every beat that
+    does not already print that standard in its diagram footnotes it here. The
+    chip is added after ``_fit_stage`` and sits in absolute frame coordinates,
+    so ``CONTENT_SCALE`` never touches it.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
 #endregion
 
 
@@ -251,7 +266,8 @@ class Beat2_PersonenPhiP(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Personenabwärme Φ_p", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "person"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -369,7 +385,8 @@ class Beat3_GeraetePhiE(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Geräteabwärme Φ_e", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "desk"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -524,7 +541,8 @@ class Beat4_BeleuchtungPhiL(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Beleuchtungswärme Φ_l", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-10")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "lamp"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -660,11 +678,17 @@ class Beat5_SummeUndDichte(Scene):
             (None, "  [W]", P_WHITE),
         ])
         row, box = formula_panel(row, edge_buff=FORMULA_EDGE_BUFF)
+        # The three source tokens were built at FORMULA_FONT_SIZE but shrunk by
+        # ``_fit_stage`` (CONTENT_SCALE) for the intro layout, so a bare
+        # ``move_to`` landed them smaller than the equation glyphs they merge
+        # into — a visible size jump when they were removed. Scale each token up
+        # to its target glyph's height as it travels, so it grows into place and
+        # matches exactly on arrival.
         self.play(
             FadeOut(p_lab), FadeOut(e_lab), FadeOut(l_lab),
-            p_tok.animate.move_to(items["phi_p"].get_center()),
-            e_tok.animate.move_to(items["phi_e"].get_center()),
-            l_tok.animate.move_to(items["phi_l"].get_center()),
+            p_tok.animate.scale(items["phi_p"].height / p_tok.height).move_to(items["phi_p"].get_center()),
+            e_tok.animate.scale(items["phi_e"].height / e_tok.height).move_to(items["phi_e"].get_center()),
+            l_tok.animate.scale(items["phi_l"].height / l_tok.height).move_to(items["phi_l"].get_center()),
             FadeIn(row), Create(box),
             run_time=1.6,
         )

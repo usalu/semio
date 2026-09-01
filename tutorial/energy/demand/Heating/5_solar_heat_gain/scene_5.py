@@ -28,6 +28,7 @@ from manim_visuals import (
     P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
     equation_row, formula_panel, highlight_param,
     caption_bar, swap_caption, hold_for, subtitle_text,
+    solar_wave_ray,
 )
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
@@ -116,6 +117,21 @@ def _fit_stage(mob, *, below, focus=None, scale_max=None, shrink_floor=None):
     if anchor.get_bottom()[1] < CONTENT_BOTTOM_MIN:
         mob.shift(UP * (CONTENT_BOTTOM_MIN - anchor.get_bottom()[1]))
     return mob
+
+
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in the other Heating
+    modules. Module 5's solar-gain chain — Φ_solar = G · A · F_f · g · F_sh —
+    is the DIN V 18599-2 method; the thermal-mass beats cite DIN EN ISO 13786.
+    Added in absolute frame coordinates, so ``_fit_stage`` never scales it, and
+    skipped on the g-value beat, which already prints its norm in the diagram.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
 #endregion
 
 
@@ -141,7 +157,8 @@ class Beat1_VerlustZuGewinn(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Von Wärmeverlust zu solarem Gewinn", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "loss"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -221,11 +238,14 @@ class Beat1_VerlustZuGewinn(Scene):
             window.get_center(),
             house_center + LEFT * 1.8 + UP * 0.3,
         ]
+        # Wavy solar rays (``solar_wave_ray``), matching the Strahlung style used
+        # in the other tutorial scenes — a straight Line read as a laser, not
+        # radiation.
         radiation_lines = VGroup()
         for target in targets:
             start_pt = sun_pos + (target - sun_pos) * 0.18
-            radiation_lines.add(Line(
-                start_pt, target, color=COLOR_G, stroke_width=2.5, stroke_opacity=0.85,
+            radiation_lines.add(solar_wave_ray(
+                start_pt, target, color=COLOR_G, stroke_width=2.5, amp=0.08, cycles=3.5,
             ))
         gain_label = Text("Solarer Gewinn Q_gain", font_size=BODY_FONT_SIZE, color=COLOR_G)
         gain_label.next_to(house, RIGHT, buff=0.45).shift(UP * 0.4)
@@ -311,7 +331,8 @@ class Beat2_BestrahlungUndFlaeche(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Bestrahlungsstärke G und Fläche A", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "aperture"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -343,8 +364,10 @@ class Beat2_BestrahlungUndFlaeche(Scene):
             win_gross.get_bottom() + RIGHT * 0.05,
         ]
         ray_ops = [0.4, 0.55, 0.85, 0.55, 0.4]
+        # Wavy Strahlung (``solar_wave_ray``), matching Beat 1 and the other
+        # tutorial scenes — a straight Line reads as a laser, not radiation.
         rays = VGroup(*[
-            Line(sun_center, t, color=COLOR_G, stroke_width=sw).set_opacity(op)
+            solar_wave_ray(sun_center, t, color=COLOR_G, stroke_width=sw, amp=0.07, cycles=3.5).set_opacity(op)
             for t, sw, op in zip(
                 ray_targets,
                 [2.5, 2.5, 4.0, 2.5, 2.5],
@@ -400,7 +423,13 @@ class Beat2_BestrahlungUndFlaeche(Scene):
             win_outer_frame, win_glass, mullions, frame_desc, ff_box, group_Ff,
         ):
             m.set_opacity(0)
-        _fit_stage(stage, below=subtitle, focus=VGroup(wall_outer, win_gross, sun_group))
+        # Hold the diagram smaller (scale_max) so the wall/window assembly does
+        # not reach down into the formula panel — at the module default the
+        # wall's bottom edge sat on the "G · A · F_f [W]" box at the end.
+        _fit_stage(
+            stage, below=subtitle,
+            focus=VGroup(wall_outer, win_gross, sun_group), scale_max=1.0,
+        )
 
         self.play(Create(wall_outer), DrawBorderThenFill(win_gross), FadeIn(gross_label), run_time=1.3)
         hold_for(self, self.NARRATION, "aperture", used=1.3 + 0.3)
@@ -582,9 +611,16 @@ class Beat3_GWert(Scene):
             trans_ray, trans_label, g_label, g_sub,
         ):
             m.set_opacity(0)
+        # The glass section runs the full frame height (wall_upper at UP*1.5 to
+        # wall_lower at DOWN*1.7); at the module default it was scaled up to fill
+        # the band and the lower wall block, its "g" caption and the ray labels
+        # all collided with the formula panel and the subtitle text. Cap the
+        # scale well below 1 so the whole section sits inside the free band, and
+        # lift the formula panel (edge_buff below) to clear the two-line caption.
         _fit_stage(
             stage, below=subtitle,
             focus=VGroup(wall_upper, wall_lower, frame_top, frame_bot, glass_pane),
+            scale_max=0.83, shrink_floor=0.8,
         )
 
         self.play(
@@ -636,7 +672,9 @@ class Beat3_GWert(Scene):
             ("g", "g", COLOR_GVAL),
             (None, "  [W]", P_WHITE),
         ])
-        row, box = formula_panel(row, edge_buff=FORMULA_EDGE_BUFF)
+        # Lifted above the module default so the box clears this beat's two-line
+        # caption; the shrunk glass section (scale_max above) leaves the headroom.
+        row, box = formula_panel(row, edge_buff=1.6)
         self.play(
             FadeOut(g_sub), FadeOut(g_label),
             FadeIn(row), Create(box),
@@ -674,7 +712,8 @@ class Beat4_SaisonaleWinkel(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Saisonale Sonnenwinkel", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "path"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -933,7 +972,8 @@ class Beat5_Verschattung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Verschattungsfaktor F_sh", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "awning"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -991,15 +1031,16 @@ class Beat5_Verschattung(Scene):
         # its slanted edges or the vertical right edge. "Dringt ein" fits.
         enters_text = Text("Dringt ein", font_size=BODY_FONT_SIZE, color=P_ORANGE)
         enters_text.move_to([1.7, -1.05, 0])
+        # Placed after _fit_stage (below) — stacked above the scaled top_wall but
+        # clamped clear of the subtitle. Pre-fit placement pushed them into the
+        # heading once the room was scaled up.
         fsh_label = Text("F_sh", font_size=BODY_FONT_SIZE, color=COLOR_FSH)
-        fsh_label.next_to(top_wall, UP, buff=0.1)
         fsh_desc = Text("F_sh [-] DIN 4108-2", font_size=BODY_FONT_SIZE, color=COLOR_FSH)
-        fsh_desc.next_to(fsh_label, UP, buff=0.08)
 
         stage = VGroup(
             top_wall, bottom_wall, glass_window, floor, ceiling, interior_label, awning,
             sun, winter_anchor, summer_beam, blocked_text,
-            winter_beam, enters_text, fsh_label, fsh_desc,
+            winter_beam, enters_text,
         )
         for m in (
             summer_beam, blocked_text, winter_beam,
@@ -1011,9 +1052,13 @@ class Beat5_Verschattung(Scene):
         sun_glow.set_fill(COLOR_G, opacity=0)
         sun_halo.set_stroke(opacity=0)
         sun_rays_grp.set_stroke(opacity=0)
+        # Cap the scale so the room (bottom_wall at DOWN*1.35, floor at DOWN*1.75)
+        # and the F_sh labels above top_wall stay inside the free band instead of
+        # crossing the formula panel below and the subtitle above.
         _fit_stage(
             stage, below=subtitle,
             focus=VGroup(top_wall, bottom_wall, glass_window, floor, ceiling, awning, sun),
+            scale_max=1.0,
         )
         # Room on the left for type-scale sun labels (not stage-scaled).
         label_margin = max(sun_label.width, winter_sun_label.width) + 2.2
@@ -1062,6 +1107,15 @@ class Beat5_Verschattung(Scene):
         _place_sun_label(sun_label, sun)
         winter_sun_label.set_opacity(0)
         self.add(sun_label)
+
+        # F_sh callout (type scale — not stage-scaled): above the scaled top_wall
+        # when it fits under the subtitle there, otherwise in the open band above
+        # the ceiling on the room side. The old spot ran into the heading once
+        # the room grew.
+        fsh_group = VGroup(fsh_desc, fsh_label).arrange(DOWN, buff=0.08)
+        fsh_group.next_to(top_wall, UP, buff=0.16)
+        if fsh_group.get_top()[1] > subtitle.get_bottom()[1] - 0.22:
+            fsh_group.next_to(ceiling, UP, buff=0.24).align_to(ceiling, RIGHT).shift(LEFT * 0.1)
 
         self.play(
             Create(top_wall), Create(bottom_wall), Create(glass_window),
@@ -1160,7 +1214,8 @@ class Beat6_Waermespeicherung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmespeicherung und Strahlung", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 13786")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "day"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1192,10 +1247,13 @@ class Beat6_Waermespeicherung(Scene):
         sun_glow = Circle(radius=0.42, color=COLOR_G, stroke_width=1, stroke_opacity=0.4).move_to(sun_center)
         sun_label = Text("Wintersonne", font_size=BODY_FONT_SIZE, color=COLOR_G)
         sun_group = VGroup(sun, sun_glow)
-        sun_rays = VGroup(
-            Line(sun_center, [-1.5, -0.95, 0], color=COLOR_G, stroke_width=2.2, stroke_opacity=0.8),
-            Line(sun_center, [-0.2, -0.95, 0], color=COLOR_G, stroke_width=2.2, stroke_opacity=0.8),
-            Line(sun_center, [1.0, -0.95, 0], color=COLOR_G, stroke_width=2.2, stroke_opacity=0.8),
+        # One translucent beam wedge from the sun to the slab — the same
+        # low-opacity solar fill the other scenes use for Strahlung (Beat 5's
+        # summer/winter beams), not a fan of stroke lines.
+        sun_beam = Polygon(
+            sun_center, [-1.7, -0.95, 0], [1.2, -0.95, 0],
+            fill_color=COLOR_G, fill_opacity=0.2,
+            stroke_color=COLOR_G, stroke_opacity=0.35, stroke_width=1,
         )
 
         moon = Text("☾", font_size=FORMULA_FONT_SIZE, color="#94A3B8").move_to([4.1, 1.0, 0])
@@ -1222,10 +1280,10 @@ class Beat6_Waermespeicherung(Scene):
 
         stage = VGroup(
             floor_slab, room_group,
-            sun_group, sun_rays, night_group, wavy_lines,
+            sun_group, sun_beam, night_group, wavy_lines,
         )
-        for ray in sun_rays:
-            ray.set_stroke(opacity=0)
+        sun_beam.set_fill(opacity=0)
+        sun_beam.set_stroke(opacity=0)
         for m in (phase_2, night_group, wavy_lines):
             m.set_opacity(0)
         # Core opaque; glow ring soft — set targets before FadeIn.
@@ -1260,9 +1318,9 @@ class Beat6_Waermespeicherung(Scene):
             sun_glow.animate.set_stroke(opacity=0.4),
             run_time=1.6,
         )
-        for ray in sun_rays:
-            ray.set_stroke(COLOR_G, width=2.2, opacity=0.8)
-        self.play(Create(sun_rays), run_time=1.2)
+        sun_beam.set_fill(COLOR_G, opacity=0.2)
+        sun_beam.set_stroke(COLOR_G, width=1, opacity=0.35)
+        self.play(GrowFromPoint(sun_beam, sun_center), run_time=1.2)
         self.play(
             floor_slab.animate.set_color(COLOR_HEAT).set_fill(COLOR_HEAT, opacity=0.9),
             run_time=1.8,
@@ -1273,7 +1331,7 @@ class Beat6_Waermespeicherung(Scene):
         phase_2.set_opacity(1)
         night_group.set_opacity(1)
         self.play(
-            FadeOut(sun_rays), FadeOut(sun_group), FadeOut(sun_label),
+            FadeOut(sun_beam), FadeOut(sun_group), FadeOut(sun_label),
             ReplacementTransform(phase_1, phase_2),
             FadeIn(night_group),
             run_time=1.4,
@@ -1316,7 +1374,8 @@ class Beat7_SpeichermasseFormel(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Thermische Speichermasse Q_speicher", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 13786")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1398,6 +1457,15 @@ class Beat8_Hauptgleichung(Scene):
         ("ring",
          "Ring F_sh — shading decides how much sun actually counts.",
          "Markiere F_sh — Verschattung entscheidet, wie viel Sonne zählt."),
+        ("store",
+         "That solar power is not lost — the building's thermal mass banks it as stored heat.",
+         "Diese solare Leistung geht nicht verloren — die thermische Masse speichert sie als Wärme."),
+        ("mass",
+         "Stored heat Q is mass m times specific heat capacity c times temperature rise delta T — in joule.",
+         "Die gespeicherte Wärme Q ist Masse m mal spezifische Wärmekapazität c mal Temperaturanstieg Delta-T — in Joule."),
+        ("release",
+         "More mass flattens the daily temperature swing and returns the warmth after sunset.",
+         "Mehr Masse glättet den Tagesgang der Temperatur und gibt die Wärme nach Sonnenuntergang zurück."),
     ]
 
     def construct(self):
@@ -1406,7 +1474,8 @@ class Beat8_Hauptgleichung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Hauptgleichung Φ_solar", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "assemble"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1459,13 +1528,17 @@ class Beat8_Hauptgleichung(Scene):
         box = SurroundingRectangle(
             row, color=P_TEAL, buff=0.22, corner_radius=0.1, stroke_width=2,
         )
+        # The tokens were built at FORMULA_FONT_SIZE but ``_fit_stage`` rescaled
+        # the whole stage, so a bare ``move_to`` dropped them at the wrong size
+        # over the equation glyphs — a visible jump when they were removed. Scale
+        # each one to its target glyph's height as it travels so it lands exactly.
         self.play(
             FadeOut(labs),
-            tokens[0].animate.move_to(items["g"].get_center()),
-            tokens[1].animate.move_to(items["a"].get_center()),
-            tokens[2].animate.move_to(items["ff"].get_center()),
-            tokens[3].animate.move_to(items["gval"].get_center()),
-            tokens[4].animate.move_to(items["fsh"].get_center()),
+            tokens[0].animate.scale(items["g"].height / tokens[0].height).move_to(items["g"].get_center()),
+            tokens[1].animate.scale(items["a"].height / tokens[1].height).move_to(items["a"].get_center()),
+            tokens[2].animate.scale(items["ff"].height / tokens[2].height).move_to(items["ff"].get_center()),
+            tokens[3].animate.scale(items["gval"].height / tokens[3].height).move_to(items["gval"].get_center()),
+            tokens[4].animate.scale(items["fsh"].height / tokens[4].height).move_to(items["fsh"].get_center()),
             FadeIn(row), Create(box),
             run_time=1.6,
         )
@@ -1477,6 +1550,65 @@ class Beat8_Hauptgleichung(Scene):
         self.play(Create(ring), run_time=0.5)
         hold_for(self, self.NARRATION, "ring", used=0.5 + 0.35)
         self.play(FadeOut(ring), run_time=0.25)
+
+        # ── Thermal mass: where that solar power is banked (Beat 6/7 payoff) ──
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "store"))
+        self.play(
+            VGroup(row, box).animate.next_to(subtitle, DOWN, buff=0.5).set_x(0),
+            run_time=0.8,
+        )
+
+        store_note = Text(
+            "↓ gespeichert in der thermischen Masse", font_size=BODY_FONT_SIZE, color=COLOR_HEAT,
+        )
+        store_note.next_to(box, DOWN, buff=0.28).set_x(0)
+
+        row2, items2 = equation_row([
+            ("q", "Q_speicher", COLOR_HEAT),
+            (None, "=", P_WHITE),
+            ("m", "m", COLOR_MASS),
+            (None, "·", P_WHITE),
+            ("c", "c", COLOR_C),
+            (None, "·", P_WHITE),
+            ("dt", "ΔT", COLOR_G),
+            (None, "  [J]", P_WHITE),
+        ])
+        row2.next_to(store_note, DOWN, buff=0.3).set_x(0)
+        box2 = SurroundingRectangle(
+            row2, color=COLOR_HEAT, buff=0.22, corner_radius=0.1, stroke_width=2,
+        )
+        legend = VGroup(
+            Text("m  Masse des Bauteils [kg]", font_size=LABEL_FONT_SIZE, color=COLOR_MASS),
+            Text("c  spez. Wärmekapazität [J/(kg·K)]", font_size=LABEL_FONT_SIZE, color=COLOR_C),
+            Text("ΔT  Temperaturanstieg [K]", font_size=LABEL_FONT_SIZE, color=COLOR_G),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
+        legend.next_to(row2, DOWN, buff=0.3).set_x(0)
+        _mass_stack = VGroup(store_note, row2, box2, legend)
+        if _mass_stack.get_bottom()[1] < caption.get_top()[1] + 0.3:
+            _mass_stack.shift(UP * (caption.get_top()[1] + 0.3 - _mass_stack.get_bottom()[1]))
+        legend.set_opacity(0)
+
+        self.play(FadeIn(store_note, shift=DOWN * 0.1), run_time=0.6)
+        self.play(FadeIn(row2), Create(box2), run_time=1.0)
+        hold_for(self, self.NARRATION, "store", used=0.8 + 0.6 + 1.0 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "mass"))
+        legend.set_opacity(1)
+        self.play(
+            LaggedStart(*[FadeIn(l, shift=RIGHT * 0.1) for l in legend], lag_ratio=0.2),
+            run_time=1.1,
+        )
+        for key, col in (("m", COLOR_MASS), ("c", COLOR_C), ("dt", COLOR_G)):
+            r = highlight_param(items2, key, color=col)
+            self.play(Create(r), run_time=0.3)
+            self.play(FadeOut(r), run_time=0.18)
+        hold_for(self, self.NARRATION, "mass", used=1.1 + 3 * 0.48 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "release"))
+        ring_q = highlight_param(items2, "q", color=COLOR_HEAT)
+        self.play(Create(ring_q), run_time=0.4)
+        hold_for(self, self.NARRATION, "release", used=0.4 + 0.35)
+        self.play(FadeOut(ring_q), run_time=0.25)
 
         self.play(FadeOut(caption), run_time=0.3)
         self.wait(0.5)

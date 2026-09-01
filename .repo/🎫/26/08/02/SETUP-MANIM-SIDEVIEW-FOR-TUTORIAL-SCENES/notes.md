@@ -16,7 +16,15 @@
    - `Beat4_SensibleVsLatent`
 4. Sideview panel shows the live preview. Switch scenes with `Manim: Render a New Scene` (`Ctrl+'` then `c`).
 
-## Config touched
+## Troubleshooting “icon does nothing”
+
+1. **Reload Cursor** after settings changes (`Developer: Reload Window`).
+2. Status bar → Python interpreter must be **`semio/.venv/bin/python`**.
+3. After “Loaded a configuration file…”, a **scene picker** appears at the top — choose `Beat1_WinterGains` (easy to miss).
+4. Or Command Palette → **`Manim: Runs a Sideview`** (same as the icon).
+5. **`outputToTerminal` must stay `true`** — setting it to `false` breaks rendering silently.
+6. **`defaultManimPath` must be `"manim"`** — Sideview does not expand `${workspaceFolder}`; using it creates a broken doubled path like `.venv/bin/${workspaceFolder}/.venv/bin/manim`. Manim is resolved from the selected `.venv` Python interpreter instead.
+7. If stuck: Command Palette → **`Manim: Clear All Active Jobs`**, then click the icon again.
 
 - `.vscode/settings.json` — correct `manim-sideview.*` keys + Mac venv Python
 - `.vscode/extensions.json` — recommends `rickaym.manim-sideview`

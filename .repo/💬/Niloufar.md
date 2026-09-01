@@ -616,3 +616,46 @@ In Scene 8 at the end, the text where kW and kWh/m²a are being compared needs t
 ---
 Also, I want you to add audio using Gemini TTS models. I think we have an agent for adding audio, but I want you to adjust it. Since we have subtitles in all of our videos, we only need the audio to read the subtitles and be synced with the video. Please implement this and, as a test, add audio to@tutorial/energy/demand/1_physical_fundamentals 
 ---
+In the heating animation, at beat 2 when we introduce the Leitung, a yellow wave comes and moves across the wall. Please remove that yellow object. Then, when the text 'Bleib am Platz' appears and the single particle inside the circle moves, I want it to return to its original position after moving.
+---
+In beat 3, when we are indicating the luftung animation, the red animated lines should be shifted a little lower, and the blue animated lines should be shifted a little higher.
+---
+can you make the curves more realistic, more clean curve, and be carefull that the curves sould be placed in opening part of the window.
+___
+In beat 2, the particle showing the text 'bleib am Platz' should move a little to the right and then return to its original position.
+---
+In beat 6, the arrow indicating a component should be white
+---
+In beat 7, when explaining what happens with a lower lambda, the combination of lines on the left side isn't working well; please revise this section to make it look more realistic
+---
+In beat 9, shift the red rectangle in the middle of the screen a little to the right to avoid a collision when the left rectangle expands
+---
+In scene 9, delete the rectangle in the middle of the left rectangle, and place the text 'A' in the center
+---
+In beat 3, scene 2 of the Python code, move the yellow curly bracket a little to the right along with its text.
+---
+In beat 4, you need to shift the building and its text slightly lower to avoid a collision between the 'Dach' text and the 'Die thermische Gebäudehülle' text.
+---
+In Scene 3 of the Convection movie, Beat 1, can you shift the house and its contents a little lower so that the house is perfectly centered on the screen? Additionally, the particles should exit cleanly and only through the window, so please revise this section carefully.
+---
+also in beat 2, the house and other connected content should shiffted a little bit lower
+---
+also again like before add Dins reffrences and fix font issues for this code
+---
+In Beat 5, shift the yellow text and the curly bracket to the left, and reposition the text 'Temperaturedifferenz' to prevent the bracket from overlapping with it.
+---
+In Beat 7, the text 'vorgewärmte Zuluft (+18)' in the middle rectangle extends beyond the borders. Please reposition it to fit within the boundaries.
+---
+also again the red rectangle in this scene , the text warmluft (+21) entweic is also need to re relocated because it has collition with red arrow
+---
+Also, in beat 2 (solar heat gain), the sun's radiation should be wavy like in the first scene. Additionally, the formula at the bottom collides with the window at the end of the scene, so please make the window and its related elements smaller to prevent this.
+---
+Also, the same issue occurs in beat 3. Everything is too big, causing collisions between the objects, formulas, and text. revise this scene as well.
+---
+in scene 6, the sun radiation can be like low opacity color instead of this lines, we have similar approach in other scenes
+---
+In Beat 8, we have a problem with the animated texts. The size of the text at the end isn't the same as it should be, so please fix it. Also, in this video, we explain thermal mass. It wouldn't be a bad idea to add that equation in Scene 8 and explain it too. You can extend the duration of Scene 8 in order to explain that as well.
+---
+In the final calculation for heat losses, add the topic in the same position and font size as the 'reviewing heat gains' section
+---
+

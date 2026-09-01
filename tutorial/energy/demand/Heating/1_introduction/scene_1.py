@@ -41,27 +41,39 @@ WALL_W = 1.70
 THETA_I, THETA_E = 20, 0
 
 
-def _section(*, warm_opacity=0.16, cold_opacity=0.14):
-    """🧱 Warm room | solid wall | cold outside — the one scaffold this module reuses."""
+def _section(*, cy=SECTION_C[1], warm_opacity=0.24, cold_opacity=0.22):
+    """🧱 Warm room | solid wall | cold outside — the one scaffold this module reuses.
+
+    Fill opacities were 0.16/0.14 and the room and outside barely separated from
+    the near-black background once the clip was compressed — the first frame of
+    every beat looked empty. Raised so the warm/cold split reads immediately,
+    and the wall carries a denser fill and stroke so it always reads as *solid
+    material*, which is the whole premise of the module (heat has to cross it).
+
+    ``cy`` is the vertical centre. Beats that draw motion *outside* the box
+    (Beat 3's buoyancy lanes) drop the whole scaffold so those lanes clear the
+    temperature labels below and the beat subtitle above.
+    """
+    center = np.array([SECTION_C[0], cy, 0.0])
     half_w, half_h = SECTION_W / 2, SECTION_H / 2
     wall_half = WALL_W / 2
-    top, bottom = SECTION_C[1] + half_h, SECTION_C[1] - half_h
+    top, bottom = cy + half_h, cy - half_h
 
     warm = Rectangle(
         width=half_w - wall_half, height=SECTION_H,
         color=P_ORANGE, stroke_width=2,
         fill_color=P_ORANGE, fill_opacity=warm_opacity,
-    ).move_to(np.array([-(half_w + wall_half) / 2, SECTION_C[1], 0.0]))
+    ).move_to(np.array([-(half_w + wall_half) / 2, cy, 0.0]))
     cold = Rectangle(
         width=half_w - wall_half, height=SECTION_H,
         color=P_BLUE, stroke_width=2,
         fill_color=P_BLUE, fill_opacity=cold_opacity,
-    ).move_to(np.array([(half_w + wall_half) / 2, SECTION_C[1], 0.0]))
+    ).move_to(np.array([(half_w + wall_half) / 2, cy, 0.0]))
     wall = Rectangle(
         width=WALL_W, height=SECTION_H,
-        color=P_WHITE, stroke_width=2.5,
-        fill_color=P_WHITE, fill_opacity=0.05,
-    ).move_to(SECTION_C)
+        color=P_WHITE, stroke_width=3.0,
+        fill_color=P_WHITE, fill_opacity=0.11,
+    ).move_to(center)
 
     ti = Text(f"innen {THETA_I} °C", font_size=BODY_FONT_SIZE, color=P_ORANGE)
     ti.move_to(np.array([warm.get_center()[0], bottom - 0.42, 0.0]))
@@ -109,10 +121,10 @@ def _person(pos, color=P_ORANGE, scale=1.0):
 def _quantum(pos, color=P_YELLOW, scale=1.0):
     """〰️ A packet of heat — a little wave, never a dot, so it cannot be mistaken for a person."""
     pts = []
-    for i in range(24):
-        t = i / 23
-        pts.append(np.array([(t - 0.5) * 0.34, 0.07 * np.sin(t * TAU * 1.5), 0.0]))
-    wave = VMobject(color=color, stroke_width=3.0)
+    for i in range(26):
+        t = i / 25
+        pts.append(np.array([(t - 0.5) * 0.46, 0.12 * np.sin(t * TAU * 1.5), 0.0]))
+    wave = VMobject(color=color, stroke_width=6.0)
     wave.set_points_smoothly(pts)
     return wave.scale(scale).move_to(pos)
 
@@ -163,6 +175,20 @@ def _layer_legend(entries):
         for name, color in entries
     ]).arrange(DOWN, aligned_edge=LEFT, buff=0.14)
     return rows
+
+
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the same empty top-right corner.
+
+    Every section of Module 1 names the norm it is built on (mostly
+    DIN EN ISO 6946 for building-component heat transfer; DIN EN 12831-1 where
+    the beat is really about the heating load). Dim so it reads as a footnote,
+    never competing with the diagram.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
 #endregion
 
 
@@ -195,7 +221,8 @@ class Beat1_DreiWegeDerWaerme(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Abschnitt 1.1 — Wie Wärme sich bewegt", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -222,7 +249,13 @@ class Beat1_DreiWegeDerWaerme(Scene):
             np.array([-2.6, SECTION_C[1] - 1.05, 0.0]),
             P_RED,
         )
-        no_mark = cross_mark(P_RED, size=0.22).move_to(np.array([0.0, SECTION_C[1] - 1.05, 0.0]))
+        # A proper "no entry" sign, not a bare tick: at size 0.22 the old cross
+        # read as a stray diagonal line over the arrow.
+        no_mark = VGroup(
+            Circle(radius=0.37, color=P_RED, stroke_width=5),
+            Line(UP * 0.26 + LEFT * 0.26, DOWN * 0.26 + RIGHT * 0.26,
+                 color=P_RED, stroke_width=5),
+        ).move_to(np.array([0.0, SECTION_C[1] - 1.02, 0.0]))
 
         routes = _route_strip()
 
@@ -264,7 +297,11 @@ class Beat1_DreiWegeDerWaerme(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "never"))
         self.play(GrowArrow(reverse), run_time=0.8)
-        self.play(Create(no_mark), reverse.animate.set_opacity(0.4), run_time=0.7)
+        self.play(
+            Create(no_mark),
+            reverse.animate.set_stroke(color=P_WHITE, opacity=0.22),
+            run_time=0.7,
+        )
         hold_for(self, self.NARRATION, "never", used=0.8 + 0.7 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "three"))
@@ -303,7 +340,8 @@ class Beat2_Waermeleitung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmeleitung — Energie ohne Materialtransport", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -327,7 +365,7 @@ class Beat2_Waermeleitung(Scene):
         watch_tag = Text("bleibt am Platz", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         watch_tag.next_to(watch_ring, LEFT, buff=0.30)
 
-        pulse = _quantum(np.array([sec["wall_l"] - 0.35, ys[2], 0.0]), color=P_YELLOW)
+        home = watched.get_center().copy()
 
         hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -339,39 +377,27 @@ class Beat2_Waermeleitung(Scene):
         hold_for(self, self.NARRATION, "lattice", used=1.4 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "relay"))
-        self.play(FadeIn(pulse, scale=0.6), run_time=0.5)
         self.play(
             Succession(*[
-                AnimationGroup(
-                    Indicate(_column(i), color=P_YELLOW, scale_factor=1.45),
-                    pulse.animate.move_to(np.array([xs[i], ys[2], 0.0])),
-                )
+                Indicate(_column(i), color=P_YELLOW, scale_factor=1.65)
                 for i in range(cols)
             ]),
             run_time=2.6,
         )
-        self.play(
-            pulse.animate.move_to(np.array([sec["wall_r"] + 0.9, ys[2], 0.0])).set_stroke(opacity=0.4),
-            run_time=1.0,
-        )
-        hold_for(self, self.NARRATION, "relay", used=0.5 + 2.6 + 1.0 + 0.35)
+        hold_for(self, self.NARRATION, "relay", used=2.6 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "stayput"))
         self.play(Create(watch_ring), FadeIn(watch_tag), run_time=0.8)
-        self.play(
-            Succession(*[
-                watched.animate(run_time=0.16).shift(RIGHT * dx)
-                for dx in (0.09, -0.18, 0.18, -0.18, 0.09)
-            ]),
-            run_time=1.3,
-        )
-        hold_for(self, self.NARRATION, "stayput", used=0.8 + 1.3 + 0.35)
+        self.play(watched.animate.move_to(home + RIGHT * 0.20), run_time=0.6)
+        self.wait(0.2)
+        self.play(watched.animate.move_to(home), run_time=0.6)
+        hold_for(self, self.NARRATION, "stayput", used=0.8 + 0.6 + 0.2 + 0.6 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = symbol_token("Q̇_k", color=P_RED, font_size=FORMULA_FONT_SIZE)
         token.move_to(SECTION_C)
         self.play(
-            FadeOut(watch_ring), FadeOut(watch_tag), FadeOut(pulse),
+            FadeOut(watch_ring), FadeOut(watch_tag),
             ReplacementTransform(grid, token),
             run_time=1.2,
         )
@@ -408,72 +434,71 @@ class Beat3_Konvektion(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Konvektion — die Luft nimmt die Wärme mit", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        sec = _section()
+        # This beat draws its buoyancy lanes *outside* the box on both sides, so
+        # the whole scaffold drops: the exit plume then clears the beat subtitle
+        # above, and the indoor/outdoor lanes clear the temperature labels below.
+        cy = SECTION_C[1] - 0.40
+        sec = _section(cy=cy)
         routes = _route_strip(active=1)
-        fit_band(VGroup(sec["group"]))
 
         # Tall enough to have an upper and a lower half: with one opening, warm air
         # leaves through the top and cold air enters through the bottom of that same
         # gap. That two-way split is the whole point of the beat.
-        gap_lo, gap_hi = SECTION_C[1] - 0.35, SECTION_C[1] + 0.85
+        gap_lo, gap_hi = cy - 0.35, cy + 0.85
         wall_upper = Rectangle(
-            width=WALL_W, height=sec["top"] - gap_hi, color=P_WHITE, stroke_width=2.5,
-            fill_color=P_WHITE, fill_opacity=0.05,
+            width=WALL_W, height=sec["top"] - gap_hi, color=P_WHITE, stroke_width=3.0,
+            fill_color=P_WHITE, fill_opacity=0.11,
         ).move_to(np.array([0.0, (sec["top"] + gap_hi) / 2, 0.0]))
         wall_lower = Rectangle(
-            width=WALL_W, height=gap_lo - sec["bottom"], color=P_WHITE, stroke_width=2.5,
-            fill_color=P_WHITE, fill_opacity=0.05,
+            width=WALL_W, height=gap_lo - sec["bottom"], color=P_WHITE, stroke_width=3.0,
+            fill_color=P_WHITE, fill_opacity=0.11,
         ).move_to(np.array([0.0, (gap_lo + sec["bottom"]) / 2, 0.0]))
-        # Above wall_upper, not beside the gap: the warm-air lane bulges up to
-        # y≈1.6 near x∈[-1.35,0] as it threads the opening, which crossed a
-        # gap_tag placed there at the old (smaller) font size.
         gap_tag = Text("Öffnung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        gap_tag.move_to(np.array([0.0, sec["top"] + 0.25, 0.0]))
+        gap_tag.move_to(np.array([0.0, sec["top"] + 0.28, 0.0]))
 
-        # Buoyancy exchange through one gap: warm rises indoors → exits at the top of
-        # the opening → plume drifts out; cold sinks outdoors → enters at the bottom
-        # → settles indoors. Three staggered lanes per direction so the stream reads
-        # as a volume of air, not a single bead on a wire.
-        y_out = gap_hi - 0.08
-        y_in = gap_lo + 0.08
-        warm_out = VGroup(*[
-            smooth_path([
-                np.array([-4.05, SECTION_C[1] - 1.15 + dy, 0.0]),
-                np.array([-3.25, SECTION_C[1] - 0.55 + dy, 0.0]),
-                np.array([-2.35, SECTION_C[1] + 0.15 + dy, 0.0]),
-                np.array([-1.35, y_out - 0.12 + dy * 0.35, 0.0]),
-                np.array([-0.55, y_out + dy * 0.25, 0.0]),
-                np.array([0.00, y_out + dy * 0.20, 0.0]),
-                np.array([1.15, y_out + 0.18 + dy * 0.35, 0.0]),
-                np.array([2.55, SECTION_C[1] + 1.05 + dy * 0.45, 0.0]),
-                np.array([4.05, SECTION_C[1] + 1.22 + dy * 0.35, 0.0]),
+        # Buoyancy exchange through the one opening, drawn as clean laminar
+        # streaklines: each lane keeps a single monotonic vertical trend — a
+        # steady rise for warm-out, a steady fall for cold-in — so the curves
+        # read as smooth flow rather than a wavy ribbon. The three-lane bundle
+        # fans out where the air is free and pinches back together to thread the
+        # gap. Both streams cross the wall squarely inside [gap_lo, gap_hi]:
+        # warm-out through the upper part of the opening, cold-in through the
+        # lower part, the two bands close but never touching.
+        LANE = 0.115
+
+        def _stream(spine):
+            return VGroup(*[
+                smooth_path([
+                    np.array([x, cy + yc + k * LANE * taper, 0.0])
+                    for x, yc, taper in spine
+                ])
+                for k in (-1.0, 0.0, 1.0)
             ])
-            for dy in (-0.20, 0.00, 0.18)
+
+        warm_out = _stream([
+            (-4.15, -0.72, 1.30), (-3.05, -0.22, 1.15), (-1.85, 0.22, 1.00),
+            (-0.80, 0.50, 0.85), (0.00, 0.60, 0.80), (0.80, 0.62, 0.85),
+            (1.95, 0.86, 1.05), (3.05, 1.06, 1.20), (4.15, 1.16, 1.30),
         ])
-        cold_in = VGroup(*[
-            smooth_path([
-                np.array([4.10, SECTION_C[1] + 0.70 + dy, 0.0]),
-                np.array([2.85, SECTION_C[1] + 0.25 + dy, 0.0]),
-                np.array([1.55, SECTION_C[1] - 0.05 + dy * 0.5, 0.0]),
-                np.array([0.55, y_in + dy * 0.25, 0.0]),
-                np.array([0.00, y_in + dy * 0.20, 0.0]),
-                np.array([-0.70, y_in - 0.08 + dy * 0.30, 0.0]),
-                np.array([-1.85, SECTION_C[1] - 0.55 + dy * 0.40, 0.0]),
-                np.array([-3.05, SECTION_C[1] - 0.95 + dy * 0.35, 0.0]),
-                np.array([-4.15, SECTION_C[1] - 1.18 + dy * 0.25, 0.0]),
-            ])
-            for dy in (-0.16, 0.02, 0.18)
+        cold_in = _stream([
+            (4.15, 0.52, 1.30), (3.05, 0.20, 1.20), (1.85, -0.06, 1.05),
+            (0.80, -0.16, 0.85), (0.00, -0.20, 0.80), (-0.80, -0.22, 0.85),
+            (-1.85, -0.46, 1.05), (-3.05, -0.66, 1.20), (-4.15, -0.78, 1.30),
         ])
 
+        # Lane tags land in genuinely empty bands: "raus" above the section top
+        # (freed now the box sits lower), "rein" low on the outside, both clear
+        # of every lane and of the temperature labels.
         out_tag = Text("warme Luft raus", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        out_tag.move_to(np.array([3.05, SECTION_C[1] + 1.42, 0.0]))
+        out_tag.move_to(np.array([3.15, sec["top"] + 0.46, 0.0]))
         in_tag = Text("kalte Luft rein", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        in_tag.move_to(np.array([3.05, SECTION_C[1] - 0.72, 0.0]))
+        in_tag.move_to(np.array([3.65, cy - 1.00, 0.0]))
 
         parcel = Dot(radius=0.14, color=P_ORANGE, fill_opacity=1.0)
         parcel_glow = Circle(radius=0.22, color=P_YELLOW, stroke_width=2.0, fill_opacity=0.0)
@@ -497,8 +522,8 @@ class Beat3_Konvektion(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "loop"))
         guides = VGroup(
-            flow_guides(warm_out, P_ORANGE, opacity=0.32, width=2.2),
-            flow_guides(cold_in, P_BLUE, opacity=0.32, width=2.2),
+            flow_guides(warm_out, P_ORANGE, opacity=0.42, width=2.4),
+            flow_guides(cold_in, P_BLUE, opacity=0.42, width=2.4),
         )
         self.play(Create(guides), FadeIn(out_tag), FadeIn(in_tag), run_time=1.2)
         # Both directions at once, looping: a real gap exchanges air as a continuous
@@ -517,11 +542,10 @@ class Beat3_Konvektion(Scene):
         hold_for(self, self.NARRATION, "loop", used=1.2 + 3.6 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "carrier"))
-        # A fixed callout spot, not next_to(parcel): the parcel spawns right at
-        # the room's left wall with the warm_out curve threading past at the
-        # same height, so anywhere hugging the dot there crosses one or the
-        # other. High in the room's open interior is clear of both.
-        parcel_tag.move_to(np.array([-3.5, SECTION_C[1] + 0.55, 0.0]))
+        # A fixed callout spot, not next_to(parcel): the parcel spawns low at
+        # the room's left wall with the warm_out curve threading past, so the
+        # tag sits high in the room's open interior, clear of every lane.
+        parcel_tag.move_to(np.array([-3.15, cy + 0.78, 0.0]))
         self.play(
             FadeIn(parcel, scale=0.5),
             FadeIn(parcel_glow),
@@ -555,7 +579,7 @@ class Beat3_Konvektion(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = symbol_token("Q̇_c", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
-        token.move_to(np.array([0.0, SECTION_C[1] + 0.30, 0.0]))
+        token.move_to(np.array([0.0, cy + 0.30, 0.0]))
         self.play(
             ReplacementTransform(guides, token),
             FadeOut(gap_tag), FadeOut(out_tag), FadeOut(in_tag),
@@ -594,7 +618,8 @@ class Beat4_Strahlung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Strahlung — braucht kein Medium", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -700,6 +725,8 @@ class Beat5_Zusammenfassung(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Zusammenfassung — drei Wege, ein Wärmestrom", title)
+        # No corner citation here: this beat's punchline *is* the standard, and it
+        # gets a full chip in the diagram ("… deshalb fasst die DIN EN ISO 6946 …").
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "recap"))
@@ -797,7 +824,8 @@ class Beat6_VonWegenZuZahlen(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Abschnitt 1.2 — Von drei Wegen zu einem Kennwert", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "bridge"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -813,7 +841,7 @@ class Beat6_VonWegenZuZahlen(Scene):
             _flow_arrow(
                 tok.get_right() + RIGHT * 0.18,
                 np.array([-1.85, 1.05, 0.0]),
-                tok.get_color(), width=3,
+                P_WHITE, width=3,
             )
             for tok in tokens
         ])
@@ -897,7 +925,8 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmedurchlasswiderstand R = d / λ", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1026,21 +1055,26 @@ class Beat7_Waermedurchlasswiderstand(Scene):
         ring_l = highlight_param(items, "lam", color=P_ORANGE)
         ins_tag = Text("Dämmung", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(mat)
         ins_lam = Text("λ = 0,035", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(lam_tag)
-        shallow = Line(
-            np.array([layer_c[0] - layer_w / 2, y_hi, 0.0]),
-            np.array([layer_c[0] - layer_w / 2 + wide_w, y_hi - 0.22, 0.0]),
-            color=P_YELLOW, stroke_width=4,
-        )
+        # A single homogeneous layer always carries the full 20 → 0 °C drop as one
+        # straight corner-to-corner line, whatever λ is: the endpoints are fixed by
+        # the two surface temperatures. Lower λ does not bend that profile — it
+        # raises R and collapses the heat flow. So the gradient keeps its shape
+        # (and stays joined to warm_face on the left and cold_face on the right);
+        # only the material, the λ label and the two gauges change.
         self.play(Create(ring_l), run_time=0.4)
         self.play(
             layer.animate.set_color(P_CYAN).set_fill(P_CYAN, opacity=0.20),
             ReplacementTransform(mat, ins_tag), ReplacementTransform(lam_tag, ins_lam),
-            Transform(grad, shallow),
             r_val.animate.set_value(0.95), q_val.animate.set_value(0.10),
             ReplacementTransform(r_mid, r_high),
             run_time=1.9,
         )
-        hold_for(self, self.NARRATION, "lam", used=0.4 + 1.9 + 0.35)
+        self.play(
+            Indicate(grad, color=P_YELLOW, scale_factor=1.0),
+            Indicate(q_gauge["track"], color=P_RED, scale_factor=1.05),
+            run_time=0.7,
+        )
+        hold_for(self, self.NARRATION, "lam", used=0.4 + 1.9 + 0.7 + 0.35)
         self.play(FadeOut(ring_l), run_time=0.25)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "sum"))
@@ -1083,7 +1117,8 @@ class Beat8_UWert(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("U-Wert — wie leicht Wärme hindurchgeht", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1225,7 +1260,8 @@ class Beat9_WaermestromFormel(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Wärmestrom Q̇ = U · A · Δθ", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -1235,15 +1271,18 @@ class Beat9_WaermestromFormel(Scene):
             width=2.9, height=2.1, color=P_WHITE, stroke_width=2.5,
             fill_color=P_TEAL, fill_opacity=0.12,
         ).move_to(facade_c)
-        win = Square(side_length=0.6, color=P_CYAN, stroke_width=2).move_to(facade_c + UP * 0.35)
-        a_lbl = Text("A", font_size=FORMULA_FONT_SIZE, color=P_CYAN).move_to(facade_c + DOWN * 0.45)
+        a_lbl = Text("A", font_size=FORMULA_FONT_SIZE, color=P_CYAN).move_to(facade_c)
         ti = Text("innen 20 °C", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
         ti.next_to(facade, UP, buff=0.16)
         te = Text("außen 0 °C", font_size=LABEL_FONT_SIZE, color=P_BLUE)
         te.next_to(facade, DOWN, buff=0.20)
 
         q_gauge = meter("Wärmestrom", length=2.5, thickness=0.55, color=P_RED)
-        q_gauge["group"].move_to(np.array([-0.75, 0.72, 0.0]))
+        # Sits clear of the facade even when the "A" beat stretches it to 1.9×
+        # its width and nudges it right — at full stretch the facade's right edge
+        # reaches ≈ -0.75, so the gauge (and its label) start well to the right of
+        # that.
+        q_gauge["group"].move_to(np.array([0.20, 0.72, 0.0]))
         q_val = ValueTracker(0.0)
         bind_meter(q_gauge, q_val)
 
@@ -1261,11 +1300,11 @@ class Beat9_WaermestromFormel(Scene):
         ])
         eq, eq_box = formula_panel(eq)
 
-        fit_band(VGroup(facade, win, a_lbl, ti, te), bottom=SAFE_BOTTOM_FORMULA)
+        fit_band(VGroup(facade, a_lbl, ti, te), bottom=SAFE_BOTTOM_FORMULA)
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
-        self.play(Create(facade), Create(win), FadeIn(a_lbl), FadeIn(ti), FadeIn(te), run_time=1.4)
+        self.play(Create(facade), FadeIn(a_lbl), FadeIn(ti), FadeIn(te), run_time=1.4)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(eq), Create(eq_box), run_time=1.1)
@@ -1283,6 +1322,7 @@ class Beat9_WaermestromFormel(Scene):
         self.play(Create(ring_a), run_time=0.4)
         self.play(
             facade.animate.stretch_to_fit_width(facade.width * 1.9).move_to(facade_c + RIGHT * 0.65),
+            a_lbl.animate.move_to(facade_c + RIGHT * 0.65),
             q_val.animate.set_value(0.88),
             ReplacementTransform(w_base, w_double),
             run_time=1.5,
@@ -1290,6 +1330,7 @@ class Beat9_WaermestromFormel(Scene):
         hold_for(self, self.NARRATION, "a", used=0.4 + 1.5 + 0.35)
         self.play(
             facade.animate.stretch_to_fit_width(2.9).move_to(facade_c),
+            a_lbl.animate.move_to(facade_c),
             q_val.animate.set_value(0.45),
             ReplacementTransform(w_double, w_base),
             FadeOut(ring_a),

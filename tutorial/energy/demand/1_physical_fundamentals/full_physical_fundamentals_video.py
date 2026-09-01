@@ -19,8 +19,10 @@ _PF_ROOT = Path(__file__).resolve().parent
 _SEMIO_ROOT = next(
     p for p in _PF_ROOT.parents if (p / ".venv").is_dir() or (p / "package.json").is_file()
 )
+# region Intro
 _INTRO_SCENE = _SEMIO_ROOT / "tutorial" / "intro" / "intro_scene.py"
 INTRO_CLASS_NAME = "Demo_Intro_PhysikalischeGrundlagen"
+# endregion
 
 
 def _load_module(module_name: str, path: Path) -> ModuleType:

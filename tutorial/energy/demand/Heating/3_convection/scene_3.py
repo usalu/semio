@@ -34,6 +34,23 @@ from manim_visuals import (
 TITLE_DE = "Modul 3: Konvektion"
 
 
+#region Beat helpers
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Same size, colour, opacity and corner as ``_din_ref`` in
+    ``1_introduction/scene_1.py`` and ``2_conduction/scene_2.py`` so every module
+    footnotes its norm identically. Module 3 is the ventilation-loss chain of
+    DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ); the systems beat cites DIN 1946-6.
+    Beats whose diagram already prints the standard in full get no corner chip.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+#endregion
+
+
 class Beat1_GebaeudeKonvektion(Scene):
     NARRATION = [
         ("intro",
@@ -53,12 +70,20 @@ class Beat1_GebaeudeKonvektion(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Das Gebäude & Konvektion", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        # Floor at y≈−1.2 so captions stay clear (was −2.0).
+        # The house is built at its original coordinates, then the whole group is
+        # dropped by DY: the roof peak (y≈2.5) used to sit right under the beat
+        # subtitle while a wide empty band opened below the floor, so the section
+        # read as top-heavy. Lowering it centres the house in the free frame.
+        # Every particle band below is derived from the same DY.
+        DY = -0.5
+        WALL_X = 1.0
+
         floor = Line([-3.0, -1.2, 0], [1.0, -1.2, 0], color=GREY_A, stroke_width=4)
         left_wall = Line([-3.0, -1.2, 0], [-3.0, 1.5, 0], color=GREY_A, stroke_width=4)
         roof_left = Line([-3.0, 1.5, 0], [-1.0, 2.5, 0], color=GREY_A, stroke_width=4)
@@ -66,21 +91,32 @@ class Beat1_GebaeudeKonvektion(Scene):
         right_wall_bot = Line([1.0, -1.2, 0], [1.0, -0.5, 0], color=GREY_A, stroke_width=4)
         right_wall_mid = Line([1.0, 0.5, 0], [1.0, 1.1, 0], color=GREY_A, stroke_width=4)
 
-        gap_bottom = Line([1.0, -0.5, 0], [1.0, 0.5, 0], color=P_BLUE, stroke_width=2).set_opacity(0.4)
-        gap_top = Line([1.0, 1.1, 0], [1.0, 1.5, 0], color=P_ORANGE, stroke_width=2).set_opacity(0.4)
+        # Two openings in the right wall: the lower one lets cold air in, the
+        # upper one — "das Fenster" — is the only way warm air leaves.
+        gap_inlet = Line([1.0, -0.5, 0], [1.0, 0.5, 0], color=P_BLUE, stroke_width=2).set_opacity(0.4)
+        gap_window = Line([1.0, 1.1, 0], [1.0, 1.5, 0], color=P_ORANGE, stroke_width=2).set_opacity(0.4)
 
         house = VGroup(
             floor, left_wall, roof_left, roof_right,
-            right_wall_bot, right_wall_mid, gap_bottom, gap_top,
+            right_wall_bot, right_wall_mid, gap_inlet, gap_window,
         )
+        house.shift(UP * DY)
+
+        # Opening bands and floor, in absolute coordinates after the shift — the
+        # particle updaters steer every dot into one of these before it may cross
+        # the wall, so a dot can only ever pass through an actual opening.
+        WIN_LO, WIN_HI = 1.1 + DY, 1.5 + DY
+        INLET_LO, INLET_HI = -0.5 + DY, 0.5 + DY
+        INLET_MID = 0.5 * (INLET_LO + INLET_HI)
+        FLOOR_Y = -1.2 + DY
 
         txt_innen = Text("Innen", font_size=BODY_FONT_SIZE, color=P_ORANGE)
         txt_warm = Text("Warm", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        label_inside = VGroup(txt_innen, txt_warm).arrange(DOWN, buff=0.12).move_to([-1.2, 0.1, 0])
+        label_inside = VGroup(txt_innen, txt_warm).arrange(DOWN, buff=0.12).move_to([-1.5, 0.1 + DY, 0])
 
         txt_aussen = Text("Außen", font_size=BODY_FONT_SIZE, color=P_BLUE)
         txt_kalt = Text("Kalt", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        label_outside = VGroup(txt_aussen, txt_kalt).arrange(DOWN, buff=0.12).move_to([2.6, 0.1, 0])
+        label_outside = VGroup(txt_aussen, txt_kalt).arrange(DOWN, buff=0.12).move_to([2.8, 0.1 + DY, 0])
 
         self.play(Create(house), run_time=1.5)
         self.play(FadeIn(label_inside), FadeIn(label_outside), run_time=1.0)
@@ -89,50 +125,68 @@ class Beat1_GebaeudeKonvektion(Scene):
         np.random.seed(42)
         orange_dots = VGroup(*[
             Dot(
-                point=[np.random.uniform(-2.7, 0.5), np.random.uniform(-0.9, 1.1), 0],
+                point=[np.random.uniform(-2.7, 0.4), np.random.uniform(FLOOR_Y + 0.2, 1.0 + DY), 0],
                 radius=0.04, color=P_ORANGE,
             )
             for _ in range(70)
         ])
         blue_dots = VGroup(*[
             Dot(
-                point=[np.random.uniform(1.3, 3.3), np.random.uniform(-1.2, 0.6), 0],
+                point=[np.random.uniform(1.5, 3.5), np.random.uniform(FLOOR_Y + 0.1, 1.2 + DY), 0],
                 radius=0.04, color=P_BLUE,
             )
             for _ in range(70)
         ])
+        # Each dot keeps a fixed lane inside its opening, so the exchange reads as
+        # a band of air filling the whole gap rather than a single-file line —
+        # while every lane still lies strictly within the opening, so no dot ever
+        # crosses a solid part of the wall.
+        for _d in orange_dots:
+            _d.lane_y = np.random.uniform(WIN_LO + 0.04, WIN_HI - 0.04)
+        for _d in blue_dots:
+            _d.lane_y = np.random.uniform(INLET_LO + 0.08, INLET_HI - 0.08)
 
         self.play(FadeIn(orange_dots), FadeIn(blue_dots), run_time=1.0)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "zones"))
         hold_for(self, self.NARRATION, "zones", used=1.0 + 0.35)
 
         def update_orange_particles(group, dt):
+            """🔥 Warm air rises to its window lane and leaves only through the opening."""
             for dot in group:
-                pos = dot.get_center()
-                if pos[0] < 1.0:
-                    dx = 0.45 * dt
-                    dy = (1.1 - pos[1]) * 0.4 * dt + 0.15 * dt
-                    pos += np.array([dx, dy, 0])
+                x, y, _ = dot.get_center()
+                if x < WALL_X - 0.05:
+                    y += (dot.lane_y - y) * 2.1 * dt
+                    aligned = WIN_LO - 0.05 <= y <= WIN_HI + 0.05
+                    x += (1.05 if aligned else 0.55) * dt
+                    if not aligned:
+                        x = min(x, WALL_X - 0.07)
                 else:
-                    pos += np.array([0.5 * dt, 0.8 * dt, 0])
-                    if pos[1] > 2.6 or pos[0] > 3.8:
-                        pos[0] = np.random.uniform(-2.7, -0.5)
-                        pos[1] = np.random.uniform(-0.9, -0.1)
-                dot.move_to(pos)
+                    x += 1.15 * dt
+                    y += 0.8 * dt
+                if x > 3.7 or y > 3.0:
+                    x = np.random.uniform(-2.7, 0.1)
+                    y = np.random.uniform(FLOOR_Y + 0.2, 0.6 + DY)
+                    dot.lane_y = np.random.uniform(WIN_LO + 0.04, WIN_HI - 0.04)
+                dot.move_to([x, y, 0])
 
         def update_blue_particles(group, dt):
+            """❄️ Cold air sinks to its inlet lane and enters only through the opening."""
             for dot in group:
-                pos = dot.get_center()
-                if pos[0] > 1.0:
-                    dx = -0.5 * dt
-                    dy = (-0.2 - pos[1]) * 0.4 * dt
-                    pos += np.array([dx, dy, 0])
+                x, y, _ = dot.get_center()
+                if x > WALL_X + 0.05:
+                    y += (dot.lane_y - y) * 2.1 * dt
+                    aligned = INLET_LO - 0.05 <= y <= INLET_HI + 0.05
+                    x -= (1.05 if aligned else 0.55) * dt
+                    if not aligned:
+                        x = max(x, WALL_X + 0.07)
                 else:
-                    pos += np.array([-0.5 * dt, -0.3 * dt, 0])
-                    if pos[0] < -2.7 or pos[1] < -1.0:
-                        pos[0] = np.random.uniform(1.5, 3.5)
-                        pos[1] = np.random.uniform(-1.0, 0.4)
-                dot.move_to(pos)
+                    x -= 1.0 * dt
+                    y -= 0.5 * dt
+                if x < -2.8 or y < FLOOR_Y:
+                    x = np.random.uniform(1.5, 3.5)
+                    y = np.random.uniform(INLET_MID, 1.3 + DY)
+                    dot.lane_y = np.random.uniform(INLET_LO + 0.08, INLET_HI - 0.08)
+                dot.move_to([x, y, 0])
 
         orange_dots.add_updater(update_orange_particles)
         blue_dots.add_updater(update_blue_particles)
@@ -143,7 +197,7 @@ class Beat1_GebaeudeKonvektion(Scene):
         orange_dots.remove_updater(update_orange_particles)
         blue_dots.remove_updater(update_blue_particles)
 
-        self.play(FadeOut(caption), run_time=0.3)
+        self.play(FadeOut(caption), FadeOut(orange_dots), FadeOut(blue_dots), run_time=0.3)
         self.wait(0.5)
 
 
@@ -169,32 +223,44 @@ class Beat2_Innenvolumen(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Gebäude-Innenvolumen V", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        v_bottom_left = np.array([-2.5, -1.2, 0])
-        v_bottom_right = np.array([2.5, -1.2, 0])
-        v_top_right = np.array([2.5, 0.9, 0])
-        v_roof_peak = np.array([0.0, 2.3, 0])
-        v_top_left = np.array([-2.5, 0.9, 0])
+        # DY drops the whole volume graphic: the roof peak (y≈2.3) and the ring of
+        # outside dots above it used to run into the beat subtitle while a wide
+        # empty band sat below the ground line. Every house point, dot and the V
+        # label below carry the same DY; the dimension line keeps a smaller drop
+        # so it stays clear of the formula panel underneath it.
+        DY = -0.25
+
+        v_bottom_left = np.array([-2.5, -1.2 + DY, 0])
+        v_bottom_right = np.array([2.5, -1.2 + DY, 0])
+        v_top_right = np.array([2.5, 0.9 + DY, 0])
+        v_roof_peak = np.array([0.0, 2.3 + DY, 0])
+        v_top_left = np.array([-2.5, 0.9 + DY, 0])
         interior_points = [v_bottom_left, v_bottom_right, v_top_right, v_roof_peak, v_top_left]
 
         house_outline = Polygon(*interior_points, color="#8A9BA8", stroke_width=3)
-        ground = Line(start=[-3.8, -1.2, 0], end=[3.8, -1.2, 0], color="#5A6577", stroke_width=2)
+        ground = Line(start=[-3.8, -1.2 + DY, 0], end=[3.8, -1.2 + DY, 0], color="#5A6577", stroke_width=2)
 
+        # The two upper dots sit in the band between the lowered roof peak
+        # (y≈2.05) and the subtitle, clear of both; the old third dot straddled
+        # the peak vertex right under the heading, so it moves down the left
+        # flank instead.
         blue_positions = [
-            [-3.2, 1.7, 0], [-3.5, -0.1, 0], [-3.0, -0.9, 0],
-            [3.2, 2.0, 0], [3.6, 0.4, 0], [3.3, -0.6, 0],
-            [-1.5, 2.9, 0], [1.5, 2.9, 0], [0.0, 3.15, 0],
+            [-3.2, 1.7 + DY, 0], [-3.5, -0.1 + DY, 0], [-3.0, -0.9 + DY, 0],
+            [3.2, 2.0 + DY, 0], [3.6, 0.4 + DY, 0], [3.3, -0.6 + DY, 0],
+            [-2.1, 2.2, 0], [2.1, 2.25, 0], [-3.4, 1.0 + DY, 0],
         ]
         blue_dots = VGroup(*[Dot(point=pos, color=P_BLUE, radius=0.08) for pos in blue_positions])
 
         orange_positions = [
-            [-1.8, -0.5, 0], [-0.6, -0.6, 0], [0.7, -0.5, 0], [1.8, -0.6, 0],
-            [-1.6, 0.3, 0], [-0.5, 0.4, 0], [0.6, 0.3, 0], [1.7, 0.4, 0],
-            [-1.0, 1.1, 0], [0.0, 1.4, 0], [1.0, 1.1, 0], [0.0, 0.1, 0],
+            [-1.8, -0.5 + DY, 0], [-0.6, -0.6 + DY, 0], [0.7, -0.5 + DY, 0], [1.8, -0.6 + DY, 0],
+            [-1.6, 0.3 + DY, 0], [-0.5, 0.4 + DY, 0], [0.6, 0.3 + DY, 0], [1.7, 0.4 + DY, 0],
+            [-1.0, 1.1 + DY, 0], [0.0, 1.4 + DY, 0], [1.0, 1.1 + DY, 0], [0.0, 0.1 + DY, 0],
         ]
         orange_dots = VGroup(*[Dot(point=pos, color=P_ORANGE, radius=0.08) for pos in orange_positions])
 
@@ -224,12 +290,13 @@ class Beat2_Innenvolumen(Scene):
 
         v_label = Text("V", font_size=FORMULA_FONT_SIZE, color=P_ORANGE)
         v_subtext = Text("Nettovolumen (m³)", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        v_group = VGroup(v_label, v_subtext).arrange(DOWN, buff=0.1).move_to([0.0, 0.35, 0])
+        v_group = VGroup(v_label, v_subtext).arrange(DOWN, buff=0.1).move_to([0.0, 0.35 + DY, 0])
         self.play(FadeIn(v_label), FadeIn(v_subtext, shift=UP * 0.15), run_time=1.0)
 
-        dim_line = Line(start=[-2.5, -1.45, 0], end=[2.5, -1.45, 0], color=P_ORANGE, stroke_width=1.5)
-        dim_tick_l = Line(start=[-2.5, -1.55, 0], end=[-2.5, -1.35, 0], color=P_ORANGE, stroke_width=1.5)
-        dim_tick_r = Line(start=[2.5, -1.55, 0], end=[2.5, -1.35, 0], color=P_ORANGE, stroke_width=1.5)
+        dim_y = -1.2 + DY - 0.1
+        dim_line = Line(start=[-2.5, dim_y, 0], end=[2.5, dim_y, 0], color=P_ORANGE, stroke_width=1.5)
+        dim_tick_l = Line(start=[-2.5, dim_y - 0.1, 0], end=[-2.5, dim_y + 0.1, 0], color=P_ORANGE, stroke_width=1.5)
+        dim_tick_r = Line(start=[2.5, dim_y - 0.1, 0], end=[2.5, dim_y + 0.1, 0], color=P_ORANGE, stroke_width=1.5)
         self.play(Create(VGroup(dim_line, dim_tick_l, dim_tick_r)), run_time=1.0)
 
         ring = highlight_param(items, "v", color=P_ORANGE)
@@ -264,7 +331,8 @@ class Beat3_Luftwechselrate(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Luftwechselrate n", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "volume"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -361,7 +429,8 @@ class Beat4_SpezWaermekapazitaet(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Spezifische Wärmekapazität c_Luft", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "cube"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -508,7 +577,8 @@ class Beat5_Lueftungsverlust(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Lüftungswärmeverlust Φ_V", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN EN 12831-1")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -544,18 +614,28 @@ class Beat5_Lueftungsverlust(Scene):
 
         self.play(FadeOut(prev_visuals), run_time=0.8)
 
+        # Temperature labels nudged right, opening a gap on their left for the Δθ
+        # annotation to move into.
         t_inside = Text("T_innen  (Innentemperatur)", color=P_RED, font_size=LABEL_FONT_SIZE)
-        t_inside.move_to(UP * 1.1 + RIGHT * 1.0)
+        t_inside.move_to(UP * 1.1 + RIGHT * 1.45)
         t_outside = Text("T_außen (Außentemperatur)", color=P_BLUE, font_size=LABEL_FONT_SIZE)
-        t_outside.move_to(UP * 0.05 + RIGHT * 1.0)
+        t_outside.move_to(UP * 0.05 + RIGHT * 1.45)
 
         dt_brace = BraceBetweenPoints(
             t_outside.get_left() + LEFT * 0.3,
             t_inside.get_left() + LEFT * 0.3,
             direction=LEFT, color=P_YELLOW,
         )
-        dt_label = Text("Δθ", color=P_YELLOW, font_size=FORMULA_FONT_SIZE).next_to(dt_brace, LEFT, buff=0.2)
-        dt_sub = Text("Temperaturdifferenz", color=P_YELLOW, font_size=LABEL_FONT_SIZE).next_to(dt_label, DOWN, buff=0.12)
+        # ``Δθ`` over ``Temperaturdifferenz`` as one centred block, placed as a
+        # unit to the left of the brace: the wide word is the block's right edge,
+        # so one ``buff`` keeps the whole label — not just ``Δθ`` — off the
+        # bracket. The block plus brace then shift left together, clear of the
+        # temperature-label column.
+        dt_label = Text("Δθ", color=P_YELLOW, font_size=FORMULA_FONT_SIZE)
+        dt_sub = Text("Temperaturdifferenz", color=P_YELLOW, font_size=LABEL_FONT_SIZE)
+        dt_text = VGroup(dt_label, dt_sub).arrange(DOWN, buff=0.12)
+        dt_text.next_to(dt_brace, LEFT, buff=0.3)
+        VGroup(dt_brace, dt_text).shift(LEFT * 0.35)
 
         self.play(
             FadeIn(t_inside, shift=LEFT * 0.2),
@@ -780,7 +860,8 @@ class Beat7_Lueftungssysteme(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Lüftungssysteme im Vergleich", title)
-        self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
+        din = _din_ref("DIN 1946-6")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "window"))
         self.play(FadeIn(caption), run_time=0.3)
@@ -837,14 +918,14 @@ class Beat7_Lueftungssysteme(Scene):
             pos1 + RIGHT * 0.2 + UP * 0.5, pos1 + RIGHT * 1.5 + UP * 1.3,
             radius=0.9, color=P_ORANGE, stroke_width=3.5,
         )
-        # Anchored to the arrow's low start point, not next_to() the whole
-        # curved arrow: that bbox reaches up to the curve's high end near the
-        # tip, which pushed this label up into the card header above it.
+        # Upper-left of the cube, well left of the arrow: sitting beside the
+        # arrow's start it was crossed by the curve as it swept up to the
+        # top-right corner, and its right end was clipped by the card border.
         lbl_out1 = Paragraph(
             "Warmluft (+21°C)", "entweicht!",
             font_size=LABEL_FONT_SIZE, color=P_ORANGE, alignment="center",
         ).scale(0.75)
-        lbl_out1.move_to(arr_out1.get_start() + UP * 0.30 + RIGHT * 0.55)
+        lbl_out1.move_to(pos1 + LEFT * 0.75 + UP * 1.0)
         stat1_wrg = Text("WRG: 0%", font_size=LABEL_FONT_SIZE, color=P_RED)
         stat1_loss = Text("Lüftungsverlust: 100% (Sehr Hoch)", font_size=LABEL_FONT_SIZE, color=P_RED)
         box1_stat = VGroup(stat1_wrg, stat1_loss).arrange(DOWN, buff=0.04).move_to(card1.get_bottom() + UP * 0.4)
@@ -878,8 +959,11 @@ class Beat7_Lueftungssysteme(Scene):
             color=P_GREEN, buff=0, stroke_width=3.5,
             max_tip_length_to_length_ratio=0.35,
         )
-        lbl_supply = Text("Vorgewärmte Zuluft (+18°C)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
-        lbl_supply.scale(0.75).next_to(arr_supply, RIGHT, buff=0.04)
+        # Two lines, right of the supply arrow: the one-line version ran well past
+        # the card's right edge and into the gap before Panel 3. Stacked and
+        # nudged up, it clears the cube below and stays inside card2.
+        lbl_supply = Text("Vorgewärmte\nZuluft (+18°C)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        lbl_supply.scale(0.7).next_to(arr_supply, RIGHT, buff=0.12).shift(UP * 0.06)
         stat2_wrg = Text("WRG: 85 – 95%", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         stat2_loss = Text("Lüftungsverlust: ~10% (Gering)", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         box2_stat = VGroup(stat2_wrg, stat2_loss).arrange(DOWN, buff=0.04).move_to(card2.get_bottom() + UP * 0.4)

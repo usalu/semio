@@ -36,6 +36,13 @@ class ReviewingHeatLosses(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "trans"))
         self.play(FadeIn(caption), run_time=0.3)
 
+        # Topic heading — same placement and size as ``ReviewingHeatGains``.
+        title = Text(
+            "Übersicht der Wärmeverluste", font_size=34, color=WHITE,
+            font=BODY_FONT, disable_ligatures=True,
+        )
+        title.to_edge(UP, buff=0.6)
+
         # Color definitions
         ICY_BLUE = "#38BDF8"
         DEEP_BLUE = "#1D4ED8"
@@ -130,6 +137,7 @@ class ReviewingHeatLosses(Scene):
 
         # --- ANIMATION BEATS ---
         self.play(
+            Write(title),
             FadeIn(trans_formula, shift=DOWN * 0.1),
             FadeIn(wall_icon, shift=RIGHT * 0.2),
             run_time=2.0,
@@ -189,47 +197,57 @@ class Scene2(Scene):
         )
         initial_eq.move_to(UP * 1.8)
 
-        wall_box = Rectangle(width=1.6, height=1.8, color=ICY_BLUE, stroke_width=2)
-        wall_label = Text("Transmission", font_size=18, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True).next_to(
-            wall_box, DOWN, buff=0.2
+        # Transmission & Lüftung icons — same hatched-wall and crossed-window
+        # glyphs used in ``ReviewingHeatLosses``, only re-labelled and parked in
+        # this scene's positions.
+        wall = Rectangle(
+            height=0.8, width=0.2, color=ICY_BLUE, fill_opacity=0.2, stroke_width=2
         )
+        wall_lines = VGroup(*[
+            Line(
+                wall.get_left() + UP * y + RIGHT * 0.02,
+                wall.get_right() + UP * (y + 0.1) + LEFT * 0.02,
+                color=ICY_BLUE,
+                stroke_width=1.5,
+            )
+            for y in [-0.25, -0.05, 0.15]
+        ])
         wall_arrow = Arrow(
-            LEFT * 0.6,
-            RIGHT * 0.6,
+            LEFT * 0.5,
+            RIGHT * 0.5,
             color=ICY_BLUE,
             stroke_width=3,
-            max_tip_length_to_length_ratio=0.25,
-        ).move_to(wall_box.get_center())
-        wall_icon = VGroup(wall_box, wall_label, wall_arrow).move_to(
-            LEFT * 2.5 + DOWN * 0.8
-        )
+            max_tip_length_to_length_ratio=0.3,
+        ).move_to(wall.get_center())
+        wall_glyph = VGroup(wall, wall_lines, wall_arrow)
+        wall_label = Text(
+            "Transmission", font_size=18, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True
+        ).next_to(wall_glyph, DOWN, buff=0.35)
+        wall_icon = VGroup(wall_glyph, wall_label).move_to(LEFT * 2.5 + DOWN * 0.8)
 
-        window_box = Rectangle(width=1.6, height=1.8, color=DEEP_BLUE, stroke_width=2)
-        window_line_h = Line(
-            window_box.get_left(),
-            window_box.get_right(),
-            color=DEEP_BLUE,
-            stroke_width=1,
+        win_frame = Square(side_length=0.8, color=DEEP_BLUE, stroke_width=2)
+        win_cross = VGroup(
+            Line(
+                win_frame.get_top(), win_frame.get_bottom(),
+                color=DEEP_BLUE, stroke_width=1.5,
+            ),
+            Line(
+                win_frame.get_left(), win_frame.get_right(),
+                color=DEEP_BLUE, stroke_width=1.5,
+            ),
         )
-        window_line_v = Line(
-            window_box.get_top(),
-            window_box.get_bottom(),
+        win_arrow = CurvedArrow(
+            win_frame.get_left() + DOWN * 0.2,
+            win_frame.get_right() + UP * 0.2,
             color=DEEP_BLUE,
-            stroke_width=1,
-        )
-        window_label = Text("Lüftung", font_size=18, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True).next_to(
-            window_box, DOWN, buff=0.2
-        )
-        window_arrow = Arrow(
-            LEFT * 0.6,
-            RIGHT * 0.6,
-            color=DEEP_BLUE,
+            angle=-TAU / 6,
             stroke_width=3,
-            max_tip_length_to_length_ratio=0.25,
-        ).move_to(window_box.get_center())
-        window_icon = VGroup(
-            window_box, window_line_h, window_line_v, window_label, window_arrow
-        ).move_to(RIGHT * 2.5 + DOWN * 0.8)
+        )
+        win_glyph = VGroup(win_frame, win_cross, win_arrow)
+        window_label = Text(
+            "Lüftung", font_size=18, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True
+        ).next_to(win_glyph, DOWN, buff=0.35)
+        window_icon = VGroup(win_glyph, window_label).move_to(RIGHT * 2.5 + DOWN * 0.8)
 
         self.play(FadeIn(initial_eq), Create(wall_icon), Create(window_icon), run_time=2)
         hold_for(self, self.NARRATION, "phi", used=0.3 + 2)
@@ -323,14 +341,17 @@ class Scene2(Scene):
             "Jahres-Wärmeverlust [kWh/a] (DIN V 18599-2)", font_size=18, color=GREY_A
         , font=BODY_FONT, disable_ligatures=True)
 
+        # Nudge the finished equation up a touch and drop the unit line centred
+        # beneath it — the old slide into the top-left corner left the formula
+        # stranded away from everything else.
         self.play(
-            final_eq_group.animate.scale(0.85).to_corner(UL, buff=0.8), run_time=2
+            final_eq_group.animate.move_to(UP * 0.5), run_time=1.5
         )
 
-        unit_text.next_to(final_eq_group, DOWN, aligned_edge=LEFT, buff=0.25)
+        unit_text.next_to(final_eq_group, DOWN, buff=0.4)
         self.play(FadeIn(unit_text), run_time=1)
 
-        hold_for(self, self.NARRATION, "annual", used=0.35 + 2.5 + 1 + 2 + 1)
+        hold_for(self, self.NARRATION, "annual", used=0.35 + 2.5 + 1 + 1.5 + 1)
         self.play(FadeOut(caption), run_time=0.3)
 
 
@@ -433,9 +454,7 @@ class ReviewingHeatGains(Scene):
 
         q_gain_main = Text("Q_Gewinn", font_size=38, color=TEXT_WHITE, font=BODY_FONT, disable_ligatures=True)
         q_gain_sub = Text("Brutto-Gesamtwärmegewinn", font_size=16, color=SUBTEXT_GREY, font=BODY_FONT, disable_ligatures=True)
-        q_gain_box = VGroup(q_gain_main, q_gain_sub).arrange(
-            DOWN, aligned_edge=RIGHT, buff=0.12
-        )
+        q_gain_box = VGroup(q_gain_main, q_gain_sub).arrange(DOWN, buff=0.12)
         q_gain_box.next_to(brace, LEFT, buff=0.3)
 
         self.play(Write(title), FadeIn(subtitle, shift=DOWN * 0.2), run_time=1.5)
@@ -787,19 +806,26 @@ class UltimateEnergyBalance(Scene):
         q_heat_exp = Text("Q_h", color="#EF4444", font_size=28, weight=BOLD, font=BODY_FONT, disable_ligatures=True)
         eq_exp = Text(" = ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         loss_exp = Text("(Q_trans + Q_vent)", color="#3B82F6", font_size=28, font=BODY_FONT, disable_ligatures=True)
+        # The climate factor that Scene 2 applied to Q_Verlust — it has to reappear
+        # once the loss term is expanded back into (Q_trans + Q_vent).
+        clim_dot_exp = Text(" · ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
+        clim_exp = Text("F_Klima", color="#C084FC", font_size=28, font=BODY_FONT, disable_ligatures=True)
         minus_exp = Text(" - ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         eta_exp = Text("η_h", color="#22C55E", font_size=28, font=BODY_FONT, disable_ligatures=True)
         dot_exp = Text(" · ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         gain_exp = Text("(Q_sol + Q_int)", color="#EAB308", font_size=28, font=BODY_FONT, disable_ligatures=True)
 
         expanded_eq = VGroup(
-            q_heat_exp, eq_exp, loss_exp, minus_exp, eta_exp, dot_exp, gain_exp
+            q_heat_exp, eq_exp, loss_exp, clim_dot_exp, clim_exp,
+            minus_exp, eta_exp, dot_exp, gain_exp,
         ).arrange(RIGHT, buff=0.1)
-        expanded_eq.move_to(DOWN * 1.0)
+        # Slightly tighter now that the F_Klima term widened the line — keeps a
+        # comfortable margin on both frame edges.
+        expanded_eq.scale(0.9).move_to(DOWN * 1.0)
 
         self.play(FadeIn(VGroup(q_heat_exp, eq_exp), shift=UP * 0.3), run_time=0.8)
         self.wait(0.3)
-        self.play(FadeIn(loss_exp, shift=UP * 0.3), run_time=0.8)
+        self.play(FadeIn(VGroup(loss_exp, clim_dot_exp, clim_exp), shift=UP * 0.3), run_time=0.8)
         self.wait(0.3)
         self.play(
             FadeIn(VGroup(minus_exp, eta_exp, dot_exp), shift=UP * 0.3), run_time=0.8
